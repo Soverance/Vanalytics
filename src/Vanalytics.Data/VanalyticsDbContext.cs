@@ -10,6 +10,7 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options) 
     public DbSet<CharacterJob> CharacterJobs => Set<CharacterJob>();
     public DbSet<EquippedGear> EquippedGear => Set<EquippedGear>();
     public DbSet<CraftingSkill> CraftingSkills => Set<CraftingSkill>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

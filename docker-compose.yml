@@ -26,6 +26,11 @@ services:
       ADMIN_EMAIL: "admin@vanalytics.com"
       ADMIN_USERNAME: "admin"
       ADMIN_PASSWORD: "Admin123!"
+      Jwt__Secret: "DockerDevSecretKeyThatIsAtLeast32BytesLongForHmacSha256!!"
+      Jwt__Issuer: "Vanalytics"
+      Jwt__Audience: "Vanalytics"
+      Jwt__AccessTokenExpirationMinutes: "15"
+      Jwt__RefreshTokenExpirationDays: "7"
     depends_on:
       db:
         condition: service_healthy
