@@ -48,6 +48,7 @@ builder.Services.AddHttpClient();
 // Services
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<OAuthService>();
+builder.Services.AddSingleton<RateLimiter>();
 
 var app = builder.Build();
 
