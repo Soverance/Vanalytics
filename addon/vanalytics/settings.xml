@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
     <global>
-        <ApiUrl>https://vanalytics.com</ApiUrl>
+        <ApiUrl>https://vanalytics.soverance.com</ApiUrl>
         <ApiKey></ApiKey>
         <SyncInterval>15</SyncInterval>
     </global>

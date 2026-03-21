@@ -49,6 +49,11 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<OAuthService>();
 builder.Services.AddSingleton<RateLimiter>();
+builder.Services.AddHttpClient("PlayOnline", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+builder.Services.AddHostedService<ServerStatusScraper>();
 
 var app = builder.Build();
 

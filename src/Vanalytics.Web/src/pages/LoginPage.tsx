@@ -83,16 +83,21 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-md rounded-lg border border-gray-800 bg-gray-900 p-8">
-        <div className="flex justify-center mb-6">
+        <div className="flex items-center justify-center mb-6 min-w-0">
           <img
             src="/vanalytics-square-logo.png"
-            alt="Vanalytics"
-            className="h-16 w-16"
+            alt=""
+            className="h-16 w-16 shrink-0 -mr-2"
+          />
+          <img
+            src="/vanalytics-typography-horizontal-logo.png"
+            alt="Vana'lytics"
+            className="min-w-0 max-w-full"
           />
         </div>
-        <h2 className="mb-6 text-2xl font-bold text-center">
-          {isRegister ? 'Create Account' : 'Login'}
-        </h2>
+        {isRegister && (
+          <h2 className="mb-6 text-2xl font-bold text-center">Create Account</h2>
+        )}
 
         {error && (
           <div className="mb-4 rounded bg-red-900/50 border border-red-700 p-3 text-sm text-red-300">

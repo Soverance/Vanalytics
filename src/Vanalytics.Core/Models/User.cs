@@ -1,3 +1,5 @@
+using Vanalytics.Core.Enums;
+
 namespace Vanalytics.Core.Models;
 
 public class User
@@ -9,6 +11,8 @@ public class User
     public string? ApiKey { get; set; }
     public string? OAuthProvider { get; set; }
     public string? OAuthId { get; set; }
+    public UserRole Role { get; set; } = UserRole.Member;
+    public bool IsSystemAccount { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 

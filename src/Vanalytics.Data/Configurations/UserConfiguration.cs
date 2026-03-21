@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 
 namespace Vanalytics.Data.Configurations;
@@ -22,5 +23,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.ApiKey).HasMaxLength(128);
         builder.Property(u => u.OAuthProvider).HasMaxLength(32);
         builder.Property(u => u.OAuthId).HasMaxLength(256);
+        builder.Property(u => u.Role)
+            .HasConversion<string>()
+            .HasMaxLength(16)
+            .HasDefaultValue(UserRole.Member);
     }
 }

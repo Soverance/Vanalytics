@@ -12,7 +12,7 @@ local res = require('resources')
 
 -- Default settings (matches settings.xml)
 local defaults = {
-    ApiUrl = 'https://vanalytics.com',
+    ApiUrl = 'https://vanalytics.soverance.com',
     ApiKey = '',
     SyncInterval = 15,
 }

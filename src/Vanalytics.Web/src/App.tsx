@@ -6,7 +6,10 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import CharacterDetailPage from './pages/CharacterDetailPage'
-import ApiKeysPage from './pages/ApiKeysPage'
+import ProfilePage from './pages/ProfilePage'
+import SetupGuidePage from './pages/SetupGuidePage'
+import ServerStatusPage from './pages/ServerStatusPage'
+import AdminUsersPage from './pages/AdminUsersPage'
 import PublicProfilePage from './pages/PublicProfilePage'
 
 export default function App() {
@@ -34,10 +37,34 @@ export default function App() {
               }
             />
             <Route
-              path="/dashboard/keys"
+              path="/dashboard/servers"
               element={
                 <ProtectedRoute>
-                  <ApiKeysPage />
+                  <ServerStatusPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/setup"
+              element={
+                <ProtectedRoute>
+                  <SetupGuidePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/admin/users"
+              element={
+                <ProtectedRoute>
+                  <AdminUsersPage />
                 </ProtectedRoute>
               }
             />

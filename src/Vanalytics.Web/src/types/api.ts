@@ -16,11 +16,14 @@ export interface AuthResponse {
   expiresAt: string
 }
 
+export type UserRole = 'Member' | 'Moderator' | 'Admin'
+
 export interface UserProfile {
   id: string
   email: string
   username: string
   hasApiKey: boolean
+  role: UserRole
   oAuthProvider: string | null
   createdAt: string
 }
@@ -78,4 +81,41 @@ export interface UpdateCharacterRequest {
 export interface ApiKeyResponse {
   apiKey: string
   generatedAt: string
+}
+
+// Servers
+export interface GameServer {
+  id: number
+  name: string
+  status: string
+  lastCheckedAt: string
+}
+
+export interface ServerHistory {
+  name: string
+  status: string
+  lastCheckedAt: string
+  days: number
+  uptimePercent: number
+  history: ServerStatusEntry[]
+}
+
+export interface ServerStatusEntry {
+  status: string
+  startedAt: string
+  endedAt: string | null
+}
+
+// Admin
+export interface AdminUser {
+  id: string
+  email: string
+  username: string
+  role: UserRole
+  isSystemAccount: boolean
+  hasApiKey: boolean
+  oAuthProvider: string | null
+  characterCount: number
+  createdAt: string
+  updatedAt: string
 }

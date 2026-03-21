@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 
 namespace Vanalytics.Data.Seeding;
@@ -13,9 +14,18 @@ public static class AdminSeeder
         string passwordHash,
         ILogger logger)
     {
-        if (await db.Users.AnyAsync(u => u.Email == email))
+        var existing = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (existing is not null)
         {
-            logger.LogInformation("Admin user already exists, skipping seed");
+            var changed = false;
+            if (existing.Role != UserRole.Admin) { existing.Role = UserRole.Admin; changed = true; }
+            if (!existing.IsSystemAccount) { existing.IsSystemAccount = true; changed = true; }
+            if (changed)
+            {
+                existing.UpdatedAt = DateTimeOffset.UtcNow;
+                await db.SaveChangesAsync();
+                logger.LogInformation("System admin account updated: {Username}", existing.Username);
+            }
             return;
         }
 
@@ -25,6 +35,8 @@ public static class AdminSeeder
             Email = email,
             Username = username,
             PasswordHash = passwordHash,
+            Role = UserRole.Admin,
+            IsSystemAccount = true,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };

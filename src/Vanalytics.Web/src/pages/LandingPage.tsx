@@ -6,11 +6,11 @@ export default function LandingPage() {
 
   return (
     <div className="text-center py-20">
-      <div className="flex items-center justify-center gap-4 mb-6 mx-auto max-w-xl px-4">
+      <div className="flex items-center justify-center mb-6 mx-auto max-w-xl px-4">
         <img
           src="/vanalytics-square-logo.png"
           alt=""
-          className="h-20 sm:h-28 shrink-0"
+          className="h-24 sm:h-32 shrink-0 -mr-3 sm:-mr-4"
         />
         <img
           src="/vanalytics-typography-horizontal-logo.png"

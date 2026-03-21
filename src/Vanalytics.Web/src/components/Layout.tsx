@@ -1,27 +1,30 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import UserAvatar from './UserAvatar'
+import { Swords, Menu, ShieldCheck, Users, BookOpen, Radio } from 'lucide-react'
 
-function SidebarLink({ to, label }: { to: string; label: string }) {
+function SidebarLink({ to, label, icon }: { to: string; label: string; icon: ReactNode }) {
   return (
     <NavLink
       to={to}
       end
       className={({ isActive }) =>
-        `block rounded px-3 py-2 text-sm font-medium transition-colors ${
+        `flex items-center gap-3 rounded px-3 py-2 text-sm font-medium transition-colors ${
           isActive
             ? 'bg-gray-800 text-white'
             : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
         }`
       }
     >
+      {icon}
       {label}
     </NavLink>
   )
 }
 
 export default function Layout() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
 
@@ -60,8 +63,8 @@ export default function Layout() {
       >
         {/* Logo */}
         <div className="border-b border-gray-800 px-4 py-4">
-          <Link to="/" className="flex items-center gap-2 min-w-0" onClick={() => setSidebarOpen(false)}>
-            <img src="/vanalytics-square-logo.png" alt="" className="h-8 w-8 shrink-0" />
+          <Link to="/" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
+            <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img
               src="/vanalytics-typography-horizontal-logo.png"
               alt="Vana'lytics"
@@ -72,20 +75,41 @@ export default function Layout() {
 
         {/* Nav links */}
         <nav className="flex-1 space-y-1 px-3 py-4" onClick={() => setSidebarOpen(false)}>
-          <SidebarLink to="/dashboard" label="Characters" />
-          <SidebarLink to="/dashboard/keys" label="API Keys" />
+          <SidebarLink to="/dashboard" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} />
+          <SidebarLink to="/dashboard/servers" label="Server Status" icon={<Radio className="h-4 w-4 shrink-0" />} />
+          <SidebarLink to="/dashboard/setup" label="Setup Guide" icon={<BookOpen className="h-4 w-4 shrink-0" />} />
+
+          {user?.role === 'Admin' && (
+            <>
+              <div className="flex items-center gap-2 px-3 pt-6 pb-2">
+                <ShieldCheck className="h-3.5 w-3.5 text-gray-600" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-600">Admin</span>
+              </div>
+              <SidebarLink to="/dashboard/admin/users" label="Users" icon={<Users className="h-4 w-4 shrink-0" />} />
+            </>
+          )}
         </nav>
 
-        {/* User footer */}
-        <div className="border-t border-gray-800 px-4 py-3">
-          <p className="text-sm text-gray-400 truncate mb-2">{user?.username}</p>
-          <button
-            onClick={() => { logout(); setSidebarOpen(false) }}
-            className="w-full rounded border border-gray-700 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+        {/* User profile link */}
+        {user && (
+          <NavLink
+            to="/dashboard/profile"
+            onClick={() => setSidebarOpen(false)}
+            className={({ isActive }) =>
+              `flex items-center gap-3 border-t border-gray-800 px-4 py-3 transition-colors ${
+                isActive
+                  ? 'bg-gray-800'
+                  : 'hover:bg-gray-800/50'
+              }`
+            }
           >
-            Logout
-          </button>
-        </div>
+            <UserAvatar username={user.username} size="sm" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-200 truncate">{user.username}</p>
+              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+            </div>
+          </NavLink>
+        )}
       </aside>
 
       {/* Main content area */}
@@ -97,13 +121,11 @@ export default function Layout() {
             className="text-gray-400 hover:text-white"
             aria-label="Open menu"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
+            <Menu className="h-6 w-6" />
           </button>
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/vanalytics-square-logo.png" alt="" className="h-7 w-7" />
-            <img src="/vanalytics-typography-horizontal-logo.png" alt="Vana'lytics" className="h-5" />
+          <Link to="/" className="flex items-center min-w-0">
+            <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
+            <img src="/vanalytics-typography-horizontal-logo.png" alt="Vana'lytics" className="min-w-0 max-w-[180px]" />
           </Link>
         </header>
 

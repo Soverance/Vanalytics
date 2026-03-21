@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vanalytics.Data;
 
@@ -11,9 +12,11 @@ using Vanalytics.Data;
 namespace Vanalytics.Data.Migrations
 {
     [DbContext(typeof(VanalyticsDbContext))]
-    partial class VanalyticsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260321014715_ReplaceIsAdminWithRole")]
+    partial class ReplaceIsAdminWithRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -158,40 +161,6 @@ namespace Vanalytics.Data.Migrations
                     b.ToTable("EquippedGear");
                 });
 
-            modelBuilder.Entity("Vanalytics.Core.Models.GameServer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset>("LastCheckedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)")
-                        .HasDefaultValue("Unknown");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("GameServers");
-                });
-
             modelBuilder.Entity("Vanalytics.Core.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -225,35 +194,6 @@ namespace Vanalytics.Data.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("Vanalytics.Core.Models.ServerStatusChange", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTimeOffset?>("EndedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("GameServerId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("StartedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GameServerId", "EndedAt");
-
-                    b.ToTable("ServerStatusChanges");
-                });
-
             modelBuilder.Entity("Vanalytics.Core.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -271,9 +211,6 @@ namespace Vanalytics.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("IsSystemAccount")
-                        .HasColumnType("bit");
 
                     b.Property<string>("OAuthId")
                         .HasMaxLength(256)
@@ -376,17 +313,6 @@ namespace Vanalytics.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Vanalytics.Core.Models.ServerStatusChange", b =>
-                {
-                    b.HasOne("Vanalytics.Core.Models.GameServer", "GameServer")
-                        .WithMany("StatusHistory")
-                        .HasForeignKey("GameServerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("GameServer");
-                });
-
             modelBuilder.Entity("Vanalytics.Core.Models.Character", b =>
                 {
                     b.Navigation("CraftingSkills");
@@ -394,11 +320,6 @@ namespace Vanalytics.Data.Migrations
                     b.Navigation("Gear");
 
                     b.Navigation("Jobs");
-                });
-
-            modelBuilder.Entity("Vanalytics.Core.Models.GameServer", b =>
-                {
-                    b.Navigation("StatusHistory");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.User", b =>
