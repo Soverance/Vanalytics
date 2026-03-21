@@ -13,7 +13,7 @@ export default function CharacterCard({ character, onTogglePublic, onDelete }: P
       <div className="flex items-start justify-between">
         <div>
           <Link
-            to={`/dashboard/characters/${character.id}`}
+            to={`/characters/${character.id}`}
             className="text-lg font-semibold text-blue-400 hover:underline"
           >
             {character.name}

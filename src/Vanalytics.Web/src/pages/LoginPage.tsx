@@ -26,7 +26,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  if (user) return <Navigate to="/dashboard" replace />
+  if (user) return <Navigate to="/characters" replace />
 
   const handleOAuth = (provider: 'google' | 'microsoft') => {
     const config = OAUTH_CONFIG[provider]
@@ -48,7 +48,7 @@ export default function LoginPage() {
     if (code && provider) {
       const redirectUri = `${window.location.origin}/login`
       oauthLogin(provider, code, redirectUri)
-        .then(() => navigate('/dashboard'))
+        .then(() => navigate('/characters'))
         .catch((err) => {
           if (err instanceof ApiError) setError(err.message)
           else setError('OAuth login failed')
@@ -68,7 +68,7 @@ export default function LoginPage() {
       } else {
         await login({ email, password })
       }
-      navigate('/dashboard')
+      navigate('/characters')
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message)

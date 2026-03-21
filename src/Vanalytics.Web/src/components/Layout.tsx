@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import UserAvatar from './UserAvatar'
-import { Swords, Menu, ShieldCheck, Users, BookOpen, Radio } from 'lucide-react'
+import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database } from 'lucide-react'
 
 function SidebarLink({ to, label, icon }: { to: string; label: string; icon: ReactNode }) {
   return (
@@ -28,13 +28,11 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
 
-  // Public pages (landing, login, public profiles) get no sidebar
+  // Public pages get no sidebar — these render without authentication
+  const publicPaths = ['/', '/login', '/items', '/bazaar']
   const isPublicPage =
-    location.pathname === '/' ||
-    location.pathname === '/login' ||
-    location.pathname.startsWith('/items') ||
-    location.pathname.startsWith('/bazaar') ||
-    (!user && !location.pathname.startsWith('/dashboard'))
+    publicPaths.some(p => p === '/' ? location.pathname === '/' : location.pathname.startsWith(p)) ||
+    (!user && location.pathname.match(/^\/[^/]+\/[^/]+$/))
 
   if (isPublicPage) {
     return (
@@ -77,9 +75,12 @@ export default function Layout() {
 
         {/* Nav links */}
         <nav className="flex-1 space-y-1 px-3 py-4" onClick={() => setSidebarOpen(false)}>
-          <SidebarLink to="/dashboard" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} />
-          <SidebarLink to="/dashboard/servers" label="Server Status" icon={<Radio className="h-4 w-4 shrink-0" />} />
-          <SidebarLink to="/dashboard/setup" label="Setup Guide" icon={<BookOpen className="h-4 w-4 shrink-0" />} />
+          <SidebarLink to="/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} />
+          <SidebarLink to="/characters" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} />
+          <SidebarLink to="/servers" label="Server Status" icon={<Radio className="h-4 w-4 shrink-0" />} />
+          <SidebarLink to="/items" label="Item Database" icon={<Package className="h-4 w-4 shrink-0" />} />
+          <SidebarLink to="/bazaar" label="Bazaar Activity" icon={<Store className="h-4 w-4 shrink-0" />} />
+          <SidebarLink to="/setup" label="Setup Guide" icon={<BookOpen className="h-4 w-4 shrink-0" />} />
 
           {user?.role === 'Admin' && (
             <>
@@ -87,7 +88,8 @@ export default function Layout() {
                 <ShieldCheck className="h-3.5 w-3.5 text-gray-600" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-600">Admin</span>
               </div>
-              <SidebarLink to="/dashboard/admin/users" label="Users" icon={<Users className="h-4 w-4 shrink-0" />} />
+              <SidebarLink to="/admin/users" label="Users" icon={<Users className="h-4 w-4 shrink-0" />} />
+              <SidebarLink to="/admin/items" label="Item Database" icon={<Database className="h-4 w-4 shrink-0" />} />
             </>
           )}
         </nav>
@@ -95,7 +97,7 @@ export default function Layout() {
         {/* User profile link */}
         {user && (
           <NavLink
-            to="/dashboard/profile"
+            to="/profile"
             onClick={() => setSidebarOpen(false)}
             className={({ isActive }) =>
               `flex items-center gap-3 border-t border-gray-800 px-4 py-3 transition-colors ${

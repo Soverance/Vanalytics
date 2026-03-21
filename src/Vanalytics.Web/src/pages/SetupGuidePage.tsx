@@ -55,8 +55,8 @@ export default function SetupGuidePage() {
         <Step number={2} title="Register Your Character">
           <p>
             Go to your{' '}
-            <Link to="/dashboard" className="text-blue-400 hover:underline">
-              Characters dashboard
+            <Link to="/characters" className="text-blue-400 hover:underline">
+              Characters
             </Link>
             {' '}and add your character by entering your character name and server.
           </p>
@@ -68,7 +68,7 @@ export default function SetupGuidePage() {
         <Step number={3} title="Generate an API Key">
           <p>
             Go to your{' '}
-            <Link to="/dashboard/profile" className="text-blue-400 hover:underline">
+            <Link to="/profile" className="text-blue-400 hover:underline">
               Profile &gt; API Keys
             </Link>
             {' '}tab and click <strong className="text-gray-200">Generate Key</strong>.
@@ -188,7 +188,7 @@ export default function SetupGuidePage() {
               <dt className="font-medium text-gray-300">Sync says "Character does not have an active license"</dt>
               <dd className="text-gray-500 mt-1">
                 Your character needs an active license for automatic syncing. Check your{' '}
-                <Link to="/dashboard/profile" className="text-blue-400 hover:underline">
+                <Link to="/profile" className="text-blue-400 hover:underline">
                   Licensing tab
                 </Link>{' '}
                 for details.
@@ -198,7 +198,7 @@ export default function SetupGuidePage() {
               <dt className="font-medium text-gray-300">Sync says "Invalid API key"</dt>
               <dd className="text-gray-500 mt-1">
                 Your API key may be incorrect or revoked. Generate a new one from your{' '}
-                <Link to="/dashboard/profile" className="text-blue-400 hover:underline">
+                <Link to="/profile" className="text-blue-400 hover:underline">
                   Profile &gt; API Keys
                 </Link>{' '}
                 tab and update your settings.xml.
@@ -215,8 +215,8 @@ export default function SetupGuidePage() {
               <dt className="font-medium text-gray-300">Character not found</dt>
               <dd className="text-gray-500 mt-1">
                 Make sure your character is registered on the{' '}
-                <Link to="/dashboard" className="text-blue-400 hover:underline">
-                  Characters dashboard
+                <Link to="/characters" className="text-blue-400 hover:underline">
+                  Characters
                 </Link>{' '}
                 with the exact name and server that matches your in-game character.
               </dd>

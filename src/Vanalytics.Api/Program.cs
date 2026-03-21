@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
 using Vanalytics.Api.Auth;
 using Vanalytics.Api.Services;
 using Vanalytics.Data;
@@ -44,6 +46,35 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
+
+builder.Services.AddOpenApi("v1", options =>
+{
+    options.AddDocumentTransformer((document, context, ct) =>
+    {
+        document.Info = new OpenApiInfo
+        {
+            Title = "Vanalytics API",
+            Version = "v1",
+            Description = "FFXI character tracking and game data API"
+        };
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes["BearerAuth"] = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Description = "JWT access token. Obtain via POST /api/auth/login or /api/auth/register."
+        };
+        document.Components.SecuritySchemes["ApiKeyAuth"] = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.ApiKey,
+            In = ParameterLocation.Header,
+            Name = "X-Api-Key",
+            Description = "API key for addon sync endpoints. Generate via POST /api/keys/generate."
+        };
+        return Task.CompletedTask;
+    });
+});
 
 // Services
 builder.Services.AddSingleton<TokenService>();
@@ -99,6 +130,11 @@ if (!app.Environment.IsDevelopment() &&
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapOpenApi();
+app.MapScalarApiReference("/api/docs", options =>
+{
+    options.Title = "Vanalytics API";
+});
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 

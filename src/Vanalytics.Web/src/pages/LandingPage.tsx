@@ -26,10 +26,10 @@ export default function LandingPage() {
       <div className="flex justify-center gap-4">
         {user ? (
           <Link
-            to="/dashboard"
+            to="/characters"
             className="rounded bg-blue-600 px-6 py-3 font-medium hover:bg-blue-500"
           >
-            Go to Dashboard
+            My Characters
           </Link>
         ) : (
           <Link

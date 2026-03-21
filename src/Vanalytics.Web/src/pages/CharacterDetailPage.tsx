@@ -23,8 +23,8 @@ export default function CharacterDetailPage() {
 
   return (
     <div>
-      <Link to="/dashboard" className="text-sm text-blue-400 hover:underline mb-4 inline-block">
-        &larr; Back to Dashboard
+      <Link to="/characters" className="text-sm text-blue-400 hover:underline mb-4 inline-block">
+        &larr; Back to Characters
       </Link>
 
       <div className="flex items-baseline gap-3 mb-6">
