@@ -76,15 +76,20 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Set Container App secrets
+        env:
+          SQL_CONN: ${{ secrets.SQL_CONNECTION_STRING }}
+          ADMIN_PASS: ${{ secrets.ADMIN_PASSWORD }}
+          JWT_SEC: ${{ secrets.JWT_SECRET }}
+          AZURE_STORAGE: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
         run: |
           az containerapp secret set \
             --name vanalytics \
             --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
             --secrets \
-              sql-connection-string="${{ secrets.SQL_CONNECTION_STRING }}" \
-              admin-password="${{ secrets.ADMIN_PASSWORD }}" \
-              jwt-secret="${{ secrets.JWT_SECRET }}" \
-              azure-storage-connection-string="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}"
+              sql-connection-string="$SQL_CONN" \
+              admin-password="$ADMIN_PASS" \
+              jwt-secret="$JWT_SEC" \
+              azure-storage-connection-string="$AZURE_STORAGE"
 
       - name: Deploy to Container App
         run: |
