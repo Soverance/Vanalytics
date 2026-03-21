@@ -1,0 +1,6 @@
+@Vanalytics.Api_HostAddress = http://localhost:5185
+
+GET {{Vanalytics.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

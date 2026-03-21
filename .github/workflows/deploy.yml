@@ -1,0 +1,133 @@
+# Vanalytics CI/CD Pipeline
+# Scott McCutchen
+# scott.mccutchen@soverance.com
+#
+# Builds a Docker image, pushes to Azure Container Registry, and deploys
+# to Azure Container Apps.
+#
+# Secrets: ACR_USERNAME, ACR_PASSWORD, AZURE_CREDENTIALS,
+#          SQL_CONNECTION_STRING, ADMIN_PASSWORD, JWT_SECRET,
+#          AZURE_STORAGE_CONNECTION_STRING
+# Variables: AZURE_RESOURCE_GROUP, ADMIN_EMAIL, ADMIN_USERNAME,
+#            JWT_ISSUER, JWT_AUDIENCE,
+#            AZURE_AD_CLIENT_ID, AZURE_AD_DOMAIN, AZURE_AD_TENANT_ID
+
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Determine version
+        id: version
+        run: |
+          LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            VERSION="1.0.0"
+          else
+            CURRENT="${LATEST_TAG#v}"
+            MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+            MINOR=$(echo "$CURRENT" | cut -d. -f2)
+            PATCH=$(echo "$CURRENT" | cut -d. -f3)
+            PATCH=$((PATCH + 1))
+            VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
+
+      - name: Log in to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: soveranceacr.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -f src/Vanalytics.Api/Dockerfile . \
+            -t soveranceacr.azurecr.io/vanalytics:v${{ steps.version.outputs.version }} \
+            -t soveranceacr.azurecr.io/vanalytics:latest
+          docker push soveranceacr.azurecr.io/vanalytics:v${{ steps.version.outputs.version }}
+          docker push soveranceacr.azurecr.io/vanalytics:latest
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set Container App secrets
+        run: |
+          az containerapp secret set \
+            --name vanalytics \
+            --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
+            --secrets \
+              sql-connection-string="${{ secrets.SQL_CONNECTION_STRING }}" \
+              admin-password="${{ secrets.ADMIN_PASSWORD }}" \
+              jwt-secret="${{ secrets.JWT_SECRET }}" \
+              azure-storage-connection-string="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}"
+
+      - name: Deploy to Container App
+        run: |
+          az containerapp update \
+            --name vanalytics \
+            --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
+            --image soveranceacr.azurecr.io/vanalytics:v${{ needs.build.outputs.version }} \
+            --set-env-vars \
+              ConnectionStrings__DefaultConnection=secretref:sql-connection-string \
+              ADMIN_EMAIL="${{ vars.ADMIN_EMAIL }}" \
+              ADMIN_USERNAME="${{ vars.ADMIN_USERNAME }}" \
+              ADMIN_PASSWORD=secretref:admin-password \
+              Jwt__Secret=secretref:jwt-secret \
+              "Jwt__Issuer=${{ vars.JWT_ISSUER }}" \
+              "Jwt__Audience=${{ vars.JWT_AUDIENCE }}" \
+              Jwt__AccessTokenExpirationMinutes=15 \
+              Jwt__RefreshTokenExpirationDays=7 \
+              ASPNETCORE_ENVIRONMENT=Production \
+              DISABLE_HTTPS_REDIRECT=true \
+              "Authentication__AzureAd__ClientId=${{ vars.AZURE_AD_CLIENT_ID }}" \
+              "Authentication__AzureAd__Domain=${{ vars.AZURE_AD_DOMAIN }}" \
+              "Authentication__AzureAd__TenantId=${{ vars.AZURE_AD_TENANT_ID }}" \
+              AzureStorage__ConnectionString=secretref:azure-storage-connection-string
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create and push tag
+        run: |
+          git tag "v${{ needs.build.outputs.version }}"
+          git push origin "v${{ needs.build.outputs.version }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ needs.build.outputs.version }}"
+          name: "v${{ needs.build.outputs.version }}"
+          generate_release_notes: true

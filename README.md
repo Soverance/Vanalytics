@@ -1,6 +1,8 @@
-# FFXI GearSwap
+# FFXI Vanalytics
 
-These files are used to help automate equipment changes while playing Final Fantasy XI.  They are specifically tuned for my characters, Soverance and Monarc on the Siren server, though you can easily modify them to work for your characters as well.
+Vana'diel + Analytics
+
+A Final Fantasy XI character progress tracker.
 
 # Requirements
 
@@ -8,51 +10,6 @@ These files are used to help automate equipment changes while playing Final Fant
 * * http://www.playonline.com/ff11us/download/media/install_win.html
 * Windower 4 (stable)
 * * https://docs.windower.net/
-
-# FFXI Config Settings
-This is an installed app you must launch prior to starting FFXI.
-
-* Window Mode:  Borderless Window
-* Resolution: 1920 x 1080
-* Play opening movie on startup = NO
-
-# FFXI In-Game Settings
-
-## Backup / Restore Macros from official server
-In the latest version of FFXI, you can simply select an option on the character select screen to save your restore your character config from the official Square Enix servers.  You used to have to do this with a hidden keyboard command, but not anymore!
-
-
-## General
-
-* Inventory - Type 1
-* Inventory - Auto Sort = ON
-
-## Chat Filters
-* Any messages for "others" or "NPCs"
-
-## Window Settings
-* Window Type = 6
-
-## Misc. 3
-* Area Display = ON
-* Status Icons - Timer Display = ON
-* Status Icons - Party Display = ON
-
-## Global
-* Language Filter = OFF
-* Auto-Disconnect = OFF
-
-# Windower Profile Config
-* Region = Auto-Detect
-* Resolution = 3840 x 2160  (4K, use 2x UI scale)
-* Resolution = 1920 x 1080  (1080p, use 1x UI scale)
-* Window Mode = Borderless Window
-* UI Scale = 2x 
-* Super Sampling = ON
-* Bump Mapping = OFF (use ambient lighting instead, F11 key in-game)
-
-* **NOTE 1:**  Use a standard resolution (1080p or 4k). Ultrawide or non-standard resolutions look terrible/stretched.
-* **NOTE 2:**  If your monitor has G-SYNC / Adaptive Sync, you should disable it, otherwise you may experience crashes due to display adapter resets
 
 # Recommended Windower Extensions
 
@@ -75,113 +32,9 @@ https://docs.windower.net/plugins/
 * DelayMeNot 
 * WinControl
 
-# GearSwap Configuration
+## Gameplay Tips
 
-This repository reflects the following installation directory on your local system:
-
-`..\Windower\addons\GearSwap\data`
-
-By default, GearSwap will search within subfolders of the current character name.
-
-You can then use the commands found on the [GearSwap Documentation](https://docs.windower.net/addons/gearswap/) to load the files in-game.  For example, the following command would load the RDM template when run inside Monarc's windower console:
-
-`gs load RDM`
-
-If you're new to GearSwap, you can get a quick crash course from [this reddit post](https://www.reddit.com/r/ffxi/comments/at3bxq/gearswap_for_idiots/egyoivh/):
-
-You can also check out the beta examples and instructions in the GearSwap install directory for more information.
-
-```
-The absolute easiest way to create a gearset will be to equip everything in game (all 16 slots), and then use the gearswap "Export" command by typing the following command into your in-game chat bar:
-
-//gs export
-
-This will export a file i-nto your "../Windower/addons/Gearswap/data/exports/" directory that allows you to simply copy and paste the gear (with appropriate syntax, naming, and even augments) into your new set.
-```
-
-**Be aware of four things:**
-
-1. If Gearswap fails to execute a command and does not detect it, the addon will likely block all input until it is reloaded.
-2. verify_equip() is not very robust, and in Delve it tends to not be usable. cast_delay() is recommended instead.
-3. Logging is on by default. You can turn it off towards the top of gearswap.
-
-Basic function scaffolding for a new file is shown below:
-
-```
------------------------------------------------------------------------------------
-
-function get_sets()
-
---This function prepares your equipment sets.
-
-end
-
------------------------------------------------------------------------------------
-
-function precast(spell)
-
---This function performs right before the action is sent to the server.
-
-end
-
------------------------------------------------------------------------------------
-
-function midcast(spell)
-
---This function performs after precast but before the action is sent to the server.
-
-end
-
------------------------------------------------------------------------------------
-
-function aftercast(spell)
-
---This function performs after the action has taken place
-
-end
-
------------------------------------------------------------------------------------
-```
-
-# Other FFXI / Windower Tidbits
-
-* hit insert to bring up windower console
-
-## WinControl
-Move the screen over to another monitor!  (These are examples for different monitor configurations I've used - yours may differ)
-
-* 4k resolution, far left screen
-`wincontrol move -3840 0`
-
-* 2k resolution, far left screen
-`wincontrol move -2560 0`
-
-* ultrawide 1440, bottom right screen
-`wincontrol move 1520 320`
-
-## High DPI resolution fix
-Sometimes when you load Windower on a high DPI (4k) monitor, the FFXI window will be massively oversized due to the resolution scaling setting in Windows.
-
-To resolve this, locate the following files:
-
-`../SquareEnix/FINAL FANTASY XI/polboot.exe`
-`../SquareEnix/PlayOnlineViewer/pol.exe`
-
-For each file, open `Properties -> Compatibility -> Change High DPI Settings` and enable the option to `Override high DPI scaling behavior. Scaling performed by "Application"`
-
-## Graphical Crash Fixes
-Crashes are common on newer operating systems, since FFXI was built originally to target DirectX 8.  Mods are available to translate the DX8 calls into a modern API like DX9 or DX11.  
-See this link for more info:
-
-https://www.bg-wiki.com/bg/User:Sitara/GraphicsEnhancement#DirectX8_Proxies
-
-* **NOTE #1**  this doesn't seem to fix the crashes caused by a UAC prompt, or when a resolution change forces a display adapter reset (such as when plugging in a second monitor while the game window is open)
-
-If your game is crashing because of a UAC prompt, then the simple fix is to disable UAC..........
-
-* **NOTE #2** If your monitor has G-SYNC / Adaptive Sync, you should disable it, otherwise you may experience crashes due to display adapter resets
-
-## Crafting Automation
+### Crafting Automation
 Crafting in FFXI is slow as shit.  When you're faced with crafting a ton of the same items over and over again... well, it's just a dreadful task.  The Windower Add-On "craft" can help automate it, and relieve much of this pain.
 
 https://docs.windower.net/addons/craft/
@@ -213,17 +66,6 @@ With the most recent crafting command having been run via the 'craft' add-on, yo
 `//craft repeat 48`
 
 where '48' is the number of crafting attempts you wish to repeat.  Make sure you have enough items and inventory space!
-
-## GuildWork Login
-This is the "new" method for connecting your FFXI account to you FFXIAH.com profile. I'm not sure how effective it still is, according to the forums it's occasionally broken as fuck.
-
-* **NOTE:** This is confirmed completely broken as of April 2023 - there is no longer an acceptable way to update your FFXIAH.com profile.
-
-In game login:
-
-`/gw login <username> <password>`
-
-## Gameplay Tips
 
 ### Alexandrite Farming
 Do Salvage, specifically Arrapago Remnants II.  Essentially you unlock all your gear + stats, spawn the Dvergr on Floor 4, and battle the Bloodthirsty Dweorg as the final boss for a 100% drop rate on a Linen Coin Purse (1-99 alex).  See the [BGWiki article](https://www.bg-wiki.com/ffxi/Silver_Sea_Remnants_II) for more specific details.

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "permissions": {
+    "deny": [      
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git reset *)",
+      "Bash(git revert *)",
+      "Bash(git cherry-pick *)",
+      "Bash(git branch -d *)",
+      "Bash(git branch -D *)",
+      "Bash(git branch -m *)",
+      "Bash(git tag *)",
+      "Bash(git stash *)",
+      "Bash(git rm *)",
+      "Bash(git mv *)",
+      "Bash(git add *)",
+      "Bash(git restore *)",
+      "Bash(git switch *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(git remote add *)",
+      "Bash(git remote remove *)",
+      "Bash(git remote set-url *)",
+      "Bash(git submodule *)",
+      "Bash(git clean *)",
+      "Bash(git gc *)",
+      "Bash(git bisect start *)",
+      "Bash(git bisect good *)",
+      "Bash(git bisect bad *)"
+    ],
+    "allow": [
+      "Bash(node:*)",
+      "Bash(docker:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet tool:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(git blame *)",
+      "Bash(git ls-files *)",
+      "Bash(git ls-tree *)",
+      "Bash(git cat-file *)",
+      "Bash(git rev-parse *)",
+      "Bash(git branch *)",
+      "Bash(git remote -v *)",
+      "Bash(git remote get-url *)",
+      "Bash(git shortlog *)",
+      "Bash(git describe *)",
+      "Bash(git tag -l *)",
+      "Bash(git stash list *)",
+      "Bash(git reflog *)",
+      "Bash(git check-ignore *)"
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_DISABLE_GIT_COMMIT_COAUTHORSHIP": "1"
+  }
+}

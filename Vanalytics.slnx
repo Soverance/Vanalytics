@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Vanalytics.Api/Vanalytics.Api.csproj" />
+    <Project Path="src/Vanalytics.Core/Vanalytics.Core.csproj" />
+    <Project Path="src/Vanalytics.Data/Vanalytics.Data.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Vanalytics.Api.Tests/Vanalytics.Api.Tests.csproj" />
+    <Project Path="tests/Vanalytics.Data.Tests/Vanalytics.Data.Tests.csproj" />
+  </Folder>
+</Solution>

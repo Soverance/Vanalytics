@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Vanalytics.Core\Vanalytics.Core.csproj" />
+    <ProjectReference Include="..\Vanalytics.Data\Vanalytics.Data.csproj" />
+    <ProjectReference Include="..\lib\Common\src\Soverance.Auth\Soverance.Auth.csproj" />
+    <ProjectReference Include="..\lib\Common\src\Soverance.Data\Soverance.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.13.13" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

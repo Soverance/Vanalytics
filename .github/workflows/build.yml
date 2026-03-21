@@ -1,0 +1,28 @@
+# PR Build Check
+# Validates that the .NET project builds and tests pass.
+# Runs on pull requests targeting main so broken builds are caught before merge.
+
+name: Build Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET 10.0 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build Release configuration
+        run: dotnet build Vanalytics.slnx --configuration Release
