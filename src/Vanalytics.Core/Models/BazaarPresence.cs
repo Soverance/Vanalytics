@@ -1,3 +1,5 @@
+using Soverance.Auth.Models;
+
 namespace Vanalytics.Core.Models;
 
 public class BazaarPresence

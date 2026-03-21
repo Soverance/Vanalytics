@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\lib\Common\src\Soverance.Auth\Soverance.Auth.csproj" />
+  </ItemGroup>
+
 </Project>

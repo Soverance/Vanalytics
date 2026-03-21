@@ -2,9 +2,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Soverance.Auth.DTOs;
+using Soverance.Auth.Models;
+using Soverance.Auth.Services;
 using Vanalytics.Api.Services;
-using Vanalytics.Core.DTOs.Auth;
-using Vanalytics.Core.Models;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Controllers;
@@ -38,7 +39,7 @@ public class AuthController : ControllerBase
             Id = Guid.NewGuid(),
             Email = request.Email,
             Username = request.Username,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            PasswordHash = PasswordHasher.HashPassword(request.Password),
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -56,7 +57,7 @@ public class AuthController : ControllerBase
         if (user is null || user.PasswordHash is null)
             return Unauthorized(new { message = "Invalid credentials" });
 
-        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (!PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
             return Unauthorized(new { message = "Invalid credentials" });
 
         return Ok(await GenerateAuthResponseAsync(user));

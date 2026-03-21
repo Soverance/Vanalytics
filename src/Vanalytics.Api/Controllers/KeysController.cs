@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Soverance.Auth.Services;
 using Vanalytics.Core.DTOs.Keys;
 using Vanalytics.Data;
 
@@ -29,7 +30,7 @@ public class KeysController : ControllerBase
         // Generate a random key, return it to the user, but store only the hash.
         // The plaintext key is only shown once — on generation.
         var rawKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-        user.ApiKey = BCrypt.Net.BCrypt.HashPassword(rawKey);
+        user.ApiKey = PasswordHasher.HashPassword(rawKey);
         user.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
 

@@ -8,7 +8,7 @@ public class ItemImageDownloader : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<ItemImageDownloader> _logger;
-    private readonly string _imageBasePath;
+    private readonly IItemImageStore _imageStore;
 
     private const string IconUrlTemplate = "https://static.ffxiah.com/images/icon/{0}.png";
     private const int MaxConcurrentDownloads = 5;
@@ -18,17 +18,17 @@ public class ItemImageDownloader : BackgroundService
         IServiceScopeFactory scopeFactory,
         IHttpClientFactory httpClientFactory,
         ILogger<ItemImageDownloader> logger,
-        IConfiguration config)
+        IItemImageStore imageStore)
     {
         _scopeFactory = scopeFactory;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
-        _imageBasePath = config["ItemImages:BasePath"] ?? Path.Combine(AppContext.BaseDirectory, "item-images");
+        _imageStore = imageStore;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Wait for seeding to complete — check periodically
+        // Wait for seeding to complete
         while (!stoppingToken.IsCancellationRequested)
         {
             using var checkScope = _scopeFactory.CreateScope();
@@ -46,10 +46,14 @@ public class ItemImageDownloader : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
 
-        var itemsNeedingIcons = await db.GameItems
-            .Where(i => i.IconPath == null)
+        var allItems = await db.GameItems
             .Select(i => i.ItemId)
             .ToListAsync(ct);
+
+        // Check which icons actually exist in the store (local disk or blob)
+        var itemsNeedingIcons = allItems
+            .Where(id => !_imageStore.IconExists(id))
+            .ToList();
 
         if (itemsNeedingIcons.Count == 0)
         {
@@ -58,9 +62,6 @@ public class ItemImageDownloader : BackgroundService
         }
 
         _logger.LogInformation("Downloading icons for {Count} items", itemsNeedingIcons.Count);
-
-        var iconsDir = Path.Combine(_imageBasePath, "icons");
-        Directory.CreateDirectory(iconsDir);
 
         var client = _httpClientFactory.CreateClient();
         client.Timeout = TimeSpan.FromSeconds(10);
@@ -77,8 +78,6 @@ public class ItemImageDownloader : BackgroundService
                 await Task.Delay(DelayBetweenRequests, ct);
 
                 var url = string.Format(IconUrlTemplate, itemId);
-                var filePath = Path.Combine(iconsDir, $"{itemId}.png");
-                var relativePath = $"icons/{itemId}.png";
 
                 try
                 {
@@ -86,13 +85,13 @@ public class ItemImageDownloader : BackgroundService
                     if (response.IsSuccessStatusCode)
                     {
                         var bytes = await response.Content.ReadAsByteArrayAsync(ct);
-                        await File.WriteAllBytesAsync(filePath, bytes, ct);
+                        var iconPath = await _imageStore.SaveIconAsync(itemId, bytes, ct);
 
                         using var updateScope = _scopeFactory.CreateScope();
                         var updateDb = updateScope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
                         await updateDb.GameItems
                             .Where(i => i.ItemId == itemId)
-                            .ExecuteUpdateAsync(s => s.SetProperty(i => i.IconPath, relativePath), ct);
+                            .ExecuteUpdateAsync(s => s.SetProperty(i => i.IconPath, iconPath), ct);
 
                         Interlocked.Increment(ref downloaded);
                     }

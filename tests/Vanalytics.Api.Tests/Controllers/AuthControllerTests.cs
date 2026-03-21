@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
-using Vanalytics.Core.DTOs.Auth;
+using Soverance.Auth.DTOs;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Tests.Controllers;

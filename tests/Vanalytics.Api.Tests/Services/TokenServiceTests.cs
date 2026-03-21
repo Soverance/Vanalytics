@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
-using Vanalytics.Api.Services;
-using Vanalytics.Core.Models;
+using Soverance.Auth.Models;
+using Soverance.Auth.Services;
 
 namespace Vanalytics.Api.Tests.Services;
 

@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Soverance.Auth.Models;
 using Vanalytics.Core.DTOs.Admin;
-using Vanalytics.Core.Enums;
+using Vanalytics.Core.Models;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Controllers;
@@ -32,7 +33,7 @@ public class AdminUsersController : ControllerBase
                 IsSystemAccount = u.IsSystemAccount,
                 HasApiKey = u.ApiKey != null,
                 OAuthProvider = u.OAuthProvider,
-                CharacterCount = u.Characters.Count,
+                CharacterCount = _db.Set<Character>().Count(c => c.UserId == u.Id),
                 CreatedAt = u.CreatedAt,
                 UpdatedAt = u.UpdatedAt,
             })
@@ -56,7 +57,7 @@ public class AdminUsersController : ControllerBase
                 IsSystemAccount = u.IsSystemAccount,
                 HasApiKey = u.ApiKey != null,
                 OAuthProvider = u.OAuthProvider,
-                CharacterCount = u.Characters.Count,
+                CharacterCount = _db.Set<Character>().Count(c => c.UserId == u.Id),
                 CreatedAt = u.CreatedAt,
                 UpdatedAt = u.UpdatedAt,
             })

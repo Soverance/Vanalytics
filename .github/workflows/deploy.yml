@@ -6,7 +6,8 @@
 # to Azure Container Apps.
 #
 # Secrets: ACR_USERNAME, ACR_PASSWORD, AZURE_CREDENTIALS,
-#          SQL_CONNECTION_STRING, ADMIN_PASSWORD, JWT_SECRET
+#          SQL_CONNECTION_STRING, ADMIN_PASSWORD, JWT_SECRET,
+#          AZURE_STORAGE_CONNECTION_STRING
 # Variables: AZURE_RESOURCE_GROUP, ADMIN_EMAIL, ADMIN_USERNAME,
 #            JWT_ISSUER, JWT_AUDIENCE,
 #            AZURE_AD_CLIENT_ID, AZURE_AD_DOMAIN, AZURE_AD_TENANT_ID
@@ -29,6 +30,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: recursive
 
       - name: Determine version
         id: version
@@ -81,7 +83,8 @@ jobs:
             --secrets \
               sql-connection-string="${{ secrets.SQL_CONNECTION_STRING }}" \
               admin-password="${{ secrets.ADMIN_PASSWORD }}" \
-              jwt-secret="${{ secrets.JWT_SECRET }}"
+              jwt-secret="${{ secrets.JWT_SECRET }}" \
+              azure-storage-connection-string="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}"
 
       - name: Deploy to Container App
         run: |
@@ -103,7 +106,8 @@ jobs:
               DISABLE_HTTPS_REDIRECT=true \
               "Authentication__AzureAd__ClientId=${{ vars.AZURE_AD_CLIENT_ID }}" \
               "Authentication__AzureAd__Domain=${{ vars.AZURE_AD_DOMAIN }}" \
-              "Authentication__AzureAd__TenantId=${{ vars.AZURE_AD_TENANT_ID }}"
+              "Authentication__AzureAd__TenantId=${{ vars.AZURE_AD_TENANT_ID }}" \
+              AzureStorage__ConnectionString=secretref:azure-storage-connection-string
 
   release:
     name: Release

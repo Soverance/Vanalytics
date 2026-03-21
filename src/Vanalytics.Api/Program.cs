@@ -1,47 +1,20 @@
-using System.Text;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
-using Vanalytics.Api.Auth;
+using Soverance.Auth.Extensions;
+using Soverance.Auth.Services;
+using Soverance.Data.Extensions;
 using Vanalytics.Api.Services;
 using Vanalytics.Data;
-using Vanalytics.Data.Seeding;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Database
-builder.Services.AddDbContext<VanalyticsDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorNumbersToAdd: null)));
+builder.Services.AddSoveranceSqlServer<VanalyticsDbContext>(builder.Configuration);
 
 // Authentication
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!))
-        };
-    })
-    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthHandler>("ApiKey", null);
+builder.Services.AddSoveranceJwtAuth(builder.Configuration)
+    .AddSoveranceApiKeyAuth();
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -58,7 +31,7 @@ builder.Services.AddOpenApi("v1", options =>
             Description = "FFXI character tracking and game data API"
         };
         document.Components ??= new OpenApiComponents();
-        document.Components.SecuritySchemes["BearerAuth"] = new OpenApiSecurityScheme
+        document.Components!.SecuritySchemes["BearerAuth"] = new OpenApiSecurityScheme
         {
             Type = SecuritySchemeType.Http,
             Scheme = "bearer",
@@ -77,10 +50,15 @@ builder.Services.AddOpenApi("v1", options =>
 });
 
 // Services
-builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<OAuthService>();
 builder.Services.AddSingleton<RateLimiter>();
 builder.Services.AddSingleton<EconomyRateLimiter>();
+
+// Item image storage: Azure Blob in production, local filesystem in dev
+if (!string.IsNullOrEmpty(builder.Configuration["AzureStorage:ConnectionString"]))
+    builder.Services.AddSingleton<IItemImageStore, AzureBlobItemImageStore>();
+else
+    builder.Services.AddSingleton<IItemImageStore, LocalItemImageStore>();
 builder.Services.AddHttpClient("PlayOnline", client =>
 {
     client.Timeout = TimeSpan.FromSeconds(15);
@@ -108,7 +86,7 @@ using (var scope = app.Services.CreateScope())
         !string.IsNullOrEmpty(adminUsername) &&
         !string.IsNullOrEmpty(adminPassword))
     {
-        var hash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
+        var hash = PasswordHasher.HashPassword(adminPassword);
         await AdminSeeder.SeedAsync(db, adminEmail, adminUsername, hash, logger);
     }
 
@@ -126,6 +104,18 @@ if (!app.Environment.IsDevelopment() &&
     !string.Equals(app.Configuration["DISABLE_HTTPS_REDIRECT"], "true", StringComparison.OrdinalIgnoreCase))
 {
     app.UseHttpsRedirection();
+}
+
+// Serve item images as static files
+var itemImagesPath = app.Configuration["ItemImages:BasePath"]
+    ?? Path.Combine(AppContext.BaseDirectory, "item-images");
+Directory.CreateDirectory(itemImagesPath);
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(itemImagesPath),
+        RequestPath = "/item-images"
+    });
 }
 
 app.UseAuthentication();

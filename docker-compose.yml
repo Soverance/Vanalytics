@@ -31,6 +31,9 @@ services:
       Jwt__Audience: "Vanalytics"
       Jwt__AccessTokenExpirationMinutes: "15"
       Jwt__RefreshTokenExpirationDays: "7"
+      ItemImages__BasePath: "/app/item-images"
+    volumes:
+      - itemimages:/app/item-images
     depends_on:
       db:
         condition: service_healthy
@@ -48,3 +51,4 @@ services:
 
 volumes:
   sqldata:
+  itemimages:

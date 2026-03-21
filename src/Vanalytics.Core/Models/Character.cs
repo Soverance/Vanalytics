@@ -1,3 +1,4 @@
+using Soverance.Auth.Models;
 using Vanalytics.Core.Enums;
 
 namespace Vanalytics.Core.Models;

@@ -25,6 +25,8 @@
     <ProjectReference Include="..\..\src\Vanalytics.Api\Vanalytics.Api.csproj" />
     <ProjectReference Include="..\..\src\Vanalytics.Core\Vanalytics.Core.csproj" />
     <ProjectReference Include="..\..\src\Vanalytics.Data\Vanalytics.Data.csproj" />
+    <ProjectReference Include="..\..\src\lib\Common\src\Soverance.Auth\Soverance.Auth.csproj" />
+    <ProjectReference Include="..\..\src\lib\Common\src\Soverance.Data\Soverance.Data.csproj" />
   </ItemGroup>
 
 </Project>

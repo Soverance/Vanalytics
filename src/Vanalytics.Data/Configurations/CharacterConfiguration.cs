@@ -19,7 +19,7 @@ public class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .HasDefaultValue(Core.Enums.LicenseStatus.Unlicensed);
 
         builder.HasOne(c => c.User)
-            .WithMany(u => u.Characters)
+            .WithMany()
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }

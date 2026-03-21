@@ -12,6 +12,10 @@ export default defineConfig({
         target: process.env.API_PROXY_TARGET || 'http://localhost:5000',
         changeOrigin: true,
       },
+      '/item-images': {
+        target: process.env.API_PROXY_TARGET || 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
   },
 })
