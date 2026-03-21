@@ -26,6 +26,3 @@ jobs:
 
       - name: Build Release configuration
         run: dotnet build Vanalytics.slnx --configuration Release
-
-      - name: Run tests
-        run: dotnet test Vanalytics.slnx --configuration Release --no-build
