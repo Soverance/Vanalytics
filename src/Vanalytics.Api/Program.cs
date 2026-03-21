@@ -5,6 +5,7 @@ using Soverance.Auth.Extensions;
 using Soverance.Auth.Services;
 using Soverance.Data.Extensions;
 using Vanalytics.Api.Services;
+using Vanalytics.Api.Services.Sync;
 using Vanalytics.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,8 +64,12 @@ builder.Services.AddHttpClient("PlayOnline", client =>
 {
     client.Timeout = TimeSpan.FromSeconds(15);
 });
+// Sync providers (admin-triggered)
+builder.Services.AddSingleton<SyncOrchestrator>();
+builder.Services.AddKeyedSingleton<ISyncProvider, ItemSyncProvider>("items");
+builder.Services.AddKeyedSingleton<ISyncProvider, IconSyncProvider>("icons");
+
 builder.Services.AddHostedService<ServerStatusScraper>();
-builder.Services.AddHostedService<ItemImageDownloader>();
 builder.Services.AddHostedService<ItemDatabaseSyncJob>();
 builder.Services.AddHostedService<BazaarStalenessJob>();
 
@@ -90,12 +95,6 @@ using (var scope = app.Services.CreateScope())
         await AdminSeeder.SeedAsync(db, adminEmail, adminUsername, hash, logger);
     }
 
-    // Seed item database (skip in integration tests via config)
-    if (!string.Equals(app.Configuration["SKIP_ITEM_SEED"], "true", StringComparison.OrdinalIgnoreCase))
-    {
-        var httpFactory = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
-        await ItemDatabaseSeeder.SeedAsync(db, httpFactory, logger);
-    }
 }
 
 // HTTPS redirection in production (skipped when behind a reverse proxy
