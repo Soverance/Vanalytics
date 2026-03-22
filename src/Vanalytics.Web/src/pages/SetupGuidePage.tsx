@@ -53,20 +53,7 @@ export default function SetupGuidePage() {
           </p>
         </Step>
 
-        <Step number={2} title="Register Your Character">
-          <p>
-            Go to your{' '}
-            <AuthLink to="/characters" className="text-blue-400 hover:underline">
-              Characters
-            </AuthLink>{' '}
-            and add your character by entering your character name and server.
-          </p>
-          <p>
-            Your character must be registered in Vana'lytics before the addon can sync data for it.
-          </p>
-        </Step>
-
-        <Step number={3} title="Generate an API Key">
+        <Step number={2} title="Generate an API Key">
           <p>
             Go to your{' '}
             <AuthLink to="/profile?tab=apikeys" className="text-blue-400 hover:underline">
@@ -86,7 +73,7 @@ export default function SetupGuidePage() {
           )}
         </Step>
 
-        <Step number={4} title="Install the Vanalytics Addon">
+        <Step number={3} title="Install the Vanalytics Addon">
           <p>
             Download the addon and extract the <code className="text-blue-300 bg-gray-800 px-1.5 py-0.5 rounded">vanalytics</code> folder
             into your Windower addons directory:
@@ -104,7 +91,7 @@ export default function SetupGuidePage() {
           </a>
         </Step>
 
-        <Step number={5} title="Configure Your API Key">
+        <Step number={4} title="Configure Your API Key">
           <p>
             Open the settings file at:
           </p>
@@ -125,7 +112,7 @@ export default function SetupGuidePage() {
           </p>
         </Step>
 
-        <Step number={6} title="Load the Addon in Windower">
+        <Step number={5} title="Load the Addon in Windower">
           <p>
             Launch FFXI through Windower and log into your character. Then load the addon by typing
             this command in the game chat:
@@ -137,7 +124,7 @@ export default function SetupGuidePage() {
           </p>
         </Step>
 
-        <Step number={7} title="Verify the Sync">
+        <Step number={6} title="Verify the Sync">
           <p>
             Run a manual sync to verify everything is working:
           </p>
@@ -190,16 +177,6 @@ export default function SetupGuidePage() {
           <h3 className="text-lg font-semibold text-amber-400 mb-3">Troubleshooting</h3>
           <dl className="space-y-4 text-sm">
             <div>
-              <dt className="font-medium text-gray-300">Sync says "Character does not have an active license"</dt>
-              <dd className="text-gray-500 mt-1">
-                Your character needs an active license for automatic syncing. Check your{' '}
-                <AuthLink to="/profile?tab=licensing" className="text-blue-400 hover:underline">
-                  Licensing tab
-                </AuthLink>{' '}
-                for details.
-              </dd>
-            </div>
-            <div>
               <dt className="font-medium text-gray-300">Sync says "Invalid API key"</dt>
               <dd className="text-gray-500 mt-1">
                 Your API key may be incorrect or revoked. Generate a new one from your{' '}
@@ -222,16 +199,6 @@ export default function SetupGuidePage() {
                 The addon uses a synchronous HTTP request to send data, which may cause a
                 momentary freeze (less than a second) each time it syncs. This is normal and
                 only happens once every sync interval (default: 15 minutes).
-              </dd>
-            </div>
-            <div>
-              <dt className="font-medium text-gray-300">Character not found</dt>
-              <dd className="text-gray-500 mt-1">
-                Make sure your character is registered on the{' '}
-                <AuthLink to="/characters" className="text-blue-400 hover:underline">
-                  Characters
-                </AuthLink>{' '}
-                with the exact name and server that matches your in-game character.
               </dd>
             </div>
           </dl>

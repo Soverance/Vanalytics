@@ -33,7 +33,6 @@ export interface CharacterSummary {
   id: string
   name: string
   server: string
-  licenseStatus: string
   isPublic: boolean
   lastSyncAt: string | null
 }
@@ -42,7 +41,6 @@ export interface CharacterDetail {
   id: string
   name: string
   server: string
-  licenseStatus: string
   isPublic: boolean
   lastSyncAt: string | null
   jobs: JobEntry[]
@@ -66,15 +64,6 @@ export interface CraftingEntry {
   craft: string
   level: number
   rank: string
-}
-
-export interface CreateCharacterRequest {
-  name: string
-  server: string
-}
-
-export interface UpdateCharacterRequest {
-  isPublic: boolean
 }
 
 // API Keys

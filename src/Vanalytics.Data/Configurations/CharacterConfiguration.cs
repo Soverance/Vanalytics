@@ -13,10 +13,6 @@ public class CharacterConfiguration : IEntityTypeConfiguration<Character>
 
         builder.Property(c => c.Name).HasMaxLength(64).IsRequired();
         builder.Property(c => c.Server).HasMaxLength(64).IsRequired();
-        builder.Property(c => c.LicenseStatus)
-            .HasConversion<string>()
-            .HasMaxLength(32)
-            .HasDefaultValue(Core.Enums.LicenseStatus.Unlicensed);
 
         builder.HasOne(c => c.User)
             .WithMany()

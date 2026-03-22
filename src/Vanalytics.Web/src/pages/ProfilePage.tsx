@@ -5,11 +5,10 @@ import { api, ApiError } from '../api/client'
 import UserAvatar from '../components/UserAvatar'
 import type { ApiKeyResponse } from '../types/api'
 
-type Tab = 'session' | 'licensing' | 'apikeys'
+type Tab = 'session' | 'apikeys'
 
 const tabs: { id: Tab; label: string }[] = [
   { id: 'session', label: 'Session' },
-  { id: 'licensing', label: 'Licensing' },
   { id: 'apikeys', label: 'API Keys' },
 ]
 
@@ -221,20 +220,6 @@ export default function ProfilePage() {
             </button>
           </section>
         </div>
-      )}
-
-      {/* Licensing tab */}
-      {activeTab === 'licensing' && (
-        <section className="rounded-lg border border-gray-800 bg-gray-900 p-6">
-          <h2 className="text-lg font-semibold mb-4">Character Licensing</h2>
-          <p className="text-sm text-gray-400 mb-4">
-            Character licenses enable automatic syncing via the Windower addon.
-            Each character requires an active license for the addon to push data.
-          </p>
-          <p className="text-sm text-gray-500">
-            Licensing and payments will be available in a future update.
-          </p>
-        </section>
       )}
 
       {/* API Keys tab */}

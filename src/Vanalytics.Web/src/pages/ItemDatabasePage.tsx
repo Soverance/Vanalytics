@@ -37,6 +37,7 @@ export default function ItemDatabasePage() {
   const [job, setJob] = useState(searchParams.get('jobs') || '')
   const [skill, setSkill] = useState(searchParams.get('skill') || '')
   const [slots, setSlots] = useState(searchParams.get('slots') || '')
+  const [itemType, setItemType] = useState(searchParams.get('type') || '')
   const [minLevel, setMinLevel] = useState(searchParams.get('minLevel') || '')
   const [maxLevel, setMaxLevel] = useState(searchParams.get('maxLevel') || '')
   const [statFilters, setStatFilters] = useState<StatFilter[]>(() => parseStatFilters(searchParams))
@@ -45,15 +46,7 @@ export default function ItemDatabasePage() {
   const [viewMode, setViewMode] = useState<ViewMode>((searchParams.get('view') as ViewMode) || 'cards')
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1)
   const [result, setResult] = useState<ItemSearchResult | null>(null)
-  const [categories, setCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/items/categories')
-      .then((r) => r.ok ? r.json() : [])
-      .then(setCategories)
-      .catch(() => {})
-  }, [])
 
   // Sync state → URL (replace, not push, to avoid polluting history with every keystroke)
   const syncUrl = useCallback(() => {
@@ -63,6 +56,7 @@ export default function ItemDatabasePage() {
     if (job) params.set('jobs', job)
     if (skill) params.set('skill', skill)
     if (slots) params.set('slots', slots)
+    if (itemType) params.set('type', itemType)
     if (minLevel) params.set('minLevel', minLevel)
     if (maxLevel) params.set('maxLevel', maxLevel)
     if (sortBy && sortBy !== 'name') params.set('sortBy', sortBy)
@@ -73,12 +67,12 @@ export default function ItemDatabasePage() {
     }
     if (page > 1) params.set('page', page.toString())
     setSearchParams(params, { replace: true })
-  }, [query, category, job, skill, slots, minLevel, maxLevel, statFilters, sortBy, sortDir, viewMode, page, setSearchParams])
+  }, [query, category, job, skill, slots, itemType, minLevel, maxLevel, statFilters, sortBy, sortDir, viewMode, page, setSearchParams])
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1)
-  }, [query, category, job, skill, slots, minLevel, maxLevel, statFilters, sortBy, sortDir])
+  }, [query, category, job, skill, slots, itemType, minLevel, maxLevel, statFilters, sortBy, sortDir])
 
   // Fetch data and sync URL
   useEffect(() => {
@@ -90,6 +84,7 @@ export default function ItemDatabasePage() {
     if (job) params.set('jobs', job)
     if (skill) params.set('skill', skill)
     if (slots) params.set('slots', slots)
+    if (itemType) params.set('type', itemType)
     if (minLevel) params.set('minLevel', minLevel)
     if (maxLevel) params.set('maxLevel', maxLevel)
     if (sortBy && sortBy !== 'name') params.set('sortBy', sortBy)
@@ -109,7 +104,7 @@ export default function ItemDatabasePage() {
       .then(setResult)
       .catch(() => setResult(null))
       .finally(() => setLoading(false))
-  }, [query, category, job, skill, slots, minLevel, maxLevel, statFilters, sortBy, sortDir, page]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [query, category, job, skill, slots, itemType, minLevel, maxLevel, statFilters, sortBy, sortDir, page]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const totalPages = result ? Math.ceil(result.totalCount / result.pageSize) : 1
 
@@ -142,13 +137,14 @@ export default function ItemDatabasePage() {
       <div className="grid gap-4 lg:grid-cols-4 mb-6">
         <div className="lg:col-span-1 space-y-4">
           <CategoryTree
-            categories={categories}
             selectedCategory={category}
             selectedSkill={skill}
             selectedSlots={slots}
+            selectedType={itemType}
             onCategoryChange={setCategory}
             onSkillChange={setSkill}
             onSlotsChange={setSlots}
+            onTypeChange={setItemType}
           />
         </div>
 

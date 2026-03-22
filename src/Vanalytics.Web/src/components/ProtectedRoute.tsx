@@ -12,7 +12,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     )
   }
 
-  if (!user) return <Navigate to="/servers" replace />
+  if (!user) return <Navigate to="/" replace />
 
   return <>{children}</>
 }

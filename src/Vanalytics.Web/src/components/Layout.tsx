@@ -1,10 +1,10 @@
 import { useState, type ReactNode } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
 import LoginModal from './LoginModal'
-import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, LogIn, Clock } from 'lucide-react'
+import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock } from 'lucide-react'
 import { CompareProvider } from './compare/CompareContext'
 import CompareTray from './compare/CompareTray'
 import { SyncProvider } from '../context/SyncContext'
@@ -39,30 +39,7 @@ export default function Layout() {
 function LayoutInner() {
   const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { isOpen: loginOpen, open: openLogin, close: closeLogin } = useLoginModal()
-  const location = useLocation()
-
-  // Only the landing page and public profiles get no sidebar.
-  // Public profiles match /:server/:name but we must exclude known app routes
-  // like /items/:id, /characters/:id, /admin/*, /oauth/*
-  const knownPrefixes = ['/items/', '/characters/', '/admin/', '/oauth/']
-  const isPublicPage =
-    location.pathname === '/' ||
-    (!user && location.pathname.match(/^\/[^/]+\/[^/]+$/) && !knownPrefixes.some(p => location.pathname.startsWith(p)))
-
-  if (isPublicPage) {
-    return (
-      <SyncProvider>
-      <CompareProvider>
-      <div className="min-h-screen bg-gray-950 text-gray-100">
-        <main className="mx-auto max-w-6xl px-4 py-8">
-          <Outlet />
-        </main>
-      </div>
-      </CompareProvider>
-      </SyncProvider>
-    )
-  }
+  const { isOpen: loginOpen, close: closeLogin } = useLoginModal()
 
   return (
     <SyncProvider>
@@ -84,7 +61,7 @@ function LayoutInner() {
       >
         {/* Logo */}
         <div className="border-b border-gray-800 px-4 py-4">
-          <Link to="/servers" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
+          <Link to="/dashboard" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img
               src="/vanalytics-typography-horizontal-logo.png"
@@ -96,12 +73,8 @@ function LayoutInner() {
 
         {/* Nav links */}
         <nav className="flex-1 space-y-1 px-3 py-4" onClick={() => setSidebarOpen(false)}>
-          {user && (
-            <>
-              <SidebarLink to="/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} />
-              <SidebarLink to="/characters" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} />
-            </>
-          )}
+          <SidebarLink to="/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} />
+          <SidebarLink to="/characters" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} />
           <SidebarLink to="/servers" label="Server Status" icon={<Radio className="h-4 w-4 shrink-0" />} />
           <SidebarLink to="/items" label="Item Database" icon={<Package className="h-4 w-4 shrink-0" />} />
           <SidebarLink to="/bazaar" label="Bazaar Activity" icon={<Store className="h-4 w-4 shrink-0" />} />
@@ -120,34 +93,24 @@ function LayoutInner() {
           )}
         </nav>
 
-        {/* User profile or Sign In */}
-        {user ? (
-          <NavLink
-            to="/profile"
-            onClick={() => setSidebarOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 border-t border-gray-800 px-4 py-3 transition-colors ${
-                isActive
-                  ? 'bg-gray-800'
-                  : 'hover:bg-gray-800/50'
-              }`
-            }
-          >
-            <UserAvatar username={user.username} size="sm" />
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-200 truncate">{user.username}</p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
-            </div>
-          </NavLink>
-        ) : (
-          <button
-            onClick={() => { setSidebarOpen(false); openLogin() }}
-            className="flex items-center gap-3 border-t border-gray-800 px-4 py-3 text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-colors w-full"
-          >
-            <LogIn className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-medium">Sign In</span>
-          </button>
-        )}
+        {/* User profile */}
+        <NavLink
+          to="/profile"
+          onClick={() => setSidebarOpen(false)}
+          className={({ isActive }) =>
+            `flex items-center gap-3 border-t border-gray-800 px-4 py-3 transition-colors ${
+              isActive
+                ? 'bg-gray-800'
+                : 'hover:bg-gray-800/50'
+            }`
+          }
+        >
+          <UserAvatar username={user?.username} size="sm" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-200 truncate">{user?.username}</p>
+            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+          </div>
+        </NavLink>
       </aside>
 
       {/* Main content area */}
@@ -161,7 +124,7 @@ function LayoutInner() {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <Link to="/servers" className="flex items-center min-w-0">
+          <Link to="/dashboard" className="flex items-center min-w-0">
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img src="/vanalytics-typography-horizontal-logo.png" alt="Vana'lytics" className="min-w-0 max-w-[180px]" />
           </Link>

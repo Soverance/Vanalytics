@@ -27,6 +27,7 @@ public class ItemsController : ControllerBase
         [FromQuery] string? jobs = null,
         [FromQuery(Name = "stats")] string[]? stats = null,
         [FromQuery] string? slots = null,
+        [FromQuery] int? type = null,
         [FromQuery] string? flags = null,
         [FromQuery] string? sortBy = null,
         [FromQuery] string? sortDir = null,
@@ -46,6 +47,9 @@ public class ItemsController : ControllerBase
 
         if (skill.HasValue)
             query = query.Where(i => i.Skill == skill.Value);
+
+        if (type.HasValue)
+            query = query.Where(i => i.Type == type.Value);
 
         if (minLevel.HasValue)
             query = query.Where(i => i.Level >= minLevel.Value);

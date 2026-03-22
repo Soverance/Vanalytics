@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 using Soverance.Auth.DTOs;
 using Vanalytics.Core.DTOs.Characters;
+using Vanalytics.Core.DTOs.Keys;
+using Vanalytics.Core.DTOs.Sync;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Tests.Controllers;
@@ -52,19 +54,45 @@ public class ProfilesControllerTests : IAsyncLifetime
         await _container.DisposeAsync();
     }
 
+    /// <summary>
+    /// Registers a user, syncs a character (auto-creating it), then optionally makes it public.
+    /// Returns the JWT token and the created character summary.
+    /// </summary>
     private async Task<(string Token, CharacterSummaryResponse Character)> CreatePublicCharacterAsync(
         string email, string username, string charName, string server)
     {
+        // Register user
         var regResp = await _client.PostAsJsonAsync("/api/auth/register", new RegisterRequest
         { Email = email, Username = username, Password = "Password123!" });
         var auth = (await regResp.Content.ReadFromJsonAsync<AuthResponse>())!;
 
-        var createReq = new HttpRequestMessage(HttpMethod.Post, "/api/characters");
-        createReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
-        createReq.Content = JsonContent.Create(new CreateCharacterRequest { Name = charName, Server = server });
-        var createResp = await _client.SendAsync(createReq);
-        var character = (await createResp.Content.ReadFromJsonAsync<CharacterSummaryResponse>())!;
+        // Generate API key
+        var keyReq = new HttpRequestMessage(HttpMethod.Post, "/api/keys/generate");
+        keyReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        var keyResp = await _client.SendAsync(keyReq);
+        var apiKey = (await keyResp.Content.ReadFromJsonAsync<ApiKeyResponse>())!;
 
+        // Sync to auto-create character
+        var syncReq = new HttpRequestMessage(HttpMethod.Post, "/api/sync");
+        syncReq.Headers.Add("X-Api-Key", apiKey.ApiKey);
+        syncReq.Content = JsonContent.Create(new SyncRequest
+        {
+            CharacterName = charName,
+            Server = server,
+            ActiveJob = "WAR",
+            ActiveJobLevel = 75,
+            Jobs = [new SyncJobEntry { Job = "WAR", Level = 75 }]
+        });
+        await _client.SendAsync(syncReq);
+
+        // Get character
+        var listReq = new HttpRequestMessage(HttpMethod.Get, "/api/characters");
+        listReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        var listResp = await _client.SendAsync(listReq);
+        var chars = (await listResp.Content.ReadFromJsonAsync<List<CharacterSummaryResponse>>())!;
+        var character = chars.First(c => c.Name == charName);
+
+        // Make it public
         var updateReq = new HttpRequestMessage(HttpMethod.Put, $"/api/characters/{character.Id}");
         updateReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         updateReq.Content = JsonContent.Create(new UpdateCharacterRequest { IsPublic = true });
@@ -89,14 +117,28 @@ public class ProfilesControllerTests : IAsyncLifetime
     [Fact]
     public async Task GetPublicProfile_WhenPrivate_ReturnsNotFound()
     {
+        // Register user
         var regResp = await _client.PostAsJsonAsync("/api/auth/register", new RegisterRequest
         { Email = "prof2@test.com", Username = "prof2user", Password = "Password123!" });
         var auth = (await regResp.Content.ReadFromJsonAsync<AuthResponse>())!;
 
-        var createReq = new HttpRequestMessage(HttpMethod.Post, "/api/characters");
-        createReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
-        createReq.Content = JsonContent.Create(new CreateCharacterRequest { Name = "PrivChar", Server = "Asura" });
-        await _client.SendAsync(createReq);
+        // Generate API key
+        var keyReq = new HttpRequestMessage(HttpMethod.Post, "/api/keys/generate");
+        keyReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        var keyResp = await _client.SendAsync(keyReq);
+        var apiKey = (await keyResp.Content.ReadFromJsonAsync<ApiKeyResponse>())!;
+
+        // Sync to auto-create character (not made public)
+        var syncReq = new HttpRequestMessage(HttpMethod.Post, "/api/sync");
+        syncReq.Headers.Add("X-Api-Key", apiKey.ApiKey);
+        syncReq.Content = JsonContent.Create(new SyncRequest
+        {
+            CharacterName = "PrivChar",
+            Server = "Asura",
+            ActiveJob = "WAR",
+            ActiveJobLevel = 75
+        });
+        await _client.SendAsync(syncReq);
 
         var resp = await _client.GetAsync("/api/profiles/Asura/PrivChar");
 

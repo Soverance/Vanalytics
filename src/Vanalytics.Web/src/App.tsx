@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import OAuthCallback from './pages/OAuthCallback'
+import LandingPage from './pages/LandingPage'
 import DashboardPage from './pages/DashboardPage'
 import CharactersPage from './pages/CharactersPage'
 import CharacterDetailPage from './pages/CharacterDetailPage'
@@ -22,47 +23,29 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Public: landing page (no layout) */}
+          <Route path="/" element={<LandingPage />} />
+
+          {/* Public: shareable character profiles (no layout) */}
+          <Route path="/:server/:name" element={<PublicProfilePage />} />
+
+          {/* OAuth callback */}
+          <Route path="/oauth/callback" element={<OAuthCallback />} />
+
+          {/* All app pages: sidebar layout + auth required */}
           <Route element={<Layout />}>
-            {/* Root redirects to servers */}
-            <Route path="/" element={<Navigate to="/servers" replace />} />
-
-            {/* OAuth callback (handles code exchange, no UI) */}
-            <Route path="/oauth/callback" element={<OAuthCallback />} />
-
-            {/* Public pages (no auth required, sidebar visible) */}
-            <Route path="/servers" element={<ServerStatusPage />} />
-            <Route path="/items" element={<ItemDatabasePage />} />
-            <Route path="/items/:id" element={<ItemDetailPage />} />
-            <Route path="/bazaar" element={<BazaarActivityPage />} />
-            <Route path="/clock" element={<VanadielClockPage />} />
-            <Route path="/setup" element={<SetupGuidePage />} />
-            <Route path="/:server/:name" element={<PublicProfilePage />} />
-
-            {/* Protected pages (require login) */}
-            <Route
-              path="/dashboard"
-              element={<ProtectedRoute><DashboardPage /></ProtectedRoute>}
-            />
-            <Route
-              path="/characters"
-              element={<ProtectedRoute><CharactersPage /></ProtectedRoute>}
-            />
-            <Route
-              path="/characters/:id"
-              element={<ProtectedRoute><CharacterDetailPage /></ProtectedRoute>}
-            />
-            <Route
-              path="/profile"
-              element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
-            />
-            <Route
-              path="/admin/users"
-              element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>}
-            />
-            <Route
-              path="/admin/data"
-              element={<ProtectedRoute><AdminItemsPage /></ProtectedRoute>}
-            />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/characters" element={<ProtectedRoute><CharactersPage /></ProtectedRoute>} />
+            <Route path="/characters/:id" element={<ProtectedRoute><CharacterDetailPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/servers" element={<ProtectedRoute><ServerStatusPage /></ProtectedRoute>} />
+            <Route path="/items" element={<ProtectedRoute><ItemDatabasePage /></ProtectedRoute>} />
+            <Route path="/items/:id" element={<ProtectedRoute><ItemDetailPage /></ProtectedRoute>} />
+            <Route path="/bazaar" element={<ProtectedRoute><BazaarActivityPage /></ProtectedRoute>} />
+            <Route path="/clock" element={<ProtectedRoute><VanadielClockPage /></ProtectedRoute>} />
+            <Route path="/setup" element={<ProtectedRoute><SetupGuidePage /></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
+            <Route path="/admin/data" element={<ProtectedRoute><AdminItemsPage /></ProtectedRoute>} />
           </Route>
         </Routes>
       </AuthProvider>

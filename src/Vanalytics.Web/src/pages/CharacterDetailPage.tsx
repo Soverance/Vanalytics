@@ -30,15 +30,6 @@ export default function CharacterDetailPage() {
       <div className="flex items-baseline gap-3 mb-6">
         <h1 className="text-2xl font-bold">{character.name}</h1>
         <span className="text-gray-400">{character.server}</span>
-        <span
-          className={`rounded px-2 py-0.5 text-xs font-medium ${
-            character.licenseStatus === 'Active'
-              ? 'bg-green-900/50 text-green-400'
-              : 'bg-gray-800 text-gray-500'
-          }`}
-        >
-          {character.licenseStatus}
-        </span>
       </div>
 
       {character.lastSyncAt && (

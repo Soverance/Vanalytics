@@ -34,22 +34,44 @@ public class SyncController : ControllerBase
         if (!_rateLimiter.IsAllowed(apiKey))
             return StatusCode(429, new { message = "Rate limit exceeded. Max 20 requests per hour." });
 
-        // Find character (without loading children — we'll delete them via ExecuteDelete)
+        // Find or create character
         var character = await _db.Characters
             .FirstOrDefaultAsync(c => c.Name == request.CharacterName && c.Server == request.Server);
 
         if (character is null)
-            return NotFound(new { message = $"Character '{request.CharacterName}' on '{request.Server}' not found" });
+        {
+            character = new Character
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Name = request.CharacterName,
+                Server = request.Server,
+                IsPublic = false,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+            _db.Characters.Add(character);
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Unique constraint race condition — re-read
+                _db.Entry(character).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+                character = await _db.Characters
+                    .FirstOrDefaultAsync(c => c.Name == request.CharacterName && c.Server == request.Server);
+                if (character is null)
+                    return StatusCode(500, new { message = "Failed to create character" });
+            }
+        }
 
         // Verify ownership
         if (character.UserId != userId)
             return StatusCode(403, new { message = "Character is not owned by this account" });
 
-        // Check license
-        if (character.LicenseStatus != LicenseStatus.Active)
-            return StatusCode(403, new { message = "Character does not have an active license" });
-
-        // Full state replacement: bulk-delete existing child rows directly in the database
+        // Full state replacement
         await _db.CharacterJobs.Where(j => j.CharacterId == character.Id).ExecuteDeleteAsync();
         await _db.EquippedGear.Where(g => g.CharacterId == character.Id).ExecuteDeleteAsync();
         await _db.CraftingSkills.Where(s => s.CharacterId == character.Id).ExecuteDeleteAsync();

@@ -31,45 +31,12 @@ public class CharactersController : ControllerBase
                 Id = c.Id,
                 Name = c.Name,
                 Server = c.Server,
-                LicenseStatus = c.LicenseStatus.ToString(),
                 IsPublic = c.IsPublic,
                 LastSyncAt = c.LastSyncAt
             })
             .ToListAsync();
 
         return Ok(characters);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateCharacterRequest request)
-    {
-        var userId = GetUserId();
-
-        if (await _db.Characters.AnyAsync(c => c.Name == request.Name && c.Server == request.Server))
-            return Conflict(new { message = "Character already exists on this server" });
-
-        var character = new Character
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            Name = request.Name,
-            Server = request.Server,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
-
-        _db.Characters.Add(character);
-        await _db.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(Get), new { id = character.Id }, new CharacterSummaryResponse
-        {
-            Id = character.Id,
-            Name = character.Name,
-            Server = character.Server,
-            LicenseStatus = character.LicenseStatus.ToString(),
-            IsPublic = character.IsPublic,
-            LastSyncAt = character.LastSyncAt
-        });
     }
 
     [HttpGet("{id:guid}")]
@@ -106,7 +73,6 @@ public class CharactersController : ControllerBase
             Id = character.Id,
             Name = character.Name,
             Server = character.Server,
-            LicenseStatus = character.LicenseStatus.ToString(),
             IsPublic = character.IsPublic,
             LastSyncAt = character.LastSyncAt
         });
@@ -135,7 +101,6 @@ public class CharactersController : ControllerBase
         Id = c.Id,
         Name = c.Name,
         Server = c.Server,
-        LicenseStatus = c.LicenseStatus.ToString(),
         IsPublic = c.IsPublic,
         LastSyncAt = c.LastSyncAt,
         Jobs = c.Jobs.Select(j => new JobEntry

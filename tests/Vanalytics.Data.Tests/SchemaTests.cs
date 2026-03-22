@@ -48,7 +48,6 @@ public class SchemaTests : IAsyncLifetime
             UserId = user.Id,
             Name = "Soverance",
             Server = "Asura",
-            LicenseStatus = LicenseStatus.Active,
             IsPublic = true,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow

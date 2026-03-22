@@ -1,6 +1,6 @@
 // src/Vanalytics.Web/src/pages/ItemDetailPage.tsx
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import type { GameItemDetail, PriceHistoryResponse, CrossServerResponse, GameServer, BazaarListingItem } from '../types/api'
 import ItemStatsTable from '../components/economy/ItemStatsTable'
 import PriceHistoryChart from '../components/economy/PriceHistoryChart'
@@ -13,6 +13,7 @@ import ItemPreviewBox from '../components/economy/ItemPreviewBox'
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [item, setItem] = useState<GameItemDetail | null>(null)
   const [prices, setPrices] = useState<PriceHistoryResponse | null>(null)
   const [crossServer, setCrossServer] = useState<CrossServerResponse | null>(null)
@@ -77,9 +78,9 @@ export default function ItemDetailPage() {
 
   return (
     <div>
-      <Link to="/items" className="text-sm text-blue-400 hover:underline mb-4 inline-block">
+      <button onClick={() => navigate(-1)} className="text-sm text-blue-400 hover:underline mb-4 inline-block">
         &larr; Back to Item Database
-      </Link>
+      </button>
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-8">
