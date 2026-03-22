@@ -147,6 +147,20 @@ export default function ItemPreviewBox({ item }: { item: GameItemDetail }) {
 
       {/* Clear floats */}
       <div style={{ clear: 'both' }} />
+
+      {/* Item Level — bottom right, matching in-game appearance */}
+      {item.itemLevel != null && (
+        <div style={{
+          textAlign: 'right',
+          padding: '2px 8px 4px',
+          fontFamily: 'Verdana, Helvetica, sans-serif',
+          fontSize: 11,
+          letterSpacing: '0.1em',
+          color: '#c0c0d0',
+        }}>
+          &lt;Item Level: {item.itemLevel}&gt;
+        </div>
+      )}
     </div>
   )
 }

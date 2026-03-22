@@ -109,7 +109,7 @@ export default function SetupGuidePage() {
           </p>
           <CodeBlock>{`<settings>
     <global>
-        <ApiUrl>https://vanalytics.com</ApiUrl>
+        <ApiUrl>https://vanalytics.soverance.com</ApiUrl>
         <ApiKey>YOUR_API_KEY_HERE</ApiKey>
         <SyncInterval>15</SyncInterval>
     </global>

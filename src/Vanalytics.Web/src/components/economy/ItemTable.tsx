@@ -24,6 +24,7 @@ const BASE_COLUMNS: ColumnDef[] = [
   { key: 'name', label: 'Name' },
   { key: 'category', label: 'Category' },
   { key: 'level', label: 'Lv', statKey: 'level' },
+  { key: 'itemLevel', label: 'iLv', statKey: 'itemLevel' },
 ]
 
 const ALL_STAT_COLUMNS: ColumnDef[] = [

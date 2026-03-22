@@ -97,6 +97,7 @@ export default function ItemDetailPage() {
           <div className="flex items-center gap-2 mt-1">
             <span className="rounded bg-gray-800 px-2 py-0.5 text-xs text-gray-400">{item.category}</span>
             {item.level && <span className="text-xs text-gray-500">Lv.{item.level}</span>}
+            {item.itemLevel != null && <span className="text-xs text-blue-400">iLv.{item.itemLevel}</span>}
             {item.isRare && <span className="text-xs text-amber-500">Rare</span>}
             {item.isExclusive && <span className="text-xs text-red-400">Ex</span>}
             {!item.isNoAuction && <span className="text-xs text-green-400">AH</span>}
@@ -116,7 +117,7 @@ export default function ItemDetailPage() {
                 <button
                   onClick={() => addItem({
                     itemId: item.itemId, name: item.name, category: item.category,
-                    level: item.level, skill: item.skill, stackSize: item.stackSize,
+                    level: item.level, itemLevel: item.itemLevel, skill: item.skill, stackSize: item.stackSize,
                     iconPath: item.iconPath, isRare: item.isRare, isExclusive: item.isExclusive,
                     isNoAuction: item.isNoAuction,
                     damage: item.damage, delay: item.delay, def: item.def,

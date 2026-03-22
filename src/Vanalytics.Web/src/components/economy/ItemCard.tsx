@@ -34,6 +34,7 @@ export default function ItemCard({ item }: { item: GameItemSummary }) {
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <span>{item.category}</span>
             {item.level && <span>Lv.{item.level}</span>}
+            {item.itemLevel != null && <span className="text-blue-400">iLv.{item.itemLevel}</span>}
             {item.isRare && <span className="text-amber-500">Rare</span>}
             {item.isExclusive && <span className="text-red-400">Ex</span>}
           </div>

@@ -17,6 +17,7 @@ public class GameItem
     public int? Races { get; set; }
     public int? Slots { get; set; }
     public int? Skill { get; set; }
+    public int? ItemLevel { get; set; }
     public int? Damage { get; set; }
     public int? Delay { get; set; }
     public int? DEF { get; set; }

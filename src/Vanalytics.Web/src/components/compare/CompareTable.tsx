@@ -63,7 +63,14 @@ export default function CompareTable({ items }: Props) {
                   ) : (
                     <div className="h-6 w-6 rounded bg-gray-700 shrink-0" />
                   )}
-                  <span className="truncate max-w-[120px]">{item.name}</span>
+                  <div>
+                    <span className="truncate max-w-[120px] block">{item.name}</span>
+                    <span className="text-[10px] text-gray-500 font-normal">
+                      {item.category}
+                      {item.level ? ` Lv.${item.level}` : ''}
+                      {item.itemLevel != null ? ` iLv.${item.itemLevel}` : ''}
+                    </span>
+                  </div>
                 </div>
               </th>
             ))}

@@ -28,6 +28,7 @@ public static class LuaResourceParser
                 Races = GetIntOrNull(fields, "races"),
                 Slots = GetIntOrNull(fields, "slots"),
                 Skill = GetIntOrNull(fields, "skill"),
+                ItemLevel = GetIntOrNull(fields, "item_level"),
                 Damage = GetIntOrNull(fields, "damage"),
                 Delay = GetIntOrNull(fields, "delay"),
             };

@@ -126,6 +126,7 @@ export interface GameItemSummary {
   name: string
   category: string
   level: number | null
+  itemLevel: number | null
   skill: number | null
   stackSize: number
   iconPath: string | null
@@ -173,6 +174,7 @@ export interface GameItemDetail {
   flags: number
   stackSize: number
   level: number | null
+  itemLevel: number | null
   jobs: number | null
   races: number | null
   slots: number | null

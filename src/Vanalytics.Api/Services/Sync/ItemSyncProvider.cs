@@ -74,7 +74,7 @@ public class ItemSyncProvider : ISyncProvider
         var existingHashes = await db.GameItems
             .AsNoTracking()
             .Select(i => new { i.ItemId, i.Name, i.Category, i.Type, i.Flags, i.StackSize,
-                i.Level, i.Jobs, i.Races, i.Slots, i.Skill,
+                i.Level, i.Jobs, i.Races, i.Slots, i.Skill, i.ItemLevel,
                 i.Damage, i.Delay, i.DEF, i.HP, i.MP,
                 i.STR, i.DEX, i.VIT, i.AGI, i.INT, i.MND, i.CHR,
                 i.Accuracy, i.Attack, i.RangedAccuracy, i.RangedAttack,
@@ -85,7 +85,7 @@ public class ItemSyncProvider : ISyncProvider
             .ToDictionaryAsync(
                 i => i.ItemId,
                 i => ComputeHash(i.Name, i.Category, i.Type, i.Flags, i.StackSize,
-                    i.Level, i.Jobs, i.Races, i.Slots, i.Skill,
+                    i.Level, i.Jobs, i.Races, i.Slots, i.Skill, i.ItemLevel,
                     i.Damage, i.Delay, i.DEF, i.HP, i.MP,
                     i.STR, i.DEX, i.VIT, i.AGI, i.INT, i.MND, i.CHR,
                     i.Accuracy, i.Attack, i.RangedAccuracy, i.RangedAttack,
@@ -174,6 +174,7 @@ public class ItemSyncProvider : ISyncProvider
                             .SetProperty(i => i.Races, item.Races)
                             .SetProperty(i => i.Slots, item.Slots)
                             .SetProperty(i => i.Skill, item.Skill)
+                            .SetProperty(i => i.ItemLevel, item.ItemLevel)
                             .SetProperty(i => i.Damage, item.Damage)
                             .SetProperty(i => i.Delay, item.Delay)
                             .SetProperty(i => i.DEF, item.DEF)
@@ -242,7 +243,7 @@ public class ItemSyncProvider : ISyncProvider
     private static string ComputeItemHash(GameItem item)
     {
         return ComputeHash(item.Name, item.Category, item.Type, item.Flags, item.StackSize,
-            item.Level, item.Jobs, item.Races, item.Slots, item.Skill,
+            item.Level, item.Jobs, item.Races, item.Slots, item.Skill, item.ItemLevel,
             item.Damage, item.Delay, item.DEF, item.HP, item.MP,
             item.STR, item.DEX, item.VIT, item.AGI, item.INT, item.MND, item.CHR,
             item.Accuracy, item.Attack, item.RangedAccuracy, item.RangedAttack,

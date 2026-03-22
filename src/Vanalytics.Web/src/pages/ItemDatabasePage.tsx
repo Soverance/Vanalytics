@@ -86,6 +86,7 @@ export default function ItemDatabasePage() {
   const sortOptions: { value: string; label: string }[] = [
     { value: 'name', label: 'Name' },
     { value: 'level', label: 'Level' },
+    { value: 'itemLevel', label: 'Item Level' },
     ...statFilters
       .filter(sf => sf.min || sf.max)
       .map(sf => ({ value: sf.stat, label: sf.stat })),

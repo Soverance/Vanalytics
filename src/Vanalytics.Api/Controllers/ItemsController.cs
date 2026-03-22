@@ -112,6 +112,10 @@ public class ItemsController : ControllerBase
         {
             query = desc ? query.OrderByDescending(i => i.Level) : query.OrderBy(i => i.Level);
         }
+        else if (!string.IsNullOrEmpty(sortBy) && string.Equals(sortBy, "itemLevel", StringComparison.OrdinalIgnoreCase))
+        {
+            query = desc ? query.OrderByDescending(i => i.ItemLevel) : query.OrderBy(i => i.ItemLevel);
+        }
         else if (!string.IsNullOrEmpty(sortBy) && StatExpressions.TryGetValue(sortBy, out var sortExpr))
         {
             // Sort by a stat column — nulls sort last
@@ -134,6 +138,7 @@ public class ItemsController : ControllerBase
                 i.Name,
                 i.Category,
                 i.Level,
+                i.ItemLevel,
                 i.Skill,
                 i.StackSize,
                 i.IconPath,
@@ -175,6 +180,7 @@ public class ItemsController : ControllerBase
             item.Flags,
             item.StackSize,
             item.Level,
+            item.ItemLevel,
             item.Jobs,
             item.Races,
             item.Slots,
