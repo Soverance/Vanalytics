@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
 import LoginModal from './LoginModal'
 import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, LogIn, Clock } from 'lucide-react'
@@ -28,23 +29,38 @@ function SidebarLink({ to, label, icon }: { to: string; label: string; icon: Rea
 }
 
 export default function Layout() {
+  return (
+    <LoginModalProvider>
+      <LayoutInner />
+    </LoginModalProvider>
+  )
+}
+
+function LayoutInner() {
   const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [loginOpen, setLoginOpen] = useState(false)
+  const { isOpen: loginOpen, open: openLogin, close: closeLogin } = useLoginModal()
   const location = useLocation()
 
-  // Only the landing page and public profiles get no sidebar
+  // Only the landing page and public profiles get no sidebar.
+  // Public profiles match /:server/:name but we must exclude known app routes
+  // like /items/:id, /characters/:id, /admin/*, /oauth/*
+  const knownPrefixes = ['/items/', '/characters/', '/admin/', '/oauth/']
   const isPublicPage =
     location.pathname === '/' ||
-    (!user && location.pathname.match(/^\/[^/]+\/[^/]+$/))
+    (!user && location.pathname.match(/^\/[^/]+\/[^/]+$/) && !knownPrefixes.some(p => location.pathname.startsWith(p)))
 
   if (isPublicPage) {
     return (
+      <SyncProvider>
+      <CompareProvider>
       <div className="min-h-screen bg-gray-950 text-gray-100">
         <main className="mx-auto max-w-6xl px-4 py-8">
           <Outlet />
         </main>
       </div>
+      </CompareProvider>
+      </SyncProvider>
     )
   }
 
@@ -125,7 +141,7 @@ export default function Layout() {
           </NavLink>
         ) : (
           <button
-            onClick={() => { setSidebarOpen(false); setLoginOpen(true) }}
+            onClick={() => { setSidebarOpen(false); openLogin() }}
             className="flex items-center gap-3 border-t border-gray-800 px-4 py-3 text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-colors w-full"
           >
             <LogIn className="h-5 w-5 shrink-0" />
@@ -160,7 +176,7 @@ export default function Layout() {
 
     </div>
     <CompareTray />
-    {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
+    {loginOpen && <LoginModal onClose={closeLogin} />}
     </CompareProvider>
     </SyncProvider>
   )

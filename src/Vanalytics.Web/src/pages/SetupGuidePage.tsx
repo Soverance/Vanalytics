@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Download } from 'lucide-react'
+import AuthLink from '../components/AuthLink'
 
 function Step({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {
   return (
@@ -56,10 +56,10 @@ export default function SetupGuidePage() {
         <Step number={2} title="Register Your Character">
           <p>
             Go to your{' '}
-            <Link to="/characters" className="text-blue-400 hover:underline">
+            <AuthLink to="/characters" className="text-blue-400 hover:underline">
               Characters
-            </Link>
-            {' '}and add your character by entering your character name and server.
+            </AuthLink>{' '}
+            and add your character by entering your character name and server.
           </p>
           <p>
             Your character must be registered in Vana'lytics before the addon can sync data for it.
@@ -69,9 +69,9 @@ export default function SetupGuidePage() {
         <Step number={3} title="Generate an API Key">
           <p>
             Go to your{' '}
-            <Link to="/profile" className="text-blue-400 hover:underline">
+            <AuthLink to="/profile?tab=apikeys" className="text-blue-400 hover:underline">
               Profile &gt; API Keys
-            </Link>
+            </AuthLink>
             {' '}tab and click <strong className="text-gray-200">Generate Key</strong>.
           </p>
           <p>
@@ -193,9 +193,9 @@ export default function SetupGuidePage() {
               <dt className="font-medium text-gray-300">Sync says "Character does not have an active license"</dt>
               <dd className="text-gray-500 mt-1">
                 Your character needs an active license for automatic syncing. Check your{' '}
-                <Link to="/profile" className="text-blue-400 hover:underline">
+                <AuthLink to="/profile?tab=licensing" className="text-blue-400 hover:underline">
                   Licensing tab
-                </Link>{' '}
+                </AuthLink>{' '}
                 for details.
               </dd>
             </div>
@@ -203,9 +203,9 @@ export default function SetupGuidePage() {
               <dt className="font-medium text-gray-300">Sync says "Invalid API key"</dt>
               <dd className="text-gray-500 mt-1">
                 Your API key may be incorrect or revoked. Generate a new one from your{' '}
-                <Link to="/profile" className="text-blue-400 hover:underline">
+                <AuthLink to="/profile?tab=apikeys" className="text-blue-400 hover:underline">
                   Profile &gt; API Keys
-                </Link>{' '}
+                </AuthLink>{' '}
                 tab and update your settings.xml.
               </dd>
             </div>
@@ -228,9 +228,9 @@ export default function SetupGuidePage() {
               <dt className="font-medium text-gray-300">Character not found</dt>
               <dd className="text-gray-500 mt-1">
                 Make sure your character is registered on the{' '}
-                <Link to="/characters" className="text-blue-400 hover:underline">
+                <AuthLink to="/characters" className="text-blue-400 hover:underline">
                   Characters
-                </Link>{' '}
+                </AuthLink>{' '}
                 with the exact name and server that matches your in-game character.
               </dd>
             </div>

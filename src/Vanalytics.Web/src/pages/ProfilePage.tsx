@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { api, ApiError } from '../api/client'
 import UserAvatar from '../components/UserAvatar'
@@ -16,7 +16,14 @@ const tabs: { id: Tab; label: string }[] = [
 export default function ProfilePage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<Tab>('session')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTab = tabs.find(t => t.id === searchParams.get('tab'))?.id ?? 'session'
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab)
+    setSearchParams(tab === 'session' ? {} : { tab }, { replace: true })
+  }
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState('')
@@ -126,7 +133,7 @@ export default function ProfilePage() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
                 activeTab === tab.id
                   ? 'border-blue-500 text-white'
