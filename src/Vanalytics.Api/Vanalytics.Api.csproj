@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <UserSecretsId>a3f7c2e1-8d4b-4f5a-9c6e-2b1d3e4f5a6b</UserSecretsId>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Vanalytics.Core\Vanalytics.Core.csproj" />
     <ProjectReference Include="..\Vanalytics.Data\Vanalytics.Data.csproj" />

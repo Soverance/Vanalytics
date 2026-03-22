@@ -26,6 +26,10 @@ interface SyncProviderStatus {
   providerId: string
   displayName: string
   isRunning: boolean
+  metadata?: {
+    storageType: string
+    label: string
+  }
   lastSync: {
     startedAt: string
     completedAt: string | null
@@ -210,6 +214,14 @@ function SyncCard({
             </p>
           ) : (
             <p className="text-xs text-gray-500 mt-0.5">Never synced</p>
+          )}
+          {provider.metadata && (
+            <p className="text-xs mt-0.5">
+              <span className="text-gray-500">Storage: </span>
+              <span className={provider.metadata.storageType === 'azure' ? 'text-blue-400' : 'text-amber-400'}>
+                {provider.metadata.label}
+              </span>
+            </p>
           )}
         </div>
 

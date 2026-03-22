@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Vanalytics.Api.Services;
 using Vanalytics.Api.Services.Sync;
 
 namespace Vanalytics.Api.Controllers;
@@ -95,11 +96,25 @@ public class AdminSyncController : ControllerBase
             var lastSync = await _orchestrator.GetLastSyncAsync(pid);
             var provider = HttpContext.RequestServices.GetKeyedService<ISyncProvider>(pid);
 
+            // For icons provider, include storage destination info
+            object? metadata = null;
+            if (pid == "icons")
+            {
+                var imageStore = HttpContext.RequestServices.GetService<IItemImageStore>();
+                metadata = imageStore switch
+                {
+                    AzureBlobItemImageStore => new { storageType = "azure", label = "Azure Blob Storage" },
+                    LocalItemImageStore => new { storageType = "local", label = "Local Disk" },
+                    _ => new { storageType = "unknown", label = "Unknown" }
+                };
+            }
+
             providerList.Add(new
             {
                 providerId = pid,
                 displayName = provider?.DisplayName ?? pid,
                 isRunning,
+                metadata,
                 lastSync = lastSync is null ? null : new
                 {
                     startedAt = lastSync.StartedAt,

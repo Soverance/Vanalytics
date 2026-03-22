@@ -32,6 +32,7 @@ services:
       Jwt__AccessTokenExpirationMinutes: "15"
       Jwt__RefreshTokenExpirationDays: "7"
       ItemImages__BasePath: "/app/item-images"
+      AzureStorage__ConnectionString: "${AZURE_STORAGE_CONNECTION_STRING:-}"
     volumes:
       - itemimages:/app/item-images
     depends_on:

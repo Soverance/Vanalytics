@@ -1,6 +1,7 @@
 # Project-specific #
 ######################
 src/Vanalytics.Api/appsettings.Development.json
+.env
 
 # Visual Studio client-specific #
 ######################
