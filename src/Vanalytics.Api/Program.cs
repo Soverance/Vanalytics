@@ -51,6 +51,7 @@ builder.Services.AddOpenApi("v1", options =>
 });
 
 // Services
+builder.Services.AddSingleton<VanadielClock>();
 builder.Services.AddScoped<OAuthService>();
 builder.Services.AddSingleton<RateLimiter>();
 builder.Services.AddSingleton<EconomyRateLimiter>();

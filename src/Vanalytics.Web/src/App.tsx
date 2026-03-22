@@ -14,6 +14,7 @@ import AdminItemsPage from './pages/AdminItemsPage'
 import ItemDatabasePage from './pages/ItemDatabasePage'
 import ItemDetailPage from './pages/ItemDetailPage'
 import BazaarActivityPage from './pages/BazaarActivityPage'
+import VanadielClockPage from './pages/VanadielClockPage'
 import PublicProfilePage from './pages/PublicProfilePage'
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/items" element={<ItemDatabasePage />} />
             <Route path="/items/:id" element={<ItemDetailPage />} />
             <Route path="/bazaar" element={<BazaarActivityPage />} />
+            <Route path="/clock" element={<VanadielClockPage />} />
             <Route path="/setup" element={<SetupGuidePage />} />
             <Route path="/:server/:name" element={<PublicProfilePage />} />
 

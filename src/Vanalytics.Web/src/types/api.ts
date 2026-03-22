@@ -229,6 +229,62 @@ export interface CrossServerResponse {
   servers: CrossServerPrice[]
 }
 
+// Vana'diel Clock
+export interface VanadielClockData {
+  time: VanadielTime
+  dayOfWeek: string
+  element: string
+  moon: MoonPhaseInfo
+  conquest: ConquestInfo
+  guilds: GuildStatus[]
+  ferry: FerryScheduleInfo
+  rse: RseInfo
+}
+
+export interface VanadielTime {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+  second: number
+}
+
+export interface MoonPhaseInfo {
+  phaseName: string
+  percent: number
+}
+
+export interface ConquestInfo {
+  earthSecondsRemaining: number
+  vanadielDaysRemaining: number
+}
+
+export interface GuildStatus {
+  name: string
+  isOpen: boolean
+  holiday: string
+  openHour: number
+  closeHour: number
+}
+
+export interface FerryScheduleInfo {
+  selbinaToMhaura: FerryDirection
+  mhauraToSelbina: FerryDirection
+}
+
+export interface FerryDirection {
+  nextDeparture: string
+  nextArrival: string
+}
+
+export interface RseInfo {
+  currentRace: string
+  currentLocation: string
+  nextRace: string
+  nextChangeEarthSeconds: string
+}
+
 // Bazaar
 export interface BazaarZoneGroup {
   zone: string
