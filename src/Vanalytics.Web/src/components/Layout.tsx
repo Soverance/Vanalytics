@@ -2,7 +2,8 @@ import { useState, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import UserAvatar from './UserAvatar'
-import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database } from 'lucide-react'
+import LoginModal from './LoginModal'
+import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, LogIn } from 'lucide-react'
 
 function SidebarLink({ to, label, icon }: { to: string; label: string; icon: ReactNode }) {
   return (
@@ -26,12 +27,12 @@ function SidebarLink({ to, label, icon }: { to: string; label: string; icon: Rea
 export default function Layout() {
   const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(false)
   const location = useLocation()
 
-  // Public pages get no sidebar — these render without authentication
-  const publicPaths = ['/', '/login', '/items', '/bazaar']
+  // Only the landing page and public profiles get no sidebar
   const isPublicPage =
-    publicPaths.some(p => p === '/' ? location.pathname === '/' : location.pathname.startsWith(p)) ||
+    location.pathname === '/' ||
     (!user && location.pathname.match(/^\/[^/]+\/[^/]+$/))
 
   if (isPublicPage) {
@@ -44,7 +45,6 @@ export default function Layout() {
     )
   }
 
-  // Dashboard pages get the sidebar layout
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex">
       {/* Mobile overlay */}
@@ -63,7 +63,7 @@ export default function Layout() {
       >
         {/* Logo */}
         <div className="border-b border-gray-800 px-4 py-4">
-          <Link to="/" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
+          <Link to="/servers" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img
               src="/vanalytics-typography-horizontal-logo.png"
@@ -75,8 +75,12 @@ export default function Layout() {
 
         {/* Nav links */}
         <nav className="flex-1 space-y-1 px-3 py-4" onClick={() => setSidebarOpen(false)}>
-          <SidebarLink to="/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} />
-          <SidebarLink to="/characters" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} />
+          {user && (
+            <>
+              <SidebarLink to="/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} />
+              <SidebarLink to="/characters" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} />
+            </>
+          )}
           <SidebarLink to="/servers" label="Server Status" icon={<Radio className="h-4 w-4 shrink-0" />} />
           <SidebarLink to="/items" label="Item Database" icon={<Package className="h-4 w-4 shrink-0" />} />
           <SidebarLink to="/bazaar" label="Bazaar Activity" icon={<Store className="h-4 w-4 shrink-0" />} />
@@ -94,8 +98,8 @@ export default function Layout() {
           )}
         </nav>
 
-        {/* User profile link */}
-        {user && (
+        {/* User profile or Sign In */}
+        {user ? (
           <NavLink
             to="/profile"
             onClick={() => setSidebarOpen(false)}
@@ -113,6 +117,14 @@ export default function Layout() {
               <p className="text-xs text-gray-500 truncate">{user.email}</p>
             </div>
           </NavLink>
+        ) : (
+          <button
+            onClick={() => { setSidebarOpen(false); setLoginOpen(true) }}
+            className="flex items-center gap-3 border-t border-gray-800 px-4 py-3 text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-colors w-full"
+          >
+            <LogIn className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-medium">Sign In</span>
+          </button>
         )}
       </aside>
 
@@ -127,7 +139,7 @@ export default function Layout() {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <Link to="/" className="flex items-center min-w-0">
+          <Link to="/servers" className="flex items-center min-w-0">
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img src="/vanalytics-typography-horizontal-logo.png" alt="Vana'lytics" className="min-w-0 max-w-[180px]" />
           </Link>
@@ -139,6 +151,9 @@ export default function Layout() {
           </div>
         </main>
       </div>
+
+      {/* Login modal */}
+      {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
     </div>
   )
 }

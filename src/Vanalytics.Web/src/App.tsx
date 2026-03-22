@@ -1,9 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
-import LandingPage from './pages/LandingPage'
-import LoginPage from './pages/LoginPage'
+import OAuthCallback from './pages/OAuthCallback'
 import DashboardPage from './pages/DashboardPage'
 import CharactersPage from './pages/CharactersPage'
 import CharacterDetailPage from './pages/CharacterDetailPage'
@@ -23,8 +22,21 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
+            {/* Root redirects to servers */}
+            <Route path="/" element={<Navigate to="/servers" replace />} />
+
+            {/* OAuth callback (handles code exchange, no UI) */}
+            <Route path="/oauth/callback" element={<OAuthCallback />} />
+
+            {/* Public pages (no auth required, sidebar visible) */}
+            <Route path="/servers" element={<ServerStatusPage />} />
+            <Route path="/items" element={<ItemDatabasePage />} />
+            <Route path="/items/:id" element={<ItemDetailPage />} />
+            <Route path="/bazaar" element={<BazaarActivityPage />} />
+            <Route path="/setup" element={<SetupGuidePage />} />
+            <Route path="/:server/:name" element={<PublicProfilePage />} />
+
+            {/* Protected pages (require login) */}
             <Route
               path="/dashboard"
               element={<ProtectedRoute><DashboardPage /></ProtectedRoute>}
@@ -38,14 +50,6 @@ export default function App() {
               element={<ProtectedRoute><CharacterDetailPage /></ProtectedRoute>}
             />
             <Route
-              path="/servers"
-              element={<ProtectedRoute><ServerStatusPage /></ProtectedRoute>}
-            />
-            <Route
-              path="/setup"
-              element={<ProtectedRoute><SetupGuidePage /></ProtectedRoute>}
-            />
-            <Route
               path="/profile"
               element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
             />
@@ -57,10 +61,6 @@ export default function App() {
               path="/admin/items"
               element={<ProtectedRoute><AdminItemsPage /></ProtectedRoute>}
             />
-            <Route path="/items" element={<ItemDatabasePage />} />
-            <Route path="/items/:id" element={<ItemDetailPage />} />
-            <Route path="/bazaar" element={<BazaarActivityPage />} />
-            <Route path="/:server/:name" element={<PublicProfilePage />} />
           </Route>
         </Routes>
       </AuthProvider>
