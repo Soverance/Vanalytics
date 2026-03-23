@@ -3,8 +3,36 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
-import { parseDatFile, parseSkeletonDat, SKELETON_PATHS } from '../lib/ffxi-dat'
+import { parseDatFile, parseSkeletonDat, SKELETON_PATHS, modelToPath } from '../lib/ffxi-dat'
 import type { ParsedMesh, ParsedTexture, ParsedSkeleton } from '../lib/ffxi-dat'
+
+/** Race ID → display name */
+const RACE_NAMES: Record<number, string> = {
+  1: 'Hume Male', 2: 'Hume Female', 3: 'Elvaan Male', 4: 'Elvaan Female',
+  5: 'Tarutaru Male', 6: 'Tarutaru Female', 7: 'Mithra', 8: 'Galka',
+}
+
+/** Slot ID → display name */
+const SLOT_NAMES: Record<number, string> = {
+  2: 'Head', 3: 'Body', 4: 'Hands', 5: 'Legs', 6: 'Feet', 7: 'Main', 8: 'Sub', 9: 'Range',
+}
+
+/** Presets defined by model ID + slot (race-independent). ROM path resolved dynamically. */
+const PRESETS = [
+  { label: 'Colichemarde', slotId: 7, modelId: 181 },
+  { label: 'Hauteclaire', slotId: 7, modelId: 399 },
+  { label: 'Leather Bandana', slotId: 2, modelId: 1 },
+  { label: 'Red Cap', slotId: 2, modelId: 23 },
+  { label: 'Koenig Schaller', slotId: 2, modelId: 95 },
+  { label: 'Leather Vest', slotId: 3, modelId: 1 },
+  { label: 'Koenig Cuirass', slotId: 3, modelId: 95 },
+  { label: 'Leather Gloves', slotId: 4, modelId: 2 },
+  { label: 'Koenig Handschuhs', slotId: 4, modelId: 95 },
+  { label: 'Leather Trousers', slotId: 5, modelId: 1 },
+  { label: 'Koenig Diechlings', slotId: 5, modelId: 95 },
+  { label: 'Leather Highboots', slotId: 6, modelId: 2 },
+  { label: 'Koenig Schuhs', slotId: 6, modelId: 95 },
+]
 
 /**
  * Debug page for testing the DAT parser and 3D renderer.
@@ -12,13 +40,15 @@ import type { ParsedMesh, ParsedTexture, ParsedSkeleton } from '../lib/ffxi-dat'
  */
 export default function ModelDebugPage() {
   const ffxi = useFfxiFileSystem()
-  const [romPath, setRomPath] = useState('ROM/27/104.dat')
+  const [romPath, setRomPath] = useState('')
   const [parseLog, setParseLog] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [meshData, setMeshData] = useState<{ meshes: ParsedMesh[]; textures: ParsedTexture[] } | null>(null)
   const [viewMode, setViewMode] = useState<'3d' | 'wireframe'>('3d')
-  const [raceId, setRaceId] = useState(1) // Default: Hume Male
+  const [raceId, setRaceId] = useState(1)
   const [skeleton, setSkeleton] = useState<ParsedSkeleton | null>(null)
+  const [skelLoading, setSkelLoading] = useState(false)
+  const [resolvedPresets, setResolvedPresets] = useState<Map<string, string>>(new Map())
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const log = (msg: string) => setParseLog(prev => [...prev, msg])
@@ -29,15 +59,37 @@ export default function ModelDebugPage() {
     const skelPath = SKELETON_PATHS[raceId]
     if (!skelPath) return
 
+    setSkelLoading(true)
     ffxi.readFile(skelPath).then(buffer => {
       const skel = parseSkeletonDat(buffer)
       setSkeleton(skel)
-      console.log(`[Skeleton] Loaded ${skelPath}: ${skel?.bones.length ?? 0} bones`)
-    }).catch(err => {
-      console.warn('Failed to load skeleton:', err)
+      setSkelLoading(false)
+    }).catch(() => {
       setSkeleton(null)
+      setSkelLoading(false)
     })
   }, [raceId, ffxi.isAuthorized, ffxi.readFile])
+
+  // Resolve preset ROM paths when race changes
+  useEffect(() => {
+    async function resolve() {
+      const resolved = new Map<string, string>()
+      for (const p of PRESETS) {
+        const path = await modelToPath(p.modelId, raceId, p.slotId)
+        if (path) resolved.set(`${p.slotId}:${p.modelId}`, path)
+      }
+      setResolvedPresets(resolved)
+    }
+    resolve()
+  }, [raceId])
+
+  // Set initial ROM path from first resolved preset
+  useEffect(() => {
+    if (resolvedPresets.size > 0 && !romPath) {
+      const firstPath = resolvedPresets.values().next().value
+      if (firstPath) setRomPath(firstPath)
+    }
+  }, [resolvedPresets, romPath])
 
   const handleLoad = async () => {
     setParseLog([])
@@ -49,11 +101,7 @@ export default function ModelDebugPage() {
       const buffer = await ffxi.readFile(romPath)
       log(`Read ${buffer.byteLength} bytes`)
 
-      if (skeleton) {
-        log(`Using skeleton: ${skeleton.bones.length} bones (race ${raceId})`)
-      } else {
-        log('No skeleton loaded — vertices will not be bone-transformed')
-      }
+      log(`Skeleton: ${skeleton ? skeleton.bones.length + ' bones' : 'none'} (${RACE_NAMES[raceId]})`)
 
       log('Parsing DAT file...')
       const dat = parseDatFile(buffer, skeleton?.matrices)
@@ -88,8 +136,7 @@ export default function ModelDebugPage() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const w = canvas.width
-    const h = canvas.height
+    const w = canvas.width, h = canvas.height
     ctx.fillStyle = '#111'
     ctx.fillRect(0, 0, w, h)
 
@@ -116,11 +163,11 @@ export default function ModelDebugPage() {
     ctx.strokeStyle = '#4a9'
     ctx.lineWidth = 0.5
     for (const mesh of meshData.meshes) {
-      const v = mesh.vertices, idx = mesh.indices
-      for (let i = 0; i < idx.length; i += 3) {
-        const a = project(v[idx[i] * 3], v[idx[i] * 3 + 1])
-        const b = project(v[idx[i + 1] * 3], v[idx[i + 1] * 3 + 1])
-        const c = project(v[idx[i + 2] * 3], v[idx[i + 2] * 3 + 1])
+      const vt = mesh.vertices
+      for (let i = 0; i < vt.length; i += 9) {
+        const a = project(vt[i], vt[i + 1])
+        const b = project(vt[i + 3], vt[i + 4])
+        const c = project(vt[i + 6], vt[i + 7])
         ctx.beginPath(); ctx.moveTo(a.px, a.py); ctx.lineTo(b.px, b.py); ctx.lineTo(c.px, c.py); ctx.closePath(); ctx.stroke()
       }
     }
@@ -138,17 +185,10 @@ export default function ModelDebugPage() {
     }
 
     ctx.fillStyle = '#888'; ctx.font = '11px monospace'
-    ctx.fillText(`${allVerts.length} verts, ${meshData.meshes.reduce((s, m) => s + m.indices.length / 3, 0)} tris`, 8, h - 8)
+    const totalVerts = meshData.meshes.reduce((s, m) => s + m.vertices.length / 3, 0)
+    const totalTris = totalVerts / 3
+    ctx.fillText(`${totalVerts} verts, ${totalTris} tris`, 8, h - 8)
   }, [meshData, viewMode])
-
-  const presets = [
-    { label: 'Head: Leather Bandana', path: 'ROM/27/104.dat' },
-    { label: 'Body: Leather Vest', path: 'ROM/28/8.dat' },
-    { label: 'Hands: Leather Gloves', path: 'ROM/28/53.dat' },
-    { label: 'Legs: Leather Trousers', path: 'ROM/28/85.dat' },
-    { label: 'Feet: Leather Highboots', path: 'ROM/28/117.dat' },
-    { label: 'Weapon: Colichemarde', path: 'ROM/30/26.dat' },
-  ]
 
   return (
     <div>
@@ -164,41 +204,62 @@ export default function ModelDebugPage() {
 
       {ffxi.isAuthorized && (
         <>
+          {/* Race / Skeleton selector */}
+          <div className="flex items-center gap-3 mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
+            <span className="text-xs text-gray-400">Race:</span>
+            <select value={raceId} onChange={e => { setRaceId(Number(e.target.value)); setMeshData(null) }}
+              className="px-2 py-1.5 text-sm bg-gray-800 border border-gray-700 rounded text-gray-200">
+              {Object.entries(RACE_NAMES).map(([id, name]) => (
+                <option key={id} value={id}>{name}</option>
+              ))}
+            </select>
+            <span className="text-[11px] text-gray-500">
+              {skelLoading ? 'Loading skeleton...' : skeleton ? `${skeleton.bones.length} bones · ${SKELETON_PATHS[raceId]}` : 'No skeleton'}
+            </span>
+          </div>
+
+          {/* ROM path input */}
           <div className="flex gap-2 mb-3">
             <input type="text" value={romPath} onChange={e => setRomPath(e.target.value)}
-              className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200" placeholder="ROM/27/104.dat" />
-            <button onClick={handleLoad} disabled={loading}
+              className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 font-mono" placeholder="ROM/27/104.dat" />
+            <button onClick={handleLoad} disabled={loading || skelLoading}
               className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white text-sm rounded disabled:opacity-50">
               {loading ? 'Loading...' : 'Load & Parse'}
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-4">
-            {presets.map(p => (
-              <button key={p.path} onClick={() => setRomPath(p.path)}
-                className="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-300">{p.label}</button>
-            ))}
-          </div>
-
-          {/* Race selector */}
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-xs text-gray-400">Skeleton:</span>
-            <select value={raceId} onChange={e => setRaceId(Number(e.target.value))}
-              className="px-2 py-1 text-xs bg-gray-800 border border-gray-700 rounded text-gray-300">
-              <option value={1}>Hume Male</option>
-              <option value={2}>Hume Female</option>
-              <option value={3}>Elvaan Male</option>
-              <option value={4}>Elvaan Female</option>
-              <option value={5}>Tarutaru</option>
-              <option value={7}>Mithra</option>
-              <option value={8}>Galka</option>
-            </select>
-            <span className="text-[10px] text-gray-600">
-              {skeleton ? `${skeleton.bones.length} bones loaded` : 'Loading...'}
-            </span>
-            <span className="text-[10px] text-amber-600/70 ml-2">
-              Skeleton must match the equipment DAT's race
-            </span>
+          {/* Presets — grouped by slot, paths resolve per race */}
+          <div className="mb-4 space-y-1.5">
+            {([7, 8, 9, 2, 3, 4, 5, 6] as number[]).map(slotId => {
+              const slotPresets = PRESETS.filter(p => p.slotId === slotId)
+              if (slotPresets.length === 0) return null
+              return (
+                <div key={slotId} className="flex items-center gap-2">
+                  <span className="text-[10px] text-gray-500 w-12 text-right shrink-0">{SLOT_NAMES[slotId]}</span>
+                  <div className="flex flex-wrap gap-1">
+                    {slotPresets.map(p => {
+                      const path = resolvedPresets.get(`${p.slotId}:${p.modelId}`)
+                      return (
+                        <button key={`${p.slotId}:${p.modelId}`}
+                          onClick={() => { if (path) { setRomPath(path); } }}
+                          disabled={!path}
+                          className={`px-2 py-0.5 text-[11px] rounded transition-colors ${
+                            path
+                              ? romPath === path
+                                ? 'bg-blue-700 text-white border border-blue-600'
+                                : 'bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300'
+                              : 'bg-gray-900 border border-gray-800 text-gray-600 cursor-not-allowed'
+                          }`}
+                          title={path || 'No model data for this race'}
+                        >
+                          {p.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
           </div>
 
           {/* View mode toggle */}
@@ -220,7 +281,9 @@ export default function ModelDebugPage() {
                 meshData ? (
                   <ThreeViewer meshData={meshData} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-600 text-sm">Load a DAT file to render</div>
+                  <div className="w-full h-full flex items-center justify-center text-gray-600 text-sm">
+                    {loading ? 'Parsing...' : 'Select an item and click "Load & Parse"'}
+                  </div>
                 )
               ) : (
                 <canvas ref={canvasRef} width={600} height={500} className="w-full h-full" style={{ imageRendering: 'auto' }} />
@@ -243,7 +306,7 @@ export default function ModelDebugPage() {
 }
 
 /**
- * Three.js viewer — auto-centers, auto-scales, and mirrors equipment meshes.
+ * Three.js viewer — auto-centers, auto-scales, and renders equipment meshes.
  */
 function ThreeViewer({ meshData }: { meshData: { meshes: ParsedMesh[]; textures: ParsedTexture[] } }) {
   const sceneData = useMemo(() => {
@@ -285,13 +348,9 @@ function ThreeViewer({ meshData }: { meshData: { meshes: ParsedMesh[]; textures:
     bbox.getCenter(rawCenter)
     bbox.getSize(size)
 
-    // After 180° X rotation: Y and Z flip sign
-    // Flipped bbox: minY becomes -maxY, maxY becomes -minY
     const flippedMinY = -bbox.max.y
     const flippedMaxY = -bbox.min.y
-    const floorY = flippedMinY  // bottom of the model after rotation
-
-    // Center for orbit target: center X/Z stay, Y is midpoint of flipped range
+    const floorY = flippedMinY
     const center = new THREE.Vector3(rawCenter.x, (flippedMinY + flippedMaxY) / 2, -rawCenter.z)
 
     return { geometries, materials, center, size, floorY }
@@ -322,7 +381,6 @@ function ThreeViewer({ meshData }: { meshData: { meshes: ParsedMesh[]; textures:
       <directionalLight position={[-1, 2, -2]} intensity={0.3} color="#a0b8d0" />
       <OrbitControls target={[cx, cy, cz]} />
 
-      {/* Rotate 180° on X to flip from FFXI coordinate system to Three.js Y-up */}
       <group rotation={[Math.PI, 0, 0]}>
         {sceneData.geometries.map((geo, i) => (
           <mesh key={i} geometry={geo} material={sceneData.materials[i]} />

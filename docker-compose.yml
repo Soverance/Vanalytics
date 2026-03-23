@@ -23,7 +23,7 @@ services:
       - "5000:8080"
     environment:
       ConnectionStrings__DefaultConnection: "Server=db;Database=Vanalytics;User Id=sa;Password=VanalyticsD3v!;TrustServerCertificate=True"
-      ADMIN_EMAIL: "admin@vanalytics.com"
+      ADMIN_EMAIL: "admin@soverance.com"
       ADMIN_USERNAME: "admin"
       ADMIN_PASSWORD: "Admin123!"
       Jwt__Secret: "DockerDevSecretKeyThatIsAtLeast32BytesLongForHmacSha256!!"

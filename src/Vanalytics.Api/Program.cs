@@ -96,8 +96,7 @@ using (var scope = app.Services.CreateScope())
         !string.IsNullOrEmpty(adminUsername) &&
         !string.IsNullOrEmpty(adminPassword))
     {
-        var hash = PasswordHasher.HashPassword(adminPassword);
-        await AdminSeeder.SeedAsync(db, adminEmail, adminUsername, hash, logger);
+        await AdminSeeder.SeedAsync(db, adminEmail, adminUsername, adminPassword, logger);
     }
 
 }

@@ -10,6 +10,7 @@ import SalesTable from '../components/economy/SalesTable'
 import BazaarListingsTable from '../components/economy/BazaarListingsTable'
 import { useCompare } from '../components/compare/CompareContext'
 import ItemPreviewBox from '../components/economy/ItemPreviewBox'
+import ItemModelViewer from '../components/character/ItemModelViewer'
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -149,6 +150,14 @@ export default function ItemDetailPage() {
           <ItemPreviewBox item={item} />
         </div>
       </div>
+
+      {/* 3D Model Viewer — only renders if item has a model mapping */}
+      <ItemModelViewer
+        itemId={item.itemId}
+        category={item.category}
+        slots={item.slots}
+        skill={item.skill}
+      />
 
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Left column: Stats */}

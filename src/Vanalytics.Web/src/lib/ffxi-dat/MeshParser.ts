@@ -253,8 +253,18 @@ interface RawMV2 {
 }
 
 /**
+ * Resolve a BONE3 index to a skeleton bone index.
+ * When isIndirect=true, the index is looked up through the boneTbl.
+ * When isIndirect=false, the index is used directly as the skeleton bone index.
+ */
+function resolveBoneIdx(tblIdx: number, boneTbl: number[], isIndirect: boolean): number {
+  return isIndirect ? (boneTbl[tblIdx] ?? 0) : tblIdx
+}
+
+/**
  * Transform MV1 and MV2 vertices using bone matrices.
  * @param flip - false for original (leftL/leftH), true for mirrored (rightL/rightH)
+ * @param isIndirect - true if bone indices go through boneTbl, false if they're direct skeleton indices
  */
 function transformVertices(
   noB1: number, noB2: number,
@@ -264,6 +274,7 @@ function transformVertices(
   boneTbl: number[],
   skelMatrices: number[][],
   flip: boolean,
+  isIndirect: boolean,
 ): RawVert[] {
   const verts: RawVert[] = []
 
@@ -274,7 +285,7 @@ function transformVertices(
     if (i < boneAssign.length) {
       const b3 = boneAssign[i]
       const tblIdx = flip ? b3.rightL : b3.leftL
-      const boneIdx = boneTbl[tblIdx] ?? 0
+      const boneIdx = resolveBoneIdx(tblIdx, boneTbl, isIndirect)
       if (boneIdx < skelMatrices.length) {
         let m = skelMatrices[boneIdx]
         if (flip) m = applyMirrorFlag(m, b3.flgL)
@@ -295,8 +306,8 @@ function transformVertices(
       const b3 = boneAssign[bIdx]
       const tblIdxL = flip ? b3.rightL : b3.leftL
       const tblIdxH = flip ? b3.rightH : b3.leftH
-      const boneIdxL = boneTbl[tblIdxL] ?? 0
-      const boneIdxH = boneTbl[tblIdxH] ?? 0
+      const boneIdxL = resolveBoneIdx(tblIdxL, boneTbl, isIndirect)
+      const boneIdxH = resolveBoneIdx(tblIdxH, boneTbl, isIndirect)
 
       px = 0; py = 0; pz = 0
       if (boneIdxL < skelMatrices.length) {
@@ -436,8 +447,11 @@ export function parseVertexBlock(
       materialIndex,
     })
   } else {
+    // Determine if bone indices are indirect (via boneTbl) or direct
+    const isIndirect = !!(hdr.type & 0x80)
+
     // Original half (leftL/leftH bone indices)
-    const origVerts = transformVertices(noB1, noB2, mv1Data, mv2Data, boneAssign, boneTbl, skelMatrices, false)
+    const origVerts = transformVertices(noB1, noB2, mv1Data, mv2Data, boneAssign, boneTbl, skelMatrices, false, isIndirect)
     const orig = expandFaces(origVerts, faces, false)
     meshes.push({
       vertices: orig.positions, normals: orig.normals, uvs: orig.uvs,
@@ -448,7 +462,7 @@ export function parseVertexBlock(
 
     // Mirrored half (rightL/rightH bone indices + mirror flags) — only if flip != 0
     if (hdr.flip !== 0) {
-      const mirrorVerts = transformVertices(noB1, noB2, mv1Data, mv2Data, boneAssign, boneTbl, skelMatrices, true)
+      const mirrorVerts = transformVertices(noB1, noB2, mv1Data, mv2Data, boneAssign, boneTbl, skelMatrices, true, isIndirect)
       const mirror = expandFaces(mirrorVerts, faces, true)
       meshes.push({
         vertices: mirror.positions, normals: mirror.normals, uvs: mirror.uvs,
