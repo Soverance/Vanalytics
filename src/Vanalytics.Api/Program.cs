@@ -20,6 +20,7 @@ builder.Services.AddSoveranceJwtAuth(builder.Configuration)
 builder.Services.AddSingleton<ISamlSignInHandler, JwtSamlSignInHandler>();
 builder.Services.AddScoped<AuthResponseService>();
 
+builder.Services.AddMemoryCache();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();

@@ -88,6 +88,7 @@ export interface ServerHistory {
   lastCheckedAt: string
   days: number
   uptimePercent: number
+  uptimeTrend: TrendPoint[]
   history: ServerStatusEntry[]
 }
 
@@ -95,6 +96,55 @@ export interface ServerStatusEntry {
   status: string
   startedAt: string
   endedAt: string | null
+}
+
+// Server Analytics Dashboard
+export interface ServerAnalytics {
+  serviceHealth: ServiceHealth
+  uptimeTrend: TrendPoint[]
+  serverRankings: ServerRanking[]
+  heatmap: ServerHeatmapData[]
+  recentIncidents: ServerIncident[]
+}
+
+export interface ServiceHealth {
+  status: string
+  onlinePercent: number
+  uptimePercent: number
+  totalServers: number
+  onlineServers: number
+  lastCheckedAt: string | null
+}
+
+export interface TrendPoint {
+  timestamp: string
+  percent: number
+}
+
+export interface ServerRanking {
+  name: string
+  uptimePercent: number
+  status: string
+}
+
+export interface ServerHeatmapData {
+  name: string
+  days: HeatmapCell[]
+}
+
+export interface HeatmapCell {
+  date: string
+  uptimePercent: number
+  dominantStatus: string
+}
+
+export interface ServerIncident {
+  id: number
+  serverName: string
+  status: string
+  startedAt: string
+  endedAt: string | null
+  duration: string | null
 }
 
 // Admin

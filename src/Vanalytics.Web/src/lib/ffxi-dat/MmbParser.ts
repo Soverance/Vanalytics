@@ -4,138 +4,105 @@ import { triangleStripToList } from './MeshParser'
 
 /**
  * Parses MMB blocks (type 0x2E) from FFXI zone DAT files.
+ * Data must be decrypted via decodeMmb() before calling this.
  *
- * MMB blocks contain mesh prefab data: position, normal, color, and UV vertices.
- * Data is expected to have already been decrypted before being passed here.
+ * MMB format (from GalkaReeve TDWMap.cpp DrawMMB + TDWAnalysis.h):
  *
- * Structure based on GalkaReeve FFXILandscapeMesh.cpp + NavMesh Builder MMB.cs:
+ * Bytes 0-31: Header (32 bytes total)
+ *   - 0-7: Crypto header (id, flags, version, key info)
+ *   - 8-31: Additional header data
  *
- * SMMBHEAD (4 bytes):
- *   - Byte 0: id/type marker
- *   - Bytes 1-3: flags (shadow, version, etc.)
+ * Offset 32: pieceCount (int32) — number of mesh pieces/strips
+ * Offset 36-63: 28 bytes padding/reserved
  *
- * SMMBHEAD2 (8 bytes at offset 4):
- *   - uint32: vertex count
- *   - uint32: buffer size / stride info
+ * Then for each piece:
+ *   - 16-byte texture name/id to match against IMG blocks
+ *   - int16 at +16: vertex count (nVer)
+ *   - 2 bytes padding
+ *   - nVer × 36 bytes: vertex data (SMMBBlockVertex)
+ *   - int32: index count (nIdx)
+ *   - nIdx × uint16: triangle strip indices
  *
- * Material group count (4 bytes at offset 12):
- *   - uint32: imgCount (number of texture/material groups)
- *
- * Offset table (imgCount × uint32):
- *   - Per-group offsets to index data
- *
- * Vertex buffer (vertexCount × 36 bytes):
- *   - Position:  3 × float32 (x, y, z)         — 12 bytes
- *   - Normal:    3 × float32 (nx, ny, nz)        — 12 bytes
- *   - Color:     4 × uint8  (r, g, b, a) /255    —  4 bytes
- *   - UV:        2 × float32 (u, v)              —  8 bytes
- *
- * Index data (after vertex buffer, per material group):
- *   - uint16: materialIndex
- *   - uint16: indexCount
- *   - indexCount × uint16: triangle-strip indices
+ * SMMBBlockVertex (36 bytes):
+ *   float x, y, z        — position (12 bytes)
+ *   float hx, hy, hz     — normal (12 bytes)
+ *   uint8 R, G, B, A     — vertex color (4 bytes)
+ *   float u, v           — texture coords (8 bytes)
  */
 export function parseMmbBlock(data: Uint8Array): ParsedZoneMesh[] {
   const reader = new DatReader(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer)
   const meshes: ParsedZoneMesh[] = []
 
-  if (data.length < 16) return meshes
+  // Need at least header (32) + pieceCount (4) + some padding
+  if (data.length < 68) return meshes
 
-  // SMMBHEAD: 4 bytes
-  reader.skip(4) // id/type marker + flags
+  // Skip 32-byte header (crypto header + extended header)
+  reader.skip(32)
 
-  // SMMBHEAD2: vertex info
-  const vertexCount = reader.readUint32()
-  reader.skip(4) // buffer size (informational)
+  // Read piece/strip count
+  const pieceCount = reader.readInt32()
+  if (pieceCount <= 0 || pieceCount > 1000) return meshes
 
-  // Number of material/texture groups
-  const imgCount = reader.readUint32()
+  // Skip 28 bytes to reach first piece data (total header area = 32 + 4 + 28 = 64)
+  reader.skip(28)
 
-  // Sanity checks to avoid runaway parsing on corrupt data
-  if (vertexCount === 0 || vertexCount > 100000) return meshes
-  if (imgCount > 100) return meshes
+  for (let p = 0; p < pieceCount; p++) {
+    if (reader.remaining < 20) break
 
-  // Read per-group offsets (currently stored for potential future use)
-  const groupOffsets: number[] = []
-  for (let i = 0; i < imgCount; i++) {
-    groupOffsets.push(reader.readUint32())
-  }
+    try {
+      // 16-byte texture name/ID (skip for now — texture matching done later)
+      reader.skip(16)
 
-  // Vertex data begins immediately after the header + offset table
-  const vertexDataOffset = reader.position
-  const VERTEX_STRIDE = 36
+      // Vertex count (int16) + 2 bytes padding
+      const nVer = reader.readInt16()
+      reader.skip(2)
 
-  const allVertices: number[] = []
-  const allNormals: number[] = []
-  const allColors: number[] = []
-  const allUvs: number[] = []
+      if (nVer <= 0 || nVer > 65535 || reader.remaining < nVer * 36 + 4) break
 
-  reader.seek(vertexDataOffset)
-  for (let i = 0; i < vertexCount; i++) {
-    if (reader.remaining < VERTEX_STRIDE) break
+      const vertices: number[] = []
+      const normals: number[] = []
+      const colors: number[] = []
+      const uvs: number[] = []
 
-    // Position (x, y, z)
-    allVertices.push(reader.readFloat32(), reader.readFloat32(), reader.readFloat32())
+      // Read vertices: SMMBBlockVertex = 36 bytes each
+      for (let v = 0; v < nVer; v++) {
+        vertices.push(reader.readFloat32(), reader.readFloat32(), reader.readFloat32())
+        normals.push(reader.readFloat32(), reader.readFloat32(), reader.readFloat32())
+        colors.push(
+          reader.readUint8() / 255,
+          reader.readUint8() / 255,
+          reader.readUint8() / 255,
+          reader.readUint8() / 255,
+        )
+        uvs.push(reader.readFloat32(), reader.readFloat32())
+      }
 
-    // Normal (nx, ny, nz)
-    allNormals.push(reader.readFloat32(), reader.readFloat32(), reader.readFloat32())
+      // Index count (int32)
+      if (reader.remaining < 4) break
+      const nIdx = reader.readInt32()
+      if (nIdx <= 0 || nIdx > 100000 || reader.remaining < nIdx * 2) break
 
-    // RGBA color: 4 × uint8, normalized to [0.0, 1.0]
-    allColors.push(
-      reader.readUint8() / 255,
-      reader.readUint8() / 255,
-      reader.readUint8() / 255,
-      reader.readUint8() / 255,
-    )
+      // Read triangle strip indices (uint16)
+      const stripIndices: number[] = []
+      for (let i = 0; i < nIdx; i++) {
+        stripIndices.push(reader.readUint16())
+      }
 
-    // UV (u, v)
-    allUvs.push(reader.readFloat32(), reader.readFloat32())
-  }
+      // Convert triangle strip to triangle list
+      const triIndices = triangleStripToList(stripIndices)
+      if (triIndices.length === 0) continue
 
-  // Index data follows immediately after the vertex buffer
-  const indexDataOffset = vertexDataOffset + vertexCount * VERTEX_STRIDE
-  reader.seek(indexDataOffset)
-
-  for (let g = 0; g < imgCount; g++) {
-    if (reader.remaining < 4) break
-
-    const materialIndex = reader.readUint16()
-    const indexCount = reader.readUint16()
-
-    if (indexCount === 0 || reader.remaining < indexCount * 2) break
-
-    const indices: number[] = []
-    for (let i = 0; i < indexCount; i++) {
-      indices.push(reader.readUint16())
+      meshes.push({
+        vertices,
+        normals,
+        colors,
+        uvs,
+        indices: triIndices,
+        materialIndex: 0, // texture matching done later by name
+      })
+    } catch {
+      break
     }
-
-    // Zone meshes commonly use triangle strips; convert to triangle list
-    const triIndices = triangleStripToList(indices)
-    if (triIndices.length === 0) continue
-
-    meshes.push({
-      vertices: allVertices,
-      normals: allNormals,
-      colors: allColors,
-      uvs: allUvs,
-      indices: triIndices,
-      materialIndex,
-    })
-  }
-
-  // Fallback: if no material groups parsed but vertices exist, emit a single mesh
-  if (meshes.length === 0 && allVertices.length > 0) {
-    const indices: number[] = []
-    for (let i = 0; i < vertexCount; i++) indices.push(i)
-
-    meshes.push({
-      vertices: allVertices,
-      normals: allNormals,
-      colors: allColors,
-      uvs: allUvs,
-      indices: triangleStripToList(indices),
-      materialIndex: 0,
-    })
   }
 
   return meshes

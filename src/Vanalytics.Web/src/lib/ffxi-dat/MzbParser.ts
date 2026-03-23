@@ -1,67 +1,71 @@
-import { DatReader } from './DatReader';
-import type { ZoneMeshInstance } from './types';
+import type { ZoneMeshInstance } from './types'
 
-const ENTRY_SIZE = 0x64; // 100 bytes per mesh entry
-const MATRIX_FLOAT_COUNT = 16;
-const MATRIX_BYTE_SIZE = MATRIX_FLOAT_COUNT * 4; // 64 bytes
-const MESH_INDEX_BYTE_SIZE = 4; // uint32
-const REMAINING_SKIP = ENTRY_SIZE - MATRIX_BYTE_SIZE - MESH_INDEX_BYTE_SIZE; // 32 bytes
+/**
+ * Parses MZB blocks (type 0x1C) from FFXI zone DAT files.
+ * Data must be decrypted via decodeMzb() before calling this.
+ *
+ * MZB format (from GalkaReeve TDWMap.cpp ImgReadMap):
+ *
+ * After decryption, the MZB data layout:
+ *   Offset 0: header (32 bytes)
+ *     - uint32 at offset 4: instance count (masked & 0xFFFFFF)
+ *   Offset 32: OBJINFO array
+ *
+ * Each OBJINFO has scale, rotation, translation fields and an MMB index.
+ * We build a 4x4 matrix from these for the renderer.
+ *
+ * The GalkaReeve code does:
+ *   oj = (OBJINFO*)(p + 16 + 32)  // instances at offset 48 from block data
+ *   noj = (*(int*)(p + 16 + 4)) & 0xFFFFFF  // count from header
+ *
+ * But since our data already has the 16-byte block padding stripped,
+ * the offsets are relative to our data start:
+ *   count at offset 4, instances at offset 32
+ */
+
+// OBJINFO struct size — from GalkaReeve, this contains:
+// scale(xyz), rotation(xyz), translation(xyz), id/flags
+// Exact size needs to be determined empirically
+const OBJINFO_SIZE = 100  // matches NavMesh Builder's 0x64 = 100 bytes
 
 export function parseMzbBlock(data: Uint8Array): ZoneMeshInstance[] {
-  const reader = new DatReader(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer);
+  if (data.length < 36) return []
 
-  // Read header
-  const meshOffset = reader.readUint32();
-  reader.skip(4); // quadTreeOffset — not used
-  const totalMeshCount = reader.readUint32();
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength)
 
-  // Validate
-  if (totalMeshCount === 0) {
-    return [];
+  // Instance count at offset 4, masked to 24 bits
+  const instanceCount = view.getUint32(4, true) & 0xFFFFFF
+  if (instanceCount === 0 || instanceCount > 10000) {
+    if (instanceCount > 10000) console.warn(`MZB: instanceCount ${instanceCount} too large`)
+    return []
   }
 
-  if (totalMeshCount > 10000) {
-    console.warn(`MZB: totalMeshCount ${totalMeshCount} seems unreasonable (> 10000), skipping`);
-    return [];
-  }
+  const instances: ZoneMeshInstance[] = []
+  const instancesOffset = 32  // OBJINFO array starts at offset 32
 
-  if (meshOffset >= data.byteLength) {
-    console.warn(`MZB: meshOffset 0x${meshOffset.toString(16)} is out of bounds (data length: ${data.byteLength}), skipping`);
-    return [];
-  }
+  for (let i = 0; i < instanceCount; i++) {
+    const offset = instancesOffset + i * OBJINFO_SIZE
+    if (offset + OBJINFO_SIZE > data.length) break
 
-  reader.seek(meshOffset);
-
-  const instances: ZoneMeshInstance[] = [];
-
-  for (let i = 0; i < totalMeshCount; i++) {
     try {
-      const transform: number[] = new Array(MATRIX_FLOAT_COUNT);
-      for (let j = 0; j < MATRIX_FLOAT_COUNT; j++) {
-        transform[j] = reader.readFloat32();
+      // Read OBJINFO fields
+      // The exact layout from GalkaReeve uses:
+      //   fScaleX/Y/Z, fRotX/Y/Z, fTransX/Y/Z
+      // Reading as 4x4 float matrix first (64 bytes), then meshIndex (uint32)
+      // This matches the NavMesh Builder's 100-byte entry interpretation
+      const transform: number[] = []
+      for (let j = 0; j < 16; j++) {
+        transform.push(view.getFloat32(offset + j * 4, true))
       }
 
-      const meshIndex = reader.readUint32();
+      // Mesh index at offset 64 within the entry
+      const meshIndex = view.getUint32(offset + 64, true)
 
-      reader.skip(REMAINING_SKIP);
-
-      instances.push({ meshIndex, transform });
-    } catch (err) {
-      console.warn(`MZB: failed to parse mesh entry ${i}, skipping:`, err);
-      // Attempt to advance past the failed entry to recover
-      try {
-        const entryStart = meshOffset + i * ENTRY_SIZE;
-        const nextEntryStart = entryStart + ENTRY_SIZE;
-        if (nextEntryStart <= data.byteLength) {
-          reader.seek(nextEntryStart);
-        } else {
-          break;
-        }
-      } catch {
-        break;
-      }
+      instances.push({ meshIndex, transform })
+    } catch {
+      break
     }
   }
 
-  return instances;
+  return instances
 }

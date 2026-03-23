@@ -16,7 +16,7 @@ type SectionName = 'database' | 'economy' | 'server' | 'admin'
 function getSection(pathname: string): SectionName | null {
   if (pathname.startsWith('/items') || pathname.startsWith('/npcs') || pathname.startsWith('/zones')) return 'database'
   if (pathname.startsWith('/bazaar')) return 'economy'
-  if (pathname.startsWith('/servers') || pathname.startsWith('/clock')) return 'server'
+  if (pathname.startsWith('/server/')) return 'server'
   if (pathname.startsWith('/admin')) return 'admin'
   return null
 }
@@ -153,7 +153,7 @@ function LayoutInner() {
           <SidebarSection label="Database" icon={<Database className="h-4 w-4 shrink-0" />} isOpen={openSection === 'database'} onToggle={() => toggleSection('database')}>
             <SidebarLink to="/items" end={false} label="Items" icon={<Package className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
             <SidebarLink to="/npcs" label="NPCs" icon={<Bug className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
-            <SidebarLink to="/zones" label="Zone Viewer" icon={<Map className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+            <SidebarLink to="/zones" label="Zones" icon={<Map className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
           </SidebarSection>
 
           <SidebarSection label="Economy" icon={<Store className="h-4 w-4 shrink-0" />} isOpen={openSection === 'economy'} onToggle={() => toggleSection('economy')}>
@@ -161,8 +161,8 @@ function LayoutInner() {
           </SidebarSection>
 
           <SidebarSection label="Server" icon={<Radio className="h-4 w-4 shrink-0" />} isOpen={openSection === 'server'} onToggle={() => toggleSection('server')}>
-            <SidebarLink to="/servers" label="Status" icon={<Radio className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
-            <SidebarLink to="/clock" label="Clock" icon={<Clock className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+            <SidebarLink to="/server/status" end={false} label="Status" icon={<Radio className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+            <SidebarLink to="/server/clock" label="Clock" icon={<Clock className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
           </SidebarSection>
 
           <SidebarLink to="/setup" label="Setup Guide" icon={<BookOpen className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />

@@ -50,6 +50,39 @@ export function parseZoneFile(
   const reader = new DatReader(buffer)
   const blocks = parseBlockChain(reader)
 
+  // Debug: log all block types found
+  const typeCounts = new Map<number, number>()
+  for (const b of blocks) typeCounts.set(b.type, (typeCounts.get(b.type) ?? 0) + 1)
+  const typeList = Array.from(typeCounts.entries())
+    .map(([t, c]) => `0x${t.toString(16).padStart(2, '0')}=${c}`)
+    .join(', ')
+  onProgress?.(`Block chain: ${blocks.length} blocks, types: [${typeList}]`)
+
+  // Debug: dump first 5 blocks for inspection
+  for (let i = 0; i < Math.min(5, blocks.length); i++) {
+    const b = blocks[i]
+    onProgress?.(`  Block ${i}: name="${b.name}" type=0x${b.type.toString(16)} size=${b.dataLength} offset=0x${b.dataOffset.toString(16)}`)
+  }
+
+  // Debug: hex dump first 64 bytes of the largest block
+  const largestBlock = blocks.reduce((a, b) => b.dataLength > a.dataLength ? b : a, blocks[0])
+  if (largestBlock && largestBlock.dataLength > 100) {
+    const start = largestBlock.dataOffset + BLOCK_PADDING
+    const raw = new Uint8Array(buffer, start, Math.min(64, largestBlock.dataLength - BLOCK_PADDING))
+    const hex = Array.from(raw).map(b => b.toString(16).padStart(2, '0')).join(' ')
+    onProgress?.(`  Largest block raw hex (offset 0x${start.toString(16)}): ${hex}`)
+    // Also try reading as uint32 LE values
+    const dv = new DataView(buffer, start, Math.min(32, largestBlock.dataLength - BLOCK_PADDING))
+    const u32s: string[] = []
+    for (let i = 0; i < 8 && i * 4 < dv.byteLength; i++) {
+      u32s.push(`0x${dv.getUint32(i * 4, true).toString(16)}`)
+    }
+    onProgress?.(`  As uint32 LE: ${u32s.join(', ')}`)
+    // Check for "MMB " or "MZB " signatures
+    const sig = String.fromCharCode(raw[0], raw[1], raw[2], raw[3])
+    onProgress?.(`  4-char signature: "${sig}"`)
+  }
+
   const textures: ParsedTexture[] = []
   const prefabs: ParsedZoneMesh[] = []
   const instances: ZoneMeshInstance[] = []
@@ -79,13 +112,29 @@ export function parseZoneFile(
     try {
       const blockData = new Uint8Array(buffer, start, len)
       const decryptedData = decodeMmb(blockData)
+      // Debug first MMB block
+      if (i === 0) {
+        const decHex32 = Array.from(decryptedData.slice(24, 48)).map(b => b.toString(16).padStart(2, '0')).join(' ')
+        onProgress?.(`  MMB[0] dec[24..47]: ${decHex32}`)
+        onProgress?.(`  MMB[0] blockSize=${len}`)
+        const dv = new DataView(decryptedData.buffer, decryptedData.byteOffset, Math.min(80, decryptedData.byteLength))
+        // Show uint32s at key offsets
+        const offsets = [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
+        const vals = offsets.map(o => `[${o}]=0x${dv.getUint32(o, true).toString(16)}`).join(' ')
+        onProgress?.(`  MMB[0] dec uint32s: ${vals}`)
+        // Also try int32 at offset 32 (expected pieceCount)
+        onProgress?.(`  MMB[0] pieceCount candidate at offset 32: ${dv.getInt32(32, true)}`)
+        // Try reading as int16 at various offsets near 32
+        onProgress?.(`  MMB[0] int16s around 32: [30]=${dv.getInt16(30, true)} [32]=${dv.getInt16(32, true)} [34]=${dv.getInt16(34, true)} [36]=${dv.getInt16(36, true)}`)
+      }
       const meshes = parseMmbBlock(decryptedData)
       prefabs.push(...meshes)
-      onProgress?.(`MMB block ${i + 1}/${mmbBlocks.length} parsed (${meshes.length} mesh(es))`)
+      if (i < 3) onProgress?.(`MMB block ${i + 1}/${mmbBlocks.length} parsed (${meshes.length} mesh(es))`)
     } catch (err) {
-      onProgress?.(`Warning: MMB block ${i + 1}/${mmbBlocks.length} failed — ${err}`)
+      if (i < 3) onProgress?.(`Warning: MMB block ${i + 1}/${mmbBlocks.length} failed — ${err}`)
     }
   }
+  onProgress?.(`MMB total: ${prefabs.length} prefab mesh(es) from ${mmbBlocks.length} blocks`)
 
   // Pass 3 — MZB transforms
   const mzbBlocks = blocks.filter(b => b.type === BLOCK_MZB)
@@ -97,7 +146,16 @@ export function parseZoneFile(
     if (len <= 0) continue
     try {
       const blockData = new Uint8Array(buffer, start, len)
+      // Debug MZB block
+      const rawHex = Array.from(blockData.slice(0, 32)).map(b => b.toString(16).padStart(2, '0')).join(' ')
+      onProgress?.(`  MZB[0] raw[0..31]: ${rawHex}`)
+      onProgress?.(`  MZB[0] blockSize=${len}, data[0..7]=${blockData[0]},${blockData[1]},${blockData[2]},${blockData[3]},${blockData[4]},${blockData[5]},${blockData[6]},${blockData[7]}`)
       const decryptedData = decodeMzb(blockData)
+      const decHex = Array.from(decryptedData.slice(0, 32)).map(b => b.toString(16).padStart(2, '0')).join(' ')
+      onProgress?.(`  MZB[0] dec[0..31]: ${decHex}`)
+      const dv = new DataView(decryptedData.buffer, decryptedData.byteOffset, Math.min(32, decryptedData.byteLength))
+      const h = [0,4,8,12,16,20,24,28].map(o => `0x${dv.getUint32(o, true).toString(16)}`).join(', ')
+      onProgress?.(`  MZB[0] dec uint32s: ${h}`)
       const newInstances = parseMzbBlock(decryptedData)
       instances.push(...newInstances)
       onProgress?.(`MZB block ${i + 1}/${mzbBlocks.length} parsed (${newInstances.length} instance(s))`)

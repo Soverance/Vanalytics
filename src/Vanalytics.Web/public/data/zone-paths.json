@@ -1,1022 +1,347 @@
 [
   {
     "name": "Altar Room",
-    "path": "ROM/26/89.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Balga's Dais",
-    "path": "ROM/26/83.dat",
+    "path": "ROM/0/64.dat",
     "expansion": "Original"
   },
   {
     "name": "Bastok Markets",
-    "path": "ROM/27/44.dat",
+    "path": "ROM/1/35.dat",
     "expansion": "Original"
   },
   {
     "name": "Bastok Mines",
-    "path": "ROM/27/43.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Bastok-Jeuno Airship",
-    "path": "ROM/27/33.dat",
+    "path": "ROM/1/34.dat",
     "expansion": "Original"
   },
   {
     "name": "Batallia Downs",
-    "path": "ROM/26/42.dat",
+    "path": "ROM/0/103.dat",
     "expansion": "Original"
   },
   {
     "name": "Beadeaux",
-    "path": "ROM/26/84.dat",
+    "path": "ROM/0/61.dat",
     "expansion": "Original"
   },
   {
     "name": "Beaucedine Glacier",
-    "path": "ROM/26/48.dat",
+    "path": "ROM/0/110.dat",
     "expansion": "Original"
   },
   {
     "name": "Behemoth's Dominion",
-    "path": "ROM/26/64.dat",
+    "path": "ROM/0/126.dat",
     "expansion": "Original"
   },
   {
     "name": "Bostaunieux Oubliette",
-    "path": "ROM/26/104.dat",
+    "path": "ROM/0/108.dat",
     "expansion": "Original"
   },
   {
     "name": "Buburimu Peninsula",
-    "path": "ROM/26/55.dat",
+    "path": "ROM/0/115.dat",
     "expansion": "Original"
   },
   {
     "name": "Castle Oztroja",
-    "path": "ROM/26/88.dat",
+    "path": "ROM/0/63.dat",
     "expansion": "Original"
   },
   {
     "name": "Castle Zvahl Baileys",
-    "path": "ROM/26/98.dat",
+    "path": "ROM/0/66.dat",
     "expansion": "Original"
   },
   {
     "name": "Castle Zvahl Keep",
-    "path": "ROM/26/99.dat",
+    "path": "ROM/0/73.dat",
     "expansion": "Original"
   },
   {
     "name": "Chateau d'Oraguille",
-    "path": "ROM/27/42.dat",
+    "path": "ROM/1/33.dat",
     "expansion": "Original"
   },
   {
-    "name": "Crawlers' Nest",
-    "path": "ROM/27/6.dat",
+    "name": "Crawler's Nest",
+    "path": "ROM/0/76.dat",
     "expansion": "Original"
   },
   {
     "name": "Dangruf Wadi",
-    "path": "ROM/27/0.dat",
+    "path": "ROM/0/90.dat",
     "expansion": "Original"
   },
   {
     "name": "Davoi",
-    "path": "ROM/26/86.dat",
+    "path": "ROM/0/99.dat",
     "expansion": "Original"
   },
   {
     "name": "East Ronfaure",
-    "path": "ROM/26/38.dat",
+    "path": "ROM/0/121.dat",
     "expansion": "Original"
   },
   {
     "name": "East Sarutabaruta",
-    "path": "ROM/26/53.dat",
+    "path": "ROM/1/0.dat",
     "expansion": "Original"
   },
   {
     "name": "Fei'Yin",
-    "path": "ROM/27/13.dat",
+    "path": "ROM/0/119.dat",
     "expansion": "Original"
   },
   {
     "name": "Fort Ghelsba",
-    "path": "ROM/26/78.dat",
+    "path": "ROM/1/7.dat",
     "expansion": "Original"
   },
   {
     "name": "Garlaige Citadel",
-    "path": "ROM/27/9.dat",
+    "path": "ROM/1/17.dat",
     "expansion": "Original"
   },
   {
     "name": "Ghelsba Outpost",
-    "path": "ROM/26/77.dat",
+    "path": "ROM/0/95.dat",
     "expansion": "Original"
   },
   {
     "name": "Giddeus",
-    "path": "ROM/26/82.dat",
+    "path": "ROM/0/104.dat",
     "expansion": "Original"
   },
   {
     "name": "Gusgen Mines",
-    "path": "ROM/27/5.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Heavens Tower",
-    "path": "ROM/27/51.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Horlais Peak",
-    "path": "ROM/26/76.dat",
+    "path": "ROM/1/16.dat",
     "expansion": "Original"
   },
   {
     "name": "Inner Horutoto Ruins",
-    "path": "ROM/27/1.dat",
+    "path": "ROM/0/112.dat",
     "expansion": "Original"
   },
   {
     "name": "Jugner Forest",
-    "path": "ROM/26/41.dat",
+    "path": "ROM/0/101.dat",
     "expansion": "Original"
   },
   {
     "name": "King Ranperre's Tomb",
-    "path": "ROM/26/127.dat",
+    "path": "ROM/0/89.dat",
     "expansion": "Original"
   },
   {
     "name": "Konschtat Highlands",
-    "path": "ROM/26/45.dat",
+    "path": "ROM/0/106.dat",
+    "expansion": "Original"
+  },
+  {
+    "name": "Korroloka Tunnel",
+    "path": "ROM/1/9.dat",
+    "expansion": "Original"
+  },
+  {
+    "name": "Kuftal Tunnel",
+    "path": "ROM/1/10.dat",
     "expansion": "Original"
   },
   {
     "name": "La Theine Plateau",
-    "path": "ROM/26/39.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Lower Delkfutt's Tower",
-    "path": "ROM/26/121.dat",
+    "path": "ROM/0/122.dat",
     "expansion": "Original"
   },
   {
     "name": "Lower Jeuno",
-    "path": "ROM/27/54.dat",
+    "path": "ROM/1/41.dat",
     "expansion": "Original"
   },
   {
     "name": "Maze of Shakhrami",
-    "path": "ROM/27/7.dat",
+    "path": "ROM/0/75.dat",
     "expansion": "Original"
   },
   {
     "name": "Meriphataud Mountains",
-    "path": "ROM/26/56.dat",
+    "path": "ROM/0/116.dat",
     "expansion": "Original"
   },
   {
     "name": "Metalworks",
-    "path": "ROM/27/46.dat",
+    "path": "ROM/1/37.dat",
     "expansion": "Original"
   },
   {
     "name": "Mhaura",
-    "path": "ROM/27/58.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Middle Delkfutt's Tower",
-    "path": "ROM/26/94.dat",
+    "path": "ROM/1/44.dat",
     "expansion": "Original"
   },
   {
     "name": "Monastic Cavern",
-    "path": "ROM/26/87.dat",
+    "path": "ROM/0/100.dat",
     "expansion": "Original"
   },
   {
     "name": "North Gustaberg",
-    "path": "ROM/26/43.dat",
+    "path": "ROM/0/123.dat",
     "expansion": "Original"
   },
   {
     "name": "Northern San d'Oria",
-    "path": "ROM/27/40.dat",
+    "path": "ROM/1/32.dat",
     "expansion": "Original"
   },
   {
     "name": "Ordelle's Caves",
-    "path": "ROM/27/2.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Outer Horutoto Ruins",
-    "path": "ROM/27/3.dat",
+    "path": "ROM/0/92.dat",
     "expansion": "Original"
   },
   {
     "name": "Palborough Mines",
-    "path": "ROM/26/80.dat",
+    "path": "ROM/0/88.dat",
     "expansion": "Original"
   },
   {
     "name": "Pashhow Marshlands",
-    "path": "ROM/26/46.dat",
+    "path": "ROM/0/107.dat",
     "expansion": "Original"
   },
   {
     "name": "Port Bastok",
-    "path": "ROM/27/45.dat",
+    "path": "ROM/1/36.dat",
     "expansion": "Original"
   },
   {
     "name": "Port Jeuno",
-    "path": "ROM/27/55.dat",
+    "path": "ROM/1/42.dat",
     "expansion": "Original"
   },
   {
     "name": "Port San d'Oria",
-    "path": "ROM/27/41.dat",
+    "path": "ROM/0/113.dat",
     "expansion": "Original"
   },
   {
     "name": "Port Windurst",
-    "path": "ROM/27/49.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Qu'Bia Arena",
-    "path": "ROM/27/15.dat",
+    "path": "ROM/0/80.dat",
     "expansion": "Original"
   },
   {
     "name": "Qufim Island",
-    "path": "ROM/26/63.dat",
+    "path": "ROM/0/58.dat",
     "expansion": "Original"
   },
   {
     "name": "Qulun Dome",
-    "path": "ROM/26/85.dat",
+    "path": "ROM/0/62.dat",
     "expansion": "Original"
   },
   {
     "name": "Ranguemont Pass",
-    "path": "ROM/26/103.dat",
+    "path": "ROM/0/118.dat",
     "expansion": "Original"
   },
   {
     "name": "Rolanberry Fields",
-    "path": "ROM/26/47.dat",
+    "path": "ROM/0/109.dat",
     "expansion": "Original"
   },
   {
     "name": "Ru'Lude Gardens",
-    "path": "ROM/27/52.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "San d'Oria-Jeuno Airship",
-    "path": "ROM/27/32.dat",
+    "path": "ROM/1/39.dat",
     "expansion": "Original"
   },
   {
     "name": "Sauromugue Champaign",
-    "path": "ROM/26/57.dat",
+    "path": "ROM/0/117.dat",
     "expansion": "Original"
   },
   {
     "name": "Selbina",
-    "path": "ROM/27/57.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Ship bound for Mhaura",
-    "path": "ROM/27/30.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Ship bound for Mhaura",
-    "path": "ROM/27/37.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Ship bound for Selbina",
-    "path": "ROM/27/29.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Ship bound for Selbina",
-    "path": "ROM/27/36.dat",
+    "path": "ROM/1/43.dat",
     "expansion": "Original"
   },
   {
     "name": "South Gustaberg",
-    "path": "ROM/26/44.dat",
+    "path": "ROM/0/124.dat",
     "expansion": "Original"
   },
   {
     "name": "Southern San d'Oria",
-    "path": "ROM/27/39.dat",
+    "path": "ROM/1/31.dat",
     "expansion": "Original"
   },
   {
     "name": "Tahrongi Canyon",
-    "path": "ROM/26/54.dat",
+    "path": "ROM/0/114.dat",
     "expansion": "Original"
   },
   {
     "name": "The Eldieme Necropolis",
-    "path": "ROM/27/4.dat",
+    "path": "ROM/0/77.dat",
     "expansion": "Original"
   },
   {
     "name": "Throne Room",
-    "path": "ROM/26/102.dat",
+    "path": "ROM/0/74.dat",
     "expansion": "Original"
   },
   {
     "name": "Toraimarai Canal",
-    "path": "ROM/26/106.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Upper Delkfutt's Tower",
-    "path": "ROM/26/95.dat",
+    "path": "ROM/0/65.dat",
     "expansion": "Original"
   },
   {
     "name": "Upper Jeuno",
-    "path": "ROM/27/53.dat",
+    "path": "ROM/1/40.dat",
     "expansion": "Original"
   },
   {
     "name": "Valkurm Dunes",
-    "path": "ROM/26/40.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Waughroon Shrine",
-    "path": "ROM/26/81.dat",
+    "path": "ROM/0/102.dat",
     "expansion": "Original"
   },
   {
     "name": "West Ronfaure",
-    "path": "ROM/26/37.dat",
+    "path": "ROM/0/120.dat",
     "expansion": "Original"
   },
   {
     "name": "West Sarutabaruta",
-    "path": "ROM/26/52.dat",
+    "path": "ROM/0/127.dat",
     "expansion": "Original"
   },
   {
     "name": "Windurst Walls",
-    "path": "ROM/27/48.dat",
+    "path": "ROM/0/79.dat",
     "expansion": "Original"
   },
   {
     "name": "Windurst Waters",
-    "path": "ROM/27/47.dat",
+    "path": "ROM/0/78.dat",
     "expansion": "Original"
   },
   {
     "name": "Windurst Woods",
-    "path": "ROM/27/50.dat",
-    "expansion": "Original"
-  },
-  {
-    "name": "Windurst-Jeuno Airship",
-    "path": "ROM/27/34.dat",
+    "path": "ROM/0/81.dat",
     "expansion": "Original"
   },
   {
     "name": "Xarcabard",
-    "path": "ROM/26/49.dat",
+    "path": "ROM/0/111.dat",
     "expansion": "Original"
   },
   {
     "name": "Yughott Grotto",
-    "path": "ROM/26/79.dat",
+    "path": "ROM/0/96.dat",
     "expansion": "Original"
   },
   {
     "name": "Zeruhn Mines",
-    "path": "ROM/26/109.dat",
+    "path": "ROM/1/11.dat",
     "expansion": "Original"
-  },
-  {
-    "name": "Cape Teriggan",
-    "path": "ROM2/13/95.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Chamber of Oracles",
-    "path": "ROM2/13/111.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Cloister of Flames",
-    "path": "ROM2/14/1.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Cloister of Frost",
-    "path": "ROM2/13/127.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Cloister of Gales",
-    "path": "ROM2/13/125.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Cloister of Storms",
-    "path": "ROM2/13/126.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Cloister of Tides",
-    "path": "ROM2/14/4.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Cloister of Tremors",
-    "path": "ROM2/14/3.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Den of Rancor",
-    "path": "ROM2/13/109.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Dragon's Aery",
-    "path": "ROM2/13/107.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Dynamis - Bastok",
-    "path": "ROM2/13/122.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Dynamis - Beaucedine",
-    "path": "ROM2/13/104.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Dynamis - Jeuno",
-    "path": "ROM2/13/124.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Dynamis - San d'Oria",
-    "path": "ROM2/13/121.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Dynamis - Windurst",
-    "path": "ROM2/13/123.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Dynamis - Xarcabard",
-    "path": "ROM2/13/105.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Eastern Altepa Desert",
-    "path": "ROM2/13/96.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Full Moon Fountain",
-    "path": "ROM2/13/112.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Gustav Tunnel",
-    "path": "ROM2/14/5.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Hall of the Gods",
-    "path": "ROM2/14/10.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Ifrit's Cauldron",
-    "path": "ROM2/14/0.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Kazham",
-    "path": "ROM2/14/9.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Kazham-Jeuno Airship",
-    "path": "ROM2/14/7.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Korroloka Tunnel",
-    "path": "ROM2/13/113.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Kuftal Tunnel",
-    "path": "ROM2/13/114.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "La'Loff Amphitheater",
-    "path": "ROM2/13/119.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Labyrinth of Onzozo",
-    "path": "ROM2/14/6.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Norg",
-    "path": "ROM2/14/11.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Quicksand Caves",
-    "path": "ROM2/14/2.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Rabao",
-    "path": "ROM2/14/8.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Ro'Maeve",
-    "path": "ROM2/13/98.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Ru'Aun Gardens",
-    "path": "ROM2/13/103.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Sacrificial Chamber",
-    "path": "ROM2/13/110.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Sea Serpent Grotto",
-    "path": "ROM2/13/115.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Stellar Fulcrum",
-    "path": "ROM2/13/118.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Temple of Uggalepih",
-    "path": "ROM2/13/108.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "The Boyahda Tree",
-    "path": "ROM2/13/106.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "The Celestial Nexus",
-    "path": "ROM2/13/120.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "The Sanctuary of Zi'Tah",
-    "path": "ROM2/13/97.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "The Shrine of Ru'Avitau",
-    "path": "ROM2/13/117.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Valley of Sorrows",
-    "path": "ROM2/13/102.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Ve'Lugannon Palace",
-    "path": "ROM2/13/116.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Western Altepa Desert",
-    "path": "ROM2/13/101.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Yhoator Jungle",
-    "path": "ROM2/13/100.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Yuhtunga Jungle",
-    "path": "ROM2/13/99.dat",
-    "expansion": "Zilart"
-  },
-  {
-    "name": "Abdhaljs Isle-Purgonorgo",
-    "path": "ROM3/3/26.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Al'Taieu",
-    "path": "ROM3/3/15.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Apollyon",
-    "path": "ROM3/3/20.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Attohwa Chasm",
-    "path": "ROM3/2/117.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Bearclaw Pinnacle",
-    "path": "ROM3/2/116.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Bibiki Bay",
-    "path": "ROM3/2/114.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Boneyard Gully",
-    "path": "ROM3/2/118.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Carpenters' Landing",
-    "path": "ROM3/2/112.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Diorama Abdhaljs-Ghelsba",
-    "path": "ROM3/3/25.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Dynamis - Buburimu",
-    "path": "ROM3/3/22.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Dynamis - Qufim",
-    "path": "ROM3/3/23.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Dynamis - Tavnazia",
-    "path": "ROM3/3/24.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Dynamis - Valkurm",
-    "path": "ROM3/3/21.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Empyreal Paradox",
-    "path": "ROM3/3/18.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Grand Palace of Hu'Xzoi",
-    "path": "ROM3/3/16.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Hall of Transference",
-    "path": "ROM3/2/124.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Lufiase Meadows",
-    "path": "ROM3/3/6.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Manaclipper",
-    "path": "ROM3/2/113.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Mine Shaft #2716",
-    "path": "ROM3/2/123.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Misareaux Coast",
-    "path": "ROM3/3/7.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Monarch Linn",
-    "path": "ROM3/3/13.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Newton Movalpolos",
-    "path": "ROM3/2/122.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Oldton Movalpolos",
-    "path": "ROM3/2/121.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Phanauet Channel",
-    "path": "ROM3/2/111.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Phomiuna Aqueducts",
-    "path": "ROM3/3/9.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Promyvion-Dem",
-    "path": "ROM3/3/0.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Promyvion-Holla",
-    "path": "ROM3/2/126.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Promyvion-Mea",
-    "path": "ROM3/3/2.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Promyvion-Vahzl",
-    "path": "ROM3/3/4.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Pso'Xja",
-    "path": "ROM3/2/119.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Riverne - Site #A01",
-    "path": "ROM3/3/12.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Riverne - Site #B01",
-    "path": "ROM3/3/11.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Sacrarium",
-    "path": "ROM3/3/10.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Sealion's Den",
-    "path": "ROM3/3/14.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Spire of Dem",
-    "path": "ROM3/3/1.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Spire of Holla",
-    "path": "ROM3/2/127.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Spire of Mea",
-    "path": "ROM3/3/3.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Spire of Vahzl",
-    "path": "ROM3/3/5.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Tavnazian Safehold",
-    "path": "ROM3/3/8.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Temenos",
-    "path": "ROM3/3/19.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "The Garden of Ru'Hmet",
-    "path": "ROM3/3/17.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "The Shrouded Maw",
-    "path": "ROM3/2/120.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Uleguerand Range",
-    "path": "ROM3/2/115.dat",
-    "expansion": "Promathia"
-  },
-  {
-    "name": "Aht Urhgan Whitegate",
-    "path": "ROM4/1/49.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Al Zahbi",
-    "path": "ROM4/1/47.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Alzadaal Undersea Ruins",
-    "path": "ROM4/1/71.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Arrapago Reef",
-    "path": "ROM4/1/53.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Arrapago Remnants",
-    "path": "ROM4/1/73.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Aydeewa Subterrane",
-    "path": "ROM4/1/67.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Bhaflau Remnants",
-    "path": "ROM4/1/74.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Bhaflau Thickets",
-    "path": "ROM4/1/51.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Caedarva Mire",
-    "path": "ROM4/1/78.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Chocobo Circuit",
-    "path": "ROM4/1/69.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Halvung",
-    "path": "ROM4/1/61.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Hazhalm Testing Grounds",
-    "path": "ROM4/1/77.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Ilrusi Atoll",
-    "path": "ROM4/1/54.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Jade Sepulcher",
-    "path": "ROM4/1/66.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Lebros Cavern",
-    "path": "ROM4/1/62.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Leujaoam Sanctum",
-    "path": "ROM4/1/68.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Mamook",
-    "path": "ROM4/1/64.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Mamool Ja Training Grounds",
-    "path": "ROM4/1/65.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Mount Zhayolm",
-    "path": "ROM4/1/60.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Nashmau",
-    "path": "ROM4/1/52.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Navukgo Execution Chamber",
-    "path": "ROM4/1/63.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Nyzul Isle",
-    "path": "ROM4/1/76.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Open sea route to Al Zahbi",
-    "path": "ROM4/1/45.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Open sea route to Mhaura",
-    "path": "ROM4/1/46.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Periqia",
-    "path": "ROM4/1/55.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Silver Sea Remnants",
-    "path": "ROM4/1/75.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Silver Sea route to Al Zahbi",
-    "path": "ROM4/1/58.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Silver Sea route to Nashmau",
-    "path": "ROM4/1/57.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Talacca Cove",
-    "path": "ROM4/1/56.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "The Ashu Talif",
-    "path": "ROM4/1/59.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "The Colosseum",
-    "path": "ROM4/1/70.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Wajaom Woodlands",
-    "path": "ROM4/1/50.dat",
-    "expansion": "Aht Urhgan"
-  },
-  {
-    "name": "Zhayolm Remnants",
-    "path": "ROM4/1/72.dat",
-    "expansion": "Aht Urhgan"
   }
 ]
