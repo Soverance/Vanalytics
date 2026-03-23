@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
 import LoginModal from './LoginModal'
-import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock } from 'lucide-react'
+import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock, KeyRound } from 'lucide-react'
 import { CompareProvider } from './compare/CompareContext'
 import CompareTray from './compare/CompareTray'
 import { SyncProvider } from '../context/SyncContext'
@@ -90,6 +90,7 @@ function LayoutInner() {
               </div>
               <SidebarLink to="/admin/users" label="Users" icon={<Users className="h-4 w-4 shrink-0" />} />
               <SidebarLink to="/admin/data" label="Data" icon={<Database className="h-4 w-4 shrink-0" />} />
+              <SidebarLink to="/admin/saml" label="SAML" icon={<KeyRound className="h-4 w-4 shrink-0" />} />
             </>
           )}
         </nav>

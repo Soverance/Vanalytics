@@ -17,12 +17,14 @@ public class AuthController : ControllerBase
     private readonly VanalyticsDbContext _db;
     private readonly TokenService _tokenService;
     private readonly OAuthService _oauthService;
+    private readonly AuthResponseService _authResponseService;
 
-    public AuthController(VanalyticsDbContext db, TokenService tokenService, OAuthService oauthService)
+    public AuthController(VanalyticsDbContext db, TokenService tokenService, OAuthService oauthService, AuthResponseService authResponseService)
     {
         _db = db;
         _tokenService = tokenService;
         _oauthService = oauthService;
+        _authResponseService = authResponseService;
     }
 
     [HttpPost("register")]
@@ -47,7 +49,7 @@ public class AuthController : ControllerBase
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        return Ok(await GenerateAuthResponseAsync(user));
+        return Ok(await _authResponseService.GenerateAuthResponseAsync(_db, user));
     }
 
     [HttpPost("login")]
@@ -60,7 +62,7 @@ public class AuthController : ControllerBase
         if (!PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
             return Unauthorized(new { message = "Invalid credentials" });
 
-        return Ok(await GenerateAuthResponseAsync(user));
+        return Ok(await _authResponseService.GenerateAuthResponseAsync(_db, user));
     }
 
     [HttpPost("oauth/{provider}")]
@@ -123,7 +125,7 @@ public class AuthController : ControllerBase
             await _db.SaveChangesAsync();
         }
 
-        return Ok(await GenerateAuthResponseAsync(user));
+        return Ok(await _authResponseService.GenerateAuthResponseAsync(_db, user));
     }
 
     // Note: Spec says refresh requires JWT, but this is intentionally unauthenticated.
@@ -146,7 +148,7 @@ public class AuthController : ControllerBase
         // will persist both the revocation and the new refresh token in one round trip.
         refreshToken.IsRevoked = true;
 
-        return Ok(await GenerateAuthResponseAsync(refreshToken.User));
+        return Ok(await _authResponseService.GenerateAuthResponseAsync(_db, refreshToken.User));
     }
 
     [Authorize]
@@ -167,30 +169,5 @@ public class AuthController : ControllerBase
             OAuthProvider = user.OAuthProvider,
             CreatedAt = user.CreatedAt
         });
-    }
-
-    private async Task<AuthResponse> GenerateAuthResponseAsync(User user)
-    {
-        var accessToken = _tokenService.GenerateAccessToken(user);
-        var refreshTokenValue = _tokenService.GenerateRefreshToken();
-
-        var refreshToken = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            Token = refreshTokenValue,
-            ExpiresAt = _tokenService.GetRefreshTokenExpiration(),
-            CreatedAt = DateTimeOffset.UtcNow
-        };
-
-        _db.RefreshTokens.Add(refreshToken);
-        await _db.SaveChangesAsync();
-
-        return new AuthResponse
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshTokenValue,
-            ExpiresAt = _tokenService.GetAccessTokenExpiration()
-        };
     }
 }

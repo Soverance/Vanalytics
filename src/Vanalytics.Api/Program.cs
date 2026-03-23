@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
+using Soverance.Auth.Endpoints;
 using Soverance.Auth.Extensions;
 using Soverance.Auth.Services;
 using Soverance.Data.Extensions;
@@ -16,6 +17,8 @@ builder.Services.AddSoveranceSqlServer<VanalyticsDbContext>(builder.Configuratio
 // Authentication
 builder.Services.AddSoveranceJwtAuth(builder.Configuration)
     .AddSoveranceApiKeyAuth();
+builder.Services.AddSingleton<ISamlSignInHandler, JwtSamlSignInHandler>();
+builder.Services.AddScoped<AuthResponseService>();
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -139,6 +142,9 @@ app.MapScalarApiReference("/api/docs", options =>
     options.Title = "Vanalytics API";
 });
 app.MapControllers();
+app.MapSamlEndpoints();
+app.MapSamlAdminEndpoints();
+app.MapSamlExchangeEndpoint();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
 // SPA fallback: serve index.html for unmatched non-file, non-API requests

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { ApiError } from '../api/client'
+import { api, ApiError } from '../api/client'
 import { X } from 'lucide-react'
 
 const OAUTH_CONFIG = {
@@ -24,6 +24,13 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [samlEnabled, setSamlEnabled] = useState(false)
+
+  useEffect(() => {
+    api<{ samlEnabled: boolean }>('/api/auth/saml/status')
+      .then(res => setSamlEnabled(res.samlEnabled))
+      .catch(() => {})
+  }, [])
 
   // Close on Escape key
   useEffect(() => {
@@ -98,6 +105,22 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
           <div className="mb-4 rounded bg-red-900/50 border border-red-700 p-3 text-sm text-red-300">
             {error}
           </div>
+        )}
+
+        {samlEnabled && (
+          <>
+            <a
+              href="/api/auth/saml/login"
+              className="block w-full rounded bg-indigo-600 py-2 text-center font-medium hover:bg-indigo-500"
+            >
+              Sign in with SSO
+            </a>
+            <div className="flex items-center gap-4 my-4">
+              <span className="flex-1 h-px bg-gray-700" />
+              <span className="text-gray-500 text-sm">or</span>
+              <span className="flex-1 h-px bg-gray-700" />
+            </div>
+          </>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">

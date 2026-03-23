@@ -5,7 +5,6 @@
     "useDefineForClassFields": true,
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client"],
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -22,7 +21,12 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@common/*": ["../../lib/Common/src/Soverance.Web/*", "./common-web/*"]
+    },
+    "typeRoots": ["node_modules/@types"]
   },
-  "include": ["src"]
+  "include": ["src", "../../lib/Common/src/Soverance.Web"]
 }

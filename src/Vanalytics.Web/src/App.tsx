@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import OAuthCallback from './pages/OAuthCallback'
@@ -12,16 +14,72 @@ import SetupGuidePage from './pages/SetupGuidePage'
 import ServerStatusPage from './pages/ServerStatusPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import AdminItemsPage from './pages/AdminItemsPage'
+import AdminSamlPage from './pages/AdminSamlPage'
 import ItemDatabasePage from './pages/ItemDatabasePage'
 import ItemDetailPage from './pages/ItemDetailPage'
 import BazaarActivityPage from './pages/BazaarActivityPage'
 import VanadielClockPage from './pages/VanadielClockPage'
 import PublicProfilePage from './pages/PublicProfilePage'
 
+function SamlCodeHandler() {
+  const { samlExchange } = useAuth()
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('saml_code')
+    const samlError = params.get('error')
+
+    if (samlError) {
+      const messages: Record<string, string> = {
+        saml_failed: 'SSO authentication failed. Please try again.',
+        no_username: 'No username was returned by the identity provider.',
+        no_account: 'No matching account found. Contact your administrator.',
+        disabled: 'Your account has been disabled.',
+        saml_disabled: 'SSO is not currently enabled.',
+      }
+      setError(messages[samlError] || 'Authentication failed.')
+      const url = new URL(window.location.href)
+      url.searchParams.delete('error')
+      window.history.replaceState({}, '', url.toString())
+      return
+    }
+
+    if (!code) return
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('saml_code')
+    window.history.replaceState({}, '', url.toString())
+
+    samlExchange(code).catch(() => {
+      setError('SSO login failed. Please try again.')
+    })
+  }, [])
+
+  if (error) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <div className="rounded-lg border border-gray-800 bg-gray-900 p-8 max-w-md mx-4 text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={() => setError('')}
+            className="text-blue-400 hover:underline text-sm"
+          >
+            Dismiss
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return null
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <SamlCodeHandler />
         <Routes>
           {/* Public: landing page (no layout) */}
           <Route path="/" element={<LandingPage />} />
@@ -46,6 +104,7 @@ export default function App() {
             <Route path="/setup" element={<ProtectedRoute><SetupGuidePage /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
             <Route path="/admin/data" element={<ProtectedRoute><AdminItemsPage /></ProtectedRoute>} />
+            <Route path="/admin/saml" element={<ProtectedRoute><AdminSamlPage /></ProtectedRoute>} />
           </Route>
         </Routes>
       </AuthProvider>

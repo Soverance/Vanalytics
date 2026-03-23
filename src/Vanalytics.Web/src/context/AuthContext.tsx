@@ -8,6 +8,7 @@ interface AuthState {
   login: (req: LoginRequest) => Promise<void>
   register: (req: RegisterRequest) => Promise<void>
   oauthLogin: (provider: string, code: string, redirectUri: string) => Promise<void>
+  samlExchange: (code: string) => Promise<void>
   logout: () => void
 }
 
@@ -59,13 +60,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(profile)
   }
 
+  const samlExchange = async (code: string) => {
+    const auth = await api<AuthResponse>('/api/auth/saml/exchange', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    })
+    storeTokens(auth.accessToken, auth.refreshToken)
+    const profile = await api<UserProfile>('/api/auth/me')
+    setUser(profile)
+  }
+
   const logout = () => {
     clearTokens()
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, oauthLogin, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, oauthLogin, samlExchange, logout }}>
       {children}
     </AuthContext.Provider>
   )
