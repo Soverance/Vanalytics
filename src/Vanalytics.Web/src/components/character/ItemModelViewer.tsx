@@ -1,11 +1,9 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
-import * as THREE from 'three'
+import { useState, useRef, useEffect } from 'react'
 import { useFfxiFileSystem } from '../../context/FfxiFileSystemContext'
 import { parseDatFile, parseSkeletonDat, SKELETON_PATHS, modelToPath } from '../../lib/ffxi-dat'
 import type { ParsedMesh, ParsedTexture, ParsedSkeleton } from '../../lib/ffxi-dat'
 import { Settings, FolderOpen } from 'lucide-react'
+import ThreeModelViewer from './ThreeModelViewer'
 import { Link } from 'react-router-dom'
 
 const RACE_NAMES: Record<number, string> = {
@@ -47,6 +45,7 @@ export default function ItemModelViewer({ itemId }: ItemModelViewerProps) {
   const [meshData, setMeshData] = useState<{ meshes: ParsedMesh[]; textures: ParsedTexture[] } | null>(null)
   const [parseLog, setParseLog] = useState<string[]>([])
   const [viewMode, setViewMode] = useState<'3d' | 'wireframe'>('3d')
+  const [lighting, setLighting] = useState<'standard' | 'enhanced'>('standard')
   const [loading, setLoading] = useState(false)
   const [itemMapping, setItemMapping] = useState<ModelMapping | null | undefined>(undefined) // undefined = checking
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -56,9 +55,7 @@ export default function ItemModelViewer({ itemId }: ItemModelViewerProps) {
   // Look up this item in the model mappings (once)
   useEffect(() => {
     loadMappings().then(mappings => {
-      const allMatches = mappings.filter(m => m.itemId === itemId)
-      const mapping = allMatches[0] ?? null
-      console.log(`[ItemModelViewer] itemId=${itemId}, matches=${allMatches.length}`, allMatches, '→ using:', mapping)
+      const mapping = mappings.find(m => m.itemId === itemId) ?? null
       setItemMapping(mapping)
     }).catch(() => setItemMapping(null))
   }, [itemId])
@@ -86,7 +83,6 @@ export default function ItemModelViewer({ itemId }: ItemModelViewerProps) {
 
       try {
         const romPath = await modelToPath(modelId, raceId, slotId)
-        console.log(`[ItemModelViewer] modelToPath(${modelId}, ${raceId}, ${slotId}) → ${romPath}`)
         if (!romPath) {
           log(`No model data for ${RACE_NAMES[raceId]}`)
           setLoading(false)
@@ -221,7 +217,7 @@ export default function ItemModelViewer({ itemId }: ItemModelViewerProps) {
             <option key={id} value={id}>{name}</option>
           ))}
         </select>
-        <div className="flex gap-1 ml-auto">
+        <div className="flex gap-1 ml-auto items-center">
           <button onClick={() => setViewMode('3d')}
             className={`px-2 py-0.5 text-[11px] rounded ${viewMode === '3d' ? 'bg-blue-700 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
             3D
@@ -230,6 +226,11 @@ export default function ItemModelViewer({ itemId }: ItemModelViewerProps) {
             className={`px-2 py-0.5 text-[11px] rounded ${viewMode === 'wireframe' ? 'bg-blue-700 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
             Wireframe
           </button>
+          <span className="w-px h-3 bg-gray-700 mx-0.5" />
+          <button onClick={() => setLighting(l => l === 'standard' ? 'enhanced' : 'standard')}
+            className={`px-2 py-0.5 text-[11px] rounded ${lighting === 'enhanced' ? 'bg-amber-700 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
+            Lighting
+          </button>
         </div>
       </div>
 
@@ -237,7 +238,7 @@ export default function ItemModelViewer({ itemId }: ItemModelViewerProps) {
         <div className="flex-1 h-[350px] bg-gray-950 border border-gray-800 rounded overflow-hidden">
           {viewMode === '3d' ? (
             meshData ? (
-              <ThreeViewer meshData={meshData} />
+              <ThreeModelViewer meshData={meshData} lighting={lighting} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
                 {loading ? 'Loading model...' : 'No model available'}
@@ -260,80 +261,3 @@ export default function ItemModelViewer({ itemId }: ItemModelViewerProps) {
   )
 }
 
-function ThreeViewer({ meshData }: { meshData: { meshes: ParsedMesh[]; textures: ParsedTexture[] } }) {
-  const sceneData = useMemo(() => {
-    const geometries: THREE.BufferGeometry[] = []
-    const materials: THREE.Material[] = []
-    const bbox = new THREE.Box3()
-
-    for (const mesh of meshData.meshes) {
-      const geometry = new THREE.BufferGeometry()
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(mesh.vertices), 3))
-      geometry.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(mesh.uvs), 2))
-      geometry.computeVertexNormals()
-      geometry.computeBoundingBox()
-      if (geometry.boundingBox) bbox.union(geometry.boundingBox)
-
-      const tex = meshData.textures[mesh.materialIndex]
-      let material: THREE.Material
-      if (tex) {
-        const texture = new THREE.DataTexture(new Uint8Array(tex.rgba), tex.width, tex.height, THREE.RGBAFormat)
-        texture.needsUpdate = true
-        texture.magFilter = THREE.NearestFilter
-        texture.minFilter = THREE.NearestMipmapLinearFilter
-        texture.flipY = false
-        material = new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide })
-      } else {
-        material = new THREE.MeshStandardMaterial({ color: 0x888888, side: THREE.DoubleSide })
-      }
-
-      geometries.push(geometry)
-      materials.push(material)
-    }
-
-    const rawCenter = new THREE.Vector3()
-    const size = new THREE.Vector3()
-    bbox.getCenter(rawCenter)
-    bbox.getSize(size)
-
-    const flippedMinY = -bbox.max.y
-    const flippedMaxY = -bbox.min.y
-    const floorY = flippedMinY
-    const center = new THREE.Vector3(rawCenter.x, (flippedMinY + flippedMaxY) / 2, -rawCenter.z)
-
-    return { geometries, materials, center, size, floorY }
-  }, [meshData])
-
-  const maxDim = Math.max(sceneData.size.x, sceneData.size.y, sceneData.size.z) || 0.5
-  const camDist = maxDim * 2.5
-
-  useEffect(() => {
-    return () => {
-      sceneData.geometries.forEach(g => g.dispose())
-      sceneData.materials.forEach(m => {
-        if (m instanceof THREE.MeshStandardMaterial) { m.map?.dispose(); m.dispose() }
-      })
-    }
-  }, [sceneData])
-
-  const cx = sceneData.center.x, cy = sceneData.center.y, cz = sceneData.center.z
-
-  return (
-    <Canvas
-      camera={{ position: [cx + camDist * 0.5, cy + camDist * 0.3, cz + camDist], fov: 45 }}
-      gl={{ antialias: true }}
-      className="w-full h-full"
-    >
-      <ambientLight intensity={0.5} color="#c8b8a0" />
-      <directionalLight position={[2, 4, 3]} intensity={0.8} color="#fff0d8" />
-      <directionalLight position={[-1, 2, -2]} intensity={0.3} color="#a0b8d0" />
-      <OrbitControls target={[cx, cy, cz]} />
-      <group rotation={[Math.PI, 0, 0]}>
-        {sceneData.geometries.map((geo, i) => (
-          <mesh key={i} geometry={geo} material={sceneData.materials[i]} />
-        ))}
-      </group>
-      <gridHelper args={[maxDim * 3, 10, '#333', '#222']} position={[cx, sceneData.floorY, cz]} />
-    </Canvas>
-  )
-}

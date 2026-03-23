@@ -1,10 +1,8 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
-import * as THREE from 'three'
+import { useState, useRef, useEffect } from 'react'
 import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
 import { parseDatFile, parseSkeletonDat, SKELETON_PATHS, modelToPath } from '../lib/ffxi-dat'
 import type { ParsedMesh, ParsedTexture, ParsedSkeleton } from '../lib/ffxi-dat'
+import ThreeModelViewer from '../components/character/ThreeModelViewer'
 
 /** Race ID → display name */
 const RACE_NAMES: Record<number, string> = {
@@ -45,10 +43,12 @@ export default function ModelDebugPage() {
   const [loading, setLoading] = useState(false)
   const [meshData, setMeshData] = useState<{ meshes: ParsedMesh[]; textures: ParsedTexture[] } | null>(null)
   const [viewMode, setViewMode] = useState<'3d' | 'wireframe'>('3d')
+  const [lighting, setLighting] = useState<'standard' | 'enhanced'>('standard')
   const [raceId, setRaceId] = useState(1)
   const [skeleton, setSkeleton] = useState<ParsedSkeleton | null>(null)
   const [skelLoading, setSkelLoading] = useState(false)
   const [resolvedPresets, setResolvedPresets] = useState<Map<string, string>>(new Map())
+  const [facePaths, setFacePaths] = useState<Array<{ name: string; path: string }>>([])
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const log = (msg: string) => setParseLog(prev => [...prev, msg])
@@ -70,7 +70,7 @@ export default function ModelDebugPage() {
     })
   }, [raceId, ffxi.isAuthorized, ffxi.readFile])
 
-  // Resolve preset ROM paths when race changes
+  // Resolve preset ROM paths and face paths when race changes
   useEffect(() => {
     async function resolve() {
       const resolved = new Map<string, string>()
@@ -81,6 +81,13 @@ export default function ModelDebugPage() {
       setResolvedPresets(resolved)
     }
     resolve()
+
+    fetch('/data/face-paths.json')
+      .then(r => r.json())
+      .then((data: Record<string, Array<{ name: string; path: string }>>) => {
+        setFacePaths(data[String(raceId)] ?? [])
+      })
+      .catch(() => setFacePaths([]))
   }, [raceId])
 
   // Set initial ROM path from first resolved preset
@@ -260,10 +267,70 @@ export default function ModelDebugPage() {
                 </div>
               )
             })}
+
+            {/* Face/Hair presets */}
+            {facePaths.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-gray-500 w-12 text-right shrink-0">Face</span>
+                <div className="flex flex-wrap gap-1">
+                  {facePaths.map(f => (
+                    <button key={f.path}
+                      onClick={() => setRomPath(f.path)}
+                      className={`px-2 py-0.5 text-[11px] rounded transition-colors ${
+                        romPath === f.path
+                          ? 'bg-blue-700 text-white border border-blue-600'
+                          : 'bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300'
+                      }`}
+                    >
+                      {f.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* NPC/Monster presets — self-contained DATs with embedded skeletons */}
+            <div className="border-t border-gray-800 pt-1.5 mt-1.5">
+              {([
+                { label: 'NPCs / Monsters', items: [
+                  { name: 'Carbuncle', path: 'ROM/97/66.dat' },
+                  { name: 'Ifrit', path: 'ROM/97/68.dat' },
+                  { name: 'Wyvern (Pet)', path: 'ROM/97/74.dat' },
+                  { name: 'Dragon', path: 'ROM/5/62.dat' },
+                  { name: 'Goblin', path: 'ROM/3/102.dat' },
+                  { name: 'Tonberry', path: 'ROM/147/4.dat' },
+                  { name: 'Crab', path: 'ROM/5/27.dat' },
+                  { name: 'Mandragora', path: 'ROM/4/127.dat' },
+                  { name: 'Rabbit', path: 'ROM/4/108.dat' },
+                  { name: 'Bee', path: 'ROM/4/111.dat' },
+                  { name: 'Sheep', path: 'ROM/5/19.dat' },
+                  { name: 'Morbol', path: 'ROM/5/42.dat' },
+                  { name: 'Treant', path: 'ROM/5/46.dat' },
+                ]},
+              ] as const).map(group => (
+                <div key={group.label} className="flex items-center gap-2">
+                  <span className="text-[10px] text-amber-500/70 w-12 text-right shrink-0">NPC</span>
+                  <div className="flex flex-wrap gap-1">
+                    {group.items.map(item => (
+                      <button key={item.path}
+                        onClick={() => setRomPath(item.path)}
+                        className={`px-2 py-0.5 text-[11px] rounded transition-colors ${
+                          romPath === item.path
+                            ? 'bg-amber-700 text-white border border-amber-600'
+                            : 'bg-gray-800 hover:bg-gray-700 border border-amber-900/40 text-gray-300'
+                        }`}
+                      >
+                        {item.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* View mode toggle */}
-          <div className="flex gap-2 mb-4">
+          {/* View mode + lighting toggle */}
+          <div className="flex gap-2 mb-4 items-center">
             <button onClick={() => setViewMode('3d')}
               className={`px-3 py-1 text-xs rounded ${viewMode === '3d' ? 'bg-blue-700 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
               3D View
@@ -272,6 +339,11 @@ export default function ModelDebugPage() {
               className={`px-3 py-1 text-xs rounded ${viewMode === 'wireframe' ? 'bg-blue-700 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
               Wireframe
             </button>
+            <span className="w-px h-4 bg-gray-700 mx-1" />
+            <button onClick={() => setLighting(l => l === 'standard' ? 'enhanced' : 'standard')}
+              className={`px-3 py-1 text-xs rounded ${lighting === 'enhanced' ? 'bg-amber-700 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
+              {lighting === 'enhanced' ? 'Enhanced Lighting' : 'Lighting'}
+            </button>
           </div>
 
           <div className="flex gap-4">
@@ -279,7 +351,7 @@ export default function ModelDebugPage() {
             <div className="flex-1 h-[500px] bg-gray-900 border border-gray-700 rounded overflow-hidden">
               {viewMode === '3d' ? (
                 meshData ? (
-                  <ThreeViewer meshData={meshData} />
+                  <ThreeModelViewer meshData={meshData} lighting={lighting} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-600 text-sm">
                     {loading ? 'Parsing...' : 'Select an item and click "Load & Parse"'}
@@ -305,89 +377,3 @@ export default function ModelDebugPage() {
   )
 }
 
-/**
- * Three.js viewer — auto-centers, auto-scales, and renders equipment meshes.
- */
-function ThreeViewer({ meshData }: { meshData: { meshes: ParsedMesh[]; textures: ParsedTexture[] } }) {
-  const sceneData = useMemo(() => {
-    const geometries: THREE.BufferGeometry[] = []
-    const materials: THREE.Material[] = []
-    const bbox = new THREE.Box3()
-
-    for (const mesh of meshData.meshes) {
-      const positions = new Float32Array(mesh.vertices)
-      const uvs = new Float32Array(mesh.uvs)
-
-      const geometry = new THREE.BufferGeometry()
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-      geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
-      geometry.computeVertexNormals()
-      geometry.computeBoundingBox()
-      if (geometry.boundingBox) bbox.union(geometry.boundingBox)
-
-      const tex = meshData.textures[mesh.materialIndex]
-      let material: THREE.Material
-      if (tex) {
-        const rgba = new Uint8Array(tex.rgba)
-        const texture = new THREE.DataTexture(rgba, tex.width, tex.height, THREE.RGBAFormat)
-        texture.needsUpdate = true
-        texture.magFilter = THREE.NearestFilter
-        texture.minFilter = THREE.NearestMipmapLinearFilter
-        texture.flipY = false
-        material = new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide })
-      } else {
-        material = new THREE.MeshStandardMaterial({ color: 0x888888, side: THREE.DoubleSide })
-      }
-
-      geometries.push(geometry)
-      materials.push(material)
-    }
-
-    const rawCenter = new THREE.Vector3()
-    const size = new THREE.Vector3()
-    bbox.getCenter(rawCenter)
-    bbox.getSize(size)
-
-    const flippedMinY = -bbox.max.y
-    const flippedMaxY = -bbox.min.y
-    const floorY = flippedMinY
-    const center = new THREE.Vector3(rawCenter.x, (flippedMinY + flippedMaxY) / 2, -rawCenter.z)
-
-    return { geometries, materials, center, size, floorY }
-  }, [meshData])
-
-  const maxDim = Math.max(sceneData.size.x, sceneData.size.y, sceneData.size.z) || 0.5
-  const camDist = maxDim * 2.5
-
-  useEffect(() => {
-    return () => {
-      sceneData.geometries.forEach(g => g.dispose())
-      sceneData.materials.forEach(m => {
-        if (m instanceof THREE.MeshStandardMaterial) { m.map?.dispose(); m.dispose() }
-      })
-    }
-  }, [sceneData])
-
-  const cx = sceneData.center.x, cy = sceneData.center.y, cz = sceneData.center.z
-
-  return (
-    <Canvas
-      camera={{ position: [cx + camDist * 0.5, cy + camDist * 0.3, cz + camDist], fov: 45 }}
-      gl={{ antialias: true }}
-      className="w-full h-full"
-    >
-      <ambientLight intensity={0.5} color="#c8b8a0" />
-      <directionalLight position={[2, 4, 3]} intensity={0.8} color="#fff0d8" />
-      <directionalLight position={[-1, 2, -2]} intensity={0.3} color="#a0b8d0" />
-      <OrbitControls target={[cx, cy, cz]} />
-
-      <group rotation={[Math.PI, 0, 0]}>
-        {sceneData.geometries.map((geo, i) => (
-          <mesh key={i} geometry={geo} material={sceneData.materials[i]} />
-        ))}
-      </group>
-
-      <gridHelper args={[maxDim * 3, 10, '#333', '#222']} position={[cx, sceneData.floorY, cz]} />
-    </Canvas>
-  )
-}

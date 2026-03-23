@@ -380,6 +380,10 @@ export function parseVertexBlock(
   reader.seek(dataOffset)
   const hdr = readDat2AHeader(reader)
 
+  // Model type: 0 = standard (MODELVERTEX), 1 = cloth (CLOTHVERTEX — 12 bytes, no normals)
+  const modelType = hdr.type & 0x7F
+  const isCloth = modelType === 1
+
   // Read weight info
   reader.seek(dataOffset + hdr.offsetWeight * 2)
   const noB1 = reader.readUint16()
@@ -401,28 +405,40 @@ export function parseVertexBlock(
     })
   }
 
-  // Read raw MV1 vertex data
+  // Read raw vertex data
+  // CLOTHVERTEX1 = 12 bytes (x, y, z only — no normals)
+  // CLOTHVERTEX2 = 32 bytes (x1,x2, y1,y2, z1,z2, w1,w2)
+  // MODELVERTEX1 = 24 bytes (x, y, z, nx, ny, nz)
+  // MODELVERTEX2 = 56 bytes (x1,x2, y1,y2, z1,z2, w1,w2, nx1,nx2, ny1,ny2, nz1,nz2)
+  const mv1Size = isCloth ? 12 : 24
   const vertexByteOffset = dataOffset + hdr.offsetVertex * 2
   const mv1Data: Array<{ x: number; y: number; z: number; nx: number; ny: number; nz: number }> = []
   reader.seek(vertexByteOffset)
   for (let i = 0; i < noB1; i++) {
-    mv1Data.push({
-      x: reader.readFloat32(), y: reader.readFloat32(), z: reader.readFloat32(),
-      nx: reader.readFloat32(), ny: reader.readFloat32(), nz: reader.readFloat32(),
-    })
+    const x = reader.readFloat32(), y = reader.readFloat32(), z = reader.readFloat32()
+    if (isCloth) {
+      mv1Data.push({ x, y, z, nx: 0, ny: 1, nz: 0 }) // cloth has no normals, use up vector
+    } else {
+      mv1Data.push({ x, y, z, nx: reader.readFloat32(), ny: reader.readFloat32(), nz: reader.readFloat32() })
+    }
   }
 
   // Read raw MV2 vertex data
+  // CLOTHVERTEX2 = 32 bytes (x1,x2,y1,y2,z1,z2,w1,w2 — no normals)
+  // MODELVERTEX2 = 56 bytes (x1,x2,y1,y2,z1,z2,w1,w2,nx1,nx2,ny1,ny2,nz1,nz2)
   const mv2Data: RawMV2[] = []
-  reader.seek(vertexByteOffset + noB1 * 24)
+  reader.seek(vertexByteOffset + noB1 * mv1Size)
   for (let i = 0; i < noB2; i++) {
     const x1 = reader.readFloat32(), x2 = reader.readFloat32()
     const y1 = reader.readFloat32(), y2 = reader.readFloat32()
     const z1 = reader.readFloat32(), z2 = reader.readFloat32()
     const w1 = reader.readFloat32(), w2 = reader.readFloat32()
-    const nx1 = reader.readFloat32(); reader.skip(4)
-    const ny1 = reader.readFloat32(); reader.skip(4)
-    const nz1 = reader.readFloat32(); reader.skip(4)
+    let nx1 = 0, ny1 = 1, nz1 = 0
+    if (!isCloth) {
+      nx1 = reader.readFloat32(); reader.skip(4)
+      ny1 = reader.readFloat32(); reader.skip(4)
+      nz1 = reader.readFloat32(); reader.skip(4)
+    }
     mv2Data.push({ x1, x2, y1, y2, z1, z2, w1, w2, nx1, ny1, nz1 })
   }
 

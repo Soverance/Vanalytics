@@ -4,7 +4,7 @@ import { useSyncProgress } from '../context/SyncContext'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface ItemDbStats {
+interface GameDataStats {
   items: {
     total: number
     withIcons: number
@@ -12,6 +12,24 @@ interface ItemDbStats {
     missingIcons: number
     iconCoverage: number
     categories: { category: string; count: number }[]
+  }
+  modelMappings: {
+    total: number
+    itemsWithModels: number
+    slots: { slotId: number; count: number }[]
+  }
+  npcPools: {
+    total: number
+    monsters: number
+    humanoids: number
+    families: number
+  }
+  characters: {
+    total: number
+    withRace: number
+  }
+  servers: {
+    total: number
   }
   economy: {
     totalAhSales: number
@@ -261,6 +279,28 @@ function SyncCard({
   )
 }
 
+// ─── DataSource ──────────────────────────────────────────────────────────
+
+function DataSource({ name, url, description, usedBy }: {
+  name: string; url: string; description: string; usedBy: string
+}) {
+  return (
+    <div className="flex gap-3 text-xs">
+      <div className="shrink-0 w-1 rounded-full bg-blue-600/40" />
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <a href={url} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-400 hover:text-blue-300">
+            {name}
+          </a>
+          <span className="text-gray-600">|</span>
+          <span className="text-gray-500">Used by: <span className="text-gray-400">{usedBy}</span></span>
+        </div>
+        <p className="text-gray-500 leading-relaxed">{description}</p>
+      </div>
+    </div>
+  )
+}
+
 // ─── SyncSection ──────────────────────────────────────────────────────────────
 
 function SyncSection() {
@@ -303,72 +343,152 @@ function SyncSection() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const SLOT_NAMES: Record<number, string> = {
+  2: 'Head', 3: 'Body', 4: 'Hands', 5: 'Legs', 6: 'Feet', 7: 'Main', 8: 'Sub', 9: 'Range',
+}
+
+function CoverageBar({ label, value, total, color = 'bg-blue-600' }: {
+  label: string; value: number; total: number; color?: string
+}) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0
+  return (
+    <div>
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span className="text-gray-400">{label}</span>
+        <span className="text-gray-300">
+          {value.toLocaleString()} / {total.toLocaleString()}{' '}
+          <span className="text-gray-500">({pct}%)</span>
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-gray-800 overflow-hidden">
+        <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
+}
+
 export default function AdminItemsPage() {
-  const [stats, setStats] = useState<ItemDbStats | null>(null)
+  const [stats, setStats] = useState<GameDataStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api<ItemDbStats>('/api/admin/items/stats')
+    api<GameDataStats>('/api/admin/items/stats')
       .then(setStats)
-      .catch(() => setError('Failed to load item database stats'))
+      .catch(() => setError('Failed to load game data stats'))
       .finally(() => setLoading(false))
   }, [])
-
-  const { items, economy } = stats ?? { items: null, economy: null }
 
   return (
     <div>
       {/* ── Sync section (always visible) ── */}
       <SyncSection />
 
+      {/* ── Data Sources ── */}
+      <div className="mb-8 rounded-lg border border-gray-800 bg-gray-900/50 p-5">
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">External Data Sources</h2>
+        <p className="text-xs text-gray-500 mb-4">
+          These sync features depend on the following community-maintained projects. If a source goes offline or stops updating, the corresponding data will need an alternative source.
+        </p>
+        <div className="space-y-3">
+          <DataSource
+            name="Windower Resources"
+            url="https://github.com/Windower/Resources"
+            description="Item names, descriptions, categories, flags, stats, and equipment properties. Extracted from FFXI game data."
+            usedBy="Game Data"
+          />
+          <DataSource
+            name="LandSandBoat"
+            url="https://github.com/LandSandBoat/server"
+            description="Equipment model ID mappings (item_equipment.sql) and NPC/monster pool data (mob_pools.sql). Maps items to visual 3D model IDs and provides NPC model definitions. Updated with each retail FFXI patch."
+            usedBy="Game Data (Model Mappings, NPC Pools)"
+          />
+          <DataSource
+            name="FFXIAH"
+            url="https://www.ffxiah.com"
+            description="Item icon images (32x32 PNG). Icons are downloaded per item ID from ffxiah.com's image CDN."
+            usedBy="Item Icons"
+          />
+        </div>
+      </div>
+
       <hr className="border-gray-800 mb-8" />
 
-      {/* ── Item Database Health ── */}
-      <h1 className="text-2xl font-bold mb-6">Item Database Health</h1>
+      {/* ── Game Data Health ── */}
+      <h1 className="text-2xl font-bold mb-6">Game Data Health</h1>
 
-      {loading && <p className="text-gray-400">Loading item database stats…</p>}
+      {loading && <p className="text-gray-400">Loading game data stats…</p>}
       {error && <p className="text-red-400">{error}</p>}
 
-      {items && economy && (
+      {stats && (
         <>
-          {/* Item stats */}
-          <h2 className="text-lg font-semibold mb-3">Items</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-            <StatCard label="Total Items" value={items.total} />
-            <StatCard label="With Descriptions" value={items.withDescriptions} />
+          {/* ── Overview row ── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            <StatCard label="Items" value={stats.items.total} />
+            <StatCard label="Model Mappings" value={stats.modelMappings.total} sub={`${stats.modelMappings.itemsWithModels.toLocaleString()} items with 3D models`} />
+            <StatCard label="NPC Pools" value={stats.npcPools.total} sub={`${stats.npcPools.monsters.toLocaleString()} monsters · ${stats.npcPools.humanoids.toLocaleString()} humanoids`} />
+            <StatCard label="Characters" value={stats.characters.total} sub={`${stats.servers.total} servers tracked`} />
+          </div>
 
-            {/* Icon Coverage widget */}
-            <div className="rounded-lg border border-gray-800 bg-gray-900 p-4 row-span-1">
-              <p className="text-xs text-gray-500 mb-3">Icon Coverage</p>
-              {(() => {
-                const iconPct = items.total > 0 ? Math.round((items.withIcons / items.total) * 100) : 0
-                return (
-                  <div>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-gray-400">Icons</span>
-                      <span className="text-gray-300">{items.withIcons.toLocaleString()} / {items.total.toLocaleString()} <span className="text-gray-500">({iconPct}%)</span></span>
+          {/* ── Items ── */}
+          <h2 className="text-lg font-semibold mb-3">Items</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            <div className="rounded-lg border border-gray-800 bg-gray-900 p-4 space-y-3">
+              <CoverageBar label="Icons" value={stats.items.withIcons} total={stats.items.total} />
+              <CoverageBar label="Descriptions" value={stats.items.withDescriptions} total={stats.items.total} />
+              <CoverageBar label="3D Model Mappings" value={stats.modelMappings.itemsWithModels} total={stats.items.total} color="bg-emerald-600" />
+            </div>
+            <div className="rounded-lg border border-gray-800 bg-gray-900 p-4">
+              <p className="text-xs text-gray-500 mb-2">Model Mappings by Slot</p>
+              <div className="space-y-1.5">
+                {stats.modelMappings.slots.map(s => {
+                  const name = SLOT_NAMES[s.slotId] ?? `Slot ${s.slotId}`
+                  return (
+                    <div key={s.slotId} className="flex items-center justify-between text-xs">
+                      <span className="text-gray-400 w-16">{name}</span>
+                      <div className="flex-1 mx-2 h-1.5 rounded-full bg-gray-800 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-emerald-600"
+                          style={{ width: `${stats.modelMappings.total > 0 ? (s.count / stats.modelMappings.total) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <span className="text-gray-500 w-14 text-right">{s.count.toLocaleString()}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-gray-800 overflow-hidden">
-                      <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${iconPct}%` }} />
-                    </div>
-                  </div>
-                )
-              })()}
+                  )
+                })}
+              </div>
             </div>
           </div>
 
-          {/* Economy stats */}
-          <h2 className="text-lg font-semibold mb-3">Economy Data</h2>
+          {/* ── NPC Pools ── */}
+          <h2 className="text-lg font-semibold mb-3">NPC / Monster Pools</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <StatCard label="AH Transactions" value={economy.totalAhSales} />
-            <StatCard label="Bazaar Listings (Total)" value={economy.totalBazaarListings} />
-            <StatCard label="Bazaar Listings (Active)" value={economy.activeBazaarListings} />
-            <StatCard label="Bazaar Presences (Active)" value={economy.activeBazaarPresences} />
+            <StatCard label="Total Pools" value={stats.npcPools.total} />
+            <StatCard label="Monster Models" value={stats.npcPools.monsters} sub="Self-contained DATs" />
+            <StatCard label="Humanoid NPCs" value={stats.npcPools.humanoids} sub="Use character skeleton" />
+            <StatCard label="Model Families" value={stats.npcPools.families} />
           </div>
 
-          {/* Categories breakdown */}
-          <h2 className="text-lg font-semibold mb-3">Categories</h2>
+          {/* ── Characters ── */}
+          <h2 className="text-lg font-semibold mb-3">Characters</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            <div className="rounded-lg border border-gray-800 bg-gray-900 p-4 space-y-3">
+              <CoverageBar label="With Race Data" value={stats.characters.withRace} total={stats.characters.total} color="bg-violet-600" />
+            </div>
+            <StatCard label="Tracked Servers" value={stats.servers.total} />
+          </div>
+
+          {/* ── Economy ── */}
+          <h2 className="text-lg font-semibold mb-3">Economy Data</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <StatCard label="AH Transactions" value={stats.economy.totalAhSales} />
+            <StatCard label="Bazaar Listings (Total)" value={stats.economy.totalBazaarListings} />
+            <StatCard label="Bazaar Listings (Active)" value={stats.economy.activeBazaarListings} />
+            <StatCard label="Bazaar Presences (Active)" value={stats.economy.activeBazaarPresences} />
+          </div>
+
+          {/* ── Categories breakdown ── */}
+          <h2 className="text-lg font-semibold mb-3">Item Categories</h2>
           <div className="rounded-lg border border-gray-800 bg-gray-900 overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -379,8 +499,8 @@ export default function AdminItemsPage() {
                 </tr>
               </thead>
               <tbody>
-                {items.categories.map((c) => {
-                  const pct = items.total > 0 ? (c.count / items.total) * 100 : 0
+                {stats.items.categories.map((c) => {
+                  const pct = stats.items.total > 0 ? (c.count / stats.items.total) * 100 : 0
                   return (
                     <tr key={c.category} className="border-t border-gray-800">
                       <td className="px-4 py-2 text-gray-300">{c.category}</td>

@@ -4,10 +4,9 @@ import { parseVertexBlock } from './MeshParser'
 import { parseSkeleton } from './SkeletonParser'
 import type { ParsedDatFile, ParsedMesh, ParsedTexture, ParsedSkeleton } from './types'
 
-/** Block type constants */
 const BLOCK_IMG = 0x20
+const BLOCK_BONE = 0x29
 const BLOCK_VERTEX = 0x2A
-const BLOCK_END = 0x00
 
 const DATHEAD_SIZE = 8
 const BLOCK_PADDING = 8
@@ -39,22 +38,26 @@ function parseBlockChain(reader: DatReader): DatBlock[] {
       dataLength: Math.max(0, blockSize - DATHEAD_SIZE),
     })
 
-    if (nextUnits === 0 || type === BLOCK_END) break
+    if (nextUnits === 0) break
     offset += blockSize
-    if (blocks.length > 100) break
+    if (blocks.length > 500) break // NPC/Monster DATs can have 100+ blocks
   }
 
   return blocks
 }
 
 /**
- * Parse an FFXI equipment DAT file.
+ * Parse an FFXI DAT file containing 3D model data.
+ *
+ * Works for:
+ * - Equipment DATs (pass external skelMatrices from the character skeleton)
+ * - NPC/Monster DATs (skeleton is embedded — auto-detected if no external skeleton provided)
+ * - Face/Hair DATs (same as equipment, uses character skeleton)
  *
  * @param buffer - Raw DAT file contents
- * @param skelMatrices - Pre-computed bone matrices from the skeleton DAT.
- *   Required for armor (which stores vertices in bone-local space).
- *   Weapons work without skeleton since they use a single bone at identity.
- *   Pass null to skip bone transforms.
+ * @param skelMatrices - Pre-computed bone matrices from an external skeleton DAT.
+ *   If null/undefined, the parser checks for an embedded Bone block (type 0x29)
+ *   and builds the skeleton from that. This is the case for NPC/Monster models.
  */
 export function parseDatFile(
   buffer: ArrayBuffer,
@@ -66,8 +69,9 @@ export function parseDatFile(
   const textures: ParsedTexture[] = []
   const meshes: ParsedMesh[] = []
   const textureMap = new Map<string, number>()
+  let embeddedSkeleton: ParsedSkeleton | null = null
 
-  // First pass: parse textures
+  // First pass: parse textures and check for embedded skeleton
   for (const block of blocks) {
     if (block.type === BLOCK_IMG) {
       try {
@@ -80,7 +84,19 @@ export function parseDatFile(
         }
       } catch { /* skip */ }
     }
+
+    if (block.type === BLOCK_BONE && !embeddedSkeleton) {
+      try {
+        embeddedSkeleton = parseSkeleton(reader)
+      } catch { /* skip */ }
+    }
   }
+
+  // Determine which bone matrices to use:
+  // 1. Embedded skeleton (found in this DAT — NPC/Monster models are self-contained)
+  // 2. External skeleton (passed by caller — equipment/face attach to character skeleton)
+  // 3. None (weapons, untransformed)
+  const matrices = embeddedSkeleton?.matrices ?? skelMatrices ?? null
 
   // Second pass: parse vertex/mesh blocks with bone transforms
   for (const block of blocks) {
@@ -88,12 +104,12 @@ export function parseDatFile(
       try {
         const start = block.dataOffset + BLOCK_PADDING
         const len = block.dataLength - BLOCK_PADDING
-        meshes.push(...parseVertexBlock(reader, start, len, textureMap, skelMatrices))
+        meshes.push(...parseVertexBlock(reader, start, len, textureMap, matrices))
       } catch { /* skip */ }
     }
   }
 
-  return { meshes, textures, skeleton: null }
+  return { meshes, textures, skeleton: embeddedSkeleton }
 }
 
 /**

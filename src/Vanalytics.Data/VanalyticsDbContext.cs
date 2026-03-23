@@ -19,6 +19,7 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<BazaarListing> BazaarListings => Set<BazaarListing>();
     public DbSet<SyncHistory> SyncHistory => Set<SyncHistory>();
     public DbSet<ItemModelMapping> ItemModelMappings => Set<ItemModelMapping>();
+    public DbSet<NpcPool> NpcPools => Set<NpcPool>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
