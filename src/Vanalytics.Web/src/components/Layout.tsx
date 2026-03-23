@@ -1,8 +1,15 @@
 import { useState, type ReactNode } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
-import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database } from 'lucide-react'
+import LoginModal from './LoginModal'
+import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock, KeyRound } from 'lucide-react'
+import { CompareProvider } from './compare/CompareContext'
+import CompareTray from './compare/CompareTray'
+import { SyncProvider } from '../context/SyncContext'
+import SyncBanner from './SyncBanner'
+import { FfxiFileSystemProvider } from '../context/FfxiFileSystemContext'
 
 function SidebarLink({ to, label, icon }: { to: string; label: string; icon: ReactNode }) {
   return (
@@ -24,28 +31,22 @@ function SidebarLink({ to, label, icon }: { to: string; label: string; icon: Rea
 }
 
 export default function Layout() {
+  return (
+    <LoginModalProvider>
+      <LayoutInner />
+    </LoginModalProvider>
+  )
+}
+
+function LayoutInner() {
   const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const location = useLocation()
+  const { isOpen: loginOpen, close: closeLogin } = useLoginModal()
 
-  // Public pages get no sidebar — these render without authentication
-  const publicPaths = ['/', '/login', '/items', '/bazaar']
-  const isPublicPage =
-    publicPaths.some(p => p === '/' ? location.pathname === '/' : location.pathname.startsWith(p)) ||
-    (!user && location.pathname.match(/^\/[^/]+\/[^/]+$/))
-
-  if (isPublicPage) {
-    return (
-      <div className="min-h-screen bg-gray-950 text-gray-100">
-        <main className="mx-auto max-w-6xl px-4 py-8">
-          <Outlet />
-        </main>
-      </div>
-    )
-  }
-
-  // Dashboard pages get the sidebar layout
   return (
+    <FfxiFileSystemProvider>
+    <SyncProvider>
+    <CompareProvider>
     <div className="min-h-screen bg-gray-950 text-gray-100 flex">
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -63,7 +64,7 @@ export default function Layout() {
       >
         {/* Logo */}
         <div className="border-b border-gray-800 px-4 py-4">
-          <Link to="/" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
+          <Link to="/dashboard" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img
               src="/vanalytics-typography-horizontal-logo.png"
@@ -80,6 +81,7 @@ export default function Layout() {
           <SidebarLink to="/servers" label="Server Status" icon={<Radio className="h-4 w-4 shrink-0" />} />
           <SidebarLink to="/items" label="Item Database" icon={<Package className="h-4 w-4 shrink-0" />} />
           <SidebarLink to="/bazaar" label="Bazaar Activity" icon={<Store className="h-4 w-4 shrink-0" />} />
+          <SidebarLink to="/clock" label="Vana'diel Clock" icon={<Clock className="h-4 w-4 shrink-0" />} />
           <SidebarLink to="/setup" label="Setup Guide" icon={<BookOpen className="h-4 w-4 shrink-0" />} />
 
           {user?.role === 'Admin' && (
@@ -89,31 +91,30 @@ export default function Layout() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-600">Admin</span>
               </div>
               <SidebarLink to="/admin/users" label="Users" icon={<Users className="h-4 w-4 shrink-0" />} />
-              <SidebarLink to="/admin/items" label="Item Database" icon={<Database className="h-4 w-4 shrink-0" />} />
+              <SidebarLink to="/admin/data" label="Data" icon={<Database className="h-4 w-4 shrink-0" />} />
+              <SidebarLink to="/admin/saml" label="SAML" icon={<KeyRound className="h-4 w-4 shrink-0" />} />
             </>
           )}
         </nav>
 
-        {/* User profile link */}
-        {user && (
-          <NavLink
-            to="/profile"
-            onClick={() => setSidebarOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 border-t border-gray-800 px-4 py-3 transition-colors ${
-                isActive
-                  ? 'bg-gray-800'
-                  : 'hover:bg-gray-800/50'
-              }`
-            }
-          >
-            <UserAvatar username={user.username} size="sm" />
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-200 truncate">{user.username}</p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
-            </div>
-          </NavLink>
-        )}
+        {/* User profile */}
+        <NavLink
+          to="/profile"
+          onClick={() => setSidebarOpen(false)}
+          className={({ isActive }) =>
+            `flex items-center gap-3 border-t border-gray-800 px-4 py-3 transition-colors ${
+              isActive
+                ? 'bg-gray-800'
+                : 'hover:bg-gray-800/50'
+            }`
+          }
+        >
+          <UserAvatar username={user?.username ?? ''} size="sm" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-200 truncate">{user?.username}</p>
+            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+          </div>
+        </NavLink>
       </aside>
 
       {/* Main content area */}
@@ -127,18 +128,26 @@ export default function Layout() {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <Link to="/" className="flex items-center min-w-0">
+          <Link to="/dashboard" className="flex items-center min-w-0">
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img src="/vanalytics-typography-horizontal-logo.png" alt="Vana'lytics" className="min-w-0 max-w-[180px]" />
           </Link>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+        <SyncBanner />
+
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8 pb-16">
           <div className="mx-auto max-w-5xl">
             <Outlet />
           </div>
         </main>
       </div>
+
     </div>
+    <CompareTray />
+    {loginOpen && <LoginModal onClose={closeLogin} />}
+    </CompareProvider>
+    </SyncProvider>
+    </FfxiFileSystemProvider>
   )
 }

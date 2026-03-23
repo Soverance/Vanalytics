@@ -17,13 +17,21 @@ public class LocalItemImageStore : IItemImageStore
         return $"icons/{itemId}.png";
     }
 
-    public bool IconExists(int itemId)
-    {
-        return File.Exists(Path.Combine(_basePath, "icons", $"{itemId}.png"));
-    }
+    public bool IconExists(int itemId) =>
+        File.Exists(Path.Combine(_basePath, "icons", $"{itemId}.png"));
 
-    public string GetIconUrl(int itemId)
+    public string GetIconUrl(int itemId) =>
+        $"/item-images/icons/{itemId}.png";
+
+    public Task<HashSet<int>> GetExistingIconIdsAsync(IEnumerable<int> itemIds, CancellationToken ct = default)
     {
-        return $"/item-images/icons/{itemId}.png";
+        var existing = new HashSet<int>();
+        foreach (var id in itemIds)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (File.Exists(Path.Combine(_basePath, "icons", $"{id}.png")))
+                existing.Add(id);
+        }
+        return Task.FromResult(existing);
     }
 }

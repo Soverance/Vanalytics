@@ -33,7 +33,6 @@ export interface CharacterSummary {
   id: string
   name: string
   server: string
-  licenseStatus: string
   isPublic: boolean
   lastSyncAt: string | null
 }
@@ -42,9 +41,10 @@ export interface CharacterDetail {
   id: string
   name: string
   server: string
-  licenseStatus: string
   isPublic: boolean
   lastSyncAt: string | null
+  race?: string
+  gender?: string
   jobs: JobEntry[]
   gear: GearEntry[]
   craftingSkills: CraftingEntry[]
@@ -66,15 +66,6 @@ export interface CraftingEntry {
   craft: string
   level: number
   rank: string
-}
-
-export interface CreateCharacterRequest {
-  name: string
-  server: string
-}
-
-export interface UpdateCharacterRequest {
-  isPublic: boolean
 }
 
 // API Keys
@@ -126,12 +117,40 @@ export interface GameItemSummary {
   name: string
   category: string
   level: number | null
+  itemLevel: number | null
   skill: number | null
   stackSize: number
   iconPath: string | null
   isRare: boolean
   isExclusive: boolean
-  isAuctionable: boolean
+  isNoAuction: boolean
+  // Stats (included for table view / sorting)
+  damage: number | null
+  delay: number | null
+  def: number | null
+  hp: number | null
+  mp: number | null
+  str: number | null
+  dex: number | null
+  vit: number | null
+  agi: number | null
+  int: number | null
+  mnd: number | null
+  chr: number | null
+  accuracy: number | null
+  attack: number | null
+  rangedAccuracy: number | null
+  rangedAttack: number | null
+  magicAccuracy: number | null
+  magicDamage: number | null
+  magicEvasion: number | null
+  evasion: number | null
+  enmity: number | null
+  haste: number | null
+  storeTP: number | null
+  tpBonus: number | null
+  physicalDamageTaken: number | null
+  magicDamageTaken: number | null
 }
 
 export interface GameItemDetail {
@@ -146,6 +165,7 @@ export interface GameItemDetail {
   flags: number
   stackSize: number
   level: number | null
+  itemLevel: number | null
   jobs: number | null
   races: number | null
   slots: number | null
@@ -180,7 +200,7 @@ export interface GameItemDetail {
   previewImagePath: string | null
   isRare: boolean
   isExclusive: boolean
-  isAuctionable: boolean
+  isNoAuction: boolean
 }
 
 export interface ItemSearchResult {
@@ -229,6 +249,62 @@ export interface CrossServerResponse {
   servers: CrossServerPrice[]
 }
 
+// Vana'diel Clock
+export interface VanadielClockData {
+  time: VanadielTime
+  dayOfWeek: string
+  element: string
+  moon: MoonPhaseInfo
+  conquest: ConquestInfo
+  guilds: GuildStatus[]
+  ferry: FerryScheduleInfo
+  rse: RseInfo
+}
+
+export interface VanadielTime {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+  second: number
+}
+
+export interface MoonPhaseInfo {
+  phaseName: string
+  percent: number
+}
+
+export interface ConquestInfo {
+  earthSecondsRemaining: number
+  vanadielDaysRemaining: number
+}
+
+export interface GuildStatus {
+  name: string
+  isOpen: boolean
+  holiday: string
+  openHour: number
+  closeHour: number
+}
+
+export interface FerryScheduleInfo {
+  selbinaToMhaura: FerryDirection
+  mhauraToSelbina: FerryDirection
+}
+
+export interface FerryDirection {
+  nextDeparture: string
+  nextArrival: string
+}
+
+export interface RseInfo {
+  currentRace: string
+  currentLocation: string
+  nextRace: string
+  nextChangeEarthSeconds: string
+}
+
 // Bazaar
 export interface BazaarZoneGroup {
   zone: string
@@ -248,4 +324,18 @@ export interface BazaarListingItem {
   zone: string
   lastSeenAt: string
   serverName: string
+}
+
+// Stat filtering
+export interface StatFilter {
+  stat: string
+  min: string
+  max: string
+}
+
+// Model mappings
+export interface ModelMapping {
+  itemId: number
+  slotId: number
+  modelId: number
 }

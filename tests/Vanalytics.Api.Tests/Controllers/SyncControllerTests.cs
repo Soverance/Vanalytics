@@ -7,7 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 using Soverance.Auth.DTOs;
-using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.Keys;
 using Vanalytics.Core.DTOs.Sync;
 using Vanalytics.Core.Enums;
@@ -55,27 +54,13 @@ public class SyncControllerTests : IAsyncLifetime
         await _container.DisposeAsync();
     }
 
-    private async Task<(string JwtToken, string ApiKey, Guid CharacterId)> SetupSyncUserAsync(
-        string email, string username, string charName, LicenseStatus license = LicenseStatus.Active)
+    private async Task<(string JwtToken, string ApiKey)> SetupSyncUserAsync(
+        string email, string username)
     {
         // Register user
         var regResp = await _client.PostAsJsonAsync("/api/auth/register", new RegisterRequest
         { Email = email, Username = username, Password = "Password123!" });
         var auth = (await regResp.Content.ReadFromJsonAsync<AuthResponse>())!;
-
-        // Create character
-        var createReq = new HttpRequestMessage(HttpMethod.Post, "/api/characters");
-        createReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
-        createReq.Content = JsonContent.Create(new CreateCharacterRequest { Name = charName, Server = "Asura" });
-        var createResp = await _client.SendAsync(createReq);
-        var character = (await createResp.Content.ReadFromJsonAsync<CharacterSummaryResponse>())!;
-
-        // Set license status directly in DB
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
-        var dbChar = await db.Characters.FindAsync(character.Id);
-        dbChar!.LicenseStatus = license;
-        await db.SaveChangesAsync();
 
         // Generate API key
         var keyReq = new HttpRequestMessage(HttpMethod.Post, "/api/keys/generate");
@@ -83,7 +68,7 @@ public class SyncControllerTests : IAsyncLifetime
         var keyResp = await _client.SendAsync(keyReq);
         var apiKey = (await keyResp.Content.ReadFromJsonAsync<ApiKeyResponse>())!;
 
-        return (auth.AccessToken, apiKey.ApiKey, character.Id);
+        return (auth.AccessToken, apiKey.ApiKey);
     }
 
     private HttpRequestMessage CreateSyncRequest(string apiKey, SyncRequest payload)
@@ -97,7 +82,7 @@ public class SyncControllerTests : IAsyncLifetime
     [Fact]
     public async Task Sync_WithValidApiKey_UpsertsData()
     {
-        var (_, apiKey, _) = await SetupSyncUserAsync("sync1@test.com", "sync1user", "SyncChar1");
+        var (_, apiKey) = await SetupSyncUserAsync("sync1@test.com", "sync1user");
 
         var payload = new SyncRequest
         {
@@ -130,37 +115,21 @@ public class SyncControllerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Sync_UnlicensedCharacter_ReturnsForbidden()
+    public async Task Sync_CharacterNotOwnedByUser_ReturnsForbidden()
     {
-        var (_, apiKey, _) = await SetupSyncUserAsync(
-            "sync2@test.com", "sync2user", "SyncChar2", LicenseStatus.Unlicensed);
-
-        var payload = new SyncRequest
+        // User A creates character via sync
+        var (_, apiKeyA) = await SetupSyncUserAsync("sync3a@test.com", "sync3auser");
+        var setupPayload = new SyncRequest
         {
-            CharacterName = "SyncChar2",
+            CharacterName = "SyncChar3",
             Server = "Asura",
             ActiveJob = "WAR",
             ActiveJobLevel = 75
         };
+        await _client.SendAsync(CreateSyncRequest(apiKeyA, setupPayload));
 
-        var resp = await _client.SendAsync(CreateSyncRequest(apiKey, payload));
-
-        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
-    }
-
-    [Fact]
-    public async Task Sync_CharacterNotOwnedByUser_ReturnsForbidden()
-    {
-        var (_, _, _) = await SetupSyncUserAsync("sync3a@test.com", "sync3auser", "SyncChar3");
-
-        var regResp = await _client.PostAsJsonAsync("/api/auth/register", new RegisterRequest
-        { Email = "sync3b@test.com", Username = "sync3buser", Password = "Password123!" });
-        var auth2 = (await regResp.Content.ReadFromJsonAsync<AuthResponse>())!;
-        var keyReq = new HttpRequestMessage(HttpMethod.Post, "/api/keys/generate");
-        keyReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth2.AccessToken);
-        var keyResp = await _client.SendAsync(keyReq);
-        var apiKey2 = (await keyResp.Content.ReadFromJsonAsync<ApiKeyResponse>())!;
-
+        // User B tries to sync same character
+        var (_, apiKeyB) = await SetupSyncUserAsync("sync3b@test.com", "sync3buser");
         var payload = new SyncRequest
         {
             CharacterName = "SyncChar3",
@@ -169,8 +138,7 @@ public class SyncControllerTests : IAsyncLifetime
             ActiveJobLevel = 75
         };
 
-        var resp = await _client.SendAsync(CreateSyncRequest(apiKey2.ApiKey, payload));
-
+        var resp = await _client.SendAsync(CreateSyncRequest(apiKeyB, payload));
         Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
     }
 
@@ -193,7 +161,7 @@ public class SyncControllerTests : IAsyncLifetime
     [Fact]
     public async Task Sync_RateLimitExceeded_Returns429()
     {
-        var (_, apiKey, _) = await SetupSyncUserAsync("sync4@test.com", "sync4user", "SyncChar4");
+        var (_, apiKey) = await SetupSyncUserAsync("sync4@test.com", "sync4user");
 
         var payload = new SyncRequest
         {
@@ -219,7 +187,7 @@ public class SyncControllerTests : IAsyncLifetime
     [Fact]
     public async Task Sync_SecondSync_UpsertsExistingData()
     {
-        var (_, apiKey, _) = await SetupSyncUserAsync("sync5@test.com", "sync5user", "SyncChar5");
+        var (_, apiKey) = await SetupSyncUserAsync("sync5@test.com", "sync5user");
 
         // First sync
         var payload1 = new SyncRequest

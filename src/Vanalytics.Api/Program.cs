@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
+using Soverance.Auth.Endpoints;
 using Soverance.Auth.Extensions;
 using Soverance.Auth.Services;
 using Soverance.Data.Extensions;
@@ -16,6 +17,8 @@ builder.Services.AddSoveranceSqlServer<VanalyticsDbContext>(builder.Configuratio
 // Authentication
 builder.Services.AddSoveranceJwtAuth(builder.Configuration)
     .AddSoveranceApiKeyAuth();
+builder.Services.AddSingleton<ISamlSignInHandler, JwtSamlSignInHandler>();
+builder.Services.AddScoped<AuthResponseService>();
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -51,6 +54,7 @@ builder.Services.AddOpenApi("v1", options =>
 });
 
 // Services
+builder.Services.AddSingleton<VanadielClock>();
 builder.Services.AddScoped<OAuthService>();
 builder.Services.AddSingleton<RateLimiter>();
 builder.Services.AddSingleton<EconomyRateLimiter>();
@@ -70,7 +74,8 @@ builder.Services.AddKeyedSingleton<ISyncProvider, ItemSyncProvider>("items");
 builder.Services.AddKeyedSingleton<ISyncProvider, IconSyncProvider>("icons");
 
 builder.Services.AddHostedService<ServerStatusScraper>();
-builder.Services.AddHostedService<ItemDatabaseSyncJob>();
+// ItemDatabaseSyncJob removed — item data is static game data that only changes
+// when SE patches the game. Sync should only be triggered by an admin from /admin/data.
 builder.Services.AddHostedService<BazaarStalenessJob>();
 
 var app = builder.Build();
@@ -105,15 +110,26 @@ if (!app.Environment.IsDevelopment() &&
     app.UseHttpsRedirection();
 }
 
-// Serve item images as static files
-var itemImagesPath = app.Configuration["ItemImages:BasePath"]
-    ?? Path.Combine(AppContext.BaseDirectory, "item-images");
-Directory.CreateDirectory(itemImagesPath);
-app.UseStaticFiles(new StaticFileOptions
+// Serve item images — redirect to Azure blob URL or serve from local disk
+var azureImageStore = app.Services.GetService<IItemImageStore>() as AzureBlobItemImageStore;
+if (azureImageStore != null)
 {
-    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(itemImagesPath),
-    RequestPath = "/item-images"
-});
+    // Azure: redirect /item-images/{path} to the public blob URL
+    app.MapGet("/item-images/{**path}", (string path) =>
+        Results.Redirect($"{azureImageStore.BaseUrl}/{path}", permanent: false));
+}
+else
+{
+    // Local: serve from filesystem
+    var itemImagesPath = app.Configuration["ItemImages:BasePath"]
+        ?? Path.Combine(AppContext.BaseDirectory, "item-images");
+    Directory.CreateDirectory(itemImagesPath);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(itemImagesPath),
+        RequestPath = "/item-images"
+    });
+}
 
 // Serve the embedded SPA (Vanalytics.Web built into wwwroot/)
 app.UseStaticFiles();
@@ -126,6 +142,9 @@ app.MapScalarApiReference("/api/docs", options =>
     options.Title = "Vanalytics API";
 });
 app.MapControllers();
+app.MapSamlEndpoints();
+app.MapSamlAdminEndpoints();
+app.MapSamlExchangeEndpoint();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
 // SPA fallback: serve index.html for unmatched non-file, non-API requests

@@ -41,8 +41,8 @@ services:
 
   web:
     build:
-      context: src/Vanalytics.Web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: src/Vanalytics.Web/Dockerfile
     ports:
       - "3000:3000"
     environment:

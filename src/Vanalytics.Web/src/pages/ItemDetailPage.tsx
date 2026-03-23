@@ -1,15 +1,19 @@
 // src/Vanalytics.Web/src/pages/ItemDetailPage.tsx
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import type { GameItemDetail, PriceHistoryResponse, CrossServerResponse, GameServer, BazaarListingItem } from '../types/api'
 import ItemStatsTable from '../components/economy/ItemStatsTable'
 import PriceHistoryChart from '../components/economy/PriceHistoryChart'
+import { itemImageUrl } from '../utils/imageUrl'
 import CrossServerChart from '../components/economy/CrossServerChart'
 import SalesTable from '../components/economy/SalesTable'
 import BazaarListingsTable from '../components/economy/BazaarListingsTable'
+import { useCompare } from '../components/compare/CompareContext'
+import ItemPreviewBox from '../components/economy/ItemPreviewBox'
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [item, setItem] = useState<GameItemDetail | null>(null)
   const [prices, setPrices] = useState<PriceHistoryResponse | null>(null)
   const [crossServer, setCrossServer] = useState<CrossServerResponse | null>(null)
@@ -19,6 +23,7 @@ export default function ItemDetailPage() {
   const [salesPage, setSalesPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [bazaarListings, setBazaarListings] = useState<BazaarListingItem[]>([])
+  const { addItem, removeItem, isSelected, isFull } = useCompare()
 
   // Load item detail
   useEffect(() => {
@@ -73,33 +78,75 @@ export default function ItemDetailPage() {
 
   return (
     <div>
-      <Link to="/items" className="text-sm text-blue-400 hover:underline mb-4 inline-block">
+      <button onClick={() => navigate(-1)} className="text-sm text-blue-400 hover:underline mb-4 inline-block">
         &larr; Back to Item Database
-      </Link>
+      </button>
 
       {/* Header */}
-      <div className="flex items-start gap-4 mb-8">
-        <div className="shrink-0 flex flex-col items-center gap-2">
-          {item.iconPath ? (
-            <img src={`/item-images/${item.iconPath}`} alt="" className="h-12 w-12" />
-          ) : (
-            <div className="h-12 w-12 rounded bg-gray-800" />
-          )}
-          {item.previewImagePath && (
-            <img src={`/item-images/${item.previewImagePath}`} alt={item.name} className="max-w-[200px] rounded" />
-          )}
-        </div>
-        <div>
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div className="flex items-start gap-4 min-w-0">
+          <div className="shrink-0">
+            {item.iconPath ? (
+              <img src={itemImageUrl(item.iconPath)} alt="" className="h-12 w-12" />
+            ) : (
+              <div className="h-12 w-12 rounded bg-gray-800" />
+            )}
+          </div>
+          <div className="min-w-0">
           <h1 className="text-2xl font-bold">{item.name}</h1>
           {item.nameJa && <p className="text-sm text-gray-500">{item.nameJa}</p>}
           <div className="flex items-center gap-2 mt-1">
             <span className="rounded bg-gray-800 px-2 py-0.5 text-xs text-gray-400">{item.category}</span>
             {item.level && <span className="text-xs text-gray-500">Lv.{item.level}</span>}
+            {item.itemLevel != null && <span className="text-xs text-blue-400">iLv.{item.itemLevel}</span>}
             {item.isRare && <span className="text-xs text-amber-500">Rare</span>}
             {item.isExclusive && <span className="text-xs text-red-400">Ex</span>}
-            {item.isAuctionable && <span className="text-xs text-green-400">AH</span>}
+            {!item.isNoAuction && <span className="text-xs text-green-400">AH</span>}
             <span className="text-xs text-gray-600">Stack: {item.stackSize}</span>
           </div>
+          {/* Compare button */}
+          <div className="mt-2">
+            {item && (
+              isSelected(item.itemId) ? (
+                <button
+                  onClick={() => removeItem(item.itemId)}
+                  className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-500 transition-colors"
+                >
+                  Remove from Compare
+                </button>
+              ) : (
+                <button
+                  onClick={() => addItem({
+                    itemId: item.itemId, name: item.name, category: item.category,
+                    level: item.level, itemLevel: item.itemLevel, skill: item.skill, stackSize: item.stackSize,
+                    iconPath: item.iconPath, isRare: item.isRare, isExclusive: item.isExclusive,
+                    isNoAuction: item.isNoAuction,
+                    damage: item.damage, delay: item.delay, def: item.def,
+                    hp: item.hp, mp: item.mp,
+                    str: item.str, dex: item.dex, vit: item.vit, agi: item.agi,
+                    int: item.int, mnd: item.mnd, chr: item.chr,
+                    accuracy: item.accuracy, attack: item.attack,
+                    rangedAccuracy: item.rangedAccuracy, rangedAttack: item.rangedAttack,
+                    magicAccuracy: item.magicAccuracy, magicDamage: item.magicDamage,
+                    magicEvasion: item.magicEvasion, evasion: item.evasion,
+                    enmity: item.enmity, haste: item.haste,
+                    storeTP: item.storeTP, tpBonus: item.tpBonus,
+                    physicalDamageTaken: item.physicalDamageTaken, magicDamageTaken: item.magicDamageTaken,
+                  })}
+                  disabled={isFull}
+                  className="rounded bg-gray-700 px-3 py-1 text-xs font-medium text-gray-300 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Add to Compare
+                </button>
+              )
+            )}
+          </div>
+          </div>
+        </div>
+
+        {/* In-game style item preview */}
+        <div className="shrink-0 hidden lg:block">
+          <ItemPreviewBox item={item} />
         </div>
       </div>
 

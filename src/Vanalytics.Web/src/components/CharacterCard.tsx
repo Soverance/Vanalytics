@@ -20,15 +20,6 @@ export default function CharacterCard({ character, onTogglePublic, onDelete }: P
           </Link>
           <p className="text-sm text-gray-400">{character.server}</p>
         </div>
-        <span
-          className={`rounded px-2 py-0.5 text-xs font-medium ${
-            character.licenseStatus === 'Active'
-              ? 'bg-green-900/50 text-green-400'
-              : 'bg-gray-800 text-gray-500'
-          }`}
-        >
-          {character.licenseStatus}
-        </span>
       </div>
 
       <div className="mt-3 flex items-center gap-4 text-sm">

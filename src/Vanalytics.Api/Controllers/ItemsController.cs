@@ -1,5 +1,7 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
 
@@ -24,6 +26,12 @@ public class ItemsController : ControllerBase
         [FromQuery] int? minLevel = null,
         [FromQuery] int? maxLevel = null,
         [FromQuery] string? jobs = null,
+        [FromQuery(Name = "stats")] string[]? stats = null,
+        [FromQuery] string? slots = null,
+        [FromQuery] string? subCategory = null,
+        [FromQuery] string? flags = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDir = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 25)
     {
@@ -41,6 +49,9 @@ public class ItemsController : ControllerBase
         if (skill.HasValue)
             query = query.Where(i => i.Skill == skill.Value);
 
+        if (!string.IsNullOrEmpty(subCategory))
+            query = query.Where(i => i.SubCategory == subCategory);
+
         if (minLevel.HasValue)
             query = query.Where(i => i.Level >= minLevel.Value);
 
@@ -54,10 +65,76 @@ public class ItemsController : ControllerBase
                 query = query.Where(i => i.Jobs != null && (i.Jobs.Value & jobBit.Value) != 0);
         }
 
+        // Stat filters: stats=STR:10:&stats=DEF::50
+        if (stats is { Length: > 0 })
+        {
+            foreach (var stat in stats)
+            {
+                var parts = stat.Split(':');
+                if (parts.Length < 2)
+                    return BadRequest(new { message = $"Invalid stat filter format: '{stat}'. Expected 'StatName:Min:Max'." });
+                var statName = parts[0];
+                if (!StatExpressions.TryGetValue(statName, out var statExpr))
+                    return BadRequest(new { message = $"Unknown stat name: '{statName}'." });
+                int? min = parts.Length > 1 && int.TryParse(parts[1], out var mn) ? mn : null;
+                int? max = parts.Length > 2 && int.TryParse(parts[2], out var mx) ? mx : null;
+                if (!min.HasValue && !max.HasValue) continue;
+                query = query.Where(BuildStatFilter(statExpr, min, max));
+            }
+        }
+
+        // Slots filter: slots=Head,Body (OR'd bitmask)
+        if (!string.IsNullOrEmpty(slots))
+        {
+            int slotMask = 0;
+            foreach (var slotName in slots.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!SlotBitmasks.TryGetValue(slotName, out var bit))
+                    return BadRequest(new { message = $"Unknown slot name: '{slotName}'." });
+                slotMask |= bit;
+            }
+            if (slotMask != 0)
+                query = query.Where(i => i.Slots != null && (i.Slots.Value & slotMask) != 0);
+        }
+
+        // Flags filter: flags=rare,exclusive
+        if (!string.IsNullOrEmpty(flags))
+        {
+            foreach (var flagName in flags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!FlagBitmasks.TryGetValue(flagName, out var flagBit))
+                    return BadRequest(new { message = $"Unknown flag: '{flagName}'." });
+                var bit = flagBit;
+                query = query.Where(i => (i.Flags & bit) != 0);
+            }
+        }
+
         var totalCount = await query.CountAsync();
 
+        // Sorting
+        var desc = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase);
+        if (!string.IsNullOrEmpty(sortBy) && string.Equals(sortBy, "level", StringComparison.OrdinalIgnoreCase))
+        {
+            query = desc ? query.OrderByDescending(i => i.Level) : query.OrderBy(i => i.Level);
+        }
+        else if (!string.IsNullOrEmpty(sortBy) && string.Equals(sortBy, "itemLevel", StringComparison.OrdinalIgnoreCase))
+        {
+            query = desc ? query.OrderByDescending(i => i.ItemLevel) : query.OrderBy(i => i.ItemLevel);
+        }
+        else if (!string.IsNullOrEmpty(sortBy) && StatExpressions.TryGetValue(sortBy, out var sortExpr))
+        {
+            // Sort by a stat column — nulls sort last
+            if (desc)
+                query = query.OrderByDescending(sortExpr).ThenBy(i => i.Name);
+            else
+                query = query.OrderBy(sortExpr).ThenBy(i => i.Name);
+        }
+        else
+        {
+            query = desc ? query.OrderByDescending(i => i.Name) : query.OrderBy(i => i.Name);
+        }
+
         var items = await query
-            .OrderBy(i => i.Name)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(i => new
@@ -66,12 +143,23 @@ public class ItemsController : ControllerBase
                 i.Name,
                 i.Category,
                 i.Level,
+                i.ItemLevel,
                 i.Skill,
                 i.StackSize,
                 i.IconPath,
-                IsRare = (i.Flags & 32) != 0,
-                IsExclusive = (i.Flags & 8192) != 0,
-                IsAuctionable = (i.Flags & 32768) != 0,
+                IsRare = (i.Flags & 0x8000) != 0,
+                IsExclusive = (i.Flags & 0x4000) != 0,
+                IsNoAuction = (i.Flags & 0x0040) != 0,
+                // Stats for table view
+                i.Damage, i.Delay, i.DEF,
+                i.HP, i.MP,
+                i.STR, i.DEX, i.VIT, i.AGI, i.INT, i.MND, i.CHR,
+                i.Accuracy, i.Attack,
+                i.RangedAccuracy, i.RangedAttack,
+                i.MagicAccuracy, i.MagicDamage, i.MagicEvasion,
+                i.Evasion, i.Enmity, i.Haste,
+                i.StoreTP, i.TPBonus,
+                i.PhysicalDamageTaken, i.MagicDamageTaken,
             })
             .ToListAsync();
 
@@ -97,6 +185,7 @@ public class ItemsController : ControllerBase
             item.Flags,
             item.StackSize,
             item.Level,
+            item.ItemLevel,
             item.Jobs,
             item.Races,
             item.Slots,
@@ -116,8 +205,31 @@ public class ItemsController : ControllerBase
             item.PreviewImagePath,
             IsRare = item.IsRare,
             IsExclusive = item.IsExclusive,
-            IsAuctionable = item.IsAuctionable,
+            IsNoAuction = item.IsNoAuction,
         });
+    }
+
+    /// <summary>
+    /// Get model ID mappings for a list of item IDs.
+    /// Used by the 3D viewer to resolve which DAT files to load.
+    /// </summary>
+    [HttpGet("model-mappings")]
+    public async Task<IActionResult> GetModelMappings([FromQuery] int[] itemIds)
+    {
+        if (itemIds.Length == 0 || itemIds.Length > 20)
+            return BadRequest("Provide 1-20 item IDs");
+
+        var mappings = await _db.ItemModelMappings
+            .Where(m => itemIds.Contains(m.ItemId))
+            .Select(m => new ModelMappingResponse
+            {
+                ItemId = m.ItemId,
+                SlotId = m.SlotId,
+                ModelId = m.ModelId
+            })
+            .ToListAsync();
+
+        return Ok(mappings);
     }
 
     [HttpGet("categories")]
@@ -262,6 +374,56 @@ public class ItemsController : ControllerBase
             .ToListAsync();
 
         return Ok(listings);
+    }
+
+    private static readonly Dictionary<string, Expression<Func<GameItem, int?>>> StatExpressions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["HP"] = i => i.HP, ["MP"] = i => i.MP,
+        ["STR"] = i => i.STR, ["DEX"] = i => i.DEX, ["VIT"] = i => i.VIT,
+        ["AGI"] = i => i.AGI, ["INT"] = i => i.INT, ["MND"] = i => i.MND, ["CHR"] = i => i.CHR,
+        ["Damage"] = i => i.Damage, ["Delay"] = i => i.Delay, ["DEF"] = i => i.DEF,
+        ["Accuracy"] = i => i.Accuracy, ["Attack"] = i => i.Attack,
+        ["RangedAccuracy"] = i => i.RangedAccuracy, ["RangedAttack"] = i => i.RangedAttack,
+        ["MagicAccuracy"] = i => i.MagicAccuracy, ["MagicDamage"] = i => i.MagicDamage,
+        ["MagicEvasion"] = i => i.MagicEvasion, ["Evasion"] = i => i.Evasion,
+        ["Enmity"] = i => i.Enmity, ["Haste"] = i => i.Haste,
+        ["StoreTP"] = i => i.StoreTP, ["TPBonus"] = i => i.TPBonus,
+        ["PhysicalDamageTaken"] = i => i.PhysicalDamageTaken,
+        ["MagicDamageTaken"] = i => i.MagicDamageTaken,
+    };
+
+    private static readonly Dictionary<string, int> SlotBitmasks = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Main"] = 0x0001, ["Sub"] = 0x0002, ["Range"] = 0x0004, ["Ammo"] = 0x0008,
+        ["Head"] = 0x0010, ["Body"] = 0x0020, ["Hands"] = 0x0040, ["Legs"] = 0x0080,
+        ["Feet"] = 0x0100, ["Neck"] = 0x0200, ["Waist"] = 0x0400,
+        ["Ear"] = 0x1800,   // EarL (0x0800) | EarR (0x1000)
+        ["Ring"] = 0x6000,  // RingL (0x2000) | RingR (0x4000)
+        ["Back"] = 0x8000,
+    };
+
+    private static readonly Dictionary<string, int> FlagBitmasks = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["rare"] = 0x8000,
+        ["exclusive"] = 0x4000,
+        ["noauction"] = 0x0040,
+        ["nosale"] = 0x1000,
+        ["inscribable"] = 0x0020,
+    };
+
+    private static Expression<Func<GameItem, bool>> BuildStatFilter(
+        Expression<Func<GameItem, int?>> statExpr, int? min, int? max)
+    {
+        var param = statExpr.Parameters[0];
+        var body = statExpr.Body;
+        Expression filter = Expression.NotEqual(body, Expression.Constant(null, typeof(int?)));
+        if (min.HasValue)
+            filter = Expression.AndAlso(filter,
+                Expression.GreaterThanOrEqual(body, Expression.Constant((int?)min.Value, typeof(int?))));
+        if (max.HasValue)
+            filter = Expression.AndAlso(filter,
+                Expression.LessThanOrEqual(body, Expression.Constant((int?)max.Value, typeof(int?))));
+        return Expression.Lambda<Func<GameItem, bool>>(filter, param);
     }
 
     // FFXI job bitmask: bit 0 is unused (no job), WAR starts at bit 1.

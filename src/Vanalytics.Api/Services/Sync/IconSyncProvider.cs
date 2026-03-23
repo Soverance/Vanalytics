@@ -11,7 +11,8 @@ public class IconSyncProvider : ISyncProvider
     private readonly ILogger<IconSyncProvider> _logger;
 
     private const string IconUrlTemplate = "https://static.ffxiah.com/images/icon/{0}.png";
-    private static readonly TimeSpan DelayBetweenRequests = TimeSpan.FromMilliseconds(100);
+    private const int ConcurrentDownloads = 10;
+    private const int DbBatchSize = 100;
 
     public string ProviderId => "icons";
     public string DisplayName => "Item Icons";
@@ -30,94 +31,126 @@ public class IconSyncProvider : ISyncProvider
 
     public async Task SyncAsync(IProgress<SyncProgressEvent> progress, CancellationToken ct)
     {
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Started,
-            Message = "Querying items that need icons..."
-        });
-
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
 
+        await SyncIconsAsync(db, progress, ct);
+
+        progress.Report(new SyncProgressEvent
+        {
+            ProviderId = ProviderId,
+            Type = SyncEventType.Completed,
+            Message = "Icon sync complete."
+        });
+    }
+
+    // ─── Icons (FFXIAH) ─────────────────────────────────────────────────────────
+
+    private async Task SyncIconsAsync(
+        VanalyticsDbContext db, IProgress<SyncProgressEvent> progress, CancellationToken ct)
+    {
+        progress.Report(new SyncProgressEvent
+        {
+            ProviderId = ProviderId,
+            Type = SyncEventType.Progress,
+            Message = "Checking which items need icons..."
+        });
+
         var allItems = await db.GameItems
-            .Select(i => new { i.ItemId, i.Name })
+            .Select(i => new { i.ItemId, i.Name, i.IconPath })
             .ToListAsync(ct);
 
-        var itemsNeedingIcons = allItems
-            .Where(i => !_imageStore.IconExists(i.ItemId))
-            .ToList();
+        var allItemIds = allItems.Select(i => i.ItemId).ToList();
+        var existingInStorage = await _imageStore.GetExistingIconIdsAsync(allItemIds, ct);
 
-        var total = itemsNeedingIcons.Count;
+        // Clear orphaned DB paths
+        var orphaned = allItems
+            .Where(i => i.IconPath != null && !existingInStorage.Contains(i.ItemId))
+            .Select(i => i.ItemId)
+            .ToHashSet();
 
-        if (total == 0)
+        if (orphaned.Count > 0)
         {
-            _logger.LogInformation("All item icons are already present");
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Completed,
-                Message = "All icons already present. Nothing to do.",
-                Current = 0,
-                Total = 0,
-                Skipped = allItems.Count
-            });
-            return;
+            _logger.LogInformation("Clearing {Count} orphaned icon paths", orphaned.Count);
+            await db.GameItems
+                .Where(i => orphaned.Contains(i.ItemId))
+                .ExecuteUpdateAsync(s => s.SetProperty(i => i.IconPath, (string?)null), ct);
         }
 
-        _logger.LogInformation("Downloading icons for {Count} items", total);
+        var needingIcons = allItems
+            .Where(i => !existingInStorage.Contains(i.ItemId))
+            .ToList();
 
-        var client = _httpClientFactory.CreateClient();
-        client.Timeout = TimeSpan.FromSeconds(10);
-
-        var downloaded = 0;
-        var failed = 0;
-
-        foreach (var item in itemsNeedingIcons)
+        if (needingIcons.Count == 0)
         {
-            ct.ThrowIfCancellationRequested();
-
-            await Task.Delay(DelayBetweenRequests, ct);
-
-            var url = string.Format(IconUrlTemplate, item.ItemId);
-
-            try
-            {
-                var response = await client.GetAsync(url, ct);
-                if (response.IsSuccessStatusCode)
-                {
-                    var bytes = await response.Content.ReadAsByteArrayAsync(ct);
-                    var iconPath = await _imageStore.SaveIconAsync(item.ItemId, bytes, ct);
-
-                    await db.GameItems
-                        .Where(i => i.ItemId == item.ItemId)
-                        .ExecuteUpdateAsync(s => s.SetProperty(i => i.IconPath, iconPath), ct);
-
-                    downloaded++;
-                }
-                else
-                {
-                    _logger.LogWarning("Icon download returned {Status} for item {ItemId}", response.StatusCode, item.ItemId);
-                    failed++;
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to download icon for item {ItemId}", item.ItemId);
-                failed++;
-            }
-
             progress.Report(new SyncProgressEvent
             {
                 ProviderId = ProviderId,
                 Type = SyncEventType.Progress,
-                Message = $"Downloaded icon for {item.Name}",
-                CurrentItem = item.Name,
-                CurrentItemId = item.ItemId,
+                Message = $"All {allItems.Count} icons present. Skipping icon phase."
+            });
+            return;
+        }
+
+        _logger.LogInformation("Downloading icons for {Count} items", needingIcons.Count);
+
+        var client = _httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(10);
+        var downloaded = 0;
+        var failed = 0;
+        var total = needingIcons.Count;
+        var semaphore = new SemaphoreSlim(ConcurrentDownloads);
+
+        for (var batchStart = 0; batchStart < needingIcons.Count; batchStart += DbBatchSize)
+        {
+            ct.ThrowIfCancellationRequested();
+            var batch = needingIcons.Skip(batchStart).Take(DbBatchSize).ToList();
+            var batchResults = new List<(int ItemId, string IconPath)>();
+            var batchFailed = 0;
+
+            var tasks = batch.Select(async item =>
+            {
+                await semaphore.WaitAsync(ct);
+                try
+                {
+                    var url = string.Format(IconUrlTemplate, item.ItemId);
+                    var response = await client.GetAsync(url, ct);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var bytes = await response.Content.ReadAsByteArrayAsync(ct);
+                        var iconPath = await _imageStore.SaveIconAsync(item.ItemId, bytes, ct);
+                        lock (batchResults) batchResults.Add((item.ItemId, iconPath));
+                    }
+                    else
+                    {
+                        Interlocked.Increment(ref batchFailed);
+                    }
+                }
+                catch (OperationCanceledException) { throw; }
+                catch { Interlocked.Increment(ref batchFailed); }
+                finally { semaphore.Release(); }
+            });
+
+            await Task.WhenAll(tasks);
+
+            foreach (var r in batchResults)
+            {
+                await db.GameItems
+                    .Where(i => i.ItemId == r.ItemId)
+                    .ExecuteUpdateAsync(s => s.SetProperty(i => i.IconPath, r.IconPath), ct);
+            }
+
+            downloaded += batchResults.Count;
+            failed += batchFailed;
+
+            var last = batch.Last();
+            progress.Report(new SyncProgressEvent
+            {
+                ProviderId = ProviderId,
+                Type = SyncEventType.Progress,
+                Message = $"Icons: {downloaded}/{total} downloaded ({failed} failed)",
+                CurrentItem = last.Name,
+                CurrentItemId = last.ItemId,
                 Current = downloaded + failed,
                 Total = total,
                 Added = downloaded,
@@ -125,17 +158,7 @@ public class IconSyncProvider : ISyncProvider
             });
         }
 
-        _logger.LogInformation("Icon sync complete: {Downloaded} downloaded, {Failed} failed", downloaded, failed);
-
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Completed,
-            Message = $"Icon sync complete: {downloaded} downloaded, {failed} failed.",
-            Current = total,
-            Total = total,
-            Added = downloaded,
-            Failed = failed
-        });
+        _logger.LogInformation("Icon sync: {Downloaded} downloaded, {Failed} failed", downloaded, failed);
     }
+
 }

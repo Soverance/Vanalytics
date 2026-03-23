@@ -356,23 +356,22 @@ namespace Vanalytics.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int?>("Gender")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsPublic")
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LastSyncAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("LicenseStatus")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)")
-                        .HasDefaultValue("Unlicensed");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
+
+                    b.Property<int?>("Race")
+                        .HasColumnType("int");
 
                     b.Property<string>("Server")
                         .IsRequired()
@@ -552,6 +551,9 @@ namespace Vanalytics.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<int?>("ItemLevel")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Jobs")
                         .HasColumnType("int");
 
@@ -620,6 +622,10 @@ namespace Vanalytics.Data.Migrations
                     b.Property<int?>("StoreTP")
                         .HasColumnType("int");
 
+                    b.Property<string>("SubCategory")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<int?>("TPBonus")
                         .HasColumnType("int");
 
@@ -639,6 +645,8 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("Level");
 
                     b.HasIndex("Name");
+
+                    b.HasIndex("SubCategory");
 
                     b.ToTable("GameItems");
                 });
@@ -675,6 +683,42 @@ namespace Vanalytics.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("GameServers");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.ItemModelMapping", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ModelId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SlotId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModelId");
+
+                    b.HasIndex("ItemId", "SlotId")
+                        .IsUnique();
+
+                    b.ToTable("ItemModelMappings");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.ServerStatusChange", b =>

@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { Download } from 'lucide-react'
+import AuthLink from '../components/AuthLink'
 
 function Step({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {
   return (
@@ -52,25 +53,12 @@ export default function SetupGuidePage() {
           </p>
         </Step>
 
-        <Step number={2} title="Register Your Character">
+        <Step number={2} title="Generate an API Key">
           <p>
             Go to your{' '}
-            <Link to="/characters" className="text-blue-400 hover:underline">
-              Characters
-            </Link>
-            {' '}and add your character by entering your character name and server.
-          </p>
-          <p>
-            Your character must be registered in Vana'lytics before the addon can sync data for it.
-          </p>
-        </Step>
-
-        <Step number={3} title="Generate an API Key">
-          <p>
-            Go to your{' '}
-            <Link to="/profile" className="text-blue-400 hover:underline">
+            <AuthLink to="/profile?tab=apikeys" className="text-blue-400 hover:underline">
               Profile &gt; API Keys
-            </Link>
+            </AuthLink>
             {' '}tab and click <strong className="text-gray-200">Generate Key</strong>.
           </p>
           <p>
@@ -85,21 +73,25 @@ export default function SetupGuidePage() {
           )}
         </Step>
 
-        <Step number={4} title="Install the Vanalytics Addon">
+        <Step number={3} title="Install the Vanalytics Addon">
           <p>
-            Copy the <code className="text-blue-300 bg-gray-800 px-1.5 py-0.5 rounded">vanalytics</code> addon
-            folder into your Windower addons directory:
+            Download the addon and extract the <code className="text-blue-300 bg-gray-800 px-1.5 py-0.5 rounded">vanalytics</code> folder
+            into your Windower addons directory:
           </p>
           <CodeBlock>{`Windower4\\addons\\vanalytics\\
 ├── vanalytics.lua
 └── settings.xml`}</CodeBlock>
-          <p>
-            The addon files can be downloaded from the Vana'lytics repository or provided by your
-            server administrator.
-          </p>
+          <a
+            href="/api/addon/download"
+            download
+            className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Download Addon (.zip)
+          </a>
         </Step>
 
-        <Step number={5} title="Configure Your API Key">
+        <Step number={4} title="Configure Your API Key">
           <p>
             Open the settings file at:
           </p>
@@ -109,7 +101,7 @@ export default function SetupGuidePage() {
           </p>
           <CodeBlock>{`<settings>
     <global>
-        <ApiUrl>https://vanalytics.com</ApiUrl>
+        <ApiUrl>https://vanalytics.soverance.com</ApiUrl>
         <ApiKey>YOUR_API_KEY_HERE</ApiKey>
         <SyncInterval>15</SyncInterval>
     </global>
@@ -120,7 +112,7 @@ export default function SetupGuidePage() {
           </p>
         </Step>
 
-        <Step number={6} title="Load the Addon in Windower">
+        <Step number={5} title="Load the Addon in Windower">
           <p>
             Launch FFXI through Windower and log into your character. Then load the addon by typing
             this command in the game chat:
@@ -132,7 +124,7 @@ export default function SetupGuidePage() {
           </p>
         </Step>
 
-        <Step number={7} title="Verify the Sync">
+        <Step number={6} title="Verify the Sync">
           <p>
             Run a manual sync to verify everything is working:
           </p>
@@ -185,22 +177,12 @@ export default function SetupGuidePage() {
           <h3 className="text-lg font-semibold text-amber-400 mb-3">Troubleshooting</h3>
           <dl className="space-y-4 text-sm">
             <div>
-              <dt className="font-medium text-gray-300">Sync says "Character does not have an active license"</dt>
-              <dd className="text-gray-500 mt-1">
-                Your character needs an active license for automatic syncing. Check your{' '}
-                <Link to="/profile" className="text-blue-400 hover:underline">
-                  Licensing tab
-                </Link>{' '}
-                for details.
-              </dd>
-            </div>
-            <div>
               <dt className="font-medium text-gray-300">Sync says "Invalid API key"</dt>
               <dd className="text-gray-500 mt-1">
                 Your API key may be incorrect or revoked. Generate a new one from your{' '}
-                <Link to="/profile" className="text-blue-400 hover:underline">
+                <AuthLink to="/profile?tab=apikeys" className="text-blue-400 hover:underline">
                   Profile &gt; API Keys
-                </Link>{' '}
+                </AuthLink>{' '}
                 tab and update your settings.xml.
               </dd>
             </div>
@@ -212,13 +194,11 @@ export default function SetupGuidePage() {
               </dd>
             </div>
             <div>
-              <dt className="font-medium text-gray-300">Character not found</dt>
+              <dt className="font-medium text-gray-300">Brief game freeze during sync</dt>
               <dd className="text-gray-500 mt-1">
-                Make sure your character is registered on the{' '}
-                <Link to="/characters" className="text-blue-400 hover:underline">
-                  Characters
-                </Link>{' '}
-                with the exact name and server that matches your in-game character.
+                The addon uses a synchronous HTTP request to send data, which may cause a
+                momentary freeze (less than a second) each time it syncs. This is normal and
+                only happens once every sync interval (default: 15 minutes).
               </dd>
             </div>
           </dl>

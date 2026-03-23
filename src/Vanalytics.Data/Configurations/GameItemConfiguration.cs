@@ -19,10 +19,14 @@ public class GameItemConfiguration : IEntityTypeConfiguration<GameItem>
         builder.Property(i => i.Description).HasMaxLength(4096);
         builder.Property(i => i.DescriptionJa).HasMaxLength(4096);
         builder.Property(i => i.Category).HasMaxLength(32).IsRequired();
+        builder.Property(i => i.SubCategory).HasMaxLength(32);
+        builder.HasIndex(i => i.SubCategory);
         builder.Property(i => i.IconPath).HasMaxLength(256);
         builder.Property(i => i.PreviewImagePath).HasMaxLength(256);
         builder.Ignore(i => i.IsRare);
         builder.Ignore(i => i.IsExclusive);
-        builder.Ignore(i => i.IsAuctionable);
+        builder.Ignore(i => i.IsNoAuction);
+        builder.Ignore(i => i.IsNoSale);
+        builder.Ignore(i => i.IsInscribable);
     }
 }

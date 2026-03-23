@@ -3,6 +3,7 @@ WORKDIR /app
 COPY src/Vanalytics.Web/package.json src/Vanalytics.Web/package-lock.json ./
 RUN npm ci
 COPY src/Vanalytics.Web/ ./
+COPY src/lib/Common/src/Soverance.Web/ ./common-web/
 RUN npm run build
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base

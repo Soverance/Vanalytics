@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="..\..\addon\vanalytics\**" CopyToOutputDirectory="PreserveNewest" Link="addon\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Vanalytics.Core\Vanalytics.Core.csproj" />
     <ProjectReference Include="..\Vanalytics.Data\Vanalytics.Data.csproj" />
     <ProjectReference Include="..\lib\Common\src\Soverance.Auth\Soverance.Auth.csproj" />

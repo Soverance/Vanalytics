@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { api, getStoredTokens } from '../api/client'
+import { api } from '../api/client'
+import { useSyncProgress } from '../context/SyncContext'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -7,10 +8,8 @@ interface ItemDbStats {
   items: {
     total: number
     withIcons: number
-    withPreviews: number
     withDescriptions: number
     missingIcons: number
-    missingPreviews: number
     iconCoverage: number
     categories: { category: string; count: number }[]
   }
@@ -43,19 +42,6 @@ interface SyncProviderStatus {
   } | null
 }
 
-interface SyncProgress {
-  providerId: string
-  type: string
-  message?: string
-  currentItem?: string
-  currentItemId?: number
-  current: number
-  total: number
-  added: number
-  updated: number
-  skipped: number
-  failed: number
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -94,88 +80,41 @@ function SyncCard({
   provider: SyncProviderStatus
   onRefresh: () => void
 }) {
-  const [progress, setProgress] = useState<SyncProgress | null>(null)
+  const { progress: allProgress, isStreaming, startStream } = useSyncProgress()
+  const progress = allProgress[provider.providerId] ?? null
   const [running, setRunning] = useState(provider.isRunning)
   const [error, setError] = useState('')
 
-  // Keep running state in sync with provider prop (status refresh)
+  // Auto-connect to SSE stream if a sync is running (including on re-mount after navigation)
   useEffect(() => {
-    if (!provider.isRunning) {
+    if (provider.isRunning) {
+      setRunning(true)
+      if (!isStreaming(provider.providerId)) {
+        startStream(provider.providerId, onRefresh)
+      }
+    } else if (!isStreaming(provider.providerId)) {
       setRunning(false)
     }
-  }, [provider.isRunning])
+  }, [provider.isRunning, provider.providerId, isStreaming, startStream, onRefresh])
 
-  const startStream = useCallback(async (providerId: string) => {
-    const { accessToken } = getStoredTokens()
-    try {
-      const response = await fetch(`/api/admin/sync/${providerId}/progress`, {
-        headers: { Authorization: `Bearer ${accessToken ?? ''}` },
-      })
-
-      if (!response.ok || !response.body) {
-        throw new Error(`Stream failed: ${response.status}`)
-      }
-
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const blocks = buffer.split('\n\n')
-        buffer = blocks.pop()!
-        for (const block of blocks) {
-          const dataMatch = block.match(/^data: (.+)$/m)
-          if (dataMatch) {
-            const evt: SyncProgress = JSON.parse(dataMatch[1])
-            setProgress(evt)
-            if (evt.type === 'Completed' || evt.type === 'Cancelled' || evt.type === 'Failed') {
-              setRunning(false)
-              onRefresh()
-            }
-          }
-        }
-      }
-
-      // Stream ended cleanly without a terminal event — refresh anyway
+  // Watch for terminal events from the context-managed stream
+  useEffect(() => {
+    if (progress && (progress.type === 'Completed' || progress.type === 'Cancelled' || progress.type === 'Failed')) {
       setRunning(false)
-      onRefresh()
-    } catch {
-      // Fall back to polling
-      setError('Stream unavailable — polling for status')
-      const interval = setInterval(() => {
-        api<SyncProviderStatus[]>('/api/admin/sync/status')
-          .then((statuses) => {
-            const updated = statuses.find((s) => s.providerId === providerId)
-            if (updated && !updated.isRunning) {
-              clearInterval(interval)
-              setRunning(false)
-              setError('')
-              onRefresh()
-            }
-          })
-          .catch(() => {
-            // keep polling silently
-          })
-      }, 5_000)
     }
-  }, [onRefresh])
+  }, [progress])
 
   const handleSyncNow = async () => {
     setError('')
-    setProgress(null)
     try {
       await api(`/api/admin/sync/${provider.providerId}/start`, { method: 'POST' })
       setRunning(true)
-      await startStream(provider.providerId)
+      startStream(provider.providerId, onRefresh)
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 409) {
         setError('A sync is already running for this provider.')
-        // Still open the stream to show progress
         setRunning(true)
-        await startStream(provider.providerId)
+        startStream(provider.providerId, onRefresh)
       } else {
         setError('Failed to start sync.')
       }
@@ -395,11 +334,28 @@ export default function AdminItemsPage() {
         <>
           {/* Item stats */}
           <h2 className="text-lg font-semibold mb-3">Items</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
             <StatCard label="Total Items" value={items.total} />
-            <StatCard label="Icon Coverage" value={`${items.iconCoverage}%`} sub={`${items.withIcons} of ${items.total}`} />
-            <StatCard label="Missing Icons" value={items.missingIcons} />
             <StatCard label="With Descriptions" value={items.withDescriptions} />
+
+            {/* Icon Coverage widget */}
+            <div className="rounded-lg border border-gray-800 bg-gray-900 p-4 row-span-1">
+              <p className="text-xs text-gray-500 mb-3">Icon Coverage</p>
+              {(() => {
+                const iconPct = items.total > 0 ? Math.round((items.withIcons / items.total) * 100) : 0
+                return (
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-gray-400">Icons</span>
+                      <span className="text-gray-300">{items.withIcons.toLocaleString()} / {items.total.toLocaleString()} <span className="text-gray-500">({iconPct}%)</span></span>
+                    </div>
+                    <div className="h-2 rounded-full bg-gray-800 overflow-hidden">
+                      <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${iconPct}%` }} />
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
           </div>
 
           {/* Economy stats */}

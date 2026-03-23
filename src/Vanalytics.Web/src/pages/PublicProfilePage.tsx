@@ -24,15 +24,25 @@ export default function PublicProfilePage() {
       .finally(() => setLoading(false))
   }, [server, name])
 
-  if (loading) return <p className="text-gray-400">Loading profile...</p>
+  if (loading) return (
+    <div className="min-h-screen bg-gray-950 text-gray-100">
+      <main className="mx-auto max-w-4xl px-4 py-8">
+        <p className="text-gray-400">Loading profile...</p>
+      </main>
+    </div>
+  )
 
   if (notFound) {
     return (
-      <div className="text-center py-16">
-        <h2 className="text-xl font-bold text-gray-400">Character Not Found</h2>
-        <p className="text-gray-500 mt-2">
-          {name} on {server} doesn't have a public profile.
-        </p>
+      <div className="min-h-screen bg-gray-950 text-gray-100">
+        <main className="mx-auto max-w-4xl px-4 py-8">
+          <div className="text-center py-16">
+            <h2 className="text-xl font-bold text-gray-400">Character Not Found</h2>
+            <p className="text-gray-500 mt-2">
+              {name} on {server} doesn't have a public profile.
+            </p>
+          </div>
+        </main>
       </div>
     )
   }
@@ -42,37 +52,39 @@ export default function PublicProfilePage() {
   const activeJob = character.jobs.find((j) => j.isActive)
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">{character.name}</h1>
-        <p className="text-gray-400">{character.server}</p>
-        {activeJob && (
-          <p className="mt-2 text-lg text-blue-400">
-            {activeJob.job} Lv.{activeJob.level}
+    <div className="min-h-screen bg-gray-950 text-gray-100">
+      <main className="mx-auto max-w-4xl px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">{character.name}</h1>
+          <p className="text-gray-400">{character.server}</p>
+          {activeJob && (
+            <p className="mt-2 text-lg text-blue-400">
+              {activeJob.job} Lv.{activeJob.level}
+            </p>
+          )}
+        </div>
+
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Jobs</h2>
+          <JobsGrid jobs={character.jobs} />
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Equipment</h2>
+          <GearTable gear={character.gear} />
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Crafting</h2>
+          <CraftingTable skills={character.craftingSkills} />
+        </section>
+
+        {character.lastSyncAt && (
+          <p className="text-xs text-gray-600">
+            Last updated: {new Date(character.lastSyncAt).toLocaleString()}
           </p>
         )}
-      </div>
-
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-3">Jobs</h2>
-        <JobsGrid jobs={character.jobs} />
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-3">Equipment</h2>
-        <GearTable gear={character.gear} />
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-3">Crafting</h2>
-        <CraftingTable skills={character.craftingSkills} />
-      </section>
-
-      {character.lastSyncAt && (
-        <p className="text-xs text-gray-600">
-          Last updated: {new Date(character.lastSyncAt).toLocaleString()}
-        </p>
-      )}
+      </main>
     </div>
   )
 }

@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react'
 import { api, ApiError } from '../api/client'
-import type { CharacterSummary, CreateCharacterRequest, GameServer } from '../types/api'
+import type { CharacterSummary } from '../types/api'
 import CharacterCard from '../components/CharacterCard'
 
 export default function CharactersPage() {
   const [characters, setCharacters] = useState<CharacterSummary[]>([])
-  const [servers, setServers] = useState<GameServer[]>([])
   const [loading, setLoading] = useState(true)
-  const [name, setName] = useState('')
-  const [server, setServer] = useState('')
   const [error, setError] = useState('')
 
   const fetchCharacters = async () => {
@@ -24,28 +21,7 @@ export default function CharactersPage() {
 
   useEffect(() => {
     fetchCharacters()
-    // Load server list for dropdown
-    fetch('/api/servers')
-      .then(res => res.ok ? res.json() : [])
-      .then(setServers)
-      .catch(() => {})
   }, [])
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    try {
-      await api<CharacterSummary>('/api/characters', {
-        method: 'POST',
-        body: JSON.stringify({ name, server } as CreateCharacterRequest),
-      })
-      setName('')
-      setServer('')
-      fetchCharacters()
-    } catch (err) {
-      if (err instanceof ApiError) setError(err.message)
-    }
-  }
 
   const handleTogglePublic = async (id: string, isPublic: boolean) => {
     try {
@@ -81,44 +57,9 @@ export default function CharactersPage() {
         </div>
       )}
 
-      <form onSubmit={handleCreate} className="mb-8 flex gap-3">
-        <input
-          type="text"
-          placeholder="Character name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none"
-        />
-        {servers.length > 0 ? (
-          <select
-            value={server}
-            onChange={(e) => setServer(e.target.value)}
-            required
-            className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none"
-          >
-            <option value="">Select server</option>
-            {servers.map((s) => (
-              <option key={s.id} value={s.name}>{s.name}</option>
-            ))}
-          </select>
-        ) : (
-          <input
-            type="text"
-            placeholder="Server"
-            value={server}
-            onChange={(e) => setServer(e.target.value)}
-            required
-            className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none"
-          />
-        )}
-        <button
-          type="submit"
-          className="rounded bg-blue-600 px-4 py-2 font-medium hover:bg-blue-500"
-        >
-          Add Character
-        </button>
-      </form>
+      <p className="text-sm text-gray-500 mb-6">
+        Characters are automatically added when your Windower addon syncs.
+      </p>
 
       {characters.length === 0 ? (
         <p className="text-gray-500">No characters registered yet.</p>

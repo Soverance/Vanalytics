@@ -248,7 +248,7 @@ local function read_character_state()
         end
     end
 
-    return {
+    local state = {
         characterName = char_name,
         server = server,
         activeJob = active_job,
@@ -256,7 +256,32 @@ local function read_character_state()
         jobs = jobs,
         gear = gear,
         crafting = crafting,
+        race = player.race,
     }
+
+    -- Models: attempt to read equipment model IDs from the player mob entity.
+    -- mob.models is a table indexed by slot (1-9) in the Windower mob structure.
+    -- Slots 2-9 correspond to visible equipment slots (head, body, hands, legs, feet, etc.).
+    -- NOTE: mob.models availability is not guaranteed by all Windower builds; in-game
+    -- testing is required to confirm the field is present and correctly indexed.
+    local mob = windower.ffxi.get_mob_by_id(player.id)
+    if mob then
+        local models = {}
+        for slot_id = 2, 9 do
+            local model_id = mob.models and mob.models[slot_id]
+            if model_id and model_id > 0 then
+                table.insert(models, {
+                    slotId = slot_id,
+                    modelId = model_id,
+                })
+            end
+        end
+        if #models > 0 then
+            state.models = models
+        end
+    end
+
+    return state
 end
 
 -----------------------------------------------------------------------
@@ -422,184 +447,17 @@ windower.register_event('prerender', function()
     end
 end)
 
------------------------------------------------------------------------
--- Incoming Chunk Handler (AH history 0x0E7 + Bazaar contents 0x109)
--- SKELETON: Byte offsets are placeholders. Must be verified in-game
--- with Windower's PacketViewer addon before this will produce
--- usable data.
------------------------------------------------------------------------
-windower.register_event('incoming chunk', function(id, data)
-    if id == 0x0E7 then
-        ---------------------------------------------------------------
-        -- AH History Packet (placeholder offsets - verify in-game)
-        -- Actual FFXI AH history entries are ~52 bytes each.
-        ---------------------------------------------------------------
-        if settings.ApiKey == '' then return false end
-
-        local player = windower.ffxi.get_player()
-        if not player then return false end
-
-        local info = windower.ffxi.get_info()
-        local server = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
-
-        local item_id = data:byte(5) + data:byte(6) * 256
-
-        if item_id == 0 then return false end
-
-        local sales = {}
-        local offset = 9
-        local entry_size = 52  -- Approximate; verify with PacketViewer
-
-        while offset + entry_size - 1 <= #data do
-            local price = data:byte(offset) + data:byte(offset + 1) * 256 +
-                           data:byte(offset + 2) * 65536 + data:byte(offset + 3) * 16777216
-
-            if price == 0 then break end
-
-            local timestamp = data:byte(offset + 4) + data:byte(offset + 5) * 256 +
-                              data:byte(offset + 6) * 65536 + data:byte(offset + 7) * 16777216
-
-            -- Buyer name: bytes 8-23 (16 bytes, null-terminated)
-            local buyer_name = ''
-            for i = offset + 8, offset + 23 do
-                local b = data:byte(i)
-                if b == 0 then break end
-                buyer_name = buyer_name .. string.char(b)
-            end
-
-            -- Seller name: bytes 24-39 (16 bytes, null-terminated)
-            local seller_name = ''
-            for i = offset + 24, offset + 39 do
-                local b = data:byte(i)
-                if b == 0 then break end
-                seller_name = seller_name .. string.char(b)
-            end
-
-            table.insert(sales, {
-                price = price,
-                soldAt = os.date('!%Y-%m-%dT%H:%M:%SZ', timestamp),
-                sellerName = seller_name,
-                buyerName = buyer_name,
-                stackSize = 1,
-            })
-
-            offset = offset + entry_size
-        end
-
-        if #sales == 0 then return false end
-
-        local payload = json_encode({
-            itemId = item_id,
-            server = server,
-            sales = sales,
-        })
-
-        local url = settings.ApiUrl .. '/api/economy/ah'
-
-        local http = require('socket.http')
-        local ltn12 = require('ltn12')
-        http.TIMEOUT = 5
-
-        local response_body = {}
-        local result, status_code = http.request({
-            url = url,
-            method = 'POST',
-            headers = {
-                ['Content-Type'] = 'application/json',
-                ['Content-Length'] = tostring(#payload),
-                ['X-Api-Key'] = settings.ApiKey,
-            },
-            source = ltn12.source.string(payload),
-            sink = ltn12.sink.table(response_body),
-        })
-
-        if result and status_code == 200 then
-            log('AH data submitted: ' .. #sales .. ' sales for item ' .. item_id)
-        elseif status_code == 429 then
-            log_error('Economy rate limit exceeded')
-        end
-
-    elseif id == 0x109 then
-        ---------------------------------------------------------------
-        -- Bazaar Contents Packet (packet 0x109)
-        -- SKELETON: Byte offsets need in-game verification.
-        ---------------------------------------------------------------
-        if settings.ApiKey == '' then return false end
-
-        local player = windower.ffxi.get_player()
-        if not player then return false end
-
-        local info = windower.ffxi.get_info()
-        local server = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
-        local zone = res.zones[info.zone] and res.zones[info.zone].en or 'Unknown'
-
-        -- Parse bazaar contents packet (placeholder offsets)
-        local seller_name = ''
-        for i = 5, 20 do
-            local b = data:byte(i)
-            if b == 0 then break end
-            seller_name = seller_name .. string.char(b)
-        end
-
-        if seller_name == '' then return false end
-
-        local items = {}
-        local offset = 21
-        local entry_size = 12
-
-        while offset + entry_size - 1 <= #data do
-            local item_id = data:byte(offset) + data:byte(offset + 1) * 256
-            if item_id == 0 then break end
-
-            local price = data:byte(offset + 4) + data:byte(offset + 5) * 256 +
-                           data:byte(offset + 6) * 65536 + data:byte(offset + 7) * 16777216
-
-            local quantity = data:byte(offset + 8)
-
-            table.insert(items, {
-                itemId = item_id,
-                price = price,
-                quantity = quantity,
-            })
-
-            offset = offset + entry_size
-        end
-
-        if #items == 0 then return false end
-
-        local payload = json_encode({
-            server = server,
-            sellerName = seller_name,
-            zone = zone,
-            items = items,
-        })
-
-        local url = settings.ApiUrl .. '/api/economy/bazaar'
-
-        local http = require('socket.http')
-        local ltn12 = require('ltn12')
-        http.TIMEOUT = 5
-
-        local response_body = {}
-        local result, status_code = http.request({
-            url = url,
-            method = 'POST',
-            headers = {
-                ['Content-Type'] = 'application/json',
-                ['Content-Length'] = tostring(#payload),
-                ['X-Api-Key'] = settings.ApiKey,
-            },
-            source = ltn12.source.string(payload),
-            sink = ltn12.sink.table(response_body),
-        })
-
-        if result and status_code == 200 then
-            log('Bazaar data submitted: ' .. #items .. ' items from ' .. seller_name)
-        end
-    end
-
-    return false
-end)
+-- TODO: Packet capture for AH history (0x0E7) and bazaar contents (0x109)
+-- Byte offsets are placeholders and need in-game verification with
+-- Windower's PacketViewer addon before this will produce usable data.
+-- See git history for the skeleton implementation.
+--
+-- windower.register_event('incoming chunk', function(id, data)
+--     -- AH History (0x0E7): parse item_id, price, timestamp, buyer/seller
+--     --   -> POST /api/economy/ah
+--     -- Bazaar Contents (0x109): parse seller_name, items, prices, quantities
+--     --   -> POST /api/economy/bazaar
+-- end)
 
 -----------------------------------------------------------------------
 -- Chat commands

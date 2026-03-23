@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 using Soverance.Auth.DTOs;
 using Vanalytics.Core.DTOs.Characters;
+using Vanalytics.Core.DTOs.Keys;
+using Vanalytics.Core.DTOs.Sync;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Tests.Controllers;
@@ -67,44 +69,41 @@ public class CharactersControllerTests : IAsyncLifetime
         return req;
     }
 
-    [Fact]
-    public async Task CreateCharacter_ReturnsCreated()
+    private async Task<(string Token, Guid CharacterId)> SetupUserWithCharacterAsync(
+        string email, string username, string charName)
     {
-        var token = await RegisterAndGetTokenAsync("char1@test.com", "char1user");
-        var req = Authed(HttpMethod.Post, "/api/characters", token);
-        req.Content = JsonContent.Create(new CreateCharacterRequest { Name = "Soverance", Server = "Asura" });
+        var token = await RegisterAndGetTokenAsync(email, username);
 
-        var resp = await _client.SendAsync(req);
+        // Generate API key
+        var keyReq = Authed(HttpMethod.Post, "/api/keys/generate", token);
+        var keyResp = await _client.SendAsync(keyReq);
+        var apiKey = (await keyResp.Content.ReadFromJsonAsync<ApiKeyResponse>())!;
 
-        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
-        var character = await resp.Content.ReadFromJsonAsync<CharacterSummaryResponse>();
-        Assert.Equal("Soverance", character!.Name);
-        Assert.Equal("Asura", character.Server);
-        Assert.Equal("Unlicensed", character.LicenseStatus);
-    }
+        // Sync to auto-create character
+        var syncReq = new HttpRequestMessage(HttpMethod.Post, "/api/sync");
+        syncReq.Headers.Add("X-Api-Key", apiKey.ApiKey);
+        syncReq.Content = JsonContent.Create(new SyncRequest
+        {
+            CharacterName = charName,
+            Server = "Asura",
+            ActiveJob = "WAR",
+            ActiveJobLevel = 75,
+            Jobs = [new SyncJobEntry { Job = "WAR", Level = 75 }]
+        });
+        await _client.SendAsync(syncReq);
 
-    [Fact]
-    public async Task CreateCharacter_DuplicateNameServer_ReturnsConflict()
-    {
-        var token = await RegisterAndGetTokenAsync("char2@test.com", "char2user");
-        var req1 = Authed(HttpMethod.Post, "/api/characters", token);
-        req1.Content = JsonContent.Create(new CreateCharacterRequest { Name = "Dupechar", Server = "Asura" });
-        await _client.SendAsync(req1);
+        // Get character ID
+        var listResp = await _client.SendAsync(Authed(HttpMethod.Get, "/api/characters", token));
+        var chars = (await listResp.Content.ReadFromJsonAsync<List<CharacterSummaryResponse>>())!;
+        var character = chars.First(c => c.Name == charName);
 
-        var req2 = Authed(HttpMethod.Post, "/api/characters", token);
-        req2.Content = JsonContent.Create(new CreateCharacterRequest { Name = "Dupechar", Server = "Asura" });
-        var resp = await _client.SendAsync(req2);
-
-        Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
+        return (token, character.Id);
     }
 
     [Fact]
     public async Task ListCharacters_ReturnsOwnCharacters()
     {
-        var token = await RegisterAndGetTokenAsync("char3@test.com", "char3user");
-        var req1 = Authed(HttpMethod.Post, "/api/characters", token);
-        req1.Content = JsonContent.Create(new CreateCharacterRequest { Name = "ListChar", Server = "Asura" });
-        await _client.SendAsync(req1);
+        var (token, _) = await SetupUserWithCharacterAsync("char3@test.com", "char3user", "ListChar");
 
         var resp = await _client.SendAsync(Authed(HttpMethod.Get, "/api/characters", token));
 
@@ -117,13 +116,9 @@ public class CharactersControllerTests : IAsyncLifetime
     [Fact]
     public async Task GetCharacter_OwnerCanAccess()
     {
-        var token = await RegisterAndGetTokenAsync("char4@test.com", "char4user");
-        var req1 = Authed(HttpMethod.Post, "/api/characters", token);
-        req1.Content = JsonContent.Create(new CreateCharacterRequest { Name = "DetailChar", Server = "Asura" });
-        var createResp = await _client.SendAsync(req1);
-        var created = await createResp.Content.ReadFromJsonAsync<CharacterSummaryResponse>();
+        var (token, charId) = await SetupUserWithCharacterAsync("char4@test.com", "char4user", "DetailChar");
 
-        var resp = await _client.SendAsync(Authed(HttpMethod.Get, $"/api/characters/{created!.Id}", token));
+        var resp = await _client.SendAsync(Authed(HttpMethod.Get, $"/api/characters/{charId}", token));
 
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var detail = await resp.Content.ReadFromJsonAsync<CharacterDetailResponse>();
@@ -133,15 +128,10 @@ public class CharactersControllerTests : IAsyncLifetime
     [Fact]
     public async Task GetCharacter_NonOwnerGetsForbidden()
     {
-        var token1 = await RegisterAndGetTokenAsync("char5a@test.com", "char5auser");
+        var (_, charId) = await SetupUserWithCharacterAsync("char5a@test.com", "char5auser", "OtherChar");
         var token2 = await RegisterAndGetTokenAsync("char5b@test.com", "char5buser");
 
-        var req1 = Authed(HttpMethod.Post, "/api/characters", token1);
-        req1.Content = JsonContent.Create(new CreateCharacterRequest { Name = "OtherChar", Server = "Asura" });
-        var createResp = await _client.SendAsync(req1);
-        var created = await createResp.Content.ReadFromJsonAsync<CharacterSummaryResponse>();
-
-        var resp = await _client.SendAsync(Authed(HttpMethod.Get, $"/api/characters/{created!.Id}", token2));
+        var resp = await _client.SendAsync(Authed(HttpMethod.Get, $"/api/characters/{charId}", token2));
 
         Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
     }
@@ -149,13 +139,9 @@ public class CharactersControllerTests : IAsyncLifetime
     [Fact]
     public async Task UpdateCharacter_TogglesPublic()
     {
-        var token = await RegisterAndGetTokenAsync("char6@test.com", "char6user");
-        var req1 = Authed(HttpMethod.Post, "/api/characters", token);
-        req1.Content = JsonContent.Create(new CreateCharacterRequest { Name = "ToggleChar", Server = "Asura" });
-        var createResp = await _client.SendAsync(req1);
-        var created = await createResp.Content.ReadFromJsonAsync<CharacterSummaryResponse>();
+        var (token, charId) = await SetupUserWithCharacterAsync("char6@test.com", "char6user", "ToggleChar");
 
-        var req2 = Authed(HttpMethod.Put, $"/api/characters/{created!.Id}", token);
+        var req2 = Authed(HttpMethod.Put, $"/api/characters/{charId}", token);
         req2.Content = JsonContent.Create(new UpdateCharacterRequest { IsPublic = true });
         var resp = await _client.SendAsync(req2);
 
@@ -167,16 +153,12 @@ public class CharactersControllerTests : IAsyncLifetime
     [Fact]
     public async Task DeleteCharacter_Removes()
     {
-        var token = await RegisterAndGetTokenAsync("char7@test.com", "char7user");
-        var req1 = Authed(HttpMethod.Post, "/api/characters", token);
-        req1.Content = JsonContent.Create(new CreateCharacterRequest { Name = "DeleteChar", Server = "Asura" });
-        var createResp = await _client.SendAsync(req1);
-        var created = await createResp.Content.ReadFromJsonAsync<CharacterSummaryResponse>();
+        var (token, charId) = await SetupUserWithCharacterAsync("char7@test.com", "char7user", "DeleteChar");
 
-        var resp = await _client.SendAsync(Authed(HttpMethod.Delete, $"/api/characters/{created!.Id}", token));
+        var resp = await _client.SendAsync(Authed(HttpMethod.Delete, $"/api/characters/{charId}", token));
         Assert.Equal(HttpStatusCode.NoContent, resp.StatusCode);
 
-        var getResp = await _client.SendAsync(Authed(HttpMethod.Get, $"/api/characters/{created.Id}", token));
+        var getResp = await _client.SendAsync(Authed(HttpMethod.Get, $"/api/characters/{charId}", token));
         Assert.Equal(HttpStatusCode.NotFound, getResp.StatusCode);
     }
 

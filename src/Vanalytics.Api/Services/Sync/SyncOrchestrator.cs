@@ -12,6 +12,8 @@ public class SyncJob
     public required CancellationTokenSource Cts { get; init; }
     public required Channel<SyncProgressEvent> Channel { get; init; }
     public required DateTimeOffset StartedAt { get; init; }
+    /// <summary>Last progress event, so late-connecting SSE clients can get current state.</summary>
+    public SyncProgressEvent? LastEvent { get; set; }
 }
 
 public class SyncOrchestrator
@@ -69,6 +71,7 @@ public class SyncOrchestrator
             var progress = new Progress<SyncProgressEvent>(evt =>
             {
                 lastEvent = evt;
+                newJob.LastEvent = evt;
                 channel.Writer.TryWrite(evt);
             });
 

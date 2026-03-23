@@ -6,7 +6,6 @@ namespace Vanalytics.Api.Services;
 public class AzureBlobItemImageStore : IItemImageStore
 {
     private readonly BlobContainerClient _container;
-    private readonly string _baseUrl;
     private readonly ILogger<AzureBlobItemImageStore> _logger;
     private bool _containerEnsured;
 
@@ -17,9 +16,10 @@ public class AzureBlobItemImageStore : IItemImageStore
 
         var blobServiceClient = new BlobServiceClient(connectionString);
         _container = blobServiceClient.GetBlobContainerClient(containerName);
-        _baseUrl = _container.Uri.ToString().TrimEnd('/');
         _logger = logger;
     }
+
+    public string BaseUrl => _container.Uri.ToString().TrimEnd('/');
 
     private async Task EnsureContainerAsync(CancellationToken ct = default)
     {
@@ -31,30 +31,24 @@ public class AzureBlobItemImageStore : IItemImageStore
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to ensure blob container exists — it may already exist or credentials may be invalid");
+            _logger.LogWarning(ex, "Failed to ensure blob container exists");
         }
     }
 
     public async Task<string> SaveIconAsync(int itemId, byte[] data, CancellationToken ct = default)
     {
         await EnsureContainerAsync(ct);
-
         var blobName = $"icons/{itemId}.png";
         var blob = _container.GetBlobClient(blobName);
-
         using var stream = new MemoryStream(data);
         await blob.UploadAsync(stream, new BlobHttpHeaders { ContentType = "image/png" }, cancellationToken: ct);
-
-        return $"{_baseUrl}/{blobName}";
+        return blobName;
     }
 
     public bool IconExists(int itemId)
     {
         var blob = _container.GetBlobClient($"icons/{itemId}.png");
-        try
-        {
-            return blob.Exists();
-        }
+        try { return blob.Exists(); }
         catch (Exception ex)
         {
             _logger.LogDebug(ex, "Failed to check blob existence for item {ItemId}", itemId);
@@ -62,8 +56,20 @@ public class AzureBlobItemImageStore : IItemImageStore
         }
     }
 
-    public string GetIconUrl(int itemId)
+    public string GetIconUrl(int itemId) => $"{BaseUrl}/icons/{itemId}.png";
+
+    public async Task<HashSet<int>> GetExistingIconIdsAsync(IEnumerable<int> itemIds, CancellationToken ct = default)
     {
-        return $"{_baseUrl}/icons/{itemId}.png";
+        await EnsureContainerAsync(ct);
+        var existingIds = new HashSet<int>();
+        await foreach (var blob in _container.GetBlobsAsync(prefix: "icons/", cancellationToken: ct))
+        {
+            var fileName = Path.GetFileNameWithoutExtension(blob.Name);
+            if (int.TryParse(fileName, out var id))
+                existingIds.Add(id);
+        }
+        var requested = new HashSet<int>(itemIds);
+        existingIds.IntersectWith(requested);
+        return existingIds;
     }
 }

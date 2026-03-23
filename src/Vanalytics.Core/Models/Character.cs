@@ -9,8 +9,9 @@ public class Character
     public Guid UserId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Server { get; set; } = string.Empty;
-    public LicenseStatus LicenseStatus { get; set; } = LicenseStatus.Unlicensed;
     public bool IsPublic { get; set; }
+    public Race? Race { get; set; }
+    public Gender? Gender { get; set; }
     public DateTimeOffset? LastSyncAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }

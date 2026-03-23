@@ -5,9 +5,10 @@ public class CharacterDetailResponse
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Server { get; set; } = string.Empty;
-    public string LicenseStatus { get; set; } = string.Empty;
     public bool IsPublic { get; set; }
     public DateTimeOffset? LastSyncAt { get; set; }
+    public string? Race { get; set; }
+    public string? Gender { get; set; }
 
     public List<JobEntry> Jobs { get; set; } = [];
     public List<GearEntry> Gear { get; set; } = [];
