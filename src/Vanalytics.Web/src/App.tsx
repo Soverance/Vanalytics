@@ -12,7 +12,6 @@ import CharacterDetailPage from './pages/CharacterDetailPage'
 import ProfilePage from './pages/ProfilePage'
 import SetupGuidePage from './pages/SetupGuidePage'
 import ServerStatusDashboard from './pages/ServerStatusDashboard'
-import ServerDetailPage from './pages/ServerDetailPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import AdminItemsPage from './pages/AdminItemsPage'
 import AdminSamlPage from './pages/AdminSamlPage'
@@ -95,7 +94,6 @@ export default function App() {
           <Route element={<Layout />}>
             {/* Public server routes (no auth required) */}
             <Route path="/server/status" element={<ServerStatusDashboard />} />
-            <Route path="/server/status/:name" element={<ServerDetailPage />} />
             <Route path="/server/clock" element={<VanadielClockPage />} />
 
             {/* Redirects for old routes */}

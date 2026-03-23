@@ -4,67 +4,85 @@ import type { ZoneMeshInstance } from './types'
  * Parses MZB blocks (type 0x1C) from FFXI zone DAT files.
  * Data must be decrypted via decodeMzb() before calling this.
  *
- * MZB format (from GalkaReeve TDWMap.cpp ImgReadMap):
+ * Ported from GalkaReeve mapViewer FFXILandscapeMesh.cpp + .h
  *
- * After decryption, the MZB data layout:
- *   Offset 0: header (32 bytes)
- *     - uint32 at offset 4: instance count (masked & 0xFFFFFF)
- *   Offset 32: OBJINFO array
+ * SMZBHeader (32 bytes):
+ *   char id[4]
+ *   uint totalRecord100:24, R100Flag:8
+ *   uint offsetHeader2, d1:8, d2:8, d3:8, d4:8
+ *   int  offsetlooseTree
+ *   uint offsetEndRecord100, offsetEndlooseTree
  *
- * Each OBJINFO has scale, rotation, translation fields and an MMB index.
- * We build a 4x4 matrix from these for the renderer.
+ * Followed by totalRecord100 × SMZBBlock100 entries (100 bytes each):
+ *   char id[16]
+ *   float fTransX,fTransY,fTransZ
+ *   float fRotX,fRotY,fRotZ
+ *   float fScaleX,fScaleY,fScaleZ
+ *   float fa,fb,fc,fd
+ *   long  fe,ff,fg,fh,fi,fj,fk,fl
  *
- * The GalkaReeve code does:
- *   oj = (OBJINFO*)(p + 16 + 32)  // instances at offset 48 from block data
- *   noj = (*(int*)(p + 16 + 4)) & 0xFFFFFF  // count from header
- *
- * But since our data already has the 16-byte block padding stripped,
- * the offsets are relative to our data start:
- *   count at offset 4, instances at offset 32
+ * We build 4x4 transform matrices from scale × rotation × translation.
+ * The `id[16]` field encodes the MMB prefab index.
  */
 
-// OBJINFO struct size — from GalkaReeve, this contains:
-// scale(xyz), rotation(xyz), translation(xyz), id/flags
-// Exact size needs to be determined empirically
-const OBJINFO_SIZE = 100  // matches NavMesh Builder's 0x64 = 100 bytes
+const SMZB_HEADER_SIZE = 32
+const SMZB_BLOCK100_SIZE = 100
 
 export function parseMzbBlock(data: Uint8Array): ZoneMeshInstance[] {
-  if (data.length < 36) return []
+  if (data.length < SMZB_HEADER_SIZE + SMZB_BLOCK100_SIZE) return []
 
   const view = new DataView(data.buffer, data.byteOffset, data.byteLength)
 
-  // Instance count at offset 4, masked to 24 bits
-  const instanceCount = view.getUint32(4, true) & 0xFFFFFF
-  if (instanceCount === 0 || instanceCount > 10000) {
-    if (instanceCount > 10000) console.warn(`MZB: instanceCount ${instanceCount} too large`)
+  // SMZBHeader: totalRecord100 at offset 4 (24 bits)
+  const totalRecord100 = view.getUint32(4, true) & 0xFFFFFF
+  if (totalRecord100 === 0 || totalRecord100 > 20000) {
+    if (totalRecord100 > 20000) console.warn(`MZB: totalRecord100 ${totalRecord100} too large`)
     return []
   }
 
   const instances: ZoneMeshInstance[] = []
-  const instancesOffset = 32  // OBJINFO array starts at offset 32
+  const recordsStart = SMZB_HEADER_SIZE
 
-  for (let i = 0; i < instanceCount; i++) {
-    const offset = instancesOffset + i * OBJINFO_SIZE
-    if (offset + OBJINFO_SIZE > data.length) break
+  for (let i = 0; i < totalRecord100; i++) {
+    const offset = recordsStart + i * SMZB_BLOCK100_SIZE
+    if (offset + SMZB_BLOCK100_SIZE > data.length) break
 
-    try {
-      // Read OBJINFO fields
-      // The exact layout from GalkaReeve uses:
-      //   fScaleX/Y/Z, fRotX/Y/Z, fTransX/Y/Z
-      // Reading as 4x4 float matrix first (64 bytes), then meshIndex (uint32)
-      // This matches the NavMesh Builder's 100-byte entry interpretation
-      const transform: number[] = []
-      for (let j = 0; j < 16; j++) {
-        transform.push(view.getFloat32(offset + j * 4, true))
-      }
+    // id[16] at offset 0 — the first 2 bytes often encode the MMB index
+    // In GalkaReeve, the id is a 16-byte string used to look up MMB by name
+    // But for mesh instancing, we use the sequential ordering
+    // The meshIndex is typically encoded in the first few bytes of id
+    const meshIndex = view.getUint16(offset, true)
 
-      // Mesh index at offset 64 within the entry
-      const meshIndex = view.getUint32(offset + 64, true)
+    // Read transform components
+    const fTransX = view.getFloat32(offset + 16, true)
+    const fTransY = view.getFloat32(offset + 20, true)
+    const fTransZ = view.getFloat32(offset + 24, true)
+    const fRotX = view.getFloat32(offset + 28, true)
+    const fRotY = view.getFloat32(offset + 32, true)
+    const fRotZ = view.getFloat32(offset + 36, true)
+    const fScaleX = view.getFloat32(offset + 40, true)
+    const fScaleY = view.getFloat32(offset + 44, true)
+    const fScaleZ = view.getFloat32(offset + 48, true)
 
-      instances.push({ meshIndex, transform })
-    } catch {
-      break
-    }
+    // Build 4x4 transform matrix: Scale × RotZ × RotY × RotX × Translate
+    const cx = Math.cos(fRotX), sx = Math.sin(fRotX)
+    const cy = Math.cos(fRotY), sy = Math.sin(fRotY)
+    const cz = Math.cos(fRotZ), sz = Math.sin(fRotZ)
+
+    // Combined rotation: Rz * Ry * Rx
+    const r00 = cz * cy, r01 = cz * sy * sx - sz * cx, r02 = cz * sy * cx + sz * sx
+    const r10 = sz * cy, r11 = sz * sy * sx + cz * cx, r12 = sz * sy * cx - cz * sx
+    const r20 = -sy,     r21 = cy * sx,                 r22 = cy * cx
+
+    // Apply scale then put in column-major 4x4 for Three.js (fromArray expects column-major)
+    const transform = [
+      r00 * fScaleX, r10 * fScaleX, r20 * fScaleX, 0,
+      r01 * fScaleY, r11 * fScaleY, r21 * fScaleY, 0,
+      r02 * fScaleZ, r12 * fScaleZ, r22 * fScaleZ, 0,
+      fTransX,       fTransY,       fTransZ,        1,
+    ]
+
+    instances.push({ meshIndex, transform })
   }
 
   return instances

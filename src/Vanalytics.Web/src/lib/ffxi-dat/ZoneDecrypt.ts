@@ -68,57 +68,98 @@ export const KEY_TABLE_2: Uint8Array = new Uint8Array([
   0x10, 0x76, 0x31, 0x66, 0x0A, 0x0B, 0x2E, 0x83,
 ])
 
+/**
+ * Decrypt MZB block data.
+ * Ported from GalkaReeve mapViewer TDWAnalysis.cpp decode_mzb().
+ *
+ * Phase 1: Variable-length XOR-0xFF blocks based on key bits
+ * Phase 2: XOR node id[16] fields with 0x55
+ */
 export function decodeMzb(data: Uint8Array): Uint8Array {
   const buf = data.slice()
 
-  const len = buf[0] | (buf[1] << 8) | (buf[2] << 16)
-  let key = (buf[7] ^ 0xFF) & 0xFF
-  const decodeLen = ((len - 8) / 4) * 4 + 8
+  if (buf[3] >= 0x1B) {
+    const decodeLength = buf[0] | (buf[1] << 8) | (buf[2] << 16)
+    let key = KEY_TABLE[(buf[7] ^ 0xFF) & 0xFF]
+    let keyCounter = 0
 
-  // Phase 1: XOR with key table
-  for (let i = 8; i < decodeLen && i < buf.length; i++) {
-    buf[i] ^= KEY_TABLE[key % 256]
-    key = (key + 1) & 0xFF
-  }
+    let pos = 8
+    while (pos < decodeLength && pos < buf.length) {
+      const xorLength = ((key >>> 4) & 7) + 16
+      if ((key & 1) && (pos + xorLength < decodeLength)) {
+        for (let i = 0; i < xorLength && pos + i < buf.length; i++) {
+          buf[pos + i] ^= 0xFF
+        }
+      }
+      keyCounter++
+      key = (key + keyCounter) >>> 0
+      pos += xorLength
+    }
 
-  // Phase 2: XOR node headers
-  const count = buf[4] | (buf[5] << 8) | (buf[6] << 16)
-  for (let i = 0; i < count; i++) {
-    const offset = 0x20 + i * 0x64
-    if (offset + 0x64 > buf.length) break
-    for (let j = 0; j < 0x64; j++) {
-      buf[offset + j] ^= 0x55
+    // Phase 2: XOR node id[16] fields with 0x55
+    const nodeCount = buf[4] | (buf[5] << 8) | (buf[6] << 16)
+    let nodeOffset = 32 // OBJINFO starts at offset 32
+    for (let i = 0; i < nodeCount; i++) {
+      if (nodeOffset + 16 > buf.length) break
+      for (let j = 0; j < 16; j++) {
+        buf[nodeOffset + j] ^= 0x55
+      }
+      nodeOffset += 100 // sizeof(SMZBBlock100) = 100
     }
   }
 
   return buf
 }
 
+/**
+ * Decrypt MMB block data.
+ * Ported from GalkaReeve mapViewer TDWAnalysis.cpp decode_mmb() + decode_mmb2().
+ *
+ * Phase 1: Rolling XOR with shifting key derived from key table
+ * Phase 2: Block swapping between first and second halves
+ */
 export function decodeMmb(data: Uint8Array): Uint8Array {
   const buf = data.slice()
 
-  // Phase 1: XOR decryption
+  // Phase 1: decode_mmb — rolling XOR with complex key advancement
   if (buf[3] >= 5) {
+    const decodeLength = buf[0] | (buf[1] << 8) | (buf[2] << 16)
     let key = KEY_TABLE[(buf[5] ^ 0xF0) & 0xFF]
-    for (let i = 8; i < buf.length; i++) {
-      buf[i] ^= key
-      key = (key + 1) & 0xFF
+    let keyCounter = 0
+
+    for (let pos = 8; pos < decodeLength && pos < buf.length; pos++) {
+      const x = ((key & 0xFF) << 8) | (key & 0xFF)
+      keyCounter++
+      key = (key + keyCounter) >>> 0
+      buf[pos] ^= ((x >>> (key & 7)) & 0xFF)
+      keyCounter++
+      key = (key + keyCounter) >>> 0
     }
   }
 
-  // Phase 2: Block swapping
+  // Phase 2: decode_mmb2 — block swapping between halves
   if (buf[6] === 0xFF && buf[7] === 0xFF) {
-    const count = KEY_TABLE_2[(buf[5] ^ 0xF0) & 0xFF]
-    const halfLen = Math.floor((buf.length - 8) / 2)
-    const maxBlocks = Math.floor(halfLen / 8)
-    for (let i = 0; i < count && i < maxBlocks; i++) {
-      const offset1 = 8 + i * 8
-      const offset2 = 8 + halfLen + i * 8
-      for (let j = 0; j < 8; j++) {
-        const tmp = buf[offset1 + j]
-        buf[offset1 + j] = buf[offset2 + j]
-        buf[offset2 + j] = tmp
+    const decodeLength = buf[0] | (buf[1] << 8) | (buf[2] << 16)
+    let key1 = (buf[5] ^ 0xF0) & 0xFF
+    let key2 = KEY_TABLE_2[key1]
+
+    const decodeCount = ((decodeLength - 8) & ~0xF) >>> 1
+
+    let d1 = 8
+    let d2 = 8 + decodeCount
+    for (let pos = 0; pos < decodeCount; pos += 8) {
+      if ((key2 & 1) && d1 + 7 < buf.length && d2 + 7 < buf.length) {
+        // Swap two 4-byte DWORDs (8 bytes total)
+        for (let j = 0; j < 8; j++) {
+          const tmp = buf[d1 + j]
+          buf[d1 + j] = buf[d2 + j]
+          buf[d2 + j] = tmp
+        }
       }
+      key1 = (key1 + 9) >>> 0
+      key2 = (key2 + key1) >>> 0
+      d1 += 8
+      d2 += 8
     }
   }
 

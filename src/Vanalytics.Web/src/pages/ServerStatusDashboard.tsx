@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import type { ServerAnalytics } from '../types/api'
@@ -8,6 +8,7 @@ import ServerHeatmap from '../components/server/ServerHeatmap'
 import ServerRankings from '../components/server/ServerRankings'
 import CurrentStatusGrid from '../components/server/CurrentStatusGrid'
 import RecentIncidents from '../components/server/RecentIncidents'
+import ServerDetailPanel from '../components/server/ServerDetailPanel'
 
 const TIME_RANGES = [
   { label: '24h', days: 1 },
@@ -26,6 +27,7 @@ export default function ServerStatusDashboard() {
   const [data, setData] = useState<ServerAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [selectedServer, setSelectedServer] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -38,6 +40,14 @@ export default function ServerStatusDashboard() {
       })
       .finally(() => setLoading(false))
   }, [days])
+
+  const handleServerClick = useCallback((serverName: string) => {
+    setSelectedServer(serverName)
+  }, [])
+
+  const handlePanelClose = useCallback(() => {
+    setSelectedServer(null)
+  }, [])
 
   const changeDays = (d: number) => {
     setDays(d)
@@ -106,24 +116,32 @@ export default function ServerStatusDashboard() {
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <section className="rounded-lg border border-gray-800 bg-gray-900 p-4">
           <h2 className="text-xs uppercase text-gray-500 mb-3">Server Heatmap</h2>
-          <ServerHeatmap data={data.heatmap} days={days} />
+          <ServerHeatmap data={data.heatmap} days={days} onServerClick={handleServerClick} />
         </section>
         <section className="rounded-lg border border-gray-800 bg-gray-900 p-4">
           <h2 className="text-xs uppercase text-gray-500 mb-3">Server Rankings</h2>
-          <ServerRankings rankings={data.serverRankings} days={days} />
+          <ServerRankings rankings={data.serverRankings} days={days} onServerClick={handleServerClick} />
         </section>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-lg border border-gray-800 bg-gray-900 p-4">
           <h2 className="text-xs uppercase text-gray-500 mb-3">Current Status</h2>
-          <CurrentStatusGrid servers={currentServers} />
+          <CurrentStatusGrid servers={currentServers} onServerClick={handleServerClick} />
         </section>
         <section className="rounded-lg border border-gray-800 bg-gray-900 p-4">
           <h2 className="text-xs uppercase text-gray-500 mb-3">Recent Incidents</h2>
           <RecentIncidents incidents={data.recentIncidents} />
         </section>
       </div>
+      {/* Slide-over panel */}
+      {selectedServer && (
+        <ServerDetailPanel
+          serverName={selectedServer}
+          initialDays={days}
+          onClose={handlePanelClose}
+        />
+      )}
     </div>
   )
 }
