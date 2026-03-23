@@ -103,6 +103,8 @@ public class CharactersController : ControllerBase
         Server = c.Server,
         IsPublic = c.IsPublic,
         LastSyncAt = c.LastSyncAt,
+        Race = c.Race?.ToString(),
+        Gender = c.Gender?.ToString(),
         Jobs = c.Jobs.Select(j => new JobEntry
         {
             Job = j.JobId.ToString(),

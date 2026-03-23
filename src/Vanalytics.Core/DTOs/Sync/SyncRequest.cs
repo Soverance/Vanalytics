@@ -15,6 +15,9 @@ public class SyncRequest
 
     public int ActiveJobLevel { get; set; }
 
+    public int? Race { get; set; }
+    public List<SyncModelEntry> Models { get; set; } = [];
+
     public List<SyncJobEntry> Jobs { get; set; } = [];
     public List<SyncGearEntry> Gear { get; set; } = [];
     public List<SyncCraftingEntry> Crafting { get; set; } = [];

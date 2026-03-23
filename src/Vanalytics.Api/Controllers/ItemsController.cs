@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
 
@@ -206,6 +207,29 @@ public class ItemsController : ControllerBase
             IsExclusive = item.IsExclusive,
             IsNoAuction = item.IsNoAuction,
         });
+    }
+
+    /// <summary>
+    /// Get model ID mappings for a list of item IDs.
+    /// Used by the 3D viewer to resolve which DAT files to load.
+    /// </summary>
+    [HttpGet("model-mappings")]
+    public async Task<IActionResult> GetModelMappings([FromQuery] int[] itemIds)
+    {
+        if (itemIds.Length == 0 || itemIds.Length > 20)
+            return BadRequest("Provide 1-20 item IDs");
+
+        var mappings = await _db.ItemModelMappings
+            .Where(m => itemIds.Contains(m.ItemId))
+            .Select(m => new ModelMappingResponse
+            {
+                ItemId = m.ItemId,
+                SlotId = m.SlotId,
+                ModelId = m.ModelId
+            })
+            .ToListAsync();
+
+        return Ok(mappings);
     }
 
     [HttpGet("categories")]

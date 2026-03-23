@@ -9,6 +9,7 @@ import { CompareProvider } from './compare/CompareContext'
 import CompareTray from './compare/CompareTray'
 import { SyncProvider } from '../context/SyncContext'
 import SyncBanner from './SyncBanner'
+import { FfxiFileSystemProvider } from '../context/FfxiFileSystemContext'
 
 function SidebarLink({ to, label, icon }: { to: string; label: string; icon: ReactNode }) {
   return (
@@ -43,6 +44,7 @@ function LayoutInner() {
   const { isOpen: loginOpen, close: closeLogin } = useLoginModal()
 
   return (
+    <FfxiFileSystemProvider>
     <SyncProvider>
     <CompareProvider>
     <div className="min-h-screen bg-gray-950 text-gray-100 flex">
@@ -146,5 +148,6 @@ function LayoutInner() {
     {loginOpen && <LoginModal onClose={closeLogin} />}
     </CompareProvider>
     </SyncProvider>
+    </FfxiFileSystemProvider>
   )
 }

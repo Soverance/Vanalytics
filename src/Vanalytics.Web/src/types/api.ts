@@ -43,6 +43,8 @@ export interface CharacterDetail {
   server: string
   isPublic: boolean
   lastSyncAt: string | null
+  race?: string
+  gender?: string
   jobs: JobEntry[]
   gear: GearEntry[]
   craftingSkills: CraftingEntry[]
@@ -329,4 +331,11 @@ export interface StatFilter {
   stat: string
   min: string
   max: string
+}
+
+// Model mappings
+export interface ModelMapping {
+  itemId: number
+  slotId: number
+  modelId: number
 }

@@ -1,4 +1,5 @@
 using Soverance.Auth.Models;
+using Vanalytics.Core.Enums;
 
 namespace Vanalytics.Core.Models;
 
@@ -9,6 +10,8 @@ public class Character
     public string Name { get; set; } = string.Empty;
     public string Server { get; set; } = string.Empty;
     public bool IsPublic { get; set; }
+    public Race? Race { get; set; }
+    public Gender? Gender { get; set; }
     public DateTimeOffset? LastSyncAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }

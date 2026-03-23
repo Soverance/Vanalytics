@@ -248,7 +248,7 @@ local function read_character_state()
         end
     end
 
-    return {
+    local state = {
         characterName = char_name,
         server = server,
         activeJob = active_job,
@@ -256,7 +256,32 @@ local function read_character_state()
         jobs = jobs,
         gear = gear,
         crafting = crafting,
+        race = player.race,
     }
+
+    -- Models: attempt to read equipment model IDs from the player mob entity.
+    -- mob.models is a table indexed by slot (1-9) in the Windower mob structure.
+    -- Slots 2-9 correspond to visible equipment slots (head, body, hands, legs, feet, etc.).
+    -- NOTE: mob.models availability is not guaranteed by all Windower builds; in-game
+    -- testing is required to confirm the field is present and correctly indexed.
+    local mob = windower.ffxi.get_mob_by_id(player.id)
+    if mob then
+        local models = {}
+        for slot_id = 2, 9 do
+            local model_id = mob.models and mob.models[slot_id]
+            if model_id and model_id > 0 then
+                table.insert(models, {
+                    slotId = slot_id,
+                    modelId = model_id,
+                })
+            end
+        end
+        if #models > 0 then
+            state.models = models
+        end
+    end
+
+    return state
 end
 
 -----------------------------------------------------------------------

@@ -4,17 +4,20 @@ import { useAuth } from '../context/AuthContext'
 import { api, ApiError } from '../api/client'
 import UserAvatar from '../components/UserAvatar'
 import type { ApiKeyResponse } from '../types/api'
+import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
 
-type Tab = 'session' | 'apikeys'
+type Tab = 'session' | 'apikeys' | 'ffxi'
 
 const tabs: { id: Tab; label: string }[] = [
   { id: 'session', label: 'Session' },
   { id: 'apikeys', label: 'API Keys' },
+  { id: 'ffxi', label: 'FFXI Installation' },
 ]
 
 export default function ProfilePage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const ffxi = useFfxiFileSystem()
   const [searchParams, setSearchParams] = useSearchParams()
   const initialTab = tabs.find(t => t.id === searchParams.get('tab'))?.id ?? 'session'
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
@@ -265,6 +268,57 @@ export default function ProfilePage() {
               </button>
             )}
           </div>
+        </section>
+      )}
+
+      {/* FFXI Installation tab */}
+      {activeTab === 'ffxi' && (
+        <section className="rounded-lg border border-gray-800 bg-gray-900 p-6 max-w-lg">
+          <h2 className="text-lg font-semibold mb-4">FFXI Installation</h2>
+
+          {!ffxi.isSupported ? (
+            <p className="text-sm text-gray-400">
+              The 3D model viewer requires Chrome or Edge.<br />
+              Your browser does not support the File System Access API.
+            </p>
+          ) : !ffxi.isConfigured ? (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-400">
+                Connect your local FFXI installation to enable the 3D character model viewer.
+                Files are read locally and never uploaded.
+              </p>
+              <button
+                onClick={() => ffxi.configure()}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg"
+              >
+                Browse for FFXI Installation
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                <p className="text-xs text-gray-500 mb-1">Connected</p>
+                <p className="text-sm text-gray-300 break-all">{ffxi.path}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                {ffxi.isAuthorized ? (
+                  <span className="px-2 py-1 text-xs rounded bg-green-900/40 text-green-400 border border-green-800/40">
+                    Authorized
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 text-xs rounded bg-yellow-900/40 text-yellow-400 border border-yellow-800/40">
+                    Needs Permission
+                  </span>
+                )}
+                <button
+                  onClick={() => ffxi.disconnect()}
+                  className="text-sm text-red-400 hover:text-red-300"
+                >
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          )}
         </section>
       )}
     </div>

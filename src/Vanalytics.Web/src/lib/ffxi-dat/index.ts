@@ -1,0 +1,7 @@
+export { DatReader } from './DatReader'
+export { parseDatFile } from './DatFile'
+export { parseMeshes, triangleStripToList } from './MeshParser'
+export { parseTextures, decompressDXT1, decompressDXT3 } from './TextureParser'
+export { parseSkeleton } from './SkeletonParser'
+export { FileTableResolver, modelToPath, resolveModelPaths } from './FileTableResolver'
+export type { ParsedMesh, ParsedTexture, ParsedSkeleton, ParsedBone, ParsedDatFile } from './types'
