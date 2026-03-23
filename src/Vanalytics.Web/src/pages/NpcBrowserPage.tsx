@@ -92,38 +92,63 @@ export default function NpcBrowserPage() {
     setPickerOpen(false)
     setMeshData(null)
     setParseLog([])
+    setLogOpen(true)
     setModelLoading(true)
 
     try {
+      log(`NPC: ${npc.name} (Pool ${npc.poolId}, Family ${npc.familyId})`)
+      log(`ModelData: ${npc.modelData}`)
+      log(`IsMonster: ${npc.isMonster}, ModelId (slot1): ${npc.modelId}`)
+
       if (!resolver) {
-        log('FileTableResolver not loaded — configure your FFXI installation first.')
+        log('ERROR: FileTableResolver not loaded — configure your FFXI installation first.')
         return
       }
+
+      log(`VTABLE/FTABLE loaded (${resolver.fileCount} entries)`)
 
       const romPath = resolver.resolveFileId(npc.modelId)
       if (!romPath) {
-        log(`Could not resolve model ID ${npc.modelId} to a ROM path.`)
+        log(`VTABLE lookup failed: file ID ${npc.modelId} not found (VTABLE returned 0 or out of range)`)
+        log('This model ID may not have a corresponding DAT in your installation.')
         return
       }
 
-      log(`${npc.name} — Model ID ${npc.modelId} → ${romPath}`)
-      const buffer = await ffxi.readFile(romPath)
-      log(`Read ${buffer.byteLength} bytes`)
+      log(`Resolved: file ID ${npc.modelId} → ${romPath}`)
+
+      let buffer: ArrayBuffer
+      try {
+        buffer = await ffxi.readFile(romPath)
+      } catch (readErr) {
+        log(`File read failed: ${romPath} — ${readErr instanceof Error ? readErr.message : String(readErr)}`)
+        return
+      }
+      log(`Read ${buffer.byteLength} bytes from ${romPath}`)
+
+      if (buffer.byteLength < 16) {
+        log(`File too small (${buffer.byteLength} bytes) — not a valid DAT`)
+        return
+      }
 
       const dat = parseDatFile(buffer)
 
       log(`Textures: ${dat.textures.length}`)
+      dat.textures.forEach((t, i) => log(`  [${i}] ${t.width}x${t.height}`))
       log(`Meshes: ${dat.meshes.length}`)
+      dat.meshes.forEach((m, i) => {
+        const vertCount = m.vertices.length / 3
+        log(`  [${i}] ${vertCount} verts, material=${m.materialIndex}`)
+      })
       if (dat.skeleton) log(`Skeleton: ${dat.skeleton.bones.length} bones (embedded)`)
 
       if (dat.meshes.length > 0) {
         setMeshData({ meshes: dat.meshes, textures: dat.textures })
-        log('Rendering...')
+        log('Rendering complete.')
       } else {
-        log('No meshes found in this DAT.')
+        log('No meshes found in this DAT — may not be a 3D model file.')
       }
     } catch (err) {
-      log(`Error: ${err instanceof Error ? err.message : String(err)}`)
+      log(`ERROR: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setModelLoading(false)
     }

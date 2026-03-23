@@ -1,21 +1,32 @@
-import { useState, type ReactNode } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
 import LoginModal from './LoginModal'
-import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock, KeyRound, Bug } from 'lucide-react'
+import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock, KeyRound, Bug, ChevronRight } from 'lucide-react'
 import { CompareProvider } from './compare/CompareContext'
 import CompareTray from './compare/CompareTray'
 import { SyncProvider } from '../context/SyncContext'
 import SyncBanner from './SyncBanner'
 import { FfxiFileSystemProvider } from '../context/FfxiFileSystemContext'
 
-function SidebarLink({ to, label, icon }: { to: string; label: string; icon: ReactNode }) {
+type SectionName = 'database' | 'economy' | 'server' | 'admin'
+
+function getSection(pathname: string): SectionName | null {
+  if (pathname.startsWith('/items') || pathname.startsWith('/npcs')) return 'database'
+  if (pathname.startsWith('/bazaar')) return 'economy'
+  if (pathname.startsWith('/servers') || pathname.startsWith('/clock')) return 'server'
+  if (pathname.startsWith('/admin')) return 'admin'
+  return null
+}
+
+function SidebarLink({ to, label, icon, end = true, onClick }: { to: string; label: string; icon: ReactNode; end?: boolean; onClick?: () => void }) {
   return (
     <NavLink
       to={to}
-      end
+      end={end}
+      onClick={onClick}
       className={({ isActive }) =>
         `flex items-center gap-3 rounded px-3 py-2 text-sm font-medium transition-colors ${
           isActive
@@ -27,6 +38,55 @@ function SidebarLink({ to, label, icon }: { to: string; label: string; icon: Rea
       {icon}
       {label}
     </NavLink>
+  )
+}
+
+function SidebarSection({
+  label,
+  icon,
+  isOpen,
+  onToggle,
+  children,
+}: {
+  label: string
+  icon: ReactNode
+  isOpen: boolean
+  onToggle: () => void
+  children: ReactNode
+}) {
+  const id = `sidebar-section-${label.toLowerCase()}`
+  const btnId = `${id}-btn`
+  return (
+    <div>
+      <button
+        id={btnId}
+        onClick={(e) => {
+          e.stopPropagation()
+          onToggle()
+        }}
+        aria-expanded={isOpen}
+        aria-controls={id}
+        className="flex w-full items-center gap-3 rounded px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800/50 hover:text-gray-200 cursor-pointer"
+      >
+        {icon}
+        <span className="flex-1 text-left">{label}</span>
+        <ChevronRight
+          className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
+        />
+      </button>
+      <div
+        id={id}
+        role="region"
+        aria-labelledby={btnId}
+        className={`overflow-hidden transition-[grid-template-rows] duration-200 grid ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+      >
+        <div className="min-h-0">
+          <div className="space-y-1 py-1 pl-7">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -42,6 +102,17 @@ function LayoutInner() {
   const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { isOpen: loginOpen, close: closeLogin } = useLoginModal()
+
+  const { pathname } = useLocation()
+  const [openSection, setOpenSection] = useState<SectionName | null>(() => getSection(pathname))
+
+  useEffect(() => {
+    setOpenSection(getSection(pathname))
+  }, [pathname])
+
+  const toggleSection = (section: SectionName) => {
+    setOpenSection((prev) => (prev === section ? null : section))
+  }
 
   return (
     <FfxiFileSystemProvider>
@@ -75,26 +146,32 @@ function LayoutInner() {
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 space-y-1 px-3 py-4" onClick={() => setSidebarOpen(false)}>
-          <SidebarLink to="/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} />
-          <SidebarLink to="/characters" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} />
-          <SidebarLink to="/servers" label="Server Status" icon={<Radio className="h-4 w-4 shrink-0" />} />
-          <SidebarLink to="/items" label="Item Database" icon={<Package className="h-4 w-4 shrink-0" />} />
-          <SidebarLink to="/bazaar" label="Bazaar Activity" icon={<Store className="h-4 w-4 shrink-0" />} />
-          <SidebarLink to="/npcs" label="NPC Models" icon={<Bug className="h-4 w-4 shrink-0" />} />
-          <SidebarLink to="/clock" label="Vana'diel Clock" icon={<Clock className="h-4 w-4 shrink-0" />} />
-          <SidebarLink to="/setup" label="Setup Guide" icon={<BookOpen className="h-4 w-4 shrink-0" />} />
+        <nav className="flex-1 space-y-1 px-3 py-4">
+          <SidebarLink to="/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+          <SidebarLink to="/characters" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+
+          <SidebarSection label="Database" icon={<Database className="h-4 w-4 shrink-0" />} isOpen={openSection === 'database'} onToggle={() => toggleSection('database')}>
+            <SidebarLink to="/items" end={false} label="Items" icon={<Package className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+            <SidebarLink to="/npcs" label="NPCs" icon={<Bug className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+          </SidebarSection>
+
+          <SidebarSection label="Economy" icon={<Store className="h-4 w-4 shrink-0" />} isOpen={openSection === 'economy'} onToggle={() => toggleSection('economy')}>
+            <SidebarLink to="/bazaar" label="Bazaar" icon={<Store className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+          </SidebarSection>
+
+          <SidebarSection label="Server" icon={<Radio className="h-4 w-4 shrink-0" />} isOpen={openSection === 'server'} onToggle={() => toggleSection('server')}>
+            <SidebarLink to="/servers" label="Status" icon={<Radio className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+            <SidebarLink to="/clock" label="Clock" icon={<Clock className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+          </SidebarSection>
+
+          <SidebarLink to="/setup" label="Setup Guide" icon={<BookOpen className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
 
           {user?.role === 'Admin' && (
-            <>
-              <div className="flex items-center gap-2 px-3 pt-6 pb-2">
-                <ShieldCheck className="h-3.5 w-3.5 text-gray-600" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-600">Admin</span>
-              </div>
-              <SidebarLink to="/admin/users" label="Users" icon={<Users className="h-4 w-4 shrink-0" />} />
-              <SidebarLink to="/admin/data" label="Data" icon={<Database className="h-4 w-4 shrink-0" />} />
-              <SidebarLink to="/admin/saml" label="SAML" icon={<KeyRound className="h-4 w-4 shrink-0" />} />
-            </>
+            <SidebarSection label="Admin" icon={<ShieldCheck className="h-4 w-4 shrink-0" />} isOpen={openSection === 'admin'} onToggle={() => toggleSection('admin')}>
+              <SidebarLink to="/admin/users" label="Users" icon={<Users className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+              <SidebarLink to="/admin/data" label="Data" icon={<Database className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+              <SidebarLink to="/admin/saml" label="SAML" icon={<KeyRound className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+            </SidebarSection>
           )}
         </nav>
 
