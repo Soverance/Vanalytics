@@ -9,6 +9,9 @@ public class CharacterJob
     public JobType JobId { get; set; }
     public int Level { get; set; }
     public bool IsActive { get; set; }
+    public int JP { get; set; }
+    public int JPSpent { get; set; }
+    public int CP { get; set; }
 
     public Character Character { get; set; } = null!;
 }

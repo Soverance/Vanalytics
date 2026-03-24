@@ -13,6 +13,9 @@ public class CharacterConfiguration : IEntityTypeConfiguration<Character>
 
         builder.Property(c => c.Name).HasMaxLength(64).IsRequired();
         builder.Property(c => c.Server).HasMaxLength(64).IsRequired();
+        builder.Property(c => c.SubJob).HasMaxLength(3);
+        builder.Property(c => c.Linkshell).HasMaxLength(64);
+        builder.Property(c => c.MeritsJson).HasColumnType("nvarchar(max)");
 
         builder.HasOne(c => c.User)
             .WithMany()

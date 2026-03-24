@@ -3,9 +3,9 @@ import type { GearEntry } from '../../types/api'
 
 const GRID_LAYOUT: string[][] = [
   ['Main', 'Sub', 'Range', 'Ammo'],
-  ['Head', 'Body', 'Hands', 'Ear1'],
-  ['Legs', 'Feet', 'Neck', 'Ear2'],
-  ['Waist', 'Back', 'Ring1', 'Ring2'],
+  ['Head', 'Neck', 'Ear1', 'Ear2'],
+  ['Body', 'Hands', 'Ring1', 'Ring2'],
+  ['Back', 'Waist', 'Legs', 'Feet'],
 ]
 
 interface EquipmentGridProps {

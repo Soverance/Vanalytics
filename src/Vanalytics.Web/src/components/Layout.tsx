@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
 import LoginModal from './LoginModal'
-import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare } from 'lucide-react'
+import { Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare } from 'lucide-react'
 import { CompareProvider } from './compare/CompareContext'
 import CompareTray from './compare/CompareTray'
 import { SyncProvider } from '../context/SyncContext'
@@ -135,7 +135,7 @@ function LayoutInner() {
       >
         {/* Logo */}
         <div className="border-b border-gray-800 px-4 py-4">
-          <Link to="/dashboard" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
+          <Link to="/characters" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img
               src="/vanalytics-typography-horizontal-logo.png"
@@ -147,7 +147,6 @@ function LayoutInner() {
 
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto space-y-1 px-3 py-4">
-          <SidebarLink to="/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
           <SidebarLink to="/characters" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
 
           <SidebarSection label="Database" icon={<Database className="h-4 w-4 shrink-0" />} isOpen={openSection === 'database'} onToggle={() => toggleSection('database')}>
@@ -209,7 +208,7 @@ function LayoutInner() {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <Link to="/dashboard" className="flex items-center min-w-0">
+          <Link to="/characters" className="flex items-center min-w-0">
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img src="/vanalytics-typography-horizontal-logo.png" alt="Vana'lytics" className="min-w-0 max-w-[180px]" />
           </Link>

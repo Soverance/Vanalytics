@@ -9,6 +9,13 @@ public class CharacterDetailResponse
     public DateTimeOffset? LastSyncAt { get; set; }
     public string? Race { get; set; }
     public string? Gender { get; set; }
+    public string? SubJob { get; set; }
+    public int? SubJobLevel { get; set; }
+    public int? MasterLevel { get; set; }
+    public int? ItemLevel { get; set; }
+    public string? Linkshell { get; set; }
+    public int? Nation { get; set; }
+    public Dictionary<string, int>? Merits { get; set; }
 
     public List<JobEntry> Jobs { get; set; } = [];
     public List<GearEntry> Gear { get; set; } = [];
@@ -20,6 +27,9 @@ public class JobEntry
     public string Job { get; set; } = string.Empty;
     public int Level { get; set; }
     public bool IsActive { get; set; }
+    public int JP { get; set; }
+    public int JPSpent { get; set; }
+    public int CP { get; set; }
 }
 
 public class GearEntry

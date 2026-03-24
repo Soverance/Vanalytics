@@ -94,6 +94,7 @@ local craft_skill_names = {
     ['bonecraft']     = 'Bonecraft',
     ['alchemy']       = 'Alchemy',
     ['cooking']       = 'Cooking',
+    ['synergy']       = 'Synergy',
 }
 
 local craft_skill_ids = {
@@ -106,6 +107,7 @@ local craft_skill_ids = {
     [54] = 'Bonecraft',
     [55] = 'Alchemy',
     [56] = 'Cooking',
+    [57] = 'Synergy',
 }
 
 local function get_craft_rank(level)
@@ -191,14 +193,18 @@ local function read_character_state()
     local active_job = res.jobs[player.main_job] and res.jobs[player.main_job].ens or 'UNK'
     local active_job_level = player.main_job_level
 
-    -- All jobs with levels > 0
+    -- All jobs with levels > 0, including JP/CP data
     local jobs = {}
     for job_key, level in pairs(player.jobs) do
         if type(level) == 'number' and level > 0 then
             local job_abbr = tostring(job_key)
+            local jp_data = player.job_points and player.job_points[job_abbr:lower()]
             table.insert(jobs, {
                 job = job_abbr,
                 level = level,
+                jp = jp_data and jp_data.jp or 0,
+                jpSpent = jp_data and jp_data.jp_spent or 0,
+                cp = jp_data and jp_data.cp or 0,
             })
         end
     end
@@ -331,11 +337,31 @@ local function read_character_state()
         end
     end
 
+    -- Collect merit points (only non-zero values to keep payload small)
+    local merits = nil
+    if player.merits then
+        merits = {}
+        for merit_key, merit_val in pairs(player.merits) do
+            if type(merit_val) == 'number' and merit_val > 0 then
+                merits[merit_key] = merit_val
+            end
+        end
+        -- Use nil if no merits to avoid empty array serialization
+        if not next(merits) then merits = nil end
+    end
+
     local state = {
         characterName = char_name,
         server = server,
         activeJob = active_job,
         activeJobLevel = active_job_level,
+        subJob = player.sub_job,
+        subJobLevel = player.sub_job_level,
+        masterLevel = player.superior_level,
+        itemLevel = player.item_level,
+        linkshell = player.linkshell,
+        nation = player.nation,
+        merits = merits,
         jobs = jobs,
         gear = gear,
         crafting = crafting,
@@ -587,6 +613,65 @@ windower.register_event('addon command', function(command, ...)
         -- Restart timer with new interval
         stop_timer()
         start_timer()
+
+    elseif command == 'dump' then
+        local player = windower.ffxi.get_player()
+        if not player then
+            log_error('Not logged in.')
+            return
+        end
+        local items = windower.ffxi.get_items()
+        local info = windower.ffxi.get_info()
+        local mob = windower.ffxi.get_mob_by_id(player.id)
+
+        local lines = {}
+        local function dump(val, prefix, depth)
+            if depth > 4 then
+                table.insert(lines, prefix .. ' = <max depth>')
+                return
+            end
+            if type(val) == 'table' then
+                for k, v in pairs(val) do
+                    local key = prefix .. '.' .. tostring(k)
+                    if type(v) == 'table' then
+                        table.insert(lines, key .. ' = {table}')
+                        dump(v, key, depth + 1)
+                    else
+                        table.insert(lines, key .. ' = ' .. tostring(v) .. ' (' .. type(v) .. ')')
+                    end
+                end
+            else
+                table.insert(lines, prefix .. ' = ' .. tostring(val) .. ' (' .. type(val) .. ')')
+            end
+        end
+
+        table.insert(lines, '=== player ===')
+        dump(player, 'player', 0)
+        table.insert(lines, '')
+        table.insert(lines, '=== info ===')
+        dump(info, 'info', 0)
+        table.insert(lines, '')
+        table.insert(lines, '=== mob (self) ===')
+        if mob then dump(mob, 'mob', 0) else table.insert(lines, 'mob = nil') end
+        table.insert(lines, '')
+        table.insert(lines, '=== items.equipment ===')
+        if items and items.equipment then dump(items.equipment, 'equipment', 0) end
+        table.insert(lines, '')
+        -- Dump one bag sample (inventory slot 1) to show item structure
+        table.insert(lines, '=== items.inventory[1] (sample) ===')
+        if items and items.inventory and items.inventory[1] then
+            dump(items.inventory[1], 'inventory[1]', 0)
+        end
+
+        local path = windower.addon_path .. 'dump.txt'
+        local f = io.open(path, 'w')
+        if f then
+            f:write(table.concat(lines, '\n'))
+            f:close()
+            log_success('Player data dumped to ' .. path)
+        else
+            log_error('Failed to write dump file.')
+        end
 
     elseif command == 'help' then
         log('--- Vanalytics Commands ---')

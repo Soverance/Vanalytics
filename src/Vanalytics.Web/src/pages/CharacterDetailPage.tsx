@@ -45,14 +45,19 @@ export default function CharacterDetailPage() {
   if (loading) return <p className="text-gray-400">Loading...</p>
   if (!character) return <p className="text-red-400">Character not found.</p>
 
-  const raceGenderParts = [character.race, character.gender].filter(Boolean)
-  const headerSubtitle = [
-    character.server,
-    ...raceGenderParts,
-    character.lastSyncAt
-      ? `Last sync: ${new Date(character.lastSyncAt).toLocaleString()}`
-      : null,
-  ].filter(Boolean).join(' · ')
+  const nationNames: Record<number, string> = { 0: "San d'Oria", 1: 'Bastok', 2: 'Windurst' }
+
+  const activeJob = character.jobs.find(j => j.isActive)
+  const jobLine = activeJob
+    ? `${activeJob.job}${activeJob.level}${character.subJob ? '/' + character.subJob + (character.subJobLevel ?? '') : ''}`
+    : null
+
+  const infoParts = [
+    character.race,
+    character.gender,
+    character.nation != null ? nationNames[character.nation] : null,
+    character.linkshell ? `LS: ${character.linkshell}` : null,
+  ].filter(Boolean)
 
   return (
     <div>
@@ -60,11 +65,24 @@ export default function CharacterDetailPage() {
         &larr; Back to Characters
       </Link>
 
-      <div className="flex items-baseline gap-3 mb-6">
-        <h1 className="text-2xl font-bold">{character.name}</h1>
-        {headerSubtitle && (
-          <span className="text-gray-400 text-sm">{headerSubtitle}</span>
-        )}
+      <div className="mb-6">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-2xl font-bold">{character.name}</h1>
+          <span className="text-gray-400 text-sm">{character.server}</span>
+        </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400 mt-1">
+          {jobLine && <span className="text-gray-200 font-medium">{jobLine}</span>}
+          {character.masterLevel != null && character.masterLevel > 0 && (
+            <span>ML{character.masterLevel}</span>
+          )}
+          {character.itemLevel != null && character.itemLevel > 0 && (
+            <span>iLvl {character.itemLevel}</span>
+          )}
+          {infoParts.length > 0 && <span>{infoParts.join(' · ')}</span>}
+          {character.lastSyncAt && (
+            <span>Last sync: {new Date(character.lastSyncAt).toLocaleString()}</span>
+          )}
+        </div>
       </div>
 
       <section className="mb-8">

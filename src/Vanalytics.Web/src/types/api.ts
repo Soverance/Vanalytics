@@ -46,6 +46,13 @@ export interface CharacterDetail {
   lastSyncAt: string | null
   race?: string
   gender?: string
+  subJob?: string
+  subJobLevel?: number
+  masterLevel?: number
+  itemLevel?: number
+  linkshell?: string
+  nation?: number
+  merits?: Record<string, number>
   jobs: JobEntry[]
   gear: GearEntry[]
   craftingSkills: CraftingEntry[]
@@ -55,6 +62,9 @@ export interface JobEntry {
   job: string
   level: number
   isActive: boolean
+  jp: number
+  jpSpent: number
+  cp: number
 }
 
 export interface GearEntry {

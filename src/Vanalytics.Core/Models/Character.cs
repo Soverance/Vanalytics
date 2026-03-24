@@ -12,6 +12,13 @@ public class Character
     public bool IsPublic { get; set; }
     public Race? Race { get; set; }
     public Gender? Gender { get; set; }
+    public string? SubJob { get; set; }
+    public int? SubJobLevel { get; set; }
+    public int? MasterLevel { get; set; }
+    public int? ItemLevel { get; set; }
+    public string? Linkshell { get; set; }
+    public int? Nation { get; set; }
+    public string? MeritsJson { get; set; }
     public DateTimeOffset? LastSyncAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }

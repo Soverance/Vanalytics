@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -88,6 +89,17 @@ public class SyncController : ControllerBase
             };
         }
 
+        // Update character metadata
+        character.SubJob = request.SubJob;
+        character.SubJobLevel = request.SubJobLevel;
+        character.MasterLevel = request.MasterLevel;
+        character.ItemLevel = request.ItemLevel;
+        character.Linkshell = request.Linkshell;
+        character.Nation = request.Nation;
+        character.MeritsJson = request.Merits is { Count: > 0 }
+            ? JsonSerializer.Serialize(request.Merits)
+            : null;
+
         // Full state replacement
         await _db.CharacterJobs.Where(j => j.CharacterId == character.Id).ExecuteDeleteAsync();
         await _db.EquippedGear.Where(g => g.CharacterId == character.Id).ExecuteDeleteAsync();
@@ -105,7 +117,10 @@ public class SyncController : ControllerBase
                 CharacterId = character.Id,
                 JobId = jobType,
                 Level = jobEntry.Level,
-                IsActive = jobEntry.Job.Equals(request.ActiveJob, StringComparison.OrdinalIgnoreCase)
+                IsActive = jobEntry.Job.Equals(request.ActiveJob, StringComparison.OrdinalIgnoreCase),
+                JP = jobEntry.JP,
+                JPSpent = jobEntry.JPSpent,
+                CP = jobEntry.CP
             });
         }
         _db.CharacterJobs.AddRange(newJobs);

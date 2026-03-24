@@ -6,7 +6,6 @@ import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import OAuthCallback from './pages/OAuthCallback'
 import LandingPage from './pages/LandingPage'
-import DashboardPage from './pages/DashboardPage'
 import CharactersPage from './pages/CharactersPage'
 import CharacterDetailPage from './pages/CharacterDetailPage'
 import ProfilePage from './pages/ProfilePage'
@@ -106,7 +105,6 @@ export default function App() {
             <Route path="/clock" element={<Navigate to="/server/clock" replace />} />
 
             {/* Protected routes */}
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/characters" element={<ProtectedRoute><CharactersPage /></ProtectedRoute>} />
             <Route path="/characters/:id" element={<ProtectedRoute><CharacterDetailPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

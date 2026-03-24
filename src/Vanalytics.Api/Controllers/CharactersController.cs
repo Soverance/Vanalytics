@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -105,11 +106,23 @@ public class CharactersController : ControllerBase
         LastSyncAt = c.LastSyncAt,
         Race = c.Race?.ToString(),
         Gender = c.Gender?.ToString(),
+        SubJob = c.SubJob,
+        SubJobLevel = c.SubJobLevel,
+        MasterLevel = c.MasterLevel,
+        ItemLevel = c.ItemLevel,
+        Linkshell = c.Linkshell,
+        Nation = c.Nation,
+        Merits = c.MeritsJson != null
+            ? JsonSerializer.Deserialize<Dictionary<string, int>>(c.MeritsJson)
+            : null,
         Jobs = c.Jobs.Select(j => new JobEntry
         {
             Job = j.JobId.ToString(),
             Level = j.Level,
-            IsActive = j.IsActive
+            IsActive = j.IsActive,
+            JP = j.JP,
+            JPSpent = j.JPSpent,
+            CP = j.CP
         }).ToList(),
         Gear = c.Gear.Select(g => new GearEntry
         {

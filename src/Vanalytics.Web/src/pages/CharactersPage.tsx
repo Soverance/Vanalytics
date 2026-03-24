@@ -49,7 +49,7 @@ export default function CharactersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-6">Characters</h1>
 
       {error && (
         <div className="mb-4 rounded bg-red-900/50 border border-red-700 p-3 text-sm text-red-300">

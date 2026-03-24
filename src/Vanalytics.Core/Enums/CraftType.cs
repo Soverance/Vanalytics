@@ -4,5 +4,5 @@ public enum CraftType
 {
     Woodworking, Smithing, Goldsmithing,
     Clothcraft, Leathercraft, Bonecraft,
-    Alchemy, Cooking, Fishing
+    Alchemy, Cooking, Fishing, Synergy
 }
