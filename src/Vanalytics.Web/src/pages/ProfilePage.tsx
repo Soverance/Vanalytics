@@ -277,10 +277,17 @@ export default function ProfilePage() {
           <h2 className="text-lg font-semibold mb-4">FFXI Installation</h2>
 
           {!ffxi.isSupported ? (
-            <p className="text-sm text-gray-400">
-              The 3D model viewer requires Chrome or Edge.<br />
-              Your browser does not support the File System Access API.
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-400">
+                The 3D model viewer requires a Chromium-based browser (Chrome or Edge) with support for the{' '}
+                <a href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_API" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                  File System Access API
+                </a>.
+              </p>
+              <p className="text-xs text-gray-600">
+                Your current browser does not support this feature.
+              </p>
+            </div>
           ) : !ffxi.isConfigured ? (
             <div className="space-y-4">
               <p className="text-sm text-gray-400">
@@ -293,6 +300,13 @@ export default function ProfilePage() {
               >
                 Browse for FFXI Installation
               </button>
+              <p className="text-xs text-gray-600">
+                This setting is stored in your browser and shared across all accounts — it points to your local FFXI installation.
+                Requires a Chromium-based browser (Chrome or Edge) with{' '}
+                <a href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_API" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                  File System Access API
+                </a>{' '}support.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -317,6 +331,13 @@ export default function ProfilePage() {
                   Disconnect
                 </button>
               </div>
+              <p className="text-xs text-gray-600">
+                This setting is shared across all accounts on this browser — it points to your local FFXI installation, which is the same regardless of which account you're signed into.
+                Requires a Chromium-based browser (Chrome or Edge) with{' '}
+                <a href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_API" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                  File System Access API
+                </a>{' '}support.
+              </p>
             </div>
           )}
         </section>

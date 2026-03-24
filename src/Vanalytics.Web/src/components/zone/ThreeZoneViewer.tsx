@@ -3,14 +3,18 @@ import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { ParsedZone } from '../../lib/ffxi-dat'
+import SpawnMarkers from './SpawnMarkers'
+import type { SpawnPoint } from '../../lib/ffxi-dat/SpawnParser'
 
 interface ThreeZoneViewerProps {
   zoneData: ParsedZone
   lighting?: 'standard' | 'enhanced'
   cameraMode?: 'orbit' | 'fly'
+  spawnMarkers?: SpawnPoint[]
+  showSpawns?: boolean
 }
 
-export default function ThreeZoneViewer({ zoneData, lighting = 'standard', cameraMode = 'orbit' }: ThreeZoneViewerProps) {
+export default function ThreeZoneViewer({ zoneData, lighting = 'standard', cameraMode = 'orbit', spawnMarkers, showSpawns }: ThreeZoneViewerProps) {
   const { geometries, materials } = useMemo(() => {
     const geometries: THREE.BufferGeometry[] = []
     const materials: THREE.MeshStandardMaterial[] = []
@@ -159,6 +163,7 @@ export default function ThreeZoneViewer({ zoneData, lighting = 'standard', camer
             />
           )
         })}
+        <SpawnMarkers spawns={spawnMarkers ?? []} visible={showSpawns ?? false} />
       </group>
     </Canvas>
   )

@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../api/client'
 import { useSyncProgress } from '../context/SyncContext'
+import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
+import { FileTableResolver } from '../lib/ffxi-dat/FileTableResolver'
+import { scanForZoneDats } from '../lib/ffxi-dat/ZoneScanner'
+import type { ScanProgress } from '../lib/ffxi-dat/ZoneScanner'
+import { Map, FolderSearch } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,6 +42,25 @@ interface GameDataStats {
     activeBazaarListings: number
     activeBazaarPresences: number
   }
+}
+
+interface ZoneEntry {
+  id: number
+  name: string
+  modelPath: string | null
+  npcPath: string | null
+  mapPaths: string | null
+  expansion: string | null
+  region: string | null
+  isDiscovered: boolean
+}
+
+interface ZoneStats {
+  total: number
+  withModels: number
+  withNpcData: number
+  withMaps: number
+  discovered: number
 }
 
 interface SyncProviderStatus {
@@ -301,6 +325,156 @@ function DataSource({ name, url, description, usedBy }: {
   )
 }
 
+// ─── ZoneScannerCard ──────────────────────────────────────────────────────────
+
+function ZoneScannerCard() {
+  const ffxi = useFfxiFileSystem()
+  const [scanning, setScanning] = useState(false)
+  const [progress, setProgress] = useState<ScanProgress | null>(null)
+  const [resultMsg, setResultMsg] = useState('')
+  const [error, setError] = useState('')
+  const abortRef = useRef<AbortController | null>(null)
+
+  const handleScan = async () => {
+    setError('')
+    setResultMsg('')
+    setProgress(null)
+    setScanning(true)
+
+    const abort = new AbortController()
+    abortRef.current = abort
+
+    try {
+      // readFile from context throws on missing file, but scanner expects null on miss
+      const safeRead = async (path: string): Promise<ArrayBuffer | null> => {
+        try {
+          return await ffxi.readFile(path)
+        } catch {
+          return null
+        }
+      }
+
+      const resolver = await FileTableResolver.fromDirectory(async (path) => {
+        const buf = await ffxi.readFile(path)
+        return buf
+      })
+
+      const results = await scanForZoneDats(safeRead, resolver, setProgress, abort.signal)
+
+      if (abort.signal.aborted) {
+        setResultMsg('Scan cancelled.')
+        return
+      }
+
+      // POST discovered paths to the API
+      const payload = results.map(r => r.modelPath)
+      const response = await api<{ updated: number }>('/api/admin/zones/discovered', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+      setResultMsg(`Done. ${results.length} zone DATs found, ${response.updated} records updated.`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Scan failed.')
+    } finally {
+      setScanning(false)
+      abortRef.current = null
+    }
+  }
+
+  const handleCancel = () => {
+    abortRef.current?.abort()
+  }
+
+  const pct = progress && progress.total > 0
+    ? Math.min(100, Math.round((progress.current / progress.total) * 100))
+    : 0
+
+  if (!ffxi.isSupported) {
+    return (
+      <div className="rounded-lg border border-gray-800 bg-gray-900 p-5">
+        <h3 className="text-base font-semibold text-gray-200 mb-1">Zone DAT Scanner</h3>
+        <p className="text-xs text-gray-500">Requires a Chromium-based browser (Chrome, Edge, Brave).</p>
+      </div>
+    )
+  }
+
+  if (!ffxi.isConfigured || !ffxi.isAuthorized) {
+    return (
+      <div className="rounded-lg border border-gray-800 bg-gray-900 p-5">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h3 className="text-base font-semibold text-gray-200">Zone DAT Scanner</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Scans your local FFXI installation to discover zone DAT files.</p>
+          </div>
+          <button
+            onClick={ffxi.isConfigured ? ffxi.authorize : ffxi.configure}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+          >
+            <FolderSearch className="h-3.5 w-3.5" />
+            Configure FFXI Directory
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`rounded-lg border bg-gray-900 p-5 transition-colors ${scanning ? 'border-blue-600' : 'border-gray-800'}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h3 className="text-base font-semibold text-gray-200">Zone DAT Scanner</h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Scans local FFXI files to discover zone DATs.
+            {ffxi.path && <span className="text-gray-600"> · {ffxi.path}</span>}
+          </p>
+        </div>
+        {scanning ? (
+          <button
+            onClick={handleCancel}
+            className="px-3 py-1.5 text-sm rounded bg-red-600 hover:bg-red-700 text-white transition-colors"
+          >
+            Cancel
+          </button>
+        ) : (
+          <button
+            onClick={handleScan}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+          >
+            <FolderSearch className="h-3.5 w-3.5" />
+            Scan Local Files
+          </button>
+        )}
+      </div>
+
+      {scanning && progress && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-blue-400 text-sm animate-pulse">● Scanning…</span>
+            {progress.total > 0 && (
+              <span className="text-xs text-gray-500">
+                {progress.current.toLocaleString()} / {progress.total.toLocaleString()} ({pct}%)
+              </span>
+            )}
+            <span className="text-xs text-emerald-400 ml-auto">{progress.found} found</span>
+          </div>
+          <div className="h-2 rounded-full bg-gray-800 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-blue-600 transition-all duration-300"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 truncate">{progress.message}</p>
+        </div>
+      )}
+
+      {!scanning && resultMsg && (
+        <p className="text-xs text-emerald-400 mt-1">{resultMsg}</p>
+      )}
+      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+    </div>
+  )
+}
+
 // ─── SyncSection ──────────────────────────────────────────────────────────────
 
 function SyncSection() {
@@ -371,6 +545,7 @@ export default function AdminItemsPage() {
   const [stats, setStats] = useState<GameDataStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [zoneStats, setZoneStats] = useState<ZoneStats | null>(null)
 
   useEffect(() => {
     api<GameDataStats>('/api/admin/items/stats')
@@ -379,10 +554,31 @@ export default function AdminItemsPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    fetch('/api/zones')
+      .then(r => r.json())
+      .then((zones: ZoneEntry[]) => {
+        setZoneStats({
+          total: zones.length,
+          withModels: zones.filter(z => z.modelPath !== null).length,
+          withNpcData: zones.filter(z => z.npcPath !== null).length,
+          withMaps: zones.filter(z => z.mapPaths !== null).length,
+          discovered: zones.filter(z => z.isDiscovered === true).length,
+        })
+      })
+      .catch(() => { /* zone stats are non-critical */ })
+  }, [])
+
   return (
     <div>
       {/* ── Sync section (always visible) ── */}
       <SyncSection />
+
+      {/* ── Zone Scanner ── */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold mb-4">Zone Discovery</h2>
+        <ZoneScannerCard />
+      </div>
 
       {/* ── Data Sources ── */}
       <div className="mb-8 rounded-lg border border-gray-800 bg-gray-900/50 p-5">
@@ -423,12 +619,29 @@ export default function AdminItemsPage() {
       {stats && (
         <>
           {/* ── Overview row ── */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
             <StatCard label="Items" value={stats.items.total} />
             <StatCard label="Model Mappings" value={stats.modelMappings.total} sub={`${stats.modelMappings.itemsWithModels.toLocaleString()} items with 3D models`} />
             <StatCard label="NPC Pools" value={stats.npcPools.total} sub={`${stats.npcPools.monsters.toLocaleString()} monsters · ${stats.npcPools.humanoids.toLocaleString()} humanoids`} />
             <StatCard label="Characters" value={stats.characters.total} sub={`${stats.servers.total} servers tracked`} />
           </div>
+
+          {/* ── Zones row ── */}
+          {zoneStats && (
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
+              <div className="rounded-lg border border-gray-800 bg-gray-900 p-4 flex items-start gap-3">
+                <Map className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Zones</p>
+                  <p className="text-2xl font-bold text-gray-200">{zoneStats.total.toLocaleString()}</p>
+                </div>
+              </div>
+              <StatCard label="With 3D Models" value={zoneStats.withModels} sub={`${Math.round((zoneStats.withModels / zoneStats.total) * 100)}% coverage`} />
+              <StatCard label="With NPC Data" value={zoneStats.withNpcData} sub={`${Math.round((zoneStats.withNpcData / zoneStats.total) * 100)}% coverage`} />
+              <StatCard label="With Maps" value={zoneStats.withMaps} sub={`${Math.round((zoneStats.withMaps / zoneStats.total) * 100)}% coverage`} />
+              <StatCard label="Scanner Discovered" value={zoneStats.discovered} sub="Auto-detected zones" />
+            </div>
+          )}
 
           {/* ── Items ── */}
           <h2 className="text-lg font-semibold mb-3">Items</h2>

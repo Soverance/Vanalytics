@@ -73,6 +73,7 @@ builder.Services.AddHttpClient("PlayOnline", client =>
 builder.Services.AddSingleton<SyncOrchestrator>();
 builder.Services.AddKeyedSingleton<ISyncProvider, ItemSyncProvider>("items");
 builder.Services.AddKeyedSingleton<ISyncProvider, IconSyncProvider>("icons");
+builder.Services.AddKeyedSingleton<ISyncProvider, ZoneSyncProvider>("zones");
 
 builder.Services.AddHostedService<ServerStatusScraper>();
 // ItemDatabaseSyncJob removed — item data is static game data that only changes
