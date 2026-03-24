@@ -39,6 +39,7 @@ export interface ParsedZoneMesh {
   uvs: number[]           // flat uv (2 floats per vertex)
   indices: number[]       // triangle indices
   materialIndex: number   // texture index (sequential IMG block order)
+  blending: number        // MMB blending flag (0=opaque, >0=alpha blend)
 }
 
 export interface ZoneMeshInstance {

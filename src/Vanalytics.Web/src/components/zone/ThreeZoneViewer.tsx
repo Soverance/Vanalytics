@@ -50,10 +50,13 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, cameraMode =
       geometries.push(geometry)
 
       const tex = zoneData.textures[prefab.materialIndex]
+      const useAlpha = prefab.blending > 0
       let material: THREE.MeshBasicMaterial
       if (tex) {
         const rgba = new Uint8Array(tex.rgba)
         const texture = new THREE.DataTexture(rgba, tex.width, tex.height, THREE.RGBAFormat)
+        texture.wrapS = THREE.RepeatWrapping
+        texture.wrapT = THREE.RepeatWrapping
         texture.needsUpdate = true
         texture.magFilter = THREE.LinearFilter
         texture.minFilter = THREE.LinearMipmapLinearFilter
@@ -64,6 +67,7 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, cameraMode =
           map: texture,
           vertexColors: true,
           side: THREE.DoubleSide,
+          ...(useAlpha && { alphaTest: 0.1 }),
         })
       } else {
         material = new THREE.MeshBasicMaterial({

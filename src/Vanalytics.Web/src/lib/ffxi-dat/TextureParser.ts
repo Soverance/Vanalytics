@@ -77,7 +77,8 @@ export function decompressDXT3(data: Uint8Array, width: number, height: number):
 
   for (let by = 0; by < blocksY; by++) {
     for (let bx = 0; bx < blocksX; bx++) {
-      src += 8 // skip 8-byte alpha block (forced opaque)
+      const alpha = data.subarray(src, src + 8)
+      src += 8
 
       const c0 = data[src] | (data[src + 1] << 8)
       const c1 = data[src + 2] | (data[src + 3] << 8)
@@ -99,9 +100,8 @@ export function decompressDXT3(data: Uint8Array, width: number, height: number):
           const pi = py * 4 + px
           const ci = (idx >>> (pi * 2)) & 3
           const d = (y * width + x) * 4
-          // DXT3 has explicit 4-bit alpha, but FFXI controls transparency via
-          // per-mesh blending flags — force opaque to prevent texture holes.
-          rgba[d] = pal[ci][0]; rgba[d + 1] = pal[ci][1]; rgba[d + 2] = pal[ci][2]; rgba[d + 3] = 255
+          const a4 = (pi % 2 === 0) ? (alpha[pi >> 1] & 0xF) : ((alpha[pi >> 1] >> 4) & 0xF)
+          rgba[d] = pal[ci][0]; rgba[d + 1] = pal[ci][1]; rgba[d + 2] = pal[ci][2]; rgba[d + 3] = (a4 << 4) | a4
         }
       }
     }
