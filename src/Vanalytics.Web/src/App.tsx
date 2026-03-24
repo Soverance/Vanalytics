@@ -23,6 +23,10 @@ import PublicProfilePage from './pages/PublicProfilePage'
 import ModelDebugPage from './pages/ModelDebugPage'
 import NpcBrowserPage from './pages/NpcBrowserPage'
 import ZoneBrowserPage from './pages/ZoneBrowserPage'
+import ForumCategoryListPage from './pages/ForumCategoryListPage'
+import ForumThreadListPage from './pages/ForumThreadListPage'
+import ForumThreadPage from './pages/ForumThreadPage'
+import ForumNewThreadPage from './pages/ForumNewThreadPage'
 
 function SamlCodeHandler() {
   const { samlExchange } = useAuth()
@@ -115,6 +119,12 @@ export default function App() {
             <Route path="/npcs" element={<ProtectedRoute><NpcBrowserPage /></ProtectedRoute>} />
             <Route path="/zones" element={<ProtectedRoute><ZoneBrowserPage /></ProtectedRoute>} />
             <Route path="/debug/models" element={<ProtectedRoute><ModelDebugPage /></ProtectedRoute>} />
+
+            {/* Public forum routes */}
+            <Route path="/forum" element={<ForumCategoryListPage />} />
+            <Route path="/forum/:categorySlug" element={<ForumThreadListPage />} />
+            <Route path="/forum/:categorySlug/new" element={<ProtectedRoute><ForumNewThreadPage /></ProtectedRoute>} />
+            <Route path="/forum/:categorySlug/:threadSlug" element={<ForumThreadPage />} />
           </Route>
 
           {/* Public: shareable character profiles (MUST be after explicit routes) */}

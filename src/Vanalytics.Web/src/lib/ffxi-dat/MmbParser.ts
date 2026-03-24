@@ -102,7 +102,7 @@ export function parseMmbBlock(data: Uint8Array): MmbMeshResult[] {
       // SMMBModelHeader (20 bytes): char textureName[16], u16 vertexsize, u16 blending
       const textureName = reader.readString(16).trim()
       const vertexCount = reader.readUint16()
-      reader.skip(2) // blending
+      const blending = reader.readUint16()
 
       if (vertexCount === 0 || reader.remaining < vertexCount * vertexStride + 4) break
 
@@ -167,6 +167,7 @@ export function parseMmbBlock(data: Uint8Array): MmbMeshResult[] {
         indices: triIndices,
         materialIndex: 0,
         textureName,
+        blending,
       })
     }
   }

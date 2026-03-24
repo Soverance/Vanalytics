@@ -43,7 +43,12 @@ export function decompressDXT1(data: Uint8Array, width: number, height: number):
         pal[11] = 255; pal[15] = 255
       } else {
         for (let i = 0; i < 3; i++) pal[8 + i] = ((pal[i] + pal[4 + i]) / 2) | 0
-        pal[11] = 255; pal[15] = 0
+        pal[11] = 255
+        // DXT1 1-bit alpha: c0<=c1 makes 4th color transparent.
+        // FFXI uses DXT3 for actual transparency (foliage etc) and controls
+        // blending via per-mesh flags — DXT1 alpha is not used intentionally.
+        // Force opaque to prevent ground/wall texture holes.
+        pal[15] = 255
       }
 
       for (let py = 0; py < 4; py++) {

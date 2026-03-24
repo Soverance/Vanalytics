@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Soverance.Data;
+using Soverance.Forum.Extensions;
 using Vanalytics.Core.Models;
 
 namespace Vanalytics.Data;
@@ -20,10 +21,12 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<SyncHistory> SyncHistory => Set<SyncHistory>();
     public DbSet<ItemModelMapping> ItemModelMappings => Set<ItemModelMapping>();
     public DbSet<NpcPool> NpcPools => Set<NpcPool>();
+    public DbSet<Zone> Zones => Set<Zone>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(VanalyticsDbContext).Assembly);
+        modelBuilder.ApplyForumConfigurations();
     }
 }

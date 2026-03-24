@@ -147,6 +147,74 @@ export interface ServerIncident {
   duration: string | null
 }
 
+// Forum
+export interface CategoryResponse {
+  id: number
+  name: string
+  slug: string
+  description: string
+  displayOrder: number
+  threadCount: number
+  lastActivityAt: string | null
+}
+
+export interface EnrichedThreadSummaryResponse {
+  id: number
+  title: string
+  slug: string
+  isPinned: boolean
+  isLocked: boolean
+  authorId: string
+  replyCount: number
+  voteCount: number
+  createdAt: string
+  lastPostAt: string
+  authorUsername: string
+  authorAvatarHash: string | null
+}
+
+export interface ThreadDetailResponse {
+  id: number
+  title: string
+  slug: string
+  categoryId: number
+  categoryName: string
+  categorySlug: string
+  isPinned: boolean
+  isLocked: boolean
+  authorId: string
+  createdAt: string
+  lastPostAt: string
+  authorUsername: string
+  authorAvatarHash: string | null
+}
+
+export interface EnrichedPostResponse {
+  id: number
+  authorId: string
+  body: string | null
+  isEdited: boolean
+  isDeleted: boolean
+  voteCount: number
+  currentUserVoted: boolean
+  createdAt: string
+  updatedAt: string | null
+  authorUsername: string
+  authorAvatarHash: string | null
+  authorPostCount: number
+  authorJoinedAt: string
+}
+
+export interface PaginatedThreads {
+  threads: EnrichedThreadSummaryResponse[]
+  hasMore: boolean
+}
+
+export interface PaginatedPosts {
+  posts: EnrichedPostResponse[]
+  hasMore: boolean
+}
+
 // Admin
 export interface AdminUser {
   id: string

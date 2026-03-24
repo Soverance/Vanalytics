@@ -43,7 +43,6 @@ export default function ModelDebugPage() {
   const [loading, setLoading] = useState(false)
   const [meshData, setMeshData] = useState<{ meshes: ParsedMesh[]; textures: ParsedTexture[] } | null>(null)
   const [viewMode, setViewMode] = useState<'3d' | 'wireframe'>('3d')
-  const [lighting, setLighting] = useState<'standard' | 'enhanced'>('standard')
   const [raceId, setRaceId] = useState(1)
   const [skeleton, setSkeleton] = useState<ParsedSkeleton | null>(null)
   const [skelLoading, setSkelLoading] = useState(false)
@@ -339,11 +338,6 @@ export default function ModelDebugPage() {
               className={`px-3 py-1 text-xs rounded ${viewMode === 'wireframe' ? 'bg-blue-700 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
               Wireframe
             </button>
-            <span className="w-px h-4 bg-gray-700 mx-1" />
-            <button onClick={() => setLighting(l => l === 'standard' ? 'enhanced' : 'standard')}
-              className={`px-3 py-1 text-xs rounded ${lighting === 'enhanced' ? 'bg-amber-700 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
-              {lighting === 'enhanced' ? 'Enhanced Lighting' : 'Lighting'}
-            </button>
           </div>
 
           <div className="flex gap-4">
@@ -351,7 +345,7 @@ export default function ModelDebugPage() {
             <div className="flex-1 h-[500px] bg-gray-900 border border-gray-700 rounded overflow-hidden">
               {viewMode === '3d' ? (
                 meshData ? (
-                  <ThreeModelViewer meshData={meshData} lighting={lighting} />
+                  <ThreeModelViewer meshData={meshData} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-600 text-sm">
                     {loading ? 'Parsing...' : 'Select an item and click "Load & Parse"'}

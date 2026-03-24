@@ -22,7 +22,6 @@ export default function NpcBrowserPage() {
   const [meshData, setMeshData] = useState<{ meshes: ParsedMesh[]; textures: ParsedTexture[] } | null>(null)
   const [modelLoading, setModelLoading] = useState(false)
   const [viewMode, setViewMode] = useState<'3d' | 'wireframe'>('3d')
-  const [lighting, setLighting] = useState<'standard' | 'enhanced'>('standard')
   const [parseLog, setParseLog] = useState<string[]>([])
   const [browserOpen, setBrowserOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(true)
@@ -252,7 +251,7 @@ export default function NpcBrowserPage() {
         )}
 
         {meshData && viewMode === '3d' && (
-          <ThreeModelViewer meshData={meshData} lighting={lighting} />
+          <ThreeModelViewer meshData={meshData} />
         )}
 
         {meshData && viewMode === 'wireframe' && (
@@ -322,16 +321,6 @@ export default function NpcBrowserPage() {
             Wireframe
           </button>
         </div>
-        <button
-          onClick={() => setLighting(l => l === 'standard' ? 'enhanced' : 'standard')}
-          className={`px-2.5 py-1 text-xs rounded-lg border shadow-lg backdrop-blur transition-colors ${
-            lighting === 'enhanced'
-              ? 'bg-amber-600/90 border-amber-500/50 text-white'
-              : 'bg-gray-900/90 border-gray-700/50 text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          Lighting
-        </button>
       </div>
 
       {/* ── Bottom-left: model info ── */}
@@ -420,8 +409,13 @@ export default function NpcBrowserPage() {
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     placeholder={selectedCategory ? `Search ${selectedCategory}...` : 'Search all models...'}
-                    className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-600"
+                    className="w-full pl-8 pr-8 py-1.5 text-sm rounded-lg bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-600"
                   />
+                  {query && (
+                    <button onClick={() => setQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
                 <button
                   onClick={loadRandom}
@@ -430,12 +424,6 @@ export default function NpcBrowserPage() {
                 >
                   <Shuffle className="h-3.5 w-3.5" />
                   Random
-                </button>
-                <button
-                  onClick={() => setBrowserOpen(false)}
-                  className="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800"
-                >
-                  <X className="h-4 w-4" />
                 </button>
               </div>
 

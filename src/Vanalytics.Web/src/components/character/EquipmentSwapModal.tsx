@@ -68,7 +68,12 @@ export default function EquipmentSwapModal({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search items..."
-              className="w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder:text-gray-500 outline-none focus:border-amber-700/50" autoFocus />
+              className="w-full pl-10 pr-8 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder:text-gray-500 outline-none focus:border-amber-700/50" autoFocus />
+            {query && (
+              <button onClick={() => setQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
         <div className="max-h-64 overflow-y-auto px-3 pb-3 space-y-1">

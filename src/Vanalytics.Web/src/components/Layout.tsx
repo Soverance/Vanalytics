@@ -4,19 +4,20 @@ import { useAuth } from '../context/AuthContext'
 import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
 import LoginModal from './LoginModal'
-import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock, KeyRound, Bug, ChevronRight, Map } from 'lucide-react'
+import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare } from 'lucide-react'
 import { CompareProvider } from './compare/CompareContext'
 import CompareTray from './compare/CompareTray'
 import { SyncProvider } from '../context/SyncContext'
 import SyncBanner from './SyncBanner'
 import { FfxiFileSystemProvider } from '../context/FfxiFileSystemContext'
 
-type SectionName = 'database' | 'economy' | 'server' | 'admin'
+type SectionName = 'database' | 'economy' | 'server' | 'community' | 'admin'
 
 function getSection(pathname: string): SectionName | null {
   if (pathname.startsWith('/items') || pathname.startsWith('/npcs') || pathname.startsWith('/zones')) return 'database'
   if (pathname.startsWith('/bazaar')) return 'economy'
   if (pathname.startsWith('/server/')) return 'server'
+  if (pathname.startsWith('/forum')) return 'community'
   if (pathname.startsWith('/admin')) return 'admin'
   return null
 }
@@ -163,6 +164,10 @@ function LayoutInner() {
           <SidebarSection label="Server" icon={<Radio className="h-4 w-4 shrink-0" />} isOpen={openSection === 'server'} onToggle={() => toggleSection('server')}>
             <SidebarLink to="/server/status" end={false} label="Status" icon={<Radio className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
             <SidebarLink to="/server/clock" label="Clock" icon={<Clock className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+          </SidebarSection>
+
+          <SidebarSection label="Community" icon={<MessageSquare className="h-4 w-4 shrink-0" />} isOpen={openSection === 'community'} onToggle={() => toggleSection('community')}>
+            <SidebarLink to="/forum" end={false} label="Forum" icon={<MessageSquare className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
           </SidebarSection>
 
           <SidebarLink to="/setup" label="Setup Guide" icon={<BookOpen className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />

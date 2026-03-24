@@ -51,13 +51,17 @@ export default function CharacterModel({
           let material: THREE.Material
           const tex = parsed!.textures[mesh.materialIndex]
           if (tex) {
-            const texture = new THREE.DataTexture(tex.rgba, tex.width, tex.height, THREE.RGBAFormat)
+            const rgba = new Uint8Array(tex.rgba)
+            const texture = new THREE.DataTexture(rgba, tex.width, tex.height, THREE.RGBAFormat)
+            texture.wrapS = THREE.RepeatWrapping
+            texture.wrapT = THREE.RepeatWrapping
             texture.needsUpdate = true
-            texture.magFilter = THREE.NearestFilter
-            texture.minFilter = THREE.NearestMipmapLinearFilter
-            material = new THREE.MeshStandardMaterial({ map: texture })
+            texture.magFilter = THREE.LinearFilter
+            texture.minFilter = THREE.LinearMipmapLinearFilter
+            texture.generateMipmaps = true
+            material = new THREE.MeshBasicMaterial({ map: texture })
           } else {
-            material = new THREE.MeshStandardMaterial({ color: 0x888888 })
+            material = new THREE.MeshBasicMaterial({ color: 0x888888 })
           }
 
           return new THREE.Mesh(geometry, material)
@@ -87,7 +91,7 @@ export default function CharacterModel({
       loadedMeshes.forEach(meshes => {
         meshes.forEach(mesh => {
           mesh.geometry.dispose()
-          if (mesh.material instanceof THREE.MeshStandardMaterial) {
+          if (mesh.material instanceof THREE.MeshBasicMaterial) {
             mesh.material.map?.dispose()
             mesh.material.dispose()
           }

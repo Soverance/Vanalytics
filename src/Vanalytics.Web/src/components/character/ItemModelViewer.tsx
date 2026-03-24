@@ -45,7 +45,6 @@ export default function ItemModelViewer({ itemId }: ItemModelViewerProps) {
   const [meshData, setMeshData] = useState<{ meshes: ParsedMesh[]; textures: ParsedTexture[] } | null>(null)
   const [parseLog, setParseLog] = useState<string[]>([])
   const [viewMode, setViewMode] = useState<'3d' | 'wireframe'>('3d')
-  const [lighting, setLighting] = useState<'standard' | 'enhanced'>('standard')
   const [loading, setLoading] = useState(false)
   const [itemMapping, setItemMapping] = useState<ModelMapping | null | undefined>(undefined) // undefined = checking
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -226,11 +225,6 @@ export default function ItemModelViewer({ itemId }: ItemModelViewerProps) {
             className={`px-2 py-0.5 text-[11px] rounded ${viewMode === 'wireframe' ? 'bg-blue-700 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
             Wireframe
           </button>
-          <span className="w-px h-3 bg-gray-700 mx-0.5" />
-          <button onClick={() => setLighting(l => l === 'standard' ? 'enhanced' : 'standard')}
-            className={`px-2 py-0.5 text-[11px] rounded ${lighting === 'enhanced' ? 'bg-amber-700 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
-            Lighting
-          </button>
         </div>
       </div>
 
@@ -238,7 +232,7 @@ export default function ItemModelViewer({ itemId }: ItemModelViewerProps) {
         <div className="flex-1 h-[350px] bg-gray-950 border border-gray-800 rounded overflow-hidden">
           {viewMode === '3d' ? (
             meshData ? (
-              <ThreeModelViewer meshData={meshData} lighting={lighting} />
+              <ThreeModelViewer meshData={meshData} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
                 {loading ? 'Loading model...' : 'No model available'}

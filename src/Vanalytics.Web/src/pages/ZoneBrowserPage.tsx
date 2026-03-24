@@ -2,13 +2,23 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
 import { parseZoneFile } from '../lib/ffxi-dat'
 import type { ParsedZone } from '../lib/ffxi-dat'
+import type { ParsedTexture } from '../lib/ffxi-dat/types'
 import ThreeZoneViewer from '../components/zone/ThreeZoneViewer'
-import { Search, X, Shuffle, ChevronRight, Clock } from 'lucide-react'
+import MinimapOverlay from '../components/zone/MinimapOverlay'
+import { parseMinimapDat } from '../lib/ffxi-dat/MinimapParser'
+import { parseSpawnDat } from '../lib/ffxi-dat/SpawnParser'
+import type { SpawnPoint } from '../lib/ffxi-dat/SpawnParser'
+import { Search, X, Shuffle, ChevronRight, Clock, Users } from 'lucide-react'
 
 interface ZoneEntry {
+  id: number
   name: string
-  path: string
-  expansion: string
+  modelPath: string | null
+  npcPath: string | null
+  mapPaths: string | null
+  expansion: string | null
+  region: string | null
+  isDiscovered: boolean
 }
 
 const MAX_RECENT = 8
@@ -21,7 +31,11 @@ export default function ZoneBrowserPage() {
   const [selected, setSelected] = useState<ZoneEntry | null>(null)
   const [zoneData, setZoneData] = useState<ParsedZone | null>(null)
   const [cameraMode, setCameraMode] = useState<'orbit' | 'fly'>('orbit')
-  const [lighting, setLighting] = useState<'standard' | 'enhanced'>('standard')
+  const [fogDensity, setFogDensity] = useState(0)  // 0=off, 0.5=default, 1=thick
+  const [flySpeed, setFlySpeed] = useState<number | null>(null)
+  const [minimapTextures, setMinimapTextures] = useState<ParsedTexture[]>([])
+  const [showSpawns, setShowSpawns] = useState(false)
+  const [spawnPoints, setSpawnPoints] = useState<SpawnPoint[]>([])
   const [loading, setLoading] = useState(false)
   const [parseLog, setParseLog] = useState<string[]>([])
   const [browserOpen, setBrowserOpen] = useState(false)
@@ -31,27 +45,40 @@ export default function ZoneBrowserPage() {
 
   const log = (msg: string) => setParseLog(prev => [...prev, msg])
 
-  // Load static zone data
+  // Load zones from API
   useEffect(() => {
-    fetch('/data/zone-paths.json')
+    fetch('/api/zones')
       .then(r => r.json())
       .then((data: ZoneEntry[]) => setAllZones(data))
       .catch(() => setAllZones([]))
   }, [])
 
+  // Dynamic expansion list in canonical FFXI release order
+  const expansions = useMemo(() => {
+    const expSet = new Set(allZones.filter(z => z.expansion).map(z => z.expansion!))
+    const order = [
+      'Original', 'Rise of the Zilart', 'Chains of Promathia',
+      'Treasures of Aht Urhgan', 'Wings of the Goddess',
+      'Seekers of Adoulin'
+    ]
+    return order.filter(e => expSet.has(e))
+      .concat([...expSet].filter(e => !order.includes(e)).sort())
+  }, [allZones])
+
   // Derive expansion stats with counts
   const expansionStats = useMemo(() => {
     const counts = new Map<string, number>()
-    for (const z of allZones) counts.set(z.expansion, (counts.get(z.expansion) ?? 0) + 1)
-    return Array.from(counts.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => a.name.localeCompare(b.name))
-  }, [allZones])
+    for (const z of allZones) {
+      const exp = z.expansion ?? 'Unknown'
+      counts.set(exp, (counts.get(exp) ?? 0) + 1)
+    }
+    return expansions.map(name => ({ name, count: counts.get(name) ?? 0 }))
+  }, [allZones, expansions])
 
   // Filter zones
   const filtered = useMemo(() => {
     let list = allZones
-    if (selectedExpansion) list = list.filter(z => z.expansion === selectedExpansion)
+    if (selectedExpansion) list = list.filter(z => (z.expansion ?? 'Unknown') === selectedExpansion)
     if (query) {
       const q = query.toLowerCase()
       list = list.filter(z => z.name.toLowerCase().includes(q))
@@ -69,24 +96,33 @@ export default function ZoneBrowserPage() {
     setSelected(zone)
     setBrowserOpen(false)
     setZoneData(null)
+    setMinimapTextures([])
+    setSpawnPoints([])
+    setShowSpawns(false)
     setParseLog([])
     setLogOpen(true)
     setLoading(true)
 
     setRecent(prev => {
-      const filtered = prev.filter(r => r.path !== zone.path)
+      const filtered = prev.filter(r => r.id !== zone.id)
       return [zone, ...filtered].slice(0, MAX_RECENT)
     })
 
     try {
-      log(`Zone: ${zone.name} (${zone.expansion})`)
-      log(`DAT: ${zone.path}`)
+      log(`Zone: ${zone.name} (${zone.expansion ?? 'Unknown'})`)
+      log(`DAT: ${zone.modelPath ?? 'N/A'}`)
+
+      if (!zone.modelPath) {
+        log('No model path available for this zone.')
+        setLoading(false)
+        return
+      }
 
       let buffer: ArrayBuffer
       try {
-        buffer = await ffxi.readFile(zone.path)
+        buffer = await ffxi.readFile(zone.modelPath!)
       } catch (readErr) {
-        log(`File read failed: ${zone.path} — ${readErr instanceof Error ? readErr.message : String(readErr)}`)
+        log(`File read failed: ${zone.modelPath} — ${readErr instanceof Error ? readErr.message : String(readErr)}`)
         return
       }
       log(`Read ${buffer.byteLength} bytes`)
@@ -100,6 +136,21 @@ export default function ZoneBrowserPage() {
       } else {
         log('No zone meshes found in this DAT.')
       }
+
+      const mapTextures: ParsedTexture[] = []
+      if (zone.mapPaths) {
+        const mapDatPaths = zone.mapPaths.split(';').filter(Boolean)
+        for (const mapPath of mapDatPaths) {
+          try {
+            const mapBuffer = await ffxi.readFile(mapPath)
+            if (mapBuffer) {
+              const tex = parseMinimapDat(mapBuffer)
+              if (tex) mapTextures.push(tex)
+            }
+          } catch { /* skip */ }
+        }
+      }
+      setMinimapTextures(mapTextures)
     } catch (err) {
       log(`ERROR: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
@@ -107,14 +158,29 @@ export default function ZoneBrowserPage() {
     }
   }, [ffxi.readFile])
 
-  // Random zone
+  // Random zone (prefer zones with a modelPath)
   const loadRandom = useCallback(() => {
     if (allZones.length === 0) return
-    const pool = selectedExpansion ? allZones.filter(z => z.expansion === selectedExpansion) : allZones
+    let pool = selectedExpansion
+      ? allZones.filter(z => (z.expansion ?? 'Unknown') === selectedExpansion)
+      : allZones
+    const withModels = pool.filter(z => z.modelPath !== null)
+    if (withModels.length > 0) pool = withModels
     if (pool.length === 0) return
     const pick = pool[Math.floor(Math.random() * pool.length)]
     loadZone(pick)
   }, [allZones, selectedExpansion, loadZone])
+
+  // Toggle spawn markers — load from npcPath on first enable
+  const handleToggleSpawns = useCallback(async () => {
+    if (!showSpawns && spawnPoints.length === 0 && selected?.npcPath) {
+      try {
+        const buffer = await ffxi.readFile(selected.npcPath)
+        setSpawnPoints(parseSpawnDat(buffer))
+      } catch { /* npcPath unavailable or unreadable */ }
+    }
+    setShowSpawns(prev => !prev)
+  }, [showSpawns, spawnPoints.length, selected, ffxi])
 
   // ── Not configured states ──
   if (!ffxi.isSupported) {
@@ -189,9 +255,18 @@ export default function ZoneBrowserPage() {
         )}
 
         {zoneData && (
-          <ThreeZoneViewer zoneData={zoneData} lighting={lighting} cameraMode={cameraMode} />
+          <ThreeZoneViewer
+            zoneData={zoneData}
+            fogDensity={fogDensity}
+            onFlySpeedChange={setFlySpeed}
+            cameraMode={cameraMode}
+            spawnMarkers={spawnPoints}
+            showSpawns={showSpawns}
+          />
         )}
       </div>
+
+      <MinimapOverlay textures={minimapTextures} />
 
       {/* ── Top-left: Browse button + recent strip ── */}
       <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
@@ -219,11 +294,11 @@ export default function ZoneBrowserPage() {
             <Clock className="h-3 w-3 text-gray-600 shrink-0" />
             {recent.map((r, i) => (
               <button
-                key={`${r.path}-${i}`}
+                key={`${r.id}-${i}`}
                 onClick={() => loadZone(r)}
                 title={r.name}
                 className={`px-1.5 py-0.5 text-[11px] rounded transition-colors max-w-[80px] truncate ${
-                  selected?.path === r.path
+                  selected?.id === r.id
                     ? 'bg-blue-600/50 text-blue-200'
                     : 'text-gray-500 hover:text-gray-200 hover:bg-gray-800'
                 }`}
@@ -255,23 +330,69 @@ export default function ZoneBrowserPage() {
             Fly
           </button>
         </div>
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-900/90 backdrop-blur border border-gray-700/50 shadow-lg">
+          <button
+            onClick={() => setFogDensity(d => d > 0 ? 0 : 0.5)}
+            className={`px-2 py-0.5 text-xs rounded transition-colors ${
+              fogDensity > 0
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            Fog
+          </button>
+          {fogDensity > 0 && (
+            <input
+              type="range"
+              min="0.1"
+              max="1"
+              step="0.05"
+              value={fogDensity}
+              onChange={(e) => setFogDensity(parseFloat(e.target.value))}
+              className="w-16 h-1 accent-blue-500"
+            />
+          )}
+        </div>
         <button
-          onClick={() => setLighting(l => l === 'standard' ? 'enhanced' : 'standard')}
-          className={`px-2.5 py-1 text-xs rounded-lg border shadow-lg backdrop-blur transition-colors ${
-            lighting === 'enhanced'
-              ? 'bg-amber-600/90 border-amber-500/50 text-white'
+          onClick={handleToggleSpawns}
+          title="Toggle spawn markers"
+          className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg border shadow-lg backdrop-blur transition-colors ${
+            showSpawns
+              ? 'bg-red-600/90 border-red-500/50 text-white'
               : 'bg-gray-900/90 border-gray-700/50 text-gray-400 hover:text-gray-200'
           }`}
         >
-          Lighting
+          <Users className="h-3 w-3" />
+          Spawns
         </button>
+        {cameraMode === 'fly' && flySpeed !== null && (
+          <div className="px-2.5 py-1 rounded-lg bg-gray-900/90 backdrop-blur border border-gray-700/50 shadow-lg text-xs text-gray-400" title="Scroll wheel to adjust fly speed">
+            Speed <span className="font-mono text-gray-200">{flySpeed.toFixed(2)}</span>
+          </div>
+        )}
       </div>
 
       {/* ── Bottom-left: zone info ── */}
       {selected && (
-        <div className="absolute bottom-3 left-3 z-30 px-3 py-1.5 rounded-lg bg-gray-900/90 backdrop-blur border border-gray-700/50 shadow-lg">
+        <div className="absolute bottom-3 left-3 z-30 px-3 py-2 rounded-lg bg-gray-900/90 backdrop-blur border border-gray-700/50 shadow-lg">
           <p className="text-sm font-medium text-gray-200">{selected.name}</p>
-          <p className="text-[10px] text-gray-500">{selected.expansion} · {selected.path}</p>
+          <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+            {selected.expansion && (
+              <span className="text-[10px] text-gray-400">{selected.expansion}</span>
+            )}
+            {selected.region && (
+              <span className="text-[10px] text-gray-500">{selected.region}</span>
+            )}
+            <span className="text-[10px] text-gray-600">ID {selected.id}</span>
+            {selected.mapPaths && (
+              <span className="text-[10px] text-blue-500">
+                {selected.mapPaths.split(';').length} map floor{selected.mapPaths.split(';').length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          {selected.modelPath && (
+            <p className="text-[10px] text-gray-600 mt-0.5 truncate max-w-[320px]">{selected.modelPath}</p>
+          )}
         </div>
       )}
 
@@ -353,8 +474,13 @@ export default function ZoneBrowserPage() {
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     placeholder={selectedExpansion ? `Search ${selectedExpansion}...` : 'Search all zones...'}
-                    className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-600"
+                    className="w-full pl-8 pr-8 py-1.5 text-sm rounded-lg bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-600"
                   />
+                  {query && (
+                    <button onClick={() => setQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
                 <button
                   onClick={loadRandom}
@@ -363,12 +489,6 @@ export default function ZoneBrowserPage() {
                 >
                   <Shuffle className="h-3.5 w-3.5" />
                   Random
-                </button>
-                <button
-                  onClick={() => setBrowserOpen(false)}
-                  className="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800"
-                >
-                  <X className="h-4 w-4" />
                 </button>
               </div>
 
@@ -380,7 +500,7 @@ export default function ZoneBrowserPage() {
                   <div className="flex gap-1 overflow-x-auto">
                     {recent.map((r, i) => (
                       <button
-                        key={`${r.path}-${i}`}
+                        key={`${r.id}-${i}`}
                         onClick={() => loadZone(r)}
                         className="px-2 py-0.5 text-[11px] rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 whitespace-nowrap transition-colors"
                       >
@@ -407,22 +527,24 @@ export default function ZoneBrowserPage() {
                 )}
                 {filtered.slice(0, 300).map((zone, idx) => (
                   <button
-                    key={`${zone.path}-${idx}`}
+                    key={`${zone.id}-${idx}`}
                     onClick={() => loadZone(zone)}
                     className={`w-full text-left px-3 py-2 flex items-center gap-3 border-b border-gray-800/30 transition-colors group ${
-                      selected?.path === zone.path && selected?.name === zone.name
+                      selected?.id === zone.id
                         ? 'bg-blue-900/30'
                         : 'hover:bg-gray-800/40'
                     }`}
                   >
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm truncate ${
-                        selected?.path === zone.path && selected?.name === zone.name
+                        selected?.id === zone.id
                           ? 'text-blue-300' : 'text-gray-200'
                       }`}>
                         {zone.name}
                       </p>
-                      <p className="text-[11px] text-gray-600 truncate">{zone.path}</p>
+                      <p className="text-[11px] text-gray-600 truncate">
+                        {zone.modelPath ?? <span className="text-gray-700 italic">no model</span>}
+                      </p>
                     </div>
                     <ChevronRight className="h-3.5 w-3.5 text-gray-700 group-hover:text-gray-500 shrink-0" />
                   </button>

@@ -13,6 +13,7 @@
     <ProjectReference Include="..\Vanalytics.Data\Vanalytics.Data.csproj" />
     <ProjectReference Include="..\lib\Common\src\Soverance.Auth\Soverance.Auth.csproj" />
     <ProjectReference Include="..\lib\Common\src\Soverance.Data\Soverance.Data.csproj" />
+    <ProjectReference Include="..\lib\Common\src\Soverance.Forum\Soverance.Forum.csproj" />
   </ItemGroup>
 
   <ItemGroup>

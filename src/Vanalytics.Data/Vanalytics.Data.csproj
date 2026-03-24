@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Vanalytics.Core\Vanalytics.Core.csproj" />
     <ProjectReference Include="..\lib\Common\src\Soverance.Data\Soverance.Data.csproj" />
+    <ProjectReference Include="..\lib\Common\src\Soverance.Forum\Soverance.Forum.csproj" />
   </ItemGroup>
 
   <ItemGroup>

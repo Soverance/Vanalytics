@@ -4,6 +4,8 @@ using Scalar.AspNetCore;
 using Soverance.Auth.Endpoints;
 using Soverance.Auth.Extensions;
 using Soverance.Auth.Services;
+using Soverance.Forum.Extensions;
+using Soverance.Forum.Services;
 using Soverance.Data.Extensions;
 using Vanalytics.Api.Services;
 using Vanalytics.Api.Services.Sync;
@@ -73,11 +75,16 @@ builder.Services.AddHttpClient("PlayOnline", client =>
 builder.Services.AddSingleton<SyncOrchestrator>();
 builder.Services.AddKeyedSingleton<ISyncProvider, ItemSyncProvider>("items");
 builder.Services.AddKeyedSingleton<ISyncProvider, IconSyncProvider>("icons");
+builder.Services.AddKeyedSingleton<ISyncProvider, ZoneSyncProvider>("zones");
 
 builder.Services.AddHostedService<ServerStatusScraper>();
 // ItemDatabaseSyncJob removed — item data is static game data that only changes
 // when SE patches the game. Sync should only be triggered by an admin from /admin/data.
 builder.Services.AddHostedService<BazaarStalenessJob>();
+
+// Forum
+builder.Services.AddForumServices();
+builder.Services.AddScoped<IForumAuthorResolver, VanalyticsForumAuthorResolver>();
 
 var app = builder.Build();
 
