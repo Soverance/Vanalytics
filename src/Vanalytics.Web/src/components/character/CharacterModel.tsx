@@ -229,26 +229,30 @@ export default function CharacterModel({
     }
     let cancelled = false
     async function loadAnims() {
-      const allAnims: ParsedAnimation[] = []
-      for (const path of animationPaths!) {
-        const cacheKey = `anim:${path}`
-        let cached = animCache.get(cacheKey)
-        if (!cached) {
-          try {
-            const buffer = await readFile(path)
-            console.log('[CharModel] parsing anim DAT:', path, 'size:', buffer.byteLength)
-            cached = parseAnimationDat(buffer, path)
-            console.log('[CharModel] parsed:', cached.length, 'sections from', path)
-            animCache.set(cacheKey, cached)
-          } catch (err) {
-            console.warn('[CharModel] failed to load anim:', path, err)
-            continue
-          }
+      // Each DAT contains multiple animation clips (~3 sections each: upper/lower/additional body).
+      // Load only the FIRST DAT path — it contains the animation for this entry.
+      // Each clip is 3 consecutive sections; take the first 3 for the primary animation.
+      const path = animationPaths![0]
+      const cacheKey = `anim:${path}`
+      let sections = animCache.get(cacheKey)
+      if (!sections) {
+        try {
+          const buffer = await readFile(path)
+          console.log('[CharModel] parsing anim DAT:', path, 'size:', buffer.byteLength)
+          sections = parseAnimationDat(buffer, path)
+          console.log('[CharModel] parsed:', sections.length, 'sections from', path)
+          animCache.set(cacheKey, sections)
+        } catch (err) {
+          console.warn('[CharModel] failed to load anim:', path, err)
+          if (!cancelled) setAnimations([])
+          return
         }
-        allAnims.push(...cached)
       }
-      console.log('[CharModel] total animation sections loaded:', allAnims.length)
-      if (!cancelled) setAnimations(allAnims)
+      // Each 0x2B block is a complete full-body animation clip.
+      // Take only the first one.
+      const clip = sections.slice(0, 1)
+      console.log('[CharModel] using', clip.length, 'sections, frames:', clip.map(s => s.frameCount), 'bones:', clip.map(s => s.bones.length))
+      if (!cancelled) setAnimations(clip)
     }
     loadAnims()
     return () => { cancelled = true }

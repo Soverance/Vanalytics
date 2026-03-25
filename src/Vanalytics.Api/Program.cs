@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -221,7 +222,35 @@ app.MapControllers();
 app.MapSamlEndpoints();
 app.MapSamlAdminEndpoints();
 app.MapSamlExchangeEndpoint();
-app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+var startedAt = DateTimeOffset.UtcNow;
+app.MapGet("/health", async (VanalyticsDbContext db, IHostEnvironment env) =>
+{
+    var dbHealthy = false;
+    try
+    {
+        dbHealthy = await db.Database.CanConnectAsync();
+    }
+    catch
+    {
+        // Connection failure — dbHealthy stays false
+    }
+
+    var version = typeof(Program).Assembly
+        .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion
+        ?? typeof(Program).Assembly.GetName().Version?.ToString()
+        ?? "unknown";
+
+    var status = dbHealthy ? "healthy" : "degraded";
+
+    return Results.Json(new
+    {
+        status,
+        version,
+        environment = env.EnvironmentName,
+        uptime = (DateTimeOffset.UtcNow - startedAt).ToString(@"d\.hh\:mm\:ss"),
+        database = dbHealthy ? "connected" : "unavailable",
+    }, statusCode: dbHealthy ? 200 : 503);
+});
 
 // SPA fallback: serve index.html for unmatched non-file, non-API requests
 app.MapFallbackToFile("index.html");

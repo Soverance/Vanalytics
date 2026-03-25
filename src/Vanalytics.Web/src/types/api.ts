@@ -51,6 +51,10 @@ export interface CharacterDetail {
   subJobLevel?: number
   masterLevel?: number
   itemLevel?: number
+  hp?: number
+  maxHp?: number
+  mp?: number
+  maxMp?: number
   linkshell?: string
   nation?: number
   merits?: Record<string, number>

@@ -543,14 +543,18 @@ export function parseVertexBlock(
       materialIndex,
     })
 
-    // Mirrored half — pre-baked to world space (V1: no animation for mirrors)
+    // Mirrored half — pre-baked to world space with mirrored bone matrices,
+    // but assigned the SAME (leftL) bone indices as the original half.
+    // At bind pose: inverseBind * bind = identity, so mirror positions are preserved.
+    // During animation: both halves move together (correct for symmetric anims).
     if (hdr.flip !== 0) {
       const mirrorVerts = transformVertices(noB1, noB2, mv1Data, mv2Data, boneAssign, boneTbl, skelMatrices, true, isIndirect)
-      const mirror = expandFaces(mirrorVerts, faces, true)
+      const mirrorSkin = buildSkinningArrays(noB1, noB2, boneAssign, boneTbl, isIndirect, false)
+      const mirror = expandFaces(mirrorVerts, faces, true, mirrorSkin.boneIndices, mirrorSkin.boneWeights)
       meshes.push({
         vertices: mirror.positions, normals: mirror.normals, uvs: mirror.uvs,
         indices: new Uint16Array(mirror.positions.length / 3),
-        boneIndices: new Uint8Array(0), boneWeights: new Float32Array(0),
+        boneIndices: mirror.boneIndices, boneWeights: mirror.boneWeights,
         materialIndex,
       })
     }

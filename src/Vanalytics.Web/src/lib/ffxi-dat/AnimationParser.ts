@@ -3,7 +3,7 @@ import type { ParsedAnimation, AnimationBone } from './types'
 
 const BLOCK_ANIM = 0x2B
 const DATHEAD_SIZE = 8
-const BLOCK_PADDING = 8 // 8 bytes of zeros after DATHEAD, same as other block types
+const BLOCK_PADDING = 8
 const DAT2B_HEADER_SIZE = 10
 const DAT2B_BONE_SIZE = 84
 
@@ -15,7 +15,6 @@ const DAT2B_BONE_SIZE = 84
 export function parseAnimationDat(buffer: ArrayBuffer, debugPath?: string): ParsedAnimation[] {
   const reader = new DatReader(buffer)
   const animations: ParsedAnimation[] = []
-  const blockTypes = new Map<number, number>()
 
   let offset = 0
   while (offset < reader.length - DATHEAD_SIZE) {
@@ -26,20 +25,10 @@ export function parseAnimationDat(buffer: ArrayBuffer, debugPath?: string): Pars
     const nextUnits = (packed >> 7) & 0x7FFFF
     const blockSize = nextUnits * 16
 
-    blockTypes.set(type, (blockTypes.get(type) ?? 0) + 1)
-
     if (type === BLOCK_ANIM) {
       try {
         const dataStart = offset + DATHEAD_SIZE + BLOCK_PADDING
-        const dataLength = Math.max(0, blockSize - DATHEAD_SIZE - BLOCK_PADDING)
-        // DEBUG: log first few 0x2B block headers
-        if (animations.length === 0 && debugPath && blockTypes.get(BLOCK_ANIM)! <= 3) {
-          const r = new DatReader(buffer)
-          r.seek(dataStart)
-          const raw = Array.from({ length: 16 }, () => r.readUint8())
-          console.log(`[AnimParser] 0x2B block at offset=${offset} blockSize=${blockSize} dataStart=${dataStart} raw header bytes:`, raw)
-        }
-        const anim = parseAnimBlock(buffer, dataStart, dataLength)
+        const anim = parseAnimBlock(reader, dataStart, debugPath)
         if (anim) animations.push(anim)
       } catch (err) {
         if (debugPath) console.warn(`[AnimParser] parseAnimBlock error:`, err)
@@ -51,22 +40,14 @@ export function parseAnimationDat(buffer: ArrayBuffer, debugPath?: string): Pars
     if (offset > reader.length) break
   }
 
-  if (debugPath && animations.length === 0) {
-    const types = Array.from(blockTypes.entries())
-      .map(([t, c]) => `0x${t.toString(16)}:${c}`)
-      .join(' ')
-    console.log(`[AnimParser] ${debugPath}: no 0x2B blocks. Found types: ${types}`)
-  }
-
   return animations
 }
 
 function parseAnimBlock(
-  buffer: ArrayBuffer,
+  reader: DatReader,
   dataStart: number,
-  dataLength: number,
+  debugPath?: string,
 ): ParsedAnimation | null {
-  const reader = new DatReader(buffer)
   reader.seek(dataStart)
 
   // DAT2BHeader2: 10 bytes — skip ver(1) + nazo(1)
@@ -76,21 +57,18 @@ function parseAnimBlock(
   const speed = reader.readFloat32()
 
   if (element === 0 || frameCount === 0) return null
-  if (element > 500) return null // sanity check
+  if (element > 500) return null
 
-  // Create float view over entire block payload for keyframe pool access.
-  // The idx_* fields are absolute indices into this view (C union pattern).
-  // Use buffer.slice to ensure 4-byte alignment for Float32Array.
-  const floatView = new Float32Array(
-    buffer.slice(dataStart, dataStart + dataLength),
-  )
+  // The keyframe float pool base: idx values count from the start of the
+  // bone descriptor array (after the 10-byte header). We read floats using
+  // DatReader.seek() to the byte position: poolBase + idx * 4.
+  const poolBase = dataStart + DAT2B_HEADER_SIZE
 
-  // DEBUG: log first parse
-  const shouldLog = typeof window !== 'undefined' && !(window as unknown as Record<string, unknown>).__animParsed
+  // DEBUG: one-time log
+  const shouldLog = debugPath && typeof window !== 'undefined' && !(window as unknown as Record<string, unknown>).__animParsed
   if (shouldLog) {
     ;(window as unknown as Record<string, unknown>).__animParsed = true
-    console.log(`[AnimParser] header: element=${element} frame=${frameCount} speed=${speed} dataLen=${dataLength} floatPoolSize=${floatView.length}`)
-    console.log(`[AnimParser] metadata size: ${DAT2B_HEADER_SIZE + element * DAT2B_BONE_SIZE} bytes = ${(DAT2B_HEADER_SIZE + element * DAT2B_BONE_SIZE) / 4} floats`)
+    console.log(`[AnimParser] header: element=${element} frame=${frameCount} speed=${speed} poolBase=${poolBase}`)
   }
 
   // Read DAT2B bone descriptors (84 bytes each)
@@ -102,7 +80,6 @@ function parseAnimBlock(
 
     const boneIndex = reader.readInt32()
 
-    // Rotation indices + defaults
     const idx_qtx = reader.readInt32()
     const idx_qty = reader.readInt32()
     const idx_qtz = reader.readInt32()
@@ -112,7 +89,6 @@ function parseAnimBlock(
     const qtz = reader.readFloat32()
     const qtw = reader.readFloat32()
 
-    // Translation indices + defaults
     const idx_tx = reader.readInt32()
     const idx_ty = reader.readInt32()
     const idx_tz = reader.readInt32()
@@ -120,7 +96,6 @@ function parseAnimBlock(
     const ty = reader.readFloat32()
     const tz = reader.readFloat32()
 
-    // Scale indices + defaults
     const idx_sx = reader.readInt32()
     const idx_sy = reader.readInt32()
     const idx_sz = reader.readInt32()
@@ -131,19 +106,21 @@ function parseAnimBlock(
     // Skip flag: high bit of idx_qtx means no animation for this bone
     if (idx_qtx & 0x80000000) continue
 
-    // DEBUG: log first non-skipped bone's idx values
+    // DEBUG: log first non-skipped bone
     if (shouldLog && !loggedBone) {
       loggedBone = true
-      console.log(`[AnimParser] bone[${i}] idx=${boneIndex} idx_qtx=${idx_qtx} idx_qty=${idx_qty} idx_qtz=${idx_qtz} idx_qtw=${idx_qtw}`)
+      // Read the float at pool[idx_qtx] directly via reader
+      const testBytePos = poolBase + idx_qtx * 4
+      reader.seek(testBytePos)
+      const testFloat = reader.readFloat32()
+      console.log(`[AnimParser] bone[${i}] idx=${boneIndex} idx_qtx=${idx_qtx} bytePos=${testBytePos} pool[idx_qtx]=${testFloat}`)
       console.log(`  defaults: rot=[${qtx},${qty},${qtz},${qtw}] trans=[${tx},${ty},${tz}]`)
-      console.log(`  pool[idx_qtx]=${idx_qtx > 0 ? floatView[idx_qtx] : 'N/A'} pool[idx_qtx+1]=${idx_qtx > 0 ? floatView[idx_qtx + 1] : 'N/A'}`)
-      console.log(`  idx_tx=${idx_tx} idx_ty=${idx_ty} idx_tz=${idx_tz}`)
     }
 
-    // Extract keyframe arrays from the float pool
-    const rotKf = extractRotationKeyframes(floatView, idx_qtx, idx_qty, idx_qtz, idx_qtw, frameCount)
-    const transKf = extractTranslationKeyframes(floatView, idx_tx, idx_ty, idx_tz, frameCount)
-    const scaleKf = extractScaleKeyframes(floatView, idx_sx, idx_sy, idx_sz, frameCount)
+    // Extract keyframe arrays from the float pool using DatReader
+    const rotKf = readRotationKeyframes(reader, poolBase, idx_qtx, idx_qty, idx_qtz, idx_qtw, frameCount)
+    const transKf = readTranslationKeyframes(reader, poolBase, idx_tx, idx_ty, idx_tz, frameCount)
+    const scaleKf = readScaleKeyframes(reader, poolBase, idx_sx, idx_sy, idx_sz, frameCount)
 
     bones.push({
       boneIndex,
@@ -159,8 +136,14 @@ function parseAnimBlock(
   return { frameCount, speed, bones }
 }
 
-function extractRotationKeyframes(
-  pool: Float32Array,
+/** Read a single float from the pool at the given index */
+function readPoolFloat(reader: DatReader, poolBase: number, idx: number): number {
+  reader.seek(poolBase + idx * 4)
+  return reader.readFloat32()
+}
+
+function readRotationKeyframes(
+  reader: DatReader, poolBase: number,
   idxX: number, idxY: number, idxZ: number, idxW: number,
   frameCount: number,
 ): Float32Array | null {
@@ -168,16 +151,16 @@ function extractRotationKeyframes(
 
   const kf = new Float32Array(frameCount * 4)
   for (let f = 0; f < frameCount; f++) {
-    kf[f * 4 + 0] = idxX > 0 && idxX + f < pool.length ? pool[idxX + f] : 0
-    kf[f * 4 + 1] = idxY > 0 && idxY + f < pool.length ? pool[idxY + f] : 0
-    kf[f * 4 + 2] = idxZ > 0 && idxZ + f < pool.length ? pool[idxZ + f] : 0
-    kf[f * 4 + 3] = idxW > 0 && idxW + f < pool.length ? pool[idxW + f] : 1
+    kf[f * 4 + 0] = idxX > 0 ? readPoolFloat(reader, poolBase, idxX + f) : 0
+    kf[f * 4 + 1] = idxY > 0 ? readPoolFloat(reader, poolBase, idxY + f) : 0
+    kf[f * 4 + 2] = idxZ > 0 ? readPoolFloat(reader, poolBase, idxZ + f) : 0
+    kf[f * 4 + 3] = idxW > 0 ? readPoolFloat(reader, poolBase, idxW + f) : 1
   }
   return kf
 }
 
-function extractTranslationKeyframes(
-  pool: Float32Array,
+function readTranslationKeyframes(
+  reader: DatReader, poolBase: number,
   idxX: number, idxY: number, idxZ: number,
   frameCount: number,
 ): Float32Array | null {
@@ -185,15 +168,15 @@ function extractTranslationKeyframes(
 
   const kf = new Float32Array(frameCount * 3)
   for (let f = 0; f < frameCount; f++) {
-    kf[f * 3 + 0] = idxX > 0 && idxX + f < pool.length ? pool[idxX + f] : 0
-    kf[f * 3 + 1] = idxY > 0 && idxY + f < pool.length ? pool[idxY + f] : 0
-    kf[f * 3 + 2] = idxZ > 0 && idxZ + f < pool.length ? pool[idxZ + f] : 0
+    kf[f * 3 + 0] = idxX > 0 ? readPoolFloat(reader, poolBase, idxX + f) : 0
+    kf[f * 3 + 1] = idxY > 0 ? readPoolFloat(reader, poolBase, idxY + f) : 0
+    kf[f * 3 + 2] = idxZ > 0 ? readPoolFloat(reader, poolBase, idxZ + f) : 0
   }
   return kf
 }
 
-function extractScaleKeyframes(
-  pool: Float32Array,
+function readScaleKeyframes(
+  reader: DatReader, poolBase: number,
   idxX: number, idxY: number, idxZ: number,
   frameCount: number,
 ): Float32Array | null {
@@ -201,9 +184,9 @@ function extractScaleKeyframes(
 
   const kf = new Float32Array(frameCount * 3)
   for (let f = 0; f < frameCount; f++) {
-    kf[f * 3 + 0] = idxX > 0 && idxX + f < pool.length ? pool[idxX + f] : 1
-    kf[f * 3 + 1] = idxY > 0 && idxY + f < pool.length ? pool[idxY + f] : 1
-    kf[f * 3 + 2] = idxZ > 0 && idxZ + f < pool.length ? pool[idxZ + f] : 1
+    kf[f * 3 + 0] = idxX > 0 ? readPoolFloat(reader, poolBase, idxX + f) : 1
+    kf[f * 3 + 1] = idxY > 0 ? readPoolFloat(reader, poolBase, idxY + f) : 1
+    kf[f * 3 + 2] = idxZ > 0 ? readPoolFloat(reader, poolBase, idxZ + f) : 1
   }
   return kf
 }

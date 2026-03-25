@@ -17,6 +17,10 @@ public class Character
     public int? SubJobLevel { get; set; }
     public int? MasterLevel { get; set; }
     public int? ItemLevel { get; set; }
+    public int? Hp { get; set; }
+    public int? MaxHp { get; set; }
+    public int? Mp { get; set; }
+    public int? MaxMp { get; set; }
     public string? Linkshell { get; set; }
     public int? Nation { get; set; }
     public string? MeritsJson { get; set; }

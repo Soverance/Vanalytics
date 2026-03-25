@@ -154,6 +154,11 @@ export interface BaseStats {
 
 export const STAT_KEYS: (keyof BaseStats)[] = ['hp', 'mp', 'str', 'dex', 'vit', 'agi', 'int', 'mnd', 'chr']
 
+// Master level bonuses — flat per ML (source: BGWiki Master Levels)
+const ML_BONUS_PER_LEVEL: BaseStats = {
+  hp: 7, mp: 2, str: 1, dex: 1, vit: 1, agi: 1, int: 1, mnd: 1, chr: 1,
+}
+
 export function calculateBaseStats(
   race: string | undefined,
   gender: string | undefined,
@@ -161,6 +166,7 @@ export function calculateBaseStats(
   mainLevel: number,
   subJob: string | undefined,
   subJobLevel: number,
+  masterLevel: number = 0,
 ): BaseStats {
   const result: BaseStats = { hp: 0, mp: 0, str: 0, dex: 0, vit: 0, agi: 0, int: 0, mnd: 0, chr: 0 }
 
@@ -201,5 +207,202 @@ export function calculateBaseStats(
     result[key] = Math.floor(val)
   }
 
+  // Master level bonuses
+  if (masterLevel > 0) {
+    for (const key of STAT_KEYS) {
+      result[key] += masterLevel * ML_BONUS_PER_LEVEL[key]
+    }
+  }
+
+  return result
+}
+
+// --- JP Gift System ---
+// Automatic combat stat bonuses unlocked at JP-spent thresholds per job.
+// Source: LandSandBoat job_point_gifts.sql
+// Each entry: [jpSpentThreshold, cumulativeValue]
+// The highest threshold <= jpSpent determines the active bonus.
+
+interface JPGiftTier { threshold: number; value: number }
+
+// Maps job abbreviation → combat stat key → tiers
+// Combat stat keys match GameItemDetail field names used in StatusPanel
+const JP_GIFTS: Record<string, Record<string, JPGiftTier[]>> = {
+  WAR: {
+    def:          [{ threshold: 5, value: 10 }, { threshold: 180, value: 15 }, { threshold: 605, value: 20 }, { threshold: 1280, value: 25 }],
+    attack:       [{ threshold: 10, value: 10 }, { threshold: 210, value: 15 }, { threshold: 660, value: 20 }, { threshold: 1360, value: 25 }],
+    evasion:      [{ threshold: 20, value: 5 }, { threshold: 245, value: 8 }, { threshold: 720, value: 10 }, { threshold: 1445, value: 13 }],
+    accuracy:     [{ threshold: 30, value: 5 }, { threshold: 280, value: 8 }, { threshold: 780, value: 10 }, { threshold: 1530, value: 13 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+  MNK: {
+    def:          [{ threshold: 5, value: 5 }, { threshold: 180, value: 8 }, { threshold: 605, value: 10 }, { threshold: 1280, value: 13 }],
+    attack:       [{ threshold: 10, value: 8 }, { threshold: 210, value: 12 }, { threshold: 660, value: 16 }, { threshold: 1360, value: 20 }],
+    evasion:      [{ threshold: 20, value: 6 }, { threshold: 245, value: 9 }, { threshold: 720, value: 12 }, { threshold: 1445, value: 15 }],
+    accuracy:     [{ threshold: 30, value: 6 }, { threshold: 280, value: 9 }, { threshold: 780, value: 12 }, { threshold: 1530, value: 15 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+  WHM: {
+    accuracy:     [{ threshold: 5, value: 2 }, { threshold: 180, value: 3 }, { threshold: 605, value: 4 }, { threshold: 1280, value: 5 }],
+    magicEvasion: [{ threshold: 10, value: 7 }, { threshold: 210, value: 11 }, { threshold: 660, value: 14 }, { threshold: 1360, value: 18 }],
+    magicAccuracy:[{ threshold: 20, value: 7 }, { threshold: 245, value: 11 }, { threshold: 720, value: 14 }, { threshold: 1445, value: 18 }],
+    magicDamage:  [{ threshold: 35, value: 3 }, { threshold: 320, value: 5 }, { threshold: 845, value: 6 }, { threshold: 1620, value: 8 }],
+  },
+  BLM: {
+    magicEvasion: [{ threshold: 5, value: 6 }, { threshold: 180, value: 9 }, { threshold: 605, value: 12 }, { threshold: 1280, value: 15 }],
+    magicAccuracy:[{ threshold: 10, value: 6 }, { threshold: 210, value: 9 }, { threshold: 660, value: 12 }, { threshold: 1360, value: 15 }],
+    magicDamage:  [{ threshold: 30, value: 7 }, { threshold: 280, value: 11 }, { threshold: 780, value: 14 }, { threshold: 1530, value: 18 }],
+  },
+  RDM: {
+    accuracy:     [{ threshold: 5, value: 3 }, { threshold: 180, value: 5 }, { threshold: 605, value: 6 }, { threshold: 1280, value: 8 }],
+    magicEvasion: [{ threshold: 10, value: 8 }, { threshold: 210, value: 12 }, { threshold: 660, value: 16 }, { threshold: 1360, value: 20 }],
+    magicAccuracy:[{ threshold: 20, value: 10 }, { threshold: 245, value: 15 }, { threshold: 720, value: 20 }, { threshold: 1445, value: 25 }],
+    magicDamage:  [{ threshold: 35, value: 4 }, { threshold: 320, value: 6 }, { threshold: 845, value: 8 }, { threshold: 1620, value: 10 }],
+  },
+  THF: {
+    def:          [{ threshold: 5, value: 4 }, { threshold: 180, value: 6 }, { threshold: 605, value: 8 }, { threshold: 1280, value: 10 }],
+    attack:       [{ threshold: 10, value: 7 }, { threshold: 210, value: 11 }, { threshold: 660, value: 14 }, { threshold: 1360, value: 18 }],
+    evasion:      [{ threshold: 20, value: 10 }, { threshold: 245, value: 15 }, { threshold: 720, value: 20 }, { threshold: 1445, value: 25 }],
+    accuracy:     [{ threshold: 30, value: 5 }, { threshold: 280, value: 8 }, { threshold: 780, value: 10 }, { threshold: 1530, value: 13 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+  PLD: {
+    def:          [{ threshold: 5, value: 15 }, { threshold: 180, value: 23 }, { threshold: 605, value: 30 }, { threshold: 1280, value: 38 }],
+    attack:       [{ threshold: 10, value: 4 }, { threshold: 210, value: 6 }, { threshold: 660, value: 8 }, { threshold: 1360, value: 10 }],
+    evasion:      [{ threshold: 20, value: 3 }, { threshold: 245, value: 5 }, { threshold: 720, value: 6 }, { threshold: 1445, value: 8 }],
+    accuracy:     [{ threshold: 30, value: 4 }, { threshold: 280, value: 6 }, { threshold: 780, value: 8 }, { threshold: 1530, value: 10 }],
+    magicEvasion: [{ threshold: 35, value: 6 }, { threshold: 320, value: 9 }, { threshold: 845, value: 12 }, { threshold: 1620, value: 15 }],
+    magicAccuracy:[{ threshold: 40, value: 6 }, { threshold: 360, value: 9 }, { threshold: 910, value: 12 }, { threshold: 1710, value: 15 }],
+  },
+  DRK: {
+    def:          [{ threshold: 5, value: 4 }, { threshold: 180, value: 6 }, { threshold: 605, value: 8 }, { threshold: 1280, value: 10 }],
+    attack:       [{ threshold: 10, value: 15 }, { threshold: 210, value: 23 }, { threshold: 660, value: 30 }, { threshold: 1360, value: 38 }],
+    evasion:      [{ threshold: 20, value: 3 }, { threshold: 245, value: 5 }, { threshold: 720, value: 6 }, { threshold: 1445, value: 8 }],
+    accuracy:     [{ threshold: 30, value: 3 }, { threshold: 280, value: 5 }, { threshold: 780, value: 6 }, { threshold: 1530, value: 8 }],
+    magicEvasion: [{ threshold: 35, value: 6 }, { threshold: 320, value: 9 }, { threshold: 845, value: 12 }, { threshold: 1620, value: 15 }],
+    magicAccuracy:[{ threshold: 40, value: 6 }, { threshold: 360, value: 9 }, { threshold: 910, value: 12 }, { threshold: 1710, value: 15 }],
+  },
+  BST: {
+    def:          [{ threshold: 5, value: 10 }, { threshold: 180, value: 15 }, { threshold: 605, value: 20 }, { threshold: 1280, value: 25 }],
+    attack:       [{ threshold: 10, value: 10 }, { threshold: 210, value: 15 }, { threshold: 660, value: 20 }, { threshold: 1360, value: 25 }],
+    evasion:      [{ threshold: 20, value: 5 }, { threshold: 245, value: 8 }, { threshold: 720, value: 10 }, { threshold: 1445, value: 13 }],
+    accuracy:     [{ threshold: 30, value: 5 }, { threshold: 280, value: 8 }, { threshold: 780, value: 10 }, { threshold: 1530, value: 13 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+  BRD: {
+    def:          [{ threshold: 5, value: 3 }, { threshold: 180, value: 5 }, { threshold: 605, value: 6 }, { threshold: 1280, value: 8 }],
+    evasion:      [{ threshold: 20, value: 3 }, { threshold: 245, value: 5 }, { threshold: 720, value: 6 }, { threshold: 1445, value: 8 }],
+    accuracy:     [{ threshold: 30, value: 2 }, { threshold: 280, value: 5 }, { threshold: 780, value: 6 }, { threshold: 1530, value: 8 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+  RNG: {
+    def:          [{ threshold: 5, value: 3 }, { threshold: 180, value: 5 }, { threshold: 605, value: 6 }, { threshold: 1280, value: 8 }],
+    attack:       [{ threshold: 10, value: 10 }, { threshold: 210, value: 15 }, { threshold: 660, value: 20 }, { threshold: 1360, value: 25 }],
+    evasion:      [{ threshold: 20, value: 2 }, { threshold: 245, value: 3 }, { threshold: 720, value: 4 }, { threshold: 1445, value: 5 }],
+    accuracy:     [{ threshold: 30, value: 10 }, { threshold: 280, value: 15 }, { threshold: 780, value: 20 }, { threshold: 1530, value: 25 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+  SAM: {
+    def:          [{ threshold: 5, value: 10 }, { threshold: 180, value: 15 }, { threshold: 605, value: 20 }, { threshold: 1280, value: 25 }],
+    attack:       [{ threshold: 10, value: 10 }, { threshold: 210, value: 15 }, { threshold: 660, value: 20 }, { threshold: 1360, value: 25 }],
+    evasion:      [{ threshold: 20, value: 5 }, { threshold: 245, value: 8 }, { threshold: 720, value: 10 }, { threshold: 1445, value: 13 }],
+    accuracy:     [{ threshold: 30, value: 5 }, { threshold: 280, value: 8 }, { threshold: 780, value: 10 }, { threshold: 1530, value: 13 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+  NIN: {
+    def:          [{ threshold: 5, value: 8 }, { threshold: 180, value: 12 }, { threshold: 605, value: 16 }, { threshold: 1280, value: 20 }],
+    attack:       [{ threshold: 10, value: 10 }, { threshold: 210, value: 15 }, { threshold: 660, value: 20 }, { threshold: 1360, value: 25 }],
+    evasion:      [{ threshold: 20, value: 9 }, { threshold: 245, value: 14 }, { threshold: 720, value: 18 }, { threshold: 1445, value: 23 }],
+    accuracy:     [{ threshold: 30, value: 8 }, { threshold: 280, value: 12 }, { threshold: 780, value: 16 }, { threshold: 1530, value: 20 }],
+    magicEvasion: [{ threshold: 35, value: 7 }, { threshold: 320, value: 11 }, { threshold: 845, value: 14 }, { threshold: 1620, value: 18 }],
+    magicAccuracy:[{ threshold: 40, value: 7 }, { threshold: 360, value: 11 }, { threshold: 910, value: 14 }, { threshold: 1710, value: 18 }],
+    magicDamage:  [{ threshold: 45, value: 4 }, { threshold: 400, value: 6 }, { threshold: 980, value: 8 }, { threshold: 1800, value: 10 }],
+  },
+  DRG: {
+    def:          [{ threshold: 5, value: 10 }, { threshold: 180, value: 15 }, { threshold: 605, value: 20 }, { threshold: 1280, value: 25 }],
+    attack:       [{ threshold: 10, value: 10 }, { threshold: 210, value: 15 }, { threshold: 660, value: 20 }, { threshold: 1360, value: 25 }],
+    evasion:      [{ threshold: 20, value: 5 }, { threshold: 245, value: 8 }, { threshold: 720, value: 10 }, { threshold: 1445, value: 13 }],
+    accuracy:     [{ threshold: 30, value: 9 }, { threshold: 280, value: 14 }, { threshold: 780, value: 18 }, { threshold: 1530, value: 23 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+  SMN: {
+    def:          [{ threshold: 5, value: 3 }, { threshold: 180, value: 5 }, { threshold: 605, value: 6 }, { threshold: 1280, value: 8 }],
+    evasion:      [{ threshold: 20, value: 3 }, { threshold: 245, value: 5 }, { threshold: 720, value: 6 }, { threshold: 1445, value: 8 }],
+    magicEvasion: [{ threshold: 35, value: 3 }, { threshold: 320, value: 5 }, { threshold: 845, value: 6 }, { threshold: 1620, value: 8 }],
+  },
+  BLU: {
+    def:          [{ threshold: 5, value: 10 }, { threshold: 180, value: 15 }, { threshold: 605, value: 20 }, { threshold: 1280, value: 25 }],
+    attack:       [{ threshold: 10, value: 10 }, { threshold: 210, value: 15 }, { threshold: 660, value: 20 }, { threshold: 1360, value: 25 }],
+    evasion:      [{ threshold: 20, value: 5 }, { threshold: 245, value: 8 }, { threshold: 720, value: 10 }, { threshold: 1445, value: 13 }],
+    accuracy:     [{ threshold: 30, value: 5 }, { threshold: 280, value: 8 }, { threshold: 780, value: 10 }, { threshold: 1530, value: 13 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+    magicDamage:  [{ threshold: 45, value: 5 }, { threshold: 400, value: 8 }, { threshold: 980, value: 10 }, { threshold: 1800, value: 13 }],
+  },
+  COR: {
+    def:          [{ threshold: 5, value: 3 }, { threshold: 180, value: 5 }, { threshold: 605, value: 6 }, { threshold: 1280, value: 8 }],
+    attack:       [{ threshold: 10, value: 5 }, { threshold: 210, value: 8 }, { threshold: 660, value: 10 }, { threshold: 1360, value: 13 }],
+    evasion:      [{ threshold: 20, value: 3 }, { threshold: 245, value: 5 }, { threshold: 720, value: 6 }, { threshold: 1445, value: 8 }],
+    accuracy:     [{ threshold: 30, value: 5 }, { threshold: 280, value: 8 }, { threshold: 780, value: 10 }, { threshold: 1530, value: 13 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+    magicDamage:  [{ threshold: 45, value: 2 }, { threshold: 400, value: 3 }, { threshold: 980, value: 4 }, { threshold: 1800, value: 5 }],
+  },
+  PUP: {
+    attack:       [{ threshold: 10, value: 6 }, { threshold: 210, value: 9 }, { threshold: 660, value: 12 }, { threshold: 1360, value: 15 }],
+    evasion:      [{ threshold: 20, value: 8 }, { threshold: 245, value: 12 }, { threshold: 720, value: 16 }, { threshold: 1445, value: 20 }],
+    accuracy:     [{ threshold: 30, value: 7 }, { threshold: 280, value: 11 }, { threshold: 780, value: 14 }, { threshold: 1530, value: 18 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+  DNC: {
+    def:          [{ threshold: 5, value: 6 }, { threshold: 180, value: 9 }, { threshold: 605, value: 12 }, { threshold: 1280, value: 15 }],
+    attack:       [{ threshold: 10, value: 6 }, { threshold: 210, value: 9 }, { threshold: 660, value: 12 }, { threshold: 1360, value: 15 }],
+    evasion:      [{ threshold: 20, value: 9 }, { threshold: 245, value: 14 }, { threshold: 720, value: 18 }, { threshold: 1445, value: 23 }],
+    accuracy:     [{ threshold: 30, value: 9 }, { threshold: 280, value: 14 }, { threshold: 780, value: 18 }, { threshold: 1530, value: 23 }],
+    magicEvasion: [{ threshold: 35, value: 5 }, { threshold: 320, value: 8 }, { threshold: 845, value: 10 }, { threshold: 1620, value: 13 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+  SCH: {
+    magicEvasion: [{ threshold: 5, value: 6 }, { threshold: 180, value: 9 }, { threshold: 605, value: 12 }, { threshold: 1280, value: 15 }],
+    magicAccuracy:[{ threshold: 10, value: 6 }, { threshold: 210, value: 9 }, { threshold: 660, value: 12 }, { threshold: 1360, value: 15 }],
+    magicDamage:  [{ threshold: 30, value: 5 }, { threshold: 280, value: 8 }, { threshold: 780, value: 10 }, { threshold: 1530, value: 13 }],
+  },
+  GEO: {
+    magicEvasion: [{ threshold: 5, value: 7 }, { threshold: 180, value: 11 }, { threshold: 605, value: 14 }, { threshold: 1280, value: 18 }],
+    magicAccuracy:[{ threshold: 10, value: 7 }, { threshold: 210, value: 11 }, { threshold: 660, value: 14 }, { threshold: 1360, value: 18 }],
+    magicDamage:  [{ threshold: 30, value: 6 }, { threshold: 280, value: 9 }, { threshold: 780, value: 12 }, { threshold: 1530, value: 15 }],
+  },
+  RUN: {
+    def:          [{ threshold: 5, value: 5 }, { threshold: 180, value: 8 }, { threshold: 605, value: 10 }, { threshold: 1280, value: 13 }],
+    attack:       [{ threshold: 10, value: 7 }, { threshold: 210, value: 11 }, { threshold: 660, value: 14 }, { threshold: 1360, value: 18 }],
+    evasion:      [{ threshold: 20, value: 8 }, { threshold: 245, value: 12 }, { threshold: 720, value: 16 }, { threshold: 1445, value: 20 }],
+    accuracy:     [{ threshold: 30, value: 8 }, { threshold: 280, value: 12 }, { threshold: 780, value: 16 }, { threshold: 1530, value: 20 }],
+    magicEvasion: [{ threshold: 35, value: 10 }, { threshold: 320, value: 15 }, { threshold: 845, value: 20 }, { threshold: 1620, value: 25 }],
+    magicAccuracy:[{ threshold: 40, value: 5 }, { threshold: 360, value: 8 }, { threshold: 910, value: 10 }, { threshold: 1710, value: 13 }],
+  },
+}
+
+/** Get JP gift bonuses for a job given total JP spent. Returns a map of combat stat key → bonus value. */
+export function getJPGiftBonuses(job: string, jpSpent: number): Record<string, number> {
+  const result: Record<string, number> = {}
+  const gifts = JP_GIFTS[job]
+  if (!gifts) return result
+
+  for (const [statKey, tiers] of Object.entries(gifts)) {
+    let bonus = 0
+    for (const tier of tiers) {
+      if (jpSpent >= tier.threshold) bonus = tier.value
+    }
+    if (bonus > 0) result[statKey] = bonus
+  }
   return result
 }

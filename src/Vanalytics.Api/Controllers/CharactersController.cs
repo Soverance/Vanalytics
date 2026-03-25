@@ -111,6 +111,10 @@ public class CharactersController : ControllerBase
         SubJobLevel = c.SubJobLevel,
         MasterLevel = c.MasterLevel,
         ItemLevel = c.ItemLevel,
+        Hp = c.Hp,
+        MaxHp = c.MaxHp,
+        Mp = c.Mp,
+        MaxMp = c.MaxMp,
         Linkshell = c.Linkshell,
         Nation = c.Nation,
         Merits = c.MeritsJson != null

@@ -190,7 +190,7 @@ local function read_character_state()
     local server = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
 
     -- Active job
-    local active_job = res.jobs[player.main_job] and res.jobs[player.main_job].ens or 'UNK'
+    local active_job = player.main_job
     local active_job_level = player.main_job_level
 
     -- All jobs with levels > 0, including JP/CP data
@@ -359,6 +359,10 @@ local function read_character_state()
         subJobLevel = player.sub_job_level,
         masterLevel = player.superior_level,
         itemLevel = player.item_level,
+        hp = player.vitals.hp,
+        maxHp = player.vitals.max_hp,
+        mp = player.vitals.mp,
+        maxMp = player.vitals.max_mp,
         linkshell = player.linkshell,
         nation = player.nation,
         merits = merits,

@@ -11,6 +11,7 @@ WORKDIR /app
 EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+ARG APP_VERSION=1.0.0
 WORKDIR /src
 COPY ["src/lib/Common/src/Soverance.Auth/Soverance.Auth.csproj", "src/lib/Common/src/Soverance.Auth/"]
 COPY ["src/lib/Common/src/Soverance.Data/Soverance.Data.csproj", "src/lib/Common/src/Soverance.Data/"]
@@ -19,7 +20,7 @@ COPY ["src/Vanalytics.Data/Vanalytics.Data.csproj", "src/Vanalytics.Data/"]
 COPY ["src/Vanalytics.Api/Vanalytics.Api.csproj", "src/Vanalytics.Api/"]
 RUN dotnet restore "src/Vanalytics.Api/Vanalytics.Api.csproj"
 COPY . .
-RUN dotnet publish "src/Vanalytics.Api/Vanalytics.Api.csproj" -c Release -o /app/publish
+RUN dotnet publish "src/Vanalytics.Api/Vanalytics.Api.csproj" -c Release -o /app/publish -p:Version=$APP_VERSION
 
 FROM base AS final
 WORKDIR /app

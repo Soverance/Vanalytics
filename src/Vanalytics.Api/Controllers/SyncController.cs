@@ -95,6 +95,10 @@ public class SyncController : ControllerBase
         character.SubJobLevel = request.SubJobLevel;
         character.MasterLevel = request.MasterLevel;
         character.ItemLevel = request.ItemLevel;
+        character.Hp = request.Hp;
+        character.MaxHp = request.MaxHp;
+        character.Mp = request.Mp;
+        character.MaxMp = request.MaxMp;
         character.Linkshell = request.Linkshell;
         character.Nation = request.Nation;
         character.MeritsJson = request.Merits is { Count: > 0 }
@@ -118,7 +122,7 @@ public class SyncController : ControllerBase
                 CharacterId = character.Id,
                 JobId = jobType,
                 Level = jobEntry.Level,
-                IsActive = jobEntry.Job.Equals(request.ActiveJob, StringComparison.OrdinalIgnoreCase),
+                IsActive = jobType.ToString().Equals(request.ActiveJob, StringComparison.OrdinalIgnoreCase),
                 JP = jobEntry.JP,
                 JPSpent = jobEntry.JPSpent,
                 CP = jobEntry.CP

@@ -59,6 +59,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           docker build -f src/Vanalytics.Api/Dockerfile . \
+            --build-arg APP_VERSION=${{ steps.version.outputs.version }} \
             -t soveranceacr.azurecr.io/vanalytics:v${{ steps.version.outputs.version }} \
             -t soveranceacr.azurecr.io/vanalytics:latest
           docker push soveranceacr.azurecr.io/vanalytics:v${{ steps.version.outputs.version }}
