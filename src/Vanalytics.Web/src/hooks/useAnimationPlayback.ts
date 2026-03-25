@@ -120,7 +120,7 @@ export function useAnimationPlayback({
     skeleton.bones.forEach(bone => {
       bone.updateMatrix()
     })
-    const rootBones = skeleton.bones.filter(b => !b.parent?.isBone)
+    const rootBones = skeleton.bones.filter(b => !(b.parent as THREE.Bone | null)?.isBone)
     rootBones.forEach(b => b.updateWorldMatrix(false, true))
 
     // Report frame for UI

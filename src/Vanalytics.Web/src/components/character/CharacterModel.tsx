@@ -79,7 +79,7 @@ export default function CharacterModel({
   // Shared skeleton — ALL SkinnedMeshes bind to the same skeleton instance
   // so animation updates are visible to every mesh
   const sharedSkeletonRef = useRef<THREE.Skeleton | null>(null)
-  const [skeletonReady, setSkeletonReady] = useState(false)
+  const [, setSkeletonReady] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -189,8 +189,8 @@ export default function CharacterModel({
         // Add root bone(s) to the group so they're in the scene graph
         // (required for SkinnedMesh world-space computation)
         if (groupRef.current) {
-          threeSkeleton.bones.forEach((bone, i) => {
-            if (!bone.parent || !bone.parent.isBone) {
+          threeSkeleton.bones.forEach((bone) => {
+            if (!bone.parent || !(bone.parent as THREE.Bone).isBone) {
               groupRef.current!.add(bone)
             }
           })

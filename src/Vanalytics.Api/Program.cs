@@ -7,6 +7,7 @@ using Soverance.Auth.Services;
 using Soverance.Forum.Extensions;
 using Soverance.Forum.Services;
 using Soverance.Data.Extensions;
+using Vanalytics.Api.Middleware;
 using Vanalytics.Api.Services;
 using Vanalytics.Api.Services.Sync;
 using Vanalytics.Data;
@@ -115,6 +116,12 @@ using (var scope = app.Services.CreateScope())
     }
 
 }
+
+// Global error handling — catches unhandled exceptions and returns clean JSON
+app.UseMiddleware<ExceptionHandlerMiddleware>();
+
+// Security headers on every response
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // HTTPS redirection in production (skipped when behind a reverse proxy
 // that terminates TLS, e.g., Azure Container Apps + Cloudflare)
