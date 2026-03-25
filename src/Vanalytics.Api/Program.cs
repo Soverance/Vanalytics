@@ -28,6 +28,20 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 
+// CORS — allow only configured origins (browser-enforced; does not affect non-browser
+// clients like the Windower addon, which use native HTTP and bypass CORS entirely)
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 builder.Services.AddOpenApi("v1", options =>
 {
     options.AddDocumentTransformer((document, context, ct) =>
@@ -174,6 +188,7 @@ else
 // Serve the embedded SPA (Vanalytics.Web built into wwwroot/)
 app.UseStaticFiles();
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapOpenApi();

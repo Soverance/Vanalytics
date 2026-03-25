@@ -57,8 +57,8 @@ export default function ModelViewer({ race, gender, gear: _gear, slotDatPaths, o
   void loadingSlots
 
   return (
-    <div className="flex-1 min-h-[440px]">
-      <div className="relative bg-gradient-to-b from-indigo-950/95 to-gray-950/98 border border-amber-800/20 rounded-t-md overflow-hidden" style={{ minHeight: '400px' }}>
+    <div className="flex-1">
+      <div className="relative h-[440px] bg-gradient-to-b from-indigo-950/95 to-gray-950/98 border border-amber-800/20 rounded-t-md overflow-hidden">
         <CharacterScene className="w-full h-full">
           <CharacterModel race={race} gender={gender} slots={slots}
             animationPaths={animPaths}

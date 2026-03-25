@@ -3,7 +3,8 @@ import type { ParsedAnimation, AnimationBone } from './types'
 
 const BLOCK_ANIM = 0x2B
 const DATHEAD_SIZE = 8
-const BLOCK_PADDING = 8
+// NOTE: Animation blocks (0x2B) have NO extra padding after the DATHEAD.
+// This differs from texture (0x20) and mesh (0x2A) blocks which have 8 bytes of padding.
 const DAT2B_HEADER_SIZE = 10
 const DAT2B_BONE_SIZE = 84
 
@@ -27,8 +28,8 @@ export function parseAnimationDat(buffer: ArrayBuffer): ParsedAnimation[] {
 
     if (type === BLOCK_ANIM) {
       try {
-        const dataStart = offset + DATHEAD_SIZE + BLOCK_PADDING
-        const dataLength = Math.max(0, blockSize - DATHEAD_SIZE - BLOCK_PADDING)
+        const dataStart = offset + DATHEAD_SIZE
+        const dataLength = Math.max(0, blockSize - DATHEAD_SIZE)
         const anim = parseAnimBlock(buffer, dataStart, dataLength)
         if (anim) animations.push(anim)
       } catch { /* skip malformed block */ }
