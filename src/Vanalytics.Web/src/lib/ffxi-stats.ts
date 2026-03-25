@@ -209,6 +209,68 @@ export function calculateBaseStats(
   return result
 }
 
+/** Break down base stat into its individual components for a single stat key */
+export function getBaseStatBreakdown(
+  statKey: keyof BaseStats,
+  race: string | undefined,
+  gender: string | undefined,
+  mainJob: string | undefined,
+  mainLevel: number,
+  subJob: string | undefined,
+  subJobLevel: number,
+): { label: string; value: number }[] {
+  const lines: { label: string; value: number }[] = []
+  const raceKey = toRaceKey(race, gender)
+  if (!raceKey || !mainJob) return lines
+
+  const raceGrades = RACE_GRADES[raceKey]
+  const jobGrades = JOB_GRADES[mainJob]
+  if (!raceGrades || !jobGrades) return lines
+
+  const subGrades = subJob ? JOB_GRADES[subJob] : null
+  const sLvl = Math.min(subJobLevel, Math.floor(mainLevel / 2))
+  const idx = STAT_KEYS.indexOf(statKey)
+
+  if (statKey === 'hp') {
+    const raceHP = calcHP(raceGrades[0], mainLevel)
+    const jobHP = calcHP(jobGrades[0], mainLevel)
+    const bonusHP = ((mainLevel >= 10 ? mainLevel - 10 : 0) + clamp(mainLevel - 50, 0, 10)) * 2
+    lines.push({ label: `Race (${raceKey})`, value: raceHP })
+    lines.push({ label: `Job (${mainJob})`, value: jobHP })
+    if (bonusHP > 0) lines.push({ label: 'Level bonus', value: bonusHP })
+    if (subGrades && subJob) {
+      const subHP = calcSubHP(subGrades[0], sLvl)
+      if (subHP > 0) lines.push({ label: `Sub (${subJob})`, value: subHP })
+    }
+  } else if (statKey === 'mp') {
+    const mainHasMP = jobGrades[1] > 0
+    const subHasMP = subGrades ? subGrades[1] > 0 : false
+    if (mainHasMP) {
+      lines.push({ label: `Race (${raceKey})`, value: calcMP(raceGrades[1], mainLevel) })
+      lines.push({ label: `Job (${mainJob})`, value: calcMP(jobGrades[1], mainLevel) })
+      if (subGrades && subJob) {
+        const subMP = calcSubMP(subGrades[1], sLvl)
+        if (subMP > 0) lines.push({ label: `Sub (${subJob})`, value: subMP })
+      }
+    } else if (subHasMP && subGrades && subJob) {
+      const raceMP = Math.floor(calcMP(raceGrades[1], sLvl) / 2)
+      lines.push({ label: `Race (${raceKey})`, value: raceMP })
+      lines.push({ label: `Sub (${subJob})`, value: calcSubMP(subGrades[1], sLvl) })
+    }
+  } else if (idx >= 2) {
+    const raceVal = calcStat(raceGrades[idx], mainLevel)
+    const jobVal = calcStat(jobGrades[idx], mainLevel)
+    lines.push({ label: `Race (${raceKey})`, value: Math.floor(raceVal) })
+    lines.push({ label: `Job (${mainJob})`, value: Math.floor(jobVal) })
+    if (subGrades && subJob) {
+      const subVal = calcSubStat(subGrades[idx], sLvl)
+      if (subVal > 0) lines.push({ label: `Sub (${subJob})`, value: Math.floor(subVal) })
+    }
+  }
+
+  return lines
+}
+
 // --- JP Gift System ---
 // Automatic combat stat bonuses unlocked at JP-spent thresholds per job.
 // Source: LandSandBoat job_point_gifts.sql

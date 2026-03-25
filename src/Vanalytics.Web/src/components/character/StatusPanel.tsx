@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import type { CharacterDetail, GearEntry, GameItemDetail } from '../../types/api'
-import { calculateBaseStats, STAT_KEYS, ML_BONUS_PER_LEVEL, getJPGiftBonuses } from '../../lib/ffxi-stats'
+import { calculateBaseStats, STAT_KEYS, getBaseStatBreakdown, getJPGiftBonuses } from '../../lib/ffxi-stats'
 import type { BaseStats } from '../../lib/ffxi-stats'
 
 interface StatusPanelProps {
@@ -12,17 +12,25 @@ interface StatusPanelProps {
 const TABS = ['Base', 'Combat', 'Skills'] as const
 type Tab = typeof TABS[number]
 
-/** Mapping from merit key to BaseStats key */
+/** Mapping from Windower merit key to BaseStats key */
 const MERIT_TO_STAT: Record<string, keyof BaseStats> = {
-  max_hp: 'hp',
-  max_mp: 'mp',
-  str: 'str',
-  dex: 'dex',
-  vit: 'vit',
-  agi: 'agi',
-  int: 'int',
-  mnd: 'mnd',
-  chr: 'chr',
+  max_hp: 'hp', max_mp: 'mp',
+  str: 'str', dex: 'dex', vit: 'vit', agi: 'agi', int: 'int', mnd: 'mnd', chr: 'chr',
+}
+
+/** Convert merit points spent → number of levels.
+ *  Windower reports total points invested (cost: 1+2+3+4+5=15 for 5 levels).
+ *  Each level gives +1 stat bonus (per LandSandBoat charutils.cpp). */
+function meritPointsToLevels(points: number): number {
+  let remaining = points
+  let levels = 0
+  let cost = 1
+  while (remaining >= cost && levels < 5) {
+    remaining -= cost
+    levels++
+    cost++
+  }
+  return levels
 }
 
 /** Combat stat keys displayed on the Combat tab */
@@ -87,10 +95,10 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
     [equippedIds, itemCache],
   )
 
-  // Base stats from race + job calculation (no ML — ML goes in bonus to match in-game)
+  // Base stats: race + job + merits (per LandSandBoat charutils.cpp)
   const baseStats = useMemo<BaseStats | null>(() => {
     if (!hasRaceAndJob) return null
-    return calculateBaseStats(
+    const stats = calculateBaseStats(
       character.race,
       character.gender,
       activeJob!.job,
@@ -98,14 +106,26 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
       character.subJob,
       character.subJobLevel ?? 0,
     )
-  }, [character.race, character.gender, activeJob, character.subJob, character.subJobLevel, hasRaceAndJob])
 
-  // Bonus stats from equipment + merits + master levels
+    // Merits go into base stats — each level gives +1 (LandSandBoat: merit value=1, max 5 upgrades)
+    if (character.merits) {
+      for (const [meritKey, statKey] of Object.entries(MERIT_TO_STAT)) {
+        const points = character.merits[meritKey]
+        if (points != null && points > 0) {
+          stats[statKey] += meritPointsToLevels(points)
+        }
+      }
+    }
+
+    return stats
+  }, [character.race, character.gender, activeJob, character.subJob, character.subJobLevel, character.merits, hasRaceAndJob])
+
+  // Bonus stats: equipment only (per LandSandBoat modifier system)
   const bonusStats = useMemo<BaseStats | null>(() => {
     if (!allItemsLoaded) return null
     const bonus: BaseStats = { hp: 0, mp: 0, str: 0, dex: 0, vit: 0, agi: 0, int: 0, mnd: 0, chr: 0 }
 
-    // Sum equipment stats
+    // Equipment stats
     for (const id of equippedIds) {
       const item = itemCache.get(id)
       if (!item) continue
@@ -115,26 +135,8 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
       }
     }
 
-    // Add merit bonuses
-    if (character.merits) {
-      for (const [meritKey, statKey] of Object.entries(MERIT_TO_STAT)) {
-        const count = character.merits[meritKey]
-        if (count != null && count > 0) {
-          bonus[statKey] += count
-        }
-      }
-    }
-
-    // Add master level bonuses
-    const ml = character.masterLevel ?? 0
-    if (ml > 0) {
-      for (const key of STAT_KEYS) {
-        bonus[key] += ml * ML_BONUS_PER_LEVEL[key]
-      }
-    }
-
     return bonus
-  }, [equippedIds, itemCache, allItemsLoaded, character.merits, character.masterLevel])
+  }, [equippedIds, itemCache, allItemsLoaded])
 
   // Combat stats from equipment only
   const combatStats = useMemo<Record<CombatStatKey, number> | null>(() => {
@@ -181,10 +183,26 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
       </div>
 
       {activeTab === 'Base' && (
-        <BaseTab baseStats={baseStats} bonusStats={bonusStats} hp={character.hp} maxHp={character.maxHp} mp={character.mp} maxMp={character.maxMp} />
+        <BaseTab
+          baseStats={baseStats}
+          bonusStats={bonusStats}
+          hp={character.hp}
+          maxHp={character.maxHp}
+          mp={character.mp}
+          maxMp={character.maxMp}
+          gear={gear}
+          itemCache={itemCache}
+          character={character}
+        />
       )}
       {activeTab === 'Combat' && (
-        <CombatTab combatStats={combatStats} allItemsLoaded={allItemsLoaded} />
+        <CombatTab
+          combatStats={combatStats}
+          allItemsLoaded={allItemsLoaded}
+          gear={gear}
+          itemCache={itemCache}
+          activeJob={activeJob}
+        />
       )}
       {activeTab === 'Skills' && <SkillsTab />}
     </div>
@@ -212,6 +230,94 @@ function VitalBar({ label, current, max, color }: { label: string; current?: num
   )
 }
 
+/** Reusable tooltip for stat breakdowns */
+function BreakdownTooltip({
+  title,
+  lines,
+  anchor,
+}: {
+  title: string
+  lines: { label: string; value: number }[]
+  anchor: HTMLElement
+}) {
+  const total = lines.reduce((sum, l) => sum + l.value, 0)
+  return (
+    <div
+      className="absolute z-50 w-64 rounded border border-gray-700 bg-gray-900 shadow-lg p-2 text-xs pointer-events-none"
+      style={{
+        top: anchor.offsetTop + anchor.offsetHeight + 4,
+        right: 0,
+      }}
+    >
+      <div className="text-gray-400 font-medium mb-1">{title}</div>
+      {lines.map((line, i) => (
+        <div key={i} className="flex justify-between py-0.5">
+          <span className="text-gray-300 truncate mr-2">{line.label}</span>
+          <span className={line.value > 0 ? 'text-green-400' : line.value < 0 ? 'text-red-400' : 'text-gray-500'}>
+            {line.value > 0 ? `+${line.value}` : line.value}
+          </span>
+        </div>
+      ))}
+      <div className="flex justify-between pt-1 mt-1 border-t border-gray-700 font-medium">
+        <span className="text-gray-300">Total</span>
+        <span className="text-gray-200">
+          {total >= 0 ? `+${total}` : total}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/** Build a breakdown of bonus sources for a specific stat (equipment only) */
+function buildBonusBreakdown(
+  statKey: keyof BaseStats,
+  gear: GearEntry[],
+  itemCache: Map<number, GameItemDetail>,
+): { label: string; value: number }[] {
+  const lines: { label: string; value: number }[] = []
+
+  for (const g of gear) {
+    if (g.itemId <= 0) continue
+    const item = itemCache.get(g.itemId)
+    if (!item) continue
+    const val = item[statKey]
+    if (val != null && val !== 0) {
+      lines.push({ label: `${g.slot}: ${item.name}`, value: val })
+    }
+  }
+
+  return lines
+}
+
+/** Build a breakdown of base stat sources (race + job + merits) */
+function buildBaseBreakdown(
+  statKey: keyof BaseStats,
+  character: CharacterDetail,
+  activeJob?: { job: string; level: number },
+): { label: string; value: number }[] {
+  const lines = getBaseStatBreakdown(
+    statKey,
+    character.race,
+    character.gender,
+    activeJob?.job,
+    activeJob?.level ?? 0,
+    character.subJob,
+    character.subJobLevel ?? 0,
+  )
+
+  // Merits (converted from points spent to levels, +1 per level)
+  const meritKey = Object.entries(MERIT_TO_STAT).find(([, v]) => v === statKey)?.[0]
+  if (meritKey && character.merits) {
+    const points = character.merits[meritKey]
+    if (points != null && points > 0) {
+      const levels = meritPointsToLevels(points)
+      if (levels > 0) lines.push({ label: `Merits (${levels})`, value: levels })
+    }
+  }
+
+  return lines
+}
+
 function BaseTab({
   baseStats,
   bonusStats,
@@ -219,6 +325,9 @@ function BaseTab({
   maxHp,
   mp,
   maxMp,
+  gear,
+  itemCache,
+  character,
 }: {
   baseStats: BaseStats | null
   bonusStats: BaseStats | null
@@ -226,7 +335,27 @@ function BaseTab({
   maxHp?: number
   mp?: number
   maxMp?: number
+  gear: GearEntry[]
+  itemCache: Map<number, GameItemDetail>
+  character: CharacterDetail
 }) {
+  const [hoveredCol, setHoveredCol] = useState<'base' | 'bonus' | null>(null)
+  const [hoveredStat, setHoveredStat] = useState<keyof BaseStats | null>(null)
+  const cellRefs = useRef<Map<string, HTMLTableCellElement>>(new Map())
+
+  const activeJob = character.jobs.find(j => j.isActive)
+
+  const breakdown = hoveredStat
+    ? hoveredCol === 'bonus'
+      ? buildBonusBreakdown(hoveredStat, gear, itemCache)
+      : buildBaseBreakdown(hoveredStat, character, activeJob)
+    : []
+
+  const hoveredCell = hoveredStat ? cellRefs.current.get(`${hoveredCol}-${hoveredStat}`) : null
+  const tooltipTitle = hoveredStat
+    ? `${STAT_LABELS[hoveredStat]} ${hoveredCol === 'bonus' ? 'Bonus' : 'Base'} Breakdown`
+    : ''
+
   return (
     <div>
       {/* HP/MP vitals with bars */}
@@ -234,71 +363,144 @@ function BaseTab({
       <VitalBar label="MP" current={mp} max={maxMp} color="bg-blue-500" />
 
       {/* Core stats table */}
-      <table className="w-full text-sm mt-2">
-        <thead>
-          <tr className="text-gray-400 border-b border-gray-700">
-            <th className="text-left py-1 font-medium">Stat</th>
-            <th className="text-right py-1 font-medium">Base</th>
-            <th className="text-right py-1 font-medium">Bonus</th>
-            <th className="text-right py-1 font-medium">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {CORE_STAT_KEYS.map(key => {
-            const base = baseStats ? baseStats[key] : null
-            const bonus = bonusStats ? bonusStats[key] : null
-            const total = base != null && bonus != null ? base + bonus : null
-            return (
-              <tr key={key} className="border-b border-gray-800">
-                <td className="py-1 text-gray-300">{STAT_LABELS[key]}</td>
-                <td className="py-1 text-right text-gray-300">
-                  {base != null ? base : '—'}
-                </td>
-                <td className={`py-1 text-right ${bonus != null && bonus > 0 ? 'text-green-400' : bonus != null && bonus < 0 ? 'text-red-400' : 'text-gray-500'}`}>
-                  {bonus != null ? (bonus > 0 ? `+${bonus}` : bonus < 0 ? `${bonus}` : '—') : '—'}
-                </td>
-                <td className="py-1 text-right text-gray-200 font-medium">
-                  {total != null ? total : '—'}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+      <div className="relative">
+        <table className="w-full text-sm mt-2">
+          <thead>
+            <tr className="text-gray-400 border-b border-gray-700">
+              <th className="text-left py-1 font-medium">Stat</th>
+              <th className="text-right py-1 font-medium">Base</th>
+              <th className="text-right py-1 font-medium">Bonus</th>
+              <th className="text-right py-1 font-medium">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {CORE_STAT_KEYS.map(key => {
+              const base = baseStats ? baseStats[key] : null
+              const bonus = bonusStats ? bonusStats[key] : null
+              const total = base != null && bonus != null ? base + bonus : null
+              return (
+                <tr key={key} className="border-b border-gray-800">
+                  <td className="py-1 text-gray-300">{STAT_LABELS[key]}</td>
+                  <td
+                    ref={el => { if (el) cellRefs.current.set(`base-${key}`, el) }}
+                    onMouseEnter={() => { if (base != null) { setHoveredCol('base'); setHoveredStat(key) } }}
+                    onMouseLeave={() => { setHoveredCol(null); setHoveredStat(null) }}
+                    className="py-1 text-right text-gray-300 cursor-default"
+                  >
+                    {base != null ? base : '—'}
+                  </td>
+                  <td
+                    ref={el => { if (el) cellRefs.current.set(`bonus-${key}`, el) }}
+                    onMouseEnter={() => { if (bonus != null) { setHoveredCol('bonus'); setHoveredStat(key) } }}
+                    onMouseLeave={() => { setHoveredCol(null); setHoveredStat(null) }}
+                    className={`py-1 text-right cursor-default ${bonus != null && bonus > 0 ? 'text-green-400' : bonus != null && bonus < 0 ? 'text-red-400' : 'text-gray-500'}`}
+                  >
+                    {bonus != null ? (bonus > 0 ? `+${bonus}` : bonus < 0 ? `${bonus}` : '—') : '—'}
+                  </td>
+                  <td className="py-1 text-right text-gray-200 font-medium">
+                    {total != null ? total : '—'}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+
+        {hoveredStat && breakdown.length > 0 && hoveredCell && (
+          <BreakdownTooltip title={tooltipTitle} lines={breakdown} anchor={hoveredCell} />
+        )}
+      </div>
     </div>
   )
+}
+
+function buildCombatBreakdown(
+  statKey: CombatStatKey,
+  gear: GearEntry[],
+  itemCache: Map<number, GameItemDetail>,
+  activeJob?: { job: string; jpSpent: number },
+): { label: string; value: number }[] {
+  const lines: { label: string; value: number }[] = []
+
+  for (const g of gear) {
+    if (g.itemId <= 0) continue
+    const item = itemCache.get(g.itemId)
+    if (!item) continue
+    const val = item[statKey]
+    if (val != null && val !== 0) {
+      lines.push({ label: `${g.slot}: ${item.name}`, value: val })
+    }
+  }
+
+  if (activeJob) {
+    const jpGifts = getJPGiftBonuses(activeJob.job, activeJob.jpSpent)
+    if (jpGifts[statKey]) {
+      lines.push({ label: `JP Gifts (${activeJob.job})`, value: jpGifts[statKey] })
+    }
+  }
+
+  return lines
 }
 
 function CombatTab({
   combatStats,
   allItemsLoaded,
+  gear,
+  itemCache,
+  activeJob,
 }: {
   combatStats: Record<CombatStatKey, number> | null
   allItemsLoaded: boolean
+  gear: GearEntry[]
+  itemCache: Map<number, GameItemDetail>
+  activeJob?: { job: string; level: number; jpSpent: number }
 }) {
+  const [hoveredStat, setHoveredStat] = useState<CombatStatKey | null>(null)
+  const cellRefs = useRef<Map<string, HTMLTableCellElement>>(new Map())
+
   if (!allItemsLoaded) {
     return <p className="text-gray-400 text-sm">Loading...</p>
   }
 
+  const breakdown = hoveredStat
+    ? buildCombatBreakdown(hoveredStat, gear, itemCache, activeJob)
+    : []
+  const hoveredCell = hoveredStat ? cellRefs.current.get(hoveredStat) : null
+
   return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-gray-400 border-b border-gray-700">
-          <th className="text-left py-1 font-medium">Stat</th>
-          <th className="text-right py-1 font-medium">Equipment</th>
-        </tr>
-      </thead>
-      <tbody>
-        {COMBAT_STAT_KEYS.map(key => (
-          <tr key={key} className="border-b border-gray-800">
-            <td className="py-1 text-gray-300">{COMBAT_STAT_LABELS[key]}</td>
-            <td className="py-1 text-right text-gray-200 font-medium">
-              {combatStats ? combatStats[key] : 0}
-            </td>
+    <div className="relative">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-gray-400 border-b border-gray-700">
+            <th className="text-left py-1 font-medium">Stat</th>
+            <th className="text-right py-1 font-medium">Total</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {COMBAT_STAT_KEYS.map(key => (
+            <tr key={key} className="border-b border-gray-800">
+              <td className="py-1 text-gray-300">{COMBAT_STAT_LABELS[key]}</td>
+              <td
+                ref={el => { if (el) cellRefs.current.set(key, el) }}
+                onMouseEnter={() => combatStats && combatStats[key] !== 0 ? setHoveredStat(key) : undefined}
+                onMouseLeave={() => setHoveredStat(null)}
+                className="py-1 text-right text-gray-200 font-medium cursor-default"
+              >
+                {combatStats ? combatStats[key] : 0}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {hoveredStat && breakdown.length > 0 && hoveredCell && (
+        <BreakdownTooltip
+          title={`${COMBAT_STAT_LABELS[hoveredStat]} Breakdown`}
+          lines={breakdown}
+          anchor={hoveredCell}
+        />
+      )}
+    </div>
   )
 }
 

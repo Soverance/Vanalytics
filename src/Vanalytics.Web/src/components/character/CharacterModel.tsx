@@ -5,7 +5,7 @@ import { parseDatFile, parseSkeletonDat, parseAnimationDat } from '../../lib/ffx
 import { SKELETON_PATHS } from '../../lib/ffxi-dat/SkeletonParser'
 import type { ParsedMesh, ParsedTexture, ParsedSkeleton, ParsedAnimation } from '../../lib/ffxi-dat'
 import { toRaceId } from '../../lib/model-mappings'
-import { useAnimationPlayback } from '../../hooks/useAnimationPlayback'
+import { useAnimationPlayback, type CpuSkinMesh } from '../../hooks/useAnimationPlayback'
 
 interface SlotModel {
   slotId: number
@@ -29,36 +29,6 @@ const datCache = new Map<string, { meshes: ParsedMesh[]; textures: ParsedTexture
 const skeletonCache = new Map<string, { matrices: number[][] | null; parsed: ParsedSkeleton | null }>()
 const animCache = new Map<string, ParsedAnimation[]>()
 
-function buildThreeSkeleton(skeleton: ParsedSkeleton): THREE.Skeleton {
-  const bones: THREE.Bone[] = skeleton.bones.map(() => new THREE.Bone())
-
-  // Set up parent hierarchy
-  skeleton.bones.forEach((b, i) => {
-    if (b.parentIndex >= 0 && b.parentIndex < bones.length) {
-      bones[b.parentIndex].add(bones[i])
-    }
-  })
-
-  // Set local transforms from bind pose
-  skeleton.bones.forEach((b, i) => {
-    const bone = bones[i]
-    bone.position.set(b.position[0], b.position[1], b.position[2])
-    bone.quaternion.set(b.rotation[0], b.rotation[1], b.rotation[2], b.rotation[3])
-    bone.updateMatrix()
-  })
-
-  // Compute world matrices for bind-pose inverse
-  const rootBones = bones.filter((_, i) => skeleton.bones[i].parentIndex < 0)
-  rootBones.forEach(b => b.updateWorldMatrix(false, true))
-
-  // Build inverse bind matrices
-  const bindMatrices = bones.map(bone =>
-    new THREE.Matrix4().copy(bone.matrixWorld).invert()
-  )
-
-  return new THREE.Skeleton(bones, bindMatrices)
-}
-
 export default function CharacterModel({
   race,
   gender,
@@ -75,26 +45,25 @@ export default function CharacterModel({
   const groupRef = useRef<THREE.Group>(null)
   const [loadedMeshes, setLoadedMeshes] = useState<Map<number, THREE.Mesh[]>>(new Map())
   const [animations, setAnimations] = useState<ParsedAnimation[]>([])
-  const [bindPose, setBindPose] = useState<Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion }> | null>(null)
-  // Shared skeleton — ALL SkinnedMeshes bind to the same skeleton instance
-  // so animation updates are visible to every mesh
-  const sharedSkeletonRef = useRef<THREE.Skeleton | null>(null)
-  const [, setSkeletonReady] = useState(false)
+
+  // CPU skinning data — no THREE.Skeleton or SkinnedMesh needed
+  const parsedSkeletonRef = useRef<ParsedSkeleton | null>(null)
+  const bindWorldMatricesRef = useRef<number[][] | null>(null)
+  const cpuSkinMeshesRef = useRef<CpuSkinMesh[]>([])
 
   useEffect(() => {
     let cancelled = false
 
-    async function loadSkeleton(): Promise<{ matrices: number[][] | null; threeSkeleton: THREE.Skeleton | null }> {
+    async function loadSkeleton(): Promise<{ matrices: number[][] | null; parsed: ParsedSkeleton | null }> {
       const raceId = toRaceId(race, gender)
-      if (!raceId) return { matrices: null, threeSkeleton: null }
+      if (!raceId) return { matrices: null, parsed: null }
 
       const skelPath = SKELETON_PATHS[raceId]
-      if (!skelPath) return { matrices: null, threeSkeleton: null }
+      if (!skelPath) return { matrices: null, parsed: null }
 
       const cached = skeletonCache.get(skelPath)
       if (cached !== undefined) {
-        const threeSkel = cached.parsed ? buildThreeSkeleton(cached.parsed) : null
-        return { matrices: cached.matrices, threeSkeleton: threeSkel }
+        return { matrices: cached.matrices, parsed: cached.parsed }
       }
 
       try {
@@ -102,11 +71,10 @@ export default function CharacterModel({
         const skeleton = parseSkeletonDat(buffer)
         const matrices = skeleton?.matrices ?? null
         skeletonCache.set(skelPath, { matrices, parsed: skeleton ?? null })
-        const threeSkel = skeleton ? buildThreeSkeleton(skeleton) : null
-        return { matrices, threeSkeleton: threeSkel }
+        return { matrices, parsed: skeleton ?? null }
       } catch {
         skeletonCache.set(skelPath, { matrices: null, parsed: null })
-        return { matrices: null, threeSkeleton: null }
+        return { matrices: null, parsed: null }
       }
     }
 
@@ -144,18 +112,18 @@ export default function CharacterModel({
             material = new THREE.MeshBasicMaterial({ color: 0x888888, side: THREE.DoubleSide })
           }
 
-          // SkinnedMesh — all meshes share the SAME skeleton so animation
-          // updates are visible to every mesh simultaneously
-          if (mesh.boneIndices.length > 0 && sharedSkeletonRef.current) {
-            geometry.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(
-              new Uint16Array(mesh.boneIndices), 4))
-            geometry.setAttribute('skinWeight', new THREE.BufferAttribute(mesh.boneWeights, 4))
-            const skinned = new THREE.SkinnedMesh(geometry, material)
-            skinned.bind(sharedSkeletonRef.current)
-            return skinned as THREE.Mesh
+          const threeMesh = new THREE.Mesh(geometry, material)
+
+          // Register for CPU skinning if this mesh has bone data
+          if (mesh.boneIndices.length > 0) {
+            cpuSkinMeshesRef.current.push({
+              geometry,
+              origPositions: new Float32Array(mesh.vertices),  // copy of bind-pose positions
+              boneIndices: mesh.boneIndices,
+            })
           }
 
-          return new THREE.Mesh(geometry, material)
+          return threeMesh
         })
 
         if (!cancelled) {
@@ -174,28 +142,14 @@ export default function CharacterModel({
     }
 
     async function loadAll() {
-      const { matrices, threeSkeleton } = await loadSkeleton()
+      const { matrices, parsed } = await loadSkeleton()
       if (cancelled) return
-      if (threeSkeleton) {
-        // Store shared skeleton and bind pose
-        sharedSkeletonRef.current = threeSkeleton
-        const bp = threeSkeleton.bones.map(b => ({
-          position: b.position.clone(),
-          quaternion: b.quaternion.clone(),
-        }))
-        setBindPose(bp)
-        setSkeletonReady(true)
 
-        // Add root bone(s) to the group so they're in the scene graph
-        // (required for SkinnedMesh world-space computation)
-        if (groupRef.current) {
-          threeSkeleton.bones.forEach((bone) => {
-            if (!bone.parent || !(bone.parent as THREE.Bone).isBone) {
-              groupRef.current!.add(bone)
-            }
-          })
-        }
-      }
+      // Store skeleton data for CPU skinning (no THREE.Skeleton needed)
+      parsedSkeletonRef.current = parsed
+      bindWorldMatricesRef.current = matrices
+      cpuSkinMeshesRef.current = []  // reset for new load
+
       slots.forEach(slot => loadSlot(slot, matrices))
     }
 
@@ -205,9 +159,6 @@ export default function CharacterModel({
 
   useEffect(() => {
     return () => {
-      // Dispose skeleton
-      sharedSkeletonRef.current?.dispose()
-      sharedSkeletonRef.current = null
       loadedMeshes.forEach(meshes => {
         meshes.forEach(mesh => {
           mesh.geometry.dispose()
@@ -229,9 +180,8 @@ export default function CharacterModel({
     }
     let cancelled = false
     async function loadAnims() {
-      // Each DAT contains multiple animation clips (~3 sections each: upper/lower/additional body).
-      // Load only the FIRST DAT path — it contains the animation for this entry.
-      // Each clip is 3 consecutive sections; take the first 3 for the primary animation.
+      // Load block 0 from the first DAT for now.
+      // TODO: proper animation-to-block-index mapping.
       const path = animationPaths![0]
       const cacheKey = `anim:${path}`
       let sections = animCache.get(cacheKey)
@@ -240,7 +190,7 @@ export default function CharacterModel({
           const buffer = await readFile(path)
           console.log('[CharModel] parsing anim DAT:', path, 'size:', buffer.byteLength)
           sections = parseAnimationDat(buffer, path)
-          console.log('[CharModel] parsed:', sections.length, 'sections from', path)
+          console.log('[CharModel] parsed:', sections.length, 'blocks from', path)
           animCache.set(cacheKey, sections)
         } catch (err) {
           console.warn('[CharModel] failed to load anim:', path, err)
@@ -248,21 +198,73 @@ export default function CharacterModel({
           return
         }
       }
-      // Each 0x2B block is a complete full-body animation clip.
-      // Take only the first one.
-      const clip = sections.slice(0, 1)
-      console.log('[CharModel] using', clip.length, 'sections, frames:', clip.map(s => s.frameCount), 'bones:', clip.map(s => s.bones.length))
+      // Log all sections to understand the body-part split
+      for (let i = 0; i < Math.min(sections.length, 5); i++) {
+        const s = sections[i]
+        const boneIdxs = s.bones.slice(0, 5).map(b => b.boneIndex)
+        console.log(`[CharModel] block[${i}]: ${s.frameCount} frames, speed=${s.speed}, ${s.bones.length} bones, first indices=[${boneIdxs}]`)
+      }
+      // DEBUG: Override with idle/breathing animation (ROM/71/99.dat motion 1 = "idl")
+      // Remove this override once animation selection is working
+      const debugAnimPath = 'ROM/71/99.dat'
+      const debugMotionIdx = 1  // 0=id1 (hands on hips), 1=idl (arms by sides, breathing)
+      let debugSections = animCache.get(`anim:${debugAnimPath}`)
+      if (!debugSections) {
+        try {
+          const buf = await readFile(debugAnimPath)
+          debugSections = parseAnimationDat(buf, debugAnimPath)
+          console.log(`[CharModel] DEBUG: parsed ${debugSections.length} blocks from ${debugAnimPath}`)
+          animCache.set(`anim:${debugAnimPath}`, debugSections)
+        } catch (err) {
+          console.warn('[CharModel] DEBUG: failed to load idle anim:', err)
+          debugSections = undefined
+        }
+      }
+      // Skip the original DAT entirely when debug override is active
+      if (debugSections) { sections = debugSections }
+      // Group blocks into motions: same frame count + speed, non-overlapping bones
+      const src = debugSections ?? sections
+      const motionGroups: typeof src[] = []
+      let currentGroup: typeof src = []
+      let currentBones = new Set<number>()
+      for (let i = 0; i < src.length; i++) {
+        const block = src[i]
+        const matchesTiming = currentGroup.length === 0 ||
+          (block.frameCount === currentGroup[0].frameCount &&
+           Math.abs(block.speed - currentGroup[0].speed) < 0.001)
+        // Check if this block's bones overlap with current group
+        const hasOverlap = block.bones.some(b => currentBones.has(b.boneIndex))
+
+        if (matchesTiming && !hasOverlap) {
+          currentGroup.push(block)
+          for (const b of block.bones) currentBones.add(b.boneIndex)
+        } else {
+          if (currentGroup.length > 0) motionGroups.push(currentGroup)
+          currentGroup = [block]
+          currentBones = new Set(block.bones.map(b => b.boneIndex))
+        }
+      }
+      if (currentGroup.length > 0) motionGroups.push(currentGroup)
+      console.log(`[CharModel] ${motionGroups.length} motions detected:`, motionGroups.map((g, i) =>
+        `motion${i}(${g.length}blk, ${g[0].frameCount}fr, ${g.reduce((s, b) => s + b.bones.length, 0)}bones)`
+      ).join(', '))
+      // Select motion (debugMotionIdx when overriding, else 0)
+      const motionIdx = debugSections ? debugMotionIdx : 0
+      const clip = motionGroups[motionIdx] ?? motionGroups[0] ?? src.slice(0, 1)
+      console.log(`[CharModel] using motion ${motionIdx}: ${clip.length} blocks, ${clip.reduce((s, b) => s + b.bones.length, 0)} bones`)
+      console.log('[CharModel] using', clip.length, '/', sections.length, 'sections, frames:', clip.map(s => s.frameCount), 'bones:', clip.map(s => s.bones.length))
       if (!cancelled) setAnimations(clip)
     }
     loadAnims()
     return () => { cancelled = true }
   }, [animationPaths, readFile])
 
-  // Wire up animation playback — uses the shared skeleton ref
+  // CPU skinning animation playback
   const { seekToFrame } = useAnimationPlayback({
     animations,
-    skeleton: sharedSkeletonRef.current,
-    bindPose,
+    skeleton: parsedSkeletonRef.current,
+    bindWorldMatrices: bindWorldMatricesRef.current,
+    meshes: cpuSkinMeshesRef.current,
     playing: animationPlaying ?? false,
     speed: animationSpeed ?? 1.0,
     onFrameUpdate: onAnimationFrame,
