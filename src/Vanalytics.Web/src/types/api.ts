@@ -171,6 +171,7 @@ export interface CategoryResponse {
   slug: string
   description: string
   displayOrder: number
+  isSystem: boolean
   threadCount: number
   lastActivityAt: string | null
 }
@@ -569,3 +570,33 @@ export interface InventoryItem {
 }
 
 export type InventoryByBag = Record<string, InventoryItem[]>
+
+// Relics types
+export interface RelicWeaponVersion {
+  itemId: number
+  name: string
+  iconPath: string | null
+  itemLevel: number | null
+  level: number | null
+  damage: number | null
+  delay: number | null
+  currentlyHeld: boolean
+}
+
+export interface RelicWeapon {
+  baseName: string
+  category: string
+  weaponSkill: string
+  versions: RelicWeaponVersion[]
+}
+
+export interface RelicCategoryProgress {
+  category: string
+  total: number
+  collected: number
+}
+
+export interface RelicsResponse {
+  progress: RelicCategoryProgress[]
+  weapons: RelicWeapon[]
+}

@@ -19,6 +19,16 @@ export default function ForumCategoryManager({ onCategoryChanged, editingCategor
 
   const isEditing = editingCategory != null
 
+  // System categories cannot be edited
+  if (isEditing && editingCategory.isSystem) {
+    return (
+      <div className="rounded-lg border border-gray-800 bg-gray-900 p-4 text-sm text-gray-400">
+        System categories cannot be modified.
+        <button onClick={onCancelEdit} className="ml-2 text-blue-400 hover:text-blue-300">Dismiss</button>
+      </div>
+    )
+  }
+
   // Sync form when editing category changes
   if (isEditing && name === '' && editingCategory.name !== '') {
     setName(editingCategory.name)

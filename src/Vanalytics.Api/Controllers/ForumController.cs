@@ -302,6 +302,11 @@ public class ForumController : ControllerBase
         if (request.Description?.Length > 500)
             return BadRequest(new { error = "Description must be 500 characters or less." });
 
+        var db = HttpContext.RequestServices.GetRequiredService<VanalyticsDbContext>();
+        var category = await db.Set<ForumCategory>().FindAsync(id);
+        if (category == null) return NotFound();
+        if (category.IsSystem) return BadRequest(new { error = "System categories cannot be modified." });
+
         var result = await _forum.UpdateCategoryAsync(id, request);
         return result != null ? Ok(result) : NotFound();
     }
@@ -310,6 +315,11 @@ public class ForumController : ControllerBase
     [HttpDelete("categories/{id}")]
     public async Task<IActionResult> DeleteCategory(int id)
     {
+        var db = HttpContext.RequestServices.GetRequiredService<VanalyticsDbContext>();
+        var category = await db.Set<ForumCategory>().FindAsync(id);
+        if (category == null) return NotFound();
+        if (category.IsSystem) return BadRequest(new { error = "System categories cannot be deleted." });
+
         var result = await _forum.DeleteCategoryAsync(id);
         if (!result) return Conflict(new { error = "Category not found or has threads." });
 

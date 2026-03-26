@@ -135,6 +135,8 @@ using (var scope = app.Services.CreateScope())
         await AdminSeeder.SeedAsync(db, adminEmail, adminUsername, adminPassword, logger);
     }
 
+    await ForumSeeder.SeedSystemCategoriesAsync(db);
+
     // Generate a dev JWT for Scalar API docs pre-authentication
     if (app.Environment.IsDevelopment())
     {

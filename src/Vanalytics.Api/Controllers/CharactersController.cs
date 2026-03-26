@@ -190,7 +190,6 @@ public class CharactersController : ControllerBase
                 {
                     BaseName = def.BaseName,
                     def.Category,
-                    def.Job,
                     def.WeaponSkill,
                     Versions = versions
                 });
