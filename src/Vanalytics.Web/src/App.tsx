@@ -29,7 +29,7 @@ import ForumNewThreadPage from './pages/ForumNewThreadPage'
 import ForumSearchPage from './pages/ForumSearchPage'
 import SessionsPage from './pages/SessionsPage'
 import SessionDetailPage from './pages/SessionDetailPage'
-import MacroEditorPage from './pages/MacroEditorPage'
+
 
 function SamlCodeHandler() {
   const { samlExchange } = useAuth()
@@ -110,7 +110,6 @@ export default function App() {
             {/* Protected routes */}
             <Route path="/characters" element={<ProtectedRoute><CharactersPage /></ProtectedRoute>} />
             <Route path="/characters/:id" element={<ProtectedRoute><CharacterDetailPage /></ProtectedRoute>} />
-            <Route path="/characters/:id/macros" element={<ProtectedRoute><MacroEditorPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/items" element={<ProtectedRoute><ItemDatabasePage /></ProtectedRoute>} />
             <Route path="/items/:id" element={<ProtectedRoute><ItemDetailPage /></ProtectedRoute>} />
