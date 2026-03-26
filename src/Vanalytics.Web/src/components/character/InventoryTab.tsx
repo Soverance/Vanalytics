@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { api } from '../../api/client'
-import type { InventoryByBag, InventoryItem } from '../../types/api'
+import type { InventoryByBag, InventoryItem, GameItemDetail } from '../../types/api'
+import ItemPreviewBox from '../economy/ItemPreviewBox'
 
 const BAG_ORDER = [
   'Inventory', 'Safe', 'Storage', 'Locker',
@@ -26,6 +27,12 @@ export default function InventoryTab({ characterId }: Props) {
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [categoryFilter, setCategoryFilter] = useState<string>('')
 
+  // Tooltip state
+  const [hoveredItemId, setHoveredItemId] = useState<number | null>(null)
+  const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null)
+  const [itemDetailCache, setItemDetailCache] = useState<Map<number, GameItemDetail>>(new Map())
+  const containerRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     setLoading(true)
     api<InventoryByBag>(`/api/characters/${characterId}/inventory`)
@@ -43,7 +50,6 @@ export default function InventoryTab({ characterId }: Props) {
     return BAG_ORDER.filter(b => inventory[b] && inventory[b].length > 0)
   }, [inventory])
 
-  // All categories across all bags for the filter dropdown
   const allCategories = useMemo(() => {
     if (!inventory) return []
     const cats = new Set<string>()
@@ -57,7 +63,6 @@ export default function InventoryTab({ characterId }: Props) {
 
   const isSearching = search.length > 0
 
-  // Search results across all bags
   const searchResults = useMemo(() => {
     if (!inventory || !isSearching) return []
     const q = search.toLowerCase()
@@ -74,7 +79,6 @@ export default function InventoryTab({ characterId }: Props) {
     return results
   }, [inventory, search, isSearching])
 
-  // Items for the active bag tab — filtered and sorted
   const activeItems = useMemo(() => {
     if (!inventory || !activeBag || !inventory[activeBag]) return []
     let items = [...inventory[activeBag]]
@@ -123,13 +127,84 @@ export default function InventoryTab({ characterId }: Props) {
     }
   }
 
+  // Tooltip hover handlers
+  const handleRowEnter = useCallback((itemId: number) => {
+    setHoveredItemId(itemId)
+    if (!itemDetailCache.has(itemId)) {
+      api<GameItemDetail>(`/api/items/${itemId}`)
+        .then(detail => {
+          setItemDetailCache(prev => new Map(prev).set(itemId, detail))
+        })
+        .catch(() => {})
+    }
+  }, [itemDetailCache])
+
+  const tooltipRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const margin = 16
+    let left = e.clientX + margin
+    let top = e.clientY + margin
+
+    // If we have a rendered tooltip, use its actual dimensions
+    const el = tooltipRef.current
+    if (el) {
+      const tooltipH = el.offsetHeight
+      const tooltipW = el.offsetWidth
+
+      if (left + tooltipW > window.innerWidth) {
+        left = e.clientX - tooltipW - margin
+      }
+
+      // Flip to just above the cursor (anchor bottom of tooltip to cursor)
+      if (top + tooltipH > window.innerHeight) {
+        top = e.clientY - tooltipH - margin
+      }
+    }
+
+    setTooltipPos({ top, left })
+  }, [])
+
+  const handleRowLeave = useCallback(() => {
+    setHoveredItemId(null)
+    setTooltipPos(null)
+  }, [])
+
+  const hoveredDetail = hoveredItemId ? itemDetailCache.get(hoveredItemId) ?? null : null
+
   if (loading) return <p className="text-gray-400 py-4">Loading inventory...</p>
   if (!inventory || availableBags.length === 0) {
     return <p className="text-gray-400 py-4">No inventory data yet.</p>
   }
 
+  const renderRow = (item: InventoryItem & { bag?: string }, key: string, showBag?: boolean) => (
+    <tr
+      key={key}
+      className={`border-t border-gray-700/50 hover:bg-gray-800/50${showBag ? ' cursor-pointer' : ''}`}
+      onClick={showBag ? () => handleSearchResultClick(item.bag!) : undefined}
+      onMouseEnter={() => handleRowEnter(item.itemId)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleRowLeave}
+    >
+      <td className="px-4 py-1.5">
+        {item.iconPath && (
+          <img src={`/item-images/${item.iconPath}`} alt="" className="w-8 h-auto object-contain" loading="lazy" />
+        )}
+      </td>
+      <td className="px-4 py-1.5 text-gray-100">
+        {item.itemName}
+        <span className="ml-2 text-gray-600 text-xs">#{item.itemId}</span>
+      </td>
+      <td className="px-4 py-1.5 text-gray-400">{item.category ?? '\u2014'}</td>
+      {showBag && <td className="px-4 py-1.5 text-gray-400">{item.bag}</td>}
+      <td className="px-4 py-1.5 text-right text-gray-300">
+        {item.quantity}{item.stackSize > 1 ? `/${item.stackSize}` : ''}
+      </td>
+    </tr>
+  )
+
   return (
-    <div>
+    <div className="relative" ref={containerRef}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold">Inventory</h2>
         <div className="relative w-64">
@@ -161,41 +236,24 @@ export default function InventoryTab({ characterId }: Props) {
             <p className="text-gray-400 text-xs mb-2">
               {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} across all bags
             </p>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
-                  <th className="px-4 py-2 text-left w-10"></th>
-                  <th className="px-4 py-2 text-left">Item</th>
-                  <th className="px-4 py-2 text-left">Category</th>
-                  <th className="px-4 py-2 text-left">Bag</th>
-                  <th className="px-4 py-2 text-right w-20">Qty</th>
-                </tr>
-              </thead>
-              <tbody>
-                {searchResults.map(item => (
-                  <tr
-                    key={`${item.bag}-${item.slotIndex}-${item.itemId}`}
-                    className="border-t border-gray-700/50 hover:bg-gray-800/50 cursor-pointer"
-                    onClick={() => handleSearchResultClick(item.bag)}
-                  >
-                    <td className="px-4 py-1.5">
-                      {item.iconPath && (
-                        <img src={`/item-images/${item.iconPath}`} alt="" className="w-6 h-6" loading="lazy" />
-                      )}
-                    </td>
-                    <td className="px-4 py-1.5 text-gray-100">
-                      {item.itemName}
-                      <span className="ml-2 text-gray-600 text-xs">#{item.itemId}</span>
-                    </td>
-                    <td className="px-4 py-1.5 text-gray-400">{item.category ?? '\u2014'}</td>
-                    <td className="px-4 py-1.5 text-gray-400">{item.bag}</td>
-                    <td className="px-4 py-1.5 text-right text-gray-300">
-                      {item.quantity}{item.stackSize > 1 ? `/${item.stackSize}` : ''}
-                    </td>
+            <div className="max-h-[480px] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
+                    <th className="px-4 py-2 text-left w-12"></th>
+                    <th className="px-4 py-2 text-left">Item</th>
+                    <th className="px-4 py-2 text-left">Category</th>
+                    <th className="px-4 py-2 text-left">Bag</th>
+                    <th className="px-4 py-2 text-right w-20">Qty</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {searchResults.map(item =>
+                    renderRow(item, `${item.bag}-${item.slotIndex}-${item.itemId}`, true)
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )
       )}
@@ -240,56 +298,52 @@ export default function InventoryTab({ characterId }: Props) {
                 {categoryFilter ? 'No items in this category.' : 'This bag is empty.'}
               </p>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
-                    <th className="px-4 py-2 text-left w-10"></th>
-                    <th
-                      className="px-4 py-2 text-left cursor-pointer hover:text-gray-200 select-none"
-                      onClick={() => handleSort('itemName')}
-                    >
-                      Item{sortIndicator('itemName')}
-                    </th>
-                    <th
-                      className="px-4 py-2 text-left cursor-pointer hover:text-gray-200 select-none"
-                      onClick={() => handleSort('category')}
-                    >
-                      Category{sortIndicator('category')}
-                    </th>
-                    <th
-                      className="px-4 py-2 text-right cursor-pointer hover:text-gray-200 select-none w-20"
-                      onClick={() => handleSort('quantity')}
-                    >
-                      Qty{sortIndicator('quantity')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeItems.map(item => (
-                    <tr
-                      key={`${item.slotIndex}-${item.itemId}`}
-                      className="border-t border-gray-700/50 hover:bg-gray-800/50"
-                    >
-                      <td className="px-4 py-1.5">
-                        {item.iconPath && (
-                          <img src={`/item-images/${item.iconPath}`} alt="" className="w-6 h-6" loading="lazy" />
-                        )}
-                      </td>
-                      <td className="px-4 py-1.5 text-gray-100">
-                        {item.itemName}
-                        <span className="ml-2 text-gray-600 text-xs">#{item.itemId}</span>
-                      </td>
-                      <td className="px-4 py-1.5 text-gray-400">{item.category ?? '\u2014'}</td>
-                      <td className="px-4 py-1.5 text-right text-gray-300">
-                        {item.quantity}{item.stackSize > 1 ? `/${item.stackSize}` : ''}
-                      </td>
+              <div className="max-h-[480px] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
+                      <th className="px-4 py-2 text-left w-12"></th>
+                      <th
+                        className="px-4 py-2 text-left cursor-pointer hover:text-gray-200 select-none"
+                        onClick={() => handleSort('itemName')}
+                      >
+                        Item{sortIndicator('itemName')}
+                      </th>
+                      <th
+                        className="px-4 py-2 text-left cursor-pointer hover:text-gray-200 select-none"
+                        onClick={() => handleSort('category')}
+                      >
+                        Category{sortIndicator('category')}
+                      </th>
+                      <th
+                        className="px-4 py-2 text-right cursor-pointer hover:text-gray-200 select-none w-20"
+                        onClick={() => handleSort('quantity')}
+                      >
+                        Qty{sortIndicator('quantity')}
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {activeItems.map(item =>
+                      renderRow(item, `${item.slotIndex}-${item.itemId}`)
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )
           )}
         </>
+      )}
+
+      {/* Item preview tooltip */}
+      {hoveredDetail && tooltipPos && (
+        <div
+          ref={tooltipRef}
+          className="fixed z-50 pointer-events-none"
+          style={{ top: tooltipPos.top, left: tooltipPos.left }}
+        >
+          <ItemPreviewBox item={hoveredDetail} />
+        </div>
       )}
     </div>
   )

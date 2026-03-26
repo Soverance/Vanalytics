@@ -182,6 +182,7 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
         ))}
       </div>
 
+      <div className="min-h-[320px]">
       {activeTab === 'Base' && (
         <BaseTab
           baseStats={baseStats}
@@ -205,6 +206,7 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
         />
       )}
       {activeTab === 'Skills' && <SkillsTab />}
+      </div>
     </div>
   )
 }

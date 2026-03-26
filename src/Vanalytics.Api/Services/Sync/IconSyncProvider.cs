@@ -77,6 +77,33 @@ public class IconSyncProvider : ISyncProvider
                 .ExecuteUpdateAsync(s => s.SetProperty(i => i.IconPath, (string?)null), ct);
         }
 
+        // Backfill DB paths for items that have icons in storage but null IconPath
+        var missingPaths = allItems
+            .Where(i => i.IconPath == null && existingInStorage.Contains(i.ItemId))
+            .Select(i => i.ItemId)
+            .ToList();
+
+        if (missingPaths.Count > 0)
+        {
+            _logger.LogInformation("Backfilling {Count} icon paths from existing storage", missingPaths.Count);
+            foreach (var batch in missingPaths.Chunk(DbBatchSize))
+            {
+                var batchSet = batch.ToHashSet();
+                await db.GameItems
+                    .Where(i => batchSet.Contains(i.ItemId))
+                    .ExecuteUpdateAsync(s => s.SetProperty(
+                        i => i.IconPath,
+                        i => "icons/" + i.ItemId + ".png"), ct);
+            }
+
+            progress.Report(new SyncProgressEvent
+            {
+                ProviderId = ProviderId,
+                Type = SyncEventType.Progress,
+                Message = $"Backfilled {missingPaths.Count} icon paths from existing storage."
+            });
+        }
+
         var needingIcons = allItems
             .Where(i => !existingInStorage.Contains(i.ItemId))
             .ToList();

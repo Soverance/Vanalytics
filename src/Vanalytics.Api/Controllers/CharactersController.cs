@@ -119,6 +119,101 @@ public class CharactersController : ControllerBase
         return Ok(grouped);
     }
 
+    [HttpGet("{id:guid}/relics")]
+    public async Task<IActionResult> GetRelics(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        // Collect all item IDs this character has ever held
+        var currentItemIds = await _db.CharacterInventories
+            .Where(i => i.CharacterId == id)
+            .Select(i => i.ItemId)
+            .Distinct()
+            .ToListAsync();
+
+        var historicalItemIds = await _db.InventoryChanges
+            .Where(c => c.CharacterId == id && c.ChangeType == Vanalytics.Core.Enums.InventoryChangeType.Added)
+            .Select(c => c.ItemId)
+            .Distinct()
+            .ToListAsync();
+
+        var everHeldIds = currentItemIds.Union(historicalItemIds).ToHashSet();
+
+        // Get all weapon base names to search for
+        var weaponDefs = Vanalytics.Core.Data.UltimateWeapons.All;
+        var baseNames = weaponDefs.Select(w => w.BaseName).Distinct().ToList();
+
+        // Find all GameItems matching any ultimate weapon name
+        var matchingItems = await _db.GameItems
+            .Where(gi => baseNames.Contains(gi.Name))
+            .Select(gi => new
+            {
+                gi.ItemId,
+                gi.Name,
+                gi.IconPath,
+                gi.Category,
+                gi.ItemLevel,
+                gi.Level,
+                gi.Damage,
+                gi.Delay
+            })
+            .ToListAsync();
+
+        // Build response: for each weapon def, find matching items the player has held
+        var results = new List<object>();
+
+        foreach (var def in weaponDefs.DistinctBy(d => d.BaseName))
+        {
+            var versions = matchingItems
+                .Where(gi => gi.Name == def.BaseName && everHeldIds.Contains(gi.ItemId))
+                .Select(gi => new
+                {
+                    gi.ItemId,
+                    gi.Name,
+                    gi.IconPath,
+                    gi.ItemLevel,
+                    gi.Level,
+                    gi.Damage,
+                    gi.Delay,
+                    CurrentlyHeld = currentItemIds.Contains(gi.ItemId)
+                })
+                .OrderByDescending(v => v.ItemLevel ?? v.Level ?? 0)
+                .ToList();
+
+            if (versions.Count > 0)
+            {
+                results.Add(new
+                {
+                    BaseName = def.BaseName,
+                    def.Category,
+                    def.Job,
+                    def.WeaponSkill,
+                    Versions = versions
+                });
+            }
+        }
+
+        // Build progress per category
+        var progress = weaponDefs
+            .DistinctBy(d => d.BaseName)
+            .GroupBy(d => d.Category)
+            .Select(g => new
+            {
+                Category = g.Key,
+                Total = g.Count(),
+                Collected = g.Count(d =>
+                    matchingItems.Any(gi => gi.Name == d.BaseName && everHeldIds.Contains(gi.ItemId)))
+            })
+            .OrderBy(p => p.Category)
+            .ToList();
+
+        return Ok(new { progress, weapons = results });
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {

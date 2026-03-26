@@ -141,7 +141,7 @@ export default function CharacterDetailPage() {
                 </button>
               ))}
             </div>
-            <div>
+            <div className="min-h-[400px]">
               {activeTab === 'Jobs' && <JobsGrid jobs={character.jobs} />}
               {activeTab === 'Crafting' && <CraftingTable skills={character.craftingSkills} />}
             </div>
