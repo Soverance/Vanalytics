@@ -82,9 +82,16 @@ export function useSlotDatPaths(
           const slotId = SLOT_NAME_TO_ID[gearEntry.slot]
           if (!slotId || gearEntry.itemId <= 0) continue
 
-          const mapping = itemMappings.find(
+          let mapping = itemMappings.find(
             m => m.itemId === gearEntry.itemId && m.slotId === slotId
           )
+          // Sub-hand weapons share the same visual model as main hand.
+          // Fall back to main slot mapping if sub has no dedicated entry.
+          if (!mapping && slotId === 8) {
+            mapping = itemMappings.find(
+              m => m.itemId === gearEntry.itemId && m.slotId === 7
+            )
+          }
           if (!mapping) continue
 
           equippedSlotIds.add(slotId)

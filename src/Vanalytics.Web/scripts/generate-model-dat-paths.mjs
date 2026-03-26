@@ -151,11 +151,23 @@ async function fetchLsbEquipment() {
     const slotId = SLOT_BITMASK_TO_ID[slotBitmask]
     if (!slotId) continue
 
-    if (!bySlot.has(slotId)) bySlot.set(slotId, new Map())
-    const slotMap = bySlot.get(slotId)
-    if (!slotMap.has(modelId)) slotMap.set(modelId, new Set())
-    slotMap.get(modelId).add(normalizeName(name))
+    const normalized = normalizeName(name)
+    const addToSlot = (sid) => {
+      if (!bySlot.has(sid)) bySlot.set(sid, new Map())
+      const slotMap = bySlot.get(sid)
+      if (!slotMap.has(modelId)) slotMap.set(modelId, new Set())
+      slotMap.get(modelId).add(normalized)
+    }
+
+    addToSlot(slotId)
     total++
+
+    // Slot bitmask 3 = Main+Sub (dual-wieldable weapons).
+    // Add to Sub slot too so cross-reference covers sub-hand models.
+    if (slotBitmask === 3) {
+      addToSlot(8)
+      total++
+    }
   }
 
   console.log(`  Parsed ${total} equipment entries across ${bySlot.size} slots`)

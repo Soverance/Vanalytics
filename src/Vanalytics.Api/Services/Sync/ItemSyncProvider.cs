@@ -308,6 +308,13 @@ public class ItemSyncProvider : ISyncProvider
             if (!SlotBitmaskToModelSlot.TryGetValue(slot, out var modelSlotId)) continue;
 
             parsed.Add((itemId, modelId, modelSlotId));
+
+            // Slot bitmask 3 = Main+Sub (dual-wieldable weapons).
+            // Add a Sub slot entry too so the model viewer renders sub-hand weapons.
+            if (slot == 3)
+            {
+                parsed.Add((itemId, modelId, 8));
+            }
         }
 
         progress.Report(new SyncProgressEvent
