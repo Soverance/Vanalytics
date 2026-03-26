@@ -319,16 +319,16 @@ function FlyCamera({ center, size, onSpeedChange }: { center: THREE.Vector3; siz
       if (e.code === 'KeyS') moveState.current.backward = true
       if (e.code === 'KeyA') moveState.current.left = true
       if (e.code === 'KeyD') moveState.current.right = true
-      if (e.code === 'Space') moveState.current.up = true
-      if (e.code === 'ShiftLeft') moveState.current.down = true
+      if (e.code === 'Space' || e.code === 'KeyE') moveState.current.up = true
+      if (e.code === 'ShiftLeft' || e.code === 'KeyQ') moveState.current.down = true
     }
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.code === 'KeyW') moveState.current.forward = false
       if (e.code === 'KeyS') moveState.current.backward = false
       if (e.code === 'KeyA') moveState.current.left = false
       if (e.code === 'KeyD') moveState.current.right = false
-      if (e.code === 'Space') moveState.current.up = false
-      if (e.code === 'ShiftLeft') moveState.current.down = false
+      if (e.code === 'Space' || e.code === 'KeyE') moveState.current.up = false
+      if (e.code === 'ShiftLeft' || e.code === 'KeyQ') moveState.current.down = false
     }
     const onWheel = (e: WheelEvent) => {
       speed.current = Math.max(0.05, speed.current * (e.deltaY > 0 ? 1.25 : 0.8))

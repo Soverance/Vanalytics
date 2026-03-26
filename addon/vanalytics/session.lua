@@ -15,6 +15,8 @@ local uploaded_count = 0
 local start_time = nil
 local player_name = nil
 local server_name = nil
+local debug_mode = false
+local debug_handle = nil
 
 -- Dependencies injected via init
 local settings = nil
@@ -92,10 +94,57 @@ local function api_post(endpoint, body_table)
 end
 
 -----------------------------------------------------------------------
+-- Internal: strip FFXI control characters from chat text.
+-- \x07 (BEL) is FFXI's sentence separator — replace with space so
+-- multi-sentence patterns like "uses WS. Target takes N damage" match.
+-- Individual control bytes are stripped; we avoid stripping "next byte"
+-- patterns like \x1E. because FFXI embeds color codes densely throughout
+-- text and the 2-byte approach eats actual content.
+-----------------------------------------------------------------------
+local CHAR_BEL = string.char(7)   -- \x07 — FFXI sentence separator
+local CHAR_1E = string.char(0x1E) -- color/control marker
+
+local function sanitize(line)
+    -- Replace BEL (sentence separator) with space BEFORE stripping
+    line = line:gsub(CHAR_BEL, ' ')
+    -- Strip individual non-printable bytes (control chars below 0x20 except space/newline)
+    -- Also strip the trailing \x1E\x31 end-of-message marker: \x1E is stripped here,
+    -- and the orphaned "1" (0x31) is trimmed at the end.
+    local out = {}
+    for i = 1, #line do
+        local b = line:byte(i)
+        if b >= 0x20 or b == 0x0A then
+            out[#out + 1] = line:sub(i, i)
+        end
+    end
+    local result = table.concat(out)
+    -- Trim trailing "1" left from \x1E\x31 end-of-message marker
+    if result:sub(-1) == '1' and result:sub(-2, -2) == '.' then
+        result = result:sub(1, -2)
+    end
+    return result
+end
+
+-----------------------------------------------------------------------
+-- Internal: parse a number that may contain commas (e.g., "9,888")
+-----------------------------------------------------------------------
+local function parse_number(s)
+    return tonumber(s:gsub(',', ''))
+end
+
+-----------------------------------------------------------------------
 -- Internal: parse a chat log line into a structured event
 -----------------------------------------------------------------------
 local function parse_line(line)
+    line = sanitize(line)
     local source, target, dmg, ability, hp, who, item, count, amount, element
+
+    -- Critical hit damage: "Player scores a critical hit! Target takes N points of damage."
+    -- BEL after "!" becomes space, so there may be leading space on target — trim it.
+    source, target, dmg = line:match("(.+) scores a critical hit!%s*(.+) takes (%d+) points of damage%.")
+    if source then
+        return {t='MeleeDamage', s=source, tg=target, v=tonumber(dmg)}
+    end
 
     -- Melee damage: "Player hits Target for N points of damage."
     source, target, dmg = line:match("(.+) hits (.+) for (%d+) points of damage%.")
@@ -133,8 +182,14 @@ local function parse_line(line)
         return {t='Healing', s=source, tg=target, v=tonumber(hp), a=ability}
     end
 
+    -- HP/MP drain: "Player uses Ability. N HP drained from Target."
+    source, ability, hp, target = line:match("(.+) uses (.+)%. (%d+) HP drained from (.+)%.")
+    if source then
+        return {t='Healing', s=source, tg=target, v=tonumber(hp), a=ability}
+    end
+
     -- Ability used (no damage/healing result): "Player uses Ability."
-    -- This must come AFTER the "uses ... takes N damage" and "uses ... recovers N HP" patterns
+    -- This must come AFTER the "uses ... takes N damage", "recovers N HP", and "HP drained" patterns
     -- so damage/healing abilities match those first.
     source, ability = line:match("(.+) uses (.+)%.")
     if source and ability then
@@ -154,14 +209,34 @@ local function parse_line(line)
         return {t='MobKill', s=source, tg=target, v=0}
     end
 
-    -- Gil obtain: "Player obtains N gil." (must come before item quantity pattern)
-    who, amount = line:match("(.+) obtains (%d+) gil%.")
-    if who then
-        return {t='GilGain', s=who, tg='', v=tonumber(amount)}
+    -- Standalone AoE damage: "Target takes N points of damage." (no source — AoE spillover)
+    -- Must come AFTER all "Source uses/casts ... Target takes N" patterns.
+    target, dmg = line:match("^(.+) takes (%d+) points of damage%.")
+    if target then
+        return {t='AbilityDamage', s=player_name, tg=target, v=tonumber(dmg)}
     end
 
-    -- Item obtain (singular): "Player obtains a Item."
-    who, item = line:match("(.+) obtains a (.+)%.")
+    -- Miss (player): "Player misses Target."
+    source, target = line:match("(.+) misses (.+)%.")
+    if source then
+        return {t='Miss', s=source, tg=target, v=0}
+    end
+
+    -- Parry: "Player parries Target's attack with his/her weapon."
+    source = line:match("(.+) parries .+'s attack")
+    if source then
+        return {t='Parry', s=source, tg='', v=0}
+    end
+
+    -- Gil obtain: "Player obtains N gil." (must come before item patterns)
+    -- Handles comma-formatted numbers (e.g., "9,888 gil")
+    who, amount = line:match("(.+) obtains ([%d,]+) gil%.")
+    if who then
+        return {t='GilGain', s=who, tg='', v=parse_number(amount)}
+    end
+
+    -- Item obtain (singular): "Player obtains a/an Item."
+    who, item = line:match("(.+) obtains an? (.+)%.")
     if who then
         return {t='ItemDrop', s=who, tg=item, v=1}
     end
@@ -172,10 +247,29 @@ local function parse_line(line)
         return {t='ItemDrop', s=who, tg=item, v=tonumber(count)}
     end
 
+    -- NOTE: "You find a X on Y" (mode 121) is NOT parsed as ItemDrop because
+    -- "Player obtains a X" (mode 127) fires for the same item, causing duplicates.
+    -- We only capture from the "obtains" pattern above.
+
+    -- Item lost: "You do not meet the requirements to obtain the Item. Item lost."
+    -- Fires when inventory can't hold a unique/rare item from the treasure pool.
+    item = line:match("You do not meet the requirements to obtain the (.+)%.")
+    if item then
+        -- Strip trailing "Item lost" suffix if present (BEL-separated in original)
+        item = item:match("^(.-)%.?%s*.*lost$") or item
+        return {t='ItemLost', s=player_name, tg=item, v=0}
+    end
+
+    -- Treasure Hunter: "Additional effect: Treasure Hunter effectiveness against Target increases to N."
+    target, amount = line:match("Treasure Hunter effectiveness against (.+) increases to (%d+)%.")
+    if target then
+        return {t='TreasureHunter', s=player_name, tg=target, v=tonumber(amount)}
+    end
+
     -- Gil loss: "You lose N gil."
-    amount = line:match("You lose (%d+) gil%.")
+    amount = line:match("You lose ([%d,]+) gil%.")
     if amount then
-        return {t='GilLoss', s=player_name, tg='', v=tonumber(amount)}
+        return {t='GilLoss', s=player_name, tg='', v=parse_number(amount)}
     end
 
     -- Magic Burst: "Magic Burst! Target takes N points of damage."
@@ -215,12 +309,15 @@ end
 -- Battle-relevant chat mode filter
 -----------------------------------------------------------------------
 local function is_relevant_mode(mode)
-    if mode >= 20 and mode <= 44 then return true end
-    if mode == 110 then return true end
-    if mode == 121 then return true end
-    if mode == 123 then return true end
-    if mode == 127 then return true end
-    if mode == 150 or mode == 151 then return true end
+    if mode >= 20 and mode <= 44 then return true end   -- Battle messages
+    if mode == 101 then return true end                  -- Job abilities (SP, JAs)
+    if mode == 110 then return true end                  -- WS readied / system battle
+    if mode == 114 then return true end                  -- Ability results (Steal, etc.)
+    if mode == 121 then return true end                  -- Treasure pool / item lost
+    if mode == 123 then return true end                  -- Gil gains/losses
+    if mode == 127 then return true end                  -- Skillchain/MB, item obtain, records
+    if mode == 131 then return true end                  -- EXP/LP/CP gains, sparks
+    if mode == 150 or mode == 151 then return true end   -- System messages (defeats)
     return false
 end
 
@@ -274,7 +371,13 @@ function session.start(character_name, server, zone)
     event_count = 0
     uploaded_count = 0
 
-    log_success_fn('Session started for ' .. character_name .. ' @ ' .. server .. ' (' .. zone .. ')')
+    -- Open debug log if debug mode is on
+    if debug_mode then
+        local debug_path = sessions_dir .. character_name .. '_' .. date_stamp .. '_debug.log'
+        debug_handle = io.open(debug_path, 'a')
+    end
+
+    log_success_fn('Session started for ' .. character_name .. ' @ ' .. server .. ' (' .. zone .. ')' .. (debug_mode and ' [DEBUG]' or ''))
 end
 
 function session.stop()
@@ -286,10 +389,14 @@ function session.stop()
     -- Flush any remaining events before stopping
     session.flush()
 
-    -- Close file handle
+    -- Close file handles
     if file_handle then
         file_handle:close()
         file_handle = nil
+    end
+    if debug_handle then
+        debug_handle:close()
+        debug_handle = nil
     end
 
     -- POST to API to stop session
@@ -394,11 +501,25 @@ function session.on_text(original, modified, original_mode, modified_mode, block
     if not active then return end
 
     -- Filter by original_mode — only process battle-relevant modes
-    if not is_relevant_mode(original_mode) then return end
+    if not is_relevant_mode(original_mode) then
+        -- In debug mode, log all chat modes we're filtering out
+        if debug_mode and debug_handle then
+            debug_handle:write('[FILTERED mode=' .. tostring(original_mode) .. '] ' .. sanitize(original) .. '\n')
+            debug_handle:flush()
+        end
+        return
+    end
 
     -- Parse the line
     local event = parse_line(original)
-    if not event then return end
+    if not event then
+        -- In debug mode, log lines that passed the mode filter but didn't match any pattern
+        if debug_mode and debug_handle then
+            debug_handle:write('[UNMATCHED mode=' .. tostring(original_mode) .. '] ' .. sanitize(original) .. '\n')
+            debug_handle:flush()
+        end
+        return
+    end
 
     -- Add timestamp and zone
     event.ts = os.time()
@@ -421,6 +542,11 @@ end
 
 function session.is_active()
     return active
+end
+
+function session.toggle_debug()
+    debug_mode = not debug_mode
+    return debug_mode
 end
 
 function session.print_status()

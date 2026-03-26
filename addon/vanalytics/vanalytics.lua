@@ -1032,8 +1032,11 @@ windower.register_event('addon command', function(command, ...)
             session.flush()
         elseif subcommand == 'cleanup' then
             session.cleanup()
+        elseif subcommand == 'debug' then
+            local enabled = session.toggle_debug()
+            log('Session debug mode: ' .. (enabled and 'ON' or 'OFF'))
         else
-            log('Session commands: start | stop | status | flush | cleanup')
+            log('Session commands: start | stop | status | flush | cleanup | debug')
         end
 
     elseif command == 'dump' then
@@ -1168,6 +1171,7 @@ windower.register_event('addon command', function(command, ...)
         log('//va session status  - Show current session info')
         log('//va session flush   - Manually upload buffered events')
         log('//va session cleanup - Delete old session files')
+        log('//va session debug   - Toggle debug mode (logs unmatched chat lines)')
         log('//va macros push     - Force upload all macro books')
         log('//va macros pull     - Check for pending macro updates')
         log('//va macros status   - Show tracked macro book count')

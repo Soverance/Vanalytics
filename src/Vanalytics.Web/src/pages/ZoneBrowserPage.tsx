@@ -30,8 +30,8 @@ export default function ZoneBrowserPage() {
   const [selectedExpansion, setSelectedExpansion] = useState<string | null>(null)
   const [selected, setSelected] = useState<ZoneEntry | null>(null)
   const [zoneData, setZoneData] = useState<ParsedZone | null>(null)
-  const [cameraMode, setCameraMode] = useState<'orbit' | 'fly'>('orbit')
-  const [fogDensity, setFogDensity] = useState(0)  // 0=off, 0.5=default, 1=thick
+  const [cameraMode, setCameraMode] = useState<'orbit' | 'fly'>('fly')
+  const [fogDensity, setFogDensity] = useState(0.5)  // 0=off, 0.5=default, 1=thick
   const [flySpeed, setFlySpeed] = useState<number | null>(null)
   const [minimapTextures, setMinimapTextures] = useState<ParsedTexture[]>([])
   const [showSpawns, setShowSpawns] = useState(false)
@@ -143,11 +143,13 @@ export default function ZoneBrowserPage() {
         for (const mapPath of mapDatPaths) {
           try {
             const mapBuffer = await ffxi.readFile(mapPath)
+            console.log(`[minimap] loaded ${mapPath}: ${mapBuffer ? mapBuffer.byteLength + ' bytes' : 'null'}`)
             if (mapBuffer) {
               const tex = parseMinimapDat(mapBuffer)
+              console.log(`[minimap] parse result for ${mapPath}:`, tex ? `${tex.width}x${tex.height}` : 'null')
               if (tex) mapTextures.push(tex)
             }
-          } catch { /* skip */ }
+          } catch (e) { console.warn(`[minimap] error loading ${mapPath}:`, e) }
         }
       }
       setMinimapTextures(mapTextures)
