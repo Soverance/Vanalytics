@@ -136,6 +136,122 @@ public class SchemaTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CanInsertAndRetrieveMacroBookGraph()
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "macrotest@test.com",
+            Username = "macrouser",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _db.Users.Add(user);
+
+        var character = new Character
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Name = "MacroTestChar",
+            Server = "Asura",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _db.Characters.Add(character);
+
+        var book = new MacroBook
+        {
+            Id = Guid.NewGuid(),
+            CharacterId = character.Id,
+            BookNumber = 1,
+            ContentHash = "testhash",
+            PendingPush = false,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _db.MacroBooks.Add(book);
+
+        var page = new MacroPage
+        {
+            Id = Guid.NewGuid(),
+            MacroBookId = book.Id,
+            PageNumber = 1
+        };
+        _db.MacroPages.Add(page);
+
+        _db.Macros.Add(new Macro
+        {
+            Id = Guid.NewGuid(),
+            MacroPageId = page.Id,
+            Set = "Ctrl",
+            Position = 1,
+            Name = "Cure IV",
+            Icon = 5,
+            Line1 = "/ma \"Cure IV\" <stpt>",
+            Line2 = "",
+            Line3 = "",
+            Line4 = "",
+            Line5 = "",
+            Line6 = ""
+        });
+
+        await _db.SaveChangesAsync();
+
+        var loaded = await _db.MacroBooks
+            .Include(b => b.Pages).ThenInclude(p => p.Macros)
+            .FirstAsync(b => b.Id == book.Id);
+
+        Assert.Equal(1, loaded.BookNumber);
+        Assert.Single(loaded.Pages);
+        Assert.Single(loaded.Pages[0].Macros);
+        Assert.Equal("Cure IV", loaded.Pages[0].Macros[0].Name);
+    }
+
+    [Fact]
+    public async Task EnforcesUniqueMacroBookPerCharacter()
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "macrodupe@test.com",
+            Username = "macrodupeuser",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _db.Users.Add(user);
+
+        var character = new Character
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Name = "DupeMacroChar",
+            Server = "Asura",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _db.Characters.Add(character);
+
+        _db.MacroBooks.Add(new MacroBook
+        {
+            Id = Guid.NewGuid(),
+            CharacterId = character.Id,
+            BookNumber = 1,
+            ContentHash = "hash1",
+            UpdatedAt = DateTimeOffset.UtcNow
+        });
+        await _db.SaveChangesAsync();
+
+        _db.MacroBooks.Add(new MacroBook
+        {
+            Id = Guid.NewGuid(),
+            CharacterId = character.Id,
+            BookNumber = 1,
+            ContentHash = "hash2",
+            UpdatedAt = DateTimeOffset.UtcNow
+        });
+        await Assert.ThrowsAsync<DbUpdateException>(() => _db.SaveChangesAsync());
+    }
+
+    [Fact]
     public async Task EnforcesUniqueEmail()
     {
         _db.Users.Add(new User
