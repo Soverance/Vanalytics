@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { listMacroBooks, getMacroBook, updateMacroBook, MacroBookSummary, MacroBookDetail, MacroDetail } from '../api/macros'
+import MacroPageReel from '../components/macros/MacroPageReel'
 import { ApiError } from '../api/client'
 
 export default function MacroEditorPage() {
@@ -83,9 +84,13 @@ export default function MacroEditorPage() {
       {/* Main Content - placeholder until Tasks 9-10 */}
       <div className="flex-1 min-w-0">
         {selectedBook ? (
-          <div className="text-gray-400 text-sm">
-            Book {selectedBook.bookNumber} loaded — {selectedBook.pages.length} pages.
-          </div>
+          <MacroPageReel
+            pages={selectedBook.pages}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            selectedMacro={selectedMacro}
+            onMacroSelect={(set, position) => setSelectedMacro({ set, position })}
+          />
         ) : (
           <div className="text-gray-500 text-sm p-4">Select a macro book to view.</div>
         )}
