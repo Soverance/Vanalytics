@@ -115,6 +115,8 @@ export default function ItemPreviewBox({ item }: { item: GameItemDetail }) {
           fontWeight: 'normal',
           paddingTop: 4,
           paddingBottom: 6,
+          overflowWrap: 'break-word',
+          wordBreak: 'break-word',
         }}
       >
         {/* Title */}

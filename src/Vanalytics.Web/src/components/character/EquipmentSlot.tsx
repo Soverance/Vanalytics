@@ -9,18 +9,18 @@ interface EquipmentSlotProps {
   slotName: string
   gear?: GearEntry
   onClick: () => void
-  onHover?: (gear: GearEntry | null) => void
+  onHoverElement?: (element: HTMLElement | null) => void
 }
 
-export default function EquipmentSlot({ slotName, gear, onClick, onHover }: EquipmentSlotProps) {
+export default function EquipmentSlot({ slotName, gear, onClick, onHoverElement }: EquipmentSlotProps) {
   const isVisual = VISUAL_SLOTS.has(slotName)
   const isEmpty = !gear || gear.itemId === 0
 
   return (
     <button
       onClick={onClick}
-      onMouseEnter={() => onHover?.(gear ?? null)}
-      onMouseLeave={() => onHover?.(null)}
+      onMouseEnter={(e) => onHoverElement?.(e.currentTarget)}
+      onMouseLeave={() => onHoverElement?.(null)}
       className={`
         flex flex-col items-center justify-center p-1.5 rounded cursor-pointer
         transition-colors duration-150

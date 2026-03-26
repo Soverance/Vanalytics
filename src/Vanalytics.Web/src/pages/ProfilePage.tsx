@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { api, ApiError } from '../api/client'
 import UserAvatar from '../components/UserAvatar'
 import type { ApiKeyResponse } from '../types/api'
 import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
+import { Copy, Check } from 'lucide-react'
 
 type Tab = 'session' | 'apikeys' | 'ffxi'
 
@@ -24,6 +25,8 @@ export default function ProfilePage() {
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab)
+    setApiKey(null)
+    setCopied(false)
     setSearchParams(tab === 'session' ? {} : { tab }, { replace: true })
   }
 
@@ -39,6 +42,15 @@ export default function ProfilePage() {
   const [apiKey, setApiKey] = useState<string | null>(null)
   const [keyLoading, setKeyLoading] = useState(false)
   const [keyError, setKeyError] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyKey = useCallback(() => {
+    if (!apiKey) return
+    navigator.clipboard.writeText(apiKey).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [apiKey])
 
   if (!user) return null
 
@@ -244,7 +256,16 @@ export default function ProfilePage() {
               <p className="text-xs text-gray-500 mb-1">
                 Copy this key now — it won't be shown again.
               </p>
-              <code className="text-sm text-green-400 break-all select-all">{apiKey}</code>
+              <div className="flex items-start gap-2">
+                <code className="text-sm text-green-400 break-all select-all flex-1">{apiKey}</code>
+                <button
+                  onClick={handleCopyKey}
+                  className="shrink-0 text-gray-400 hover:text-white transition-colors"
+                  title="Copy to clipboard"
+                >
+                  {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           )}
 

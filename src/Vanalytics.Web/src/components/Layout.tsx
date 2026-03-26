@@ -4,20 +4,20 @@ import { useAuth } from '../context/AuthContext'
 import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
 import LoginModal from './LoginModal'
-import { LayoutDashboard, Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare } from 'lucide-react'
+import { Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Store, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare } from 'lucide-react'
 import { CompareProvider } from './compare/CompareContext'
 import CompareTray from './compare/CompareTray'
 import { SyncProvider } from '../context/SyncContext'
 import SyncBanner from './SyncBanner'
 import { FfxiFileSystemProvider } from '../context/FfxiFileSystemContext'
 
-type SectionName = 'database' | 'economy' | 'server' | 'community' | 'admin'
+type SectionName = 'database' | 'economy' | 'performance' | 'server' | 'admin'
 
 function getSection(pathname: string): SectionName | null {
   if (pathname.startsWith('/items') || pathname.startsWith('/npcs') || pathname.startsWith('/zones')) return 'database'
   if (pathname.startsWith('/bazaar')) return 'economy'
+  if (pathname.startsWith('/sessions')) return 'performance'
   if (pathname.startsWith('/server/')) return 'server'
-  if (pathname.startsWith('/forum')) return 'community'
   if (pathname.startsWith('/admin')) return 'admin'
   return null
 }
@@ -130,13 +130,13 @@ function LayoutInner() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-gray-800 bg-gray-900 transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-gray-800 bg-gray-900 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Logo */}
         <div className="border-b border-gray-800 px-4 py-4">
-          <Link to="/dashboard" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
+          <Link to="/characters" className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img
               src="/vanalytics-typography-horizontal-logo.png"
@@ -147,8 +147,7 @@ function LayoutInner() {
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          <SidebarLink to="/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+        <nav className="flex-1 overflow-y-auto space-y-1 px-3 py-4">
           <SidebarLink to="/characters" label="Characters" icon={<Swords className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
 
           <SidebarSection label="Database" icon={<Database className="h-4 w-4 shrink-0" />} isOpen={openSection === 'database'} onToggle={() => toggleSection('database')}>
@@ -161,14 +160,16 @@ function LayoutInner() {
             <SidebarLink to="/bazaar" label="Bazaar" icon={<Store className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
           </SidebarSection>
 
+          <SidebarSection label="Performance" icon={<Swords className="h-4 w-4 shrink-0" />} isOpen={openSection === 'performance'} onToggle={() => toggleSection('performance')}>
+            <SidebarLink to="/sessions" label="Sessions" icon={<Radio className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+          </SidebarSection>
+
           <SidebarSection label="Server" icon={<Radio className="h-4 w-4 shrink-0" />} isOpen={openSection === 'server'} onToggle={() => toggleSection('server')}>
             <SidebarLink to="/server/status" end={false} label="Status" icon={<Radio className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
             <SidebarLink to="/server/clock" label="Clock" icon={<Clock className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
           </SidebarSection>
 
-          <SidebarSection label="Community" icon={<MessageSquare className="h-4 w-4 shrink-0" />} isOpen={openSection === 'community'} onToggle={() => toggleSection('community')}>
-            <SidebarLink to="/forum" end={false} label="Forum" icon={<MessageSquare className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
-          </SidebarSection>
+          <SidebarLink to="/forum" end={false} label="Forum" icon={<MessageSquare className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
 
           <SidebarLink to="/setup" label="Setup Guide" icon={<BookOpen className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
 
@@ -212,7 +213,7 @@ function LayoutInner() {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <Link to="/dashboard" className="flex items-center min-w-0">
+          <Link to="/characters" className="flex items-center min-w-0">
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img src="/vanalytics-typography-horizontal-logo.png" alt="Vana'lytics" className="min-w-0 max-w-[180px]" />
           </Link>

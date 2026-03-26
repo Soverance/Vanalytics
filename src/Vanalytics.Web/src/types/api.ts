@@ -46,15 +46,31 @@ export interface CharacterDetail {
   lastSyncAt: string | null
   race?: string
   gender?: string
+  faceModelId?: number
+  subJob?: string
+  subJobLevel?: number
+  masterLevel?: number
+  itemLevel?: number
+  hp?: number
+  maxHp?: number
+  mp?: number
+  maxMp?: number
+  linkshell?: string
+  nation?: number
+  merits?: Record<string, number>
   jobs: JobEntry[]
   gear: GearEntry[]
   craftingSkills: CraftingEntry[]
+  favoriteAnimation?: { category: string; animationName: string; motionIndex: number }
 }
 
 export interface JobEntry {
   job: string
   level: number
   isActive: boolean
+  jp: number
+  jpSpent: number
+  cp: number
 }
 
 export interface GearEntry {
@@ -155,6 +171,7 @@ export interface CategoryResponse {
   slug: string
   description: string
   displayOrder: number
+  isSystem: boolean
   threadCount: number
   lastActivityAt: string | null
 }
@@ -479,4 +496,107 @@ export interface ModelMapping {
   itemId: number
   slotId: number
   modelId: number
+}
+
+// Session types
+export interface SessionSummary {
+  id: string
+  characterId: string
+  characterName: string
+  server: string
+  zone: string
+  startedAt: string
+  endedAt: string | null
+  status: 'Active' | 'Completed' | 'Abandoned'
+  totalDamage: number
+  gilEarned: number
+  mobsKilled: number
+  itemsDropped: number
+}
+
+export interface SessionDetail extends SessionSummary {
+  dpsAverage: number
+  gilPerHour: number
+  expGained: number
+  healingDone: number
+  eventCount: number
+}
+
+export interface SessionEvent {
+  id: number
+  eventType: string
+  timestamp: string
+  source: string
+  target: string
+  value: number
+  ability: string | null
+  itemId: number | null
+  zone: string
+}
+
+export interface SessionTimelineEntry {
+  timestamp: string
+  damage: number
+  healing: number
+  gil: number
+  kills: number
+}
+
+export interface SessionListResponse {
+  totalCount: number
+  page: number
+  pageSize: number
+  sessions: SessionSummary[]
+}
+
+export interface SessionEventsResponse {
+  totalCount: number
+  page: number
+  pageSize: number
+  events: SessionEvent[]
+}
+
+// Inventory types
+export interface InventoryItem {
+  itemId: number
+  bag: string
+  slotIndex: number
+  quantity: number
+  lastSeenAt: string
+  itemName: string
+  iconPath: string | null
+  category: string | null
+  stackSize: number
+}
+
+export type InventoryByBag = Record<string, InventoryItem[]>
+
+// Relics types
+export interface RelicWeaponVersion {
+  itemId: number
+  name: string
+  iconPath: string | null
+  itemLevel: number | null
+  level: number | null
+  damage: number | null
+  delay: number | null
+  currentlyHeld: boolean
+}
+
+export interface RelicWeapon {
+  baseName: string
+  category: string
+  weaponSkill: string
+  versions: RelicWeaponVersion[]
+}
+
+export interface RelicCategoryProgress {
+  category: string
+  total: number
+  collected: number
+}
+
+export interface RelicsResponse {
+  progress: RelicCategoryProgress[]
+  weapons: RelicWeapon[]
 }

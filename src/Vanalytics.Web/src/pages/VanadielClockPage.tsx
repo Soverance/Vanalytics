@@ -59,7 +59,7 @@ export default function VanadielClockPage() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchClock = () => {
-    api<VanadielClockData>('/api/vanadiel/clock')
+    api<VanadielClockData>('/api/servers/clock')
       .then(setClock)
       .catch((err) => {
         if (err instanceof ApiError) setError(err.message)

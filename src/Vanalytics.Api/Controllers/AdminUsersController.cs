@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -78,6 +79,10 @@ public class AdminUsersController : ControllerBase
 
         if (user.IsSystemAccount)
             return BadRequest(new { message = "Cannot modify the system administrator account" });
+
+        var currentUserId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (user.Id.ToString().Equals(currentUserId, StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Cannot change your own role" });
 
         user.Role = newRole;
         user.UpdatedAt = DateTimeOffset.UtcNow;

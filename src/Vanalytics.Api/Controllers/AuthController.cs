@@ -18,13 +18,15 @@ public class AuthController : ControllerBase
     private readonly TokenService _tokenService;
     private readonly OAuthService _oauthService;
     private readonly AuthResponseService _authResponseService;
+    private readonly LoginRateLimiter _loginRateLimiter;
 
-    public AuthController(VanalyticsDbContext db, TokenService tokenService, OAuthService oauthService, AuthResponseService authResponseService)
+    public AuthController(VanalyticsDbContext db, TokenService tokenService, OAuthService oauthService, AuthResponseService authResponseService, LoginRateLimiter loginRateLimiter)
     {
         _db = db;
         _tokenService = tokenService;
         _oauthService = oauthService;
         _authResponseService = authResponseService;
+        _loginRateLimiter = loginRateLimiter;
     }
 
     [HttpPost("register")]
@@ -55,13 +57,25 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        if (_loginRateLimiter.IsLockedOut(ip))
+            return StatusCode(429, new { message = "Too many failed login attempts. Please try again later." });
+
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
         if (user is null || user.PasswordHash is null)
+        {
+            _loginRateLimiter.RecordFailure(ip);
             return Unauthorized(new { message = "Invalid credentials" });
+        }
 
         if (!PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        {
+            _loginRateLimiter.RecordFailure(ip);
             return Unauthorized(new { message = "Invalid credentials" });
+        }
 
+        _loginRateLimiter.ClearFailures(ip);
         return Ok(await _authResponseService.GenerateAuthResponseAsync(_db, user));
     }
 

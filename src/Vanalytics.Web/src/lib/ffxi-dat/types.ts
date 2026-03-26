@@ -6,6 +6,12 @@ export interface ParsedMesh {
   boneIndices: Uint8Array
   boneWeights: Float32Array
   materialIndex: number
+  /** Per-vertex bone-local positions for bone 1 (3 floats/vert). Present when mesh has MV2 vertices. */
+  dualBoneLocalPos1?: Float32Array
+  /** Per-vertex bone-local positions for bone 2 (3 floats/vert). Zero for MV1 vertices. */
+  dualBoneLocalPos2?: Float32Array
+  /** Per-vertex weights (2 floats/vert): [w1, w2]. MV1 vertices have [1, 0]. */
+  dualBoneWeights?: Float32Array
 }
 
 export interface ParsedTexture {
@@ -30,6 +36,7 @@ export interface ParsedDatFile {
   meshes: ParsedMesh[]
   textures: ParsedTexture[]
   skeleton: ParsedSkeleton | null
+  animations: ParsedAnimation[]
 }
 
 export interface ParsedZoneMesh {
@@ -51,4 +58,20 @@ export interface ParsedZone {
   prefabs: ParsedZoneMesh[]       // unique MMB mesh prefabs
   instances: ZoneMeshInstance[]    // MZB placement transforms
   textures: ParsedTexture[]       // reused from entity pipeline
+}
+
+export interface AnimationBone {
+  boneIndex: number
+  rotationKeyframes: Float32Array | null   // 4 floats per frame (qx,qy,qz,qw), null = use default
+  rotationDefault: [number, number, number, number]
+  translationKeyframes: Float32Array | null // 3 floats per frame (tx,ty,tz), null = use default
+  translationDefault: [number, number, number]
+  scaleKeyframes: Float32Array | null       // 3 floats per frame (sx,sy,sz), null = use default
+  scaleDefault: [number, number, number]
+}
+
+export interface ParsedAnimation {
+  frameCount: number
+  speed: number
+  bones: AnimationBone[]
 }

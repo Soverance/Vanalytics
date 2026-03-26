@@ -263,6 +263,11 @@ namespace Vanalytics.Data.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<bool>("IsSystem")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -561,19 +566,53 @@ namespace Vanalytics.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int?>("FaceModelId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FavoriteAnimationJson")
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<int?>("Gender")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Hp")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsPublic")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("ItemLevel")
+                        .HasColumnType("int");
+
                     b.Property<DateTimeOffset?>("LastSyncAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Linkshell")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int?>("MasterLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MaxHp")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MaxMp")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MeritsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Mp")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
+
+                    b.Property<int?>("Nation")
+                        .HasColumnType("int");
 
                     b.Property<int?>("Race")
                         .HasColumnType("int");
@@ -582,6 +621,13 @@ namespace Vanalytics.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("SubJob")
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<int?>("SubJobLevel")
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -599,17 +645,60 @@ namespace Vanalytics.Data.Migrations
                     b.ToTable("Characters");
                 });
 
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterInventory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("Bag")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SlotIndex")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId", "ItemId", "Bag", "SlotIndex")
+                        .IsUnique();
+
+                    b.ToTable("CharacterInventories");
+                });
+
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterJob", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("CP")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("CharacterId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<int>("JP")
+                        .HasColumnType("int");
+
+                    b.Property<int>("JPSpent")
+                        .HasColumnType("int");
 
                     b.Property<string>("JobId")
                         .IsRequired()
@@ -890,6 +979,45 @@ namespace Vanalytics.Data.Migrations
                     b.ToTable("GameServers");
                 });
 
+            modelBuilder.Entity("Vanalytics.Core.Models.InventoryChange", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("Bag")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ChangeType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityAfter")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityBefore")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SlotIndex")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId", "ChangedAt");
+
+                    b.ToTable("InventoryChanges");
+                });
+
             modelBuilder.Entity("Vanalytics.Core.Models.ItemModelMapping", b =>
                 {
                     b.Property<int>("Id")
@@ -924,6 +1052,129 @@ namespace Vanalytics.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("ItemModelMappings");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.Macro", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Icon")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Line1")
+                        .IsRequired()
+                        .HasMaxLength(61)
+                        .HasColumnType("nvarchar(61)");
+
+                    b.Property<string>("Line2")
+                        .IsRequired()
+                        .HasMaxLength(61)
+                        .HasColumnType("nvarchar(61)");
+
+                    b.Property<string>("Line3")
+                        .IsRequired()
+                        .HasMaxLength(61)
+                        .HasColumnType("nvarchar(61)");
+
+                    b.Property<string>("Line4")
+                        .IsRequired()
+                        .HasMaxLength(61)
+                        .HasColumnType("nvarchar(61)");
+
+                    b.Property<string>("Line5")
+                        .IsRequired()
+                        .HasMaxLength(61)
+                        .HasColumnType("nvarchar(61)");
+
+                    b.Property<string>("Line6")
+                        .IsRequired()
+                        .HasMaxLength(61)
+                        .HasColumnType("nvarchar(61)");
+
+                    b.Property<Guid>("MacroPageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Set")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MacroPageId", "Set", "Position")
+                        .IsUnique();
+
+                    b.ToTable("Macros");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.MacroBook", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("BookNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BookTitle")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
+                        .HasDefaultValue("");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<bool>("PendingPush")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId", "BookNumber")
+                        .IsUnique();
+
+                    b.ToTable("MacroBooks");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.MacroPage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MacroBookId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("PageNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MacroBookId", "PageNumber")
+                        .IsUnique();
+
+                    b.ToTable("MacroPages");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.NpcPool", b =>
@@ -1005,6 +1256,89 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("GameServerId", "EndedAt");
 
                     b.ToTable("ServerStatusChanges");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.Session", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Zone")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId", "StartedAt");
+
+                    b.HasIndex("CharacterId", "Status");
+
+                    b.ToTable("Sessions");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.SessionEvent", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Ability")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<int>("EventType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Target")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("Value")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Zone")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId", "EventType");
+
+                    b.HasIndex("SessionId", "Timestamp");
+
+                    b.ToTable("SessionEvents");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.SyncHistory", b =>
@@ -1264,6 +1598,17 @@ namespace Vanalytics.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterInventory", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterJob", b =>
                 {
                     b.HasOne("Vanalytics.Core.Models.Character", "Character")
@@ -1294,12 +1639,51 @@ namespace Vanalytics.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Vanalytics.Core.Models.GameItem", null)
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.InventoryChange", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
                         .WithMany()
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.Macro", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.MacroPage", "Page")
+                        .WithMany("Macros")
+                        .HasForeignKey("MacroPageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Page");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.MacroBook", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithMany("MacroBooks")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.MacroPage", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.MacroBook", "Book")
+                        .WithMany("Pages")
+                        .HasForeignKey("MacroBookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.ServerStatusChange", b =>
@@ -1311,6 +1695,28 @@ namespace Vanalytics.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("GameServer");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.Session", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.SessionEvent", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Session", "Session")
+                        .WithMany("Events")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.SamlConfig", b =>
@@ -1347,11 +1753,28 @@ namespace Vanalytics.Data.Migrations
                     b.Navigation("Gear");
 
                     b.Navigation("Jobs");
+
+                    b.Navigation("MacroBooks");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.GameServer", b =>
                 {
                     b.Navigation("StatusHistory");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.MacroBook", b =>
+                {
+                    b.Navigation("Pages");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.MacroPage", b =>
+                {
+                    b.Navigation("Macros");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.Session", b =>
+                {
+                    b.Navigation("Events");
                 });
 #pragma warning restore 612, 618
         }

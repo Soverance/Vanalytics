@@ -10,7 +10,7 @@ function LandingContent() {
   const { isOpen: loginOpen, open: openLogin, close: closeLogin } = useLoginModal()
 
   if (user) {
-    navigate('/dashboard', { replace: true })
+    navigate('/characters', { replace: true })
     return null
   }
 

@@ -16,6 +16,18 @@ public class SyncRequest
     public int ActiveJobLevel { get; set; }
 
     public int? Race { get; set; }
+    public int? FaceModelId { get; set; }
+    public string? SubJob { get; set; }
+    public int? SubJobLevel { get; set; }
+    public int? MasterLevel { get; set; }
+    public int? ItemLevel { get; set; }
+    public int? Hp { get; set; }
+    public int? MaxHp { get; set; }
+    public int? Mp { get; set; }
+    public int? MaxMp { get; set; }
+    public string? Linkshell { get; set; }
+    public int? Nation { get; set; }
+    public Dictionary<string, int>? Merits { get; set; }
     public List<SyncModelEntry> Models { get; set; } = [];
 
     public List<SyncJobEntry> Jobs { get; set; } = [];
@@ -27,6 +39,9 @@ public class SyncJobEntry
 {
     public string Job { get; set; } = string.Empty;
     public int Level { get; set; }
+    public int JP { get; set; }
+    public int JPSpent { get; set; }
+    public int CP { get; set; }
 }
 
 public class SyncGearEntry

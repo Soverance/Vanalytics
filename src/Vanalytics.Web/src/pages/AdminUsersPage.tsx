@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { api, ApiError } from '../api/client'
 import type { AdminUser, UserRole } from '../types/api'
 import UserAvatar from '../components/UserAvatar'
+import { useAuth } from '../context/AuthContext'
 
 const ROLES: UserRole[] = ['Member', 'Moderator', 'Admin']
 
@@ -12,6 +13,7 @@ const roleBadgeStyles: Record<UserRole, string> = {
 }
 
 export default function AdminUsersPage() {
+  const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -101,7 +103,7 @@ export default function AdminUsersPage() {
                   {new Date(u.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-3">
-                  {u.isSystemAccount ? (
+                  {u.isSystemAccount || u.id === currentUser?.id ? (
                     <span className={`rounded px-2 py-1 text-xs font-medium ${roleBadgeStyles[u.role]}`}>
                       {u.role}
                     </span>

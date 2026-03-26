@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,9 @@ public class CharactersController : ControllerBase
         if (character.UserId != userId) return Forbid();
 
         character.IsPublic = request.IsPublic;
+        character.FavoriteAnimationJson = request.FavoriteAnimation != null
+            ? JsonSerializer.Serialize(request.FavoriteAnimation, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
+            : null;
         character.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
 
@@ -76,6 +80,137 @@ public class CharactersController : ControllerBase
             IsPublic = character.IsPublic,
             LastSyncAt = character.LastSyncAt
         });
+    }
+
+    [HttpGet("{id:guid}/inventory")]
+    public async Task<IActionResult> GetInventory(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var items = await _db.CharacterInventories
+            .Where(i => i.CharacterId == id)
+            .Join(_db.GameItems,
+                ci => ci.ItemId,
+                gi => gi.ItemId,
+                (ci, gi) => new
+                {
+                    ci.ItemId,
+                    Bag = ci.Bag.ToString(),
+                    ci.SlotIndex,
+                    ci.Quantity,
+                    ci.LastSeenAt,
+                    ItemName = gi.Name ?? gi.NameJa ?? "Unknown",
+                    gi.IconPath,
+                    gi.Category,
+                    gi.StackSize
+                })
+            .OrderBy(i => i.Bag)
+            .ThenBy(i => i.ItemName)
+            .ToListAsync();
+
+        var grouped = items
+            .GroupBy(i => i.Bag)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        return Ok(grouped);
+    }
+
+    [HttpGet("{id:guid}/relics")]
+    public async Task<IActionResult> GetRelics(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        // Collect all item IDs this character has ever held
+        var currentItemIds = await _db.CharacterInventories
+            .Where(i => i.CharacterId == id)
+            .Select(i => i.ItemId)
+            .Distinct()
+            .ToListAsync();
+
+        var historicalItemIds = await _db.InventoryChanges
+            .Where(c => c.CharacterId == id && c.ChangeType == Vanalytics.Core.Enums.InventoryChangeType.Added)
+            .Select(c => c.ItemId)
+            .Distinct()
+            .ToListAsync();
+
+        var everHeldIds = currentItemIds.Union(historicalItemIds).ToHashSet();
+
+        // Get all weapon base names to search for
+        var weaponDefs = Vanalytics.Core.Data.UltimateWeapons.All;
+        var baseNames = weaponDefs.Select(w => w.BaseName).Distinct().ToList();
+
+        // Find all GameItems matching any ultimate weapon name
+        var matchingItems = await _db.GameItems
+            .Where(gi => baseNames.Contains(gi.Name))
+            .Select(gi => new
+            {
+                gi.ItemId,
+                gi.Name,
+                gi.IconPath,
+                gi.Category,
+                gi.ItemLevel,
+                gi.Level,
+                gi.Damage,
+                gi.Delay
+            })
+            .ToListAsync();
+
+        // Build response: for each weapon def, find matching items the player has held
+        var results = new List<object>();
+
+        foreach (var def in weaponDefs.DistinctBy(d => d.BaseName))
+        {
+            var versions = matchingItems
+                .Where(gi => gi.Name == def.BaseName && everHeldIds.Contains(gi.ItemId))
+                .Select(gi => new
+                {
+                    gi.ItemId,
+                    gi.Name,
+                    gi.IconPath,
+                    gi.ItemLevel,
+                    gi.Level,
+                    gi.Damage,
+                    gi.Delay,
+                    CurrentlyHeld = currentItemIds.Contains(gi.ItemId)
+                })
+                .OrderByDescending(v => v.ItemLevel ?? v.Level ?? 0)
+                .ToList();
+
+            if (versions.Count > 0)
+            {
+                results.Add(new
+                {
+                    BaseName = def.BaseName,
+                    def.Category,
+                    def.WeaponSkill,
+                    Versions = versions
+                });
+            }
+        }
+
+        // Build progress per category
+        var progress = weaponDefs
+            .DistinctBy(d => d.BaseName)
+            .GroupBy(d => d.Category)
+            .Select(g => new
+            {
+                Category = g.Key,
+                Total = g.Count(),
+                Collected = g.Count(d =>
+                    matchingItems.Any(gi => gi.Name == d.BaseName && everHeldIds.Contains(gi.ItemId)))
+            })
+            .OrderBy(p => p.Category)
+            .ToList();
+
+        return Ok(new { progress, weapons = results });
     }
 
     [HttpDelete("{id:guid}")]
@@ -105,11 +240,31 @@ public class CharactersController : ControllerBase
         LastSyncAt = c.LastSyncAt,
         Race = c.Race?.ToString(),
         Gender = c.Gender?.ToString(),
+        FaceModelId = c.FaceModelId,
+        SubJob = c.SubJob,
+        SubJobLevel = c.SubJobLevel,
+        MasterLevel = c.MasterLevel,
+        ItemLevel = c.ItemLevel,
+        Hp = c.Hp,
+        MaxHp = c.MaxHp,
+        Mp = c.Mp,
+        MaxMp = c.MaxMp,
+        Linkshell = c.Linkshell,
+        Nation = c.Nation,
+        Merits = c.MeritsJson != null
+            ? JsonSerializer.Deserialize<Dictionary<string, int>>(c.MeritsJson)
+            : null,
+        FavoriteAnimation = c.FavoriteAnimationJson != null
+            ? JsonSerializer.Deserialize<FavoriteAnimationDto>(c.FavoriteAnimationJson, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
+            : null,
         Jobs = c.Jobs.Select(j => new JobEntry
         {
             Job = j.JobId.ToString(),
             Level = j.Level,
-            IsActive = j.IsActive
+            IsActive = j.IsActive,
+            JP = j.JP,
+            JPSpent = j.JPSpent,
+            CP = j.CP
         }).ToList(),
         Gear = c.Gear.Select(g => new GearEntry
         {

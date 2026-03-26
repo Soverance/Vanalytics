@@ -6,7 +6,6 @@ import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import OAuthCallback from './pages/OAuthCallback'
 import LandingPage from './pages/LandingPage'
-import DashboardPage from './pages/DashboardPage'
 import CharactersPage from './pages/CharactersPage'
 import CharacterDetailPage from './pages/CharacterDetailPage'
 import ProfilePage from './pages/ProfilePage'
@@ -28,6 +27,9 @@ import ForumThreadListPage from './pages/ForumThreadListPage'
 import ForumThreadPage from './pages/ForumThreadPage'
 import ForumNewThreadPage from './pages/ForumNewThreadPage'
 import ForumSearchPage from './pages/ForumSearchPage'
+import SessionsPage from './pages/SessionsPage'
+import SessionDetailPage from './pages/SessionDetailPage'
+
 
 function SamlCodeHandler() {
   const { samlExchange } = useAuth()
@@ -106,17 +108,18 @@ export default function App() {
             <Route path="/clock" element={<Navigate to="/server/clock" replace />} />
 
             {/* Protected routes */}
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/characters" element={<ProtectedRoute><CharactersPage /></ProtectedRoute>} />
             <Route path="/characters/:id" element={<ProtectedRoute><CharacterDetailPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/items" element={<ProtectedRoute><ItemDatabasePage /></ProtectedRoute>} />
             <Route path="/items/:id" element={<ProtectedRoute><ItemDetailPage /></ProtectedRoute>} />
             <Route path="/bazaar" element={<ProtectedRoute><BazaarActivityPage /></ProtectedRoute>} />
+            <Route path="/sessions" element={<ProtectedRoute><SessionsPage /></ProtectedRoute>} />
+            <Route path="/sessions/:id" element={<ProtectedRoute><SessionDetailPage /></ProtectedRoute>} />
             <Route path="/setup" element={<ProtectedRoute><SetupGuidePage /></ProtectedRoute>} />
-            <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
-            <Route path="/admin/data" element={<ProtectedRoute><AdminItemsPage /></ProtectedRoute>} />
-            <Route path="/admin/saml" element={<ProtectedRoute><AdminSamlPage /></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute requiredRole="Admin"><AdminUsersPage /></ProtectedRoute>} />
+            <Route path="/admin/data" element={<ProtectedRoute requiredRole="Admin"><AdminItemsPage /></ProtectedRoute>} />
+            <Route path="/admin/saml" element={<ProtectedRoute requiredRole="Admin"><AdminSamlPage /></ProtectedRoute>} />
             <Route path="/npcs" element={<ProtectedRoute><NpcBrowserPage /></ProtectedRoute>} />
             <Route path="/zones" element={<ProtectedRoute><ZoneBrowserPage /></ProtectedRoute>} />
             <Route path="/debug/models" element={<ProtectedRoute><ModelDebugPage /></ProtectedRoute>} />

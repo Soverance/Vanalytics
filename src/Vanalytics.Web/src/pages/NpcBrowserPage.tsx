@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
 import { parseDatFile } from '../lib/ffxi-dat'
-import type { ParsedMesh, ParsedTexture } from '../lib/ffxi-dat'
+import type { ParsedMesh, ParsedTexture, ParsedSkeleton, ParsedAnimation } from '../lib/ffxi-dat'
 import ThreeModelViewer from '../components/character/ThreeModelViewer'
-import { Search, X, Shuffle, ChevronRight, Clock } from 'lucide-react'
+import { Search, X, Shuffle, ChevronRight, Clock, Play, Pause } from 'lucide-react'
 
 interface NpcModel {
   name: string
@@ -20,6 +20,12 @@ export default function NpcBrowserPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selected, setSelected] = useState<NpcModel | null>(null)
   const [meshData, setMeshData] = useState<{ meshes: ParsedMesh[]; textures: ParsedTexture[] } | null>(null)
+  const [npcSkeleton, setNpcSkeleton] = useState<ParsedSkeleton | null>(null)
+  const [npcAnimations, setNpcAnimations] = useState<ParsedAnimation[]>([])
+  const [animPlaying, setAnimPlaying] = useState(true)
+  const [animSpeed, setAnimSpeed] = useState(1.0)
+  const [motionCount, setMotionCount] = useState(0)
+  const [motionIndex, setMotionIndex] = useState(0)
   const [modelLoading, setModelLoading] = useState(false)
   const [viewMode, setViewMode] = useState<'3d' | 'wireframe'>('3d')
   const [parseLog, setParseLog] = useState<string[]>([])
@@ -69,6 +75,9 @@ export default function NpcBrowserPage() {
     setSelected(npc)
     setBrowserOpen(false)
     setMeshData(null)
+    setNpcSkeleton(null)
+    setNpcAnimations([])
+    setMotionIndex(0)
     setParseLog([])
     setLogOpen(true)
     setModelLoading(true)
@@ -108,10 +117,22 @@ export default function NpcBrowserPage() {
       })
       if (dat.skeleton) log(`Skeleton: ${dat.skeleton.bones.length} bones (embedded)`)
 
+      // Parse embedded animations
+      let anims: ParsedAnimation[] = []
+      if (dat.animations.length > 0) {
+        anims = dat.animations
+        log(`Animations: ${anims.length} blocks (0x2B)`)
+      }
+
       if (dat.meshes.length > 0) {
         setMeshData({ meshes: dat.meshes, textures: dat.textures })
+        setNpcSkeleton(dat.skeleton)
+        setNpcAnimations(anims)
+        setMotionIndex(0)
         log('Rendering complete.')
       } else {
+        setNpcSkeleton(null)
+        setNpcAnimations([])
         log('No meshes found in this DAT — may not be a 3D model file.')
       }
     } catch (err) {
@@ -251,7 +272,15 @@ export default function NpcBrowserPage() {
         )}
 
         {meshData && viewMode === '3d' && (
-          <ThreeModelViewer meshData={meshData} />
+          <ThreeModelViewer
+            meshData={meshData}
+            skeleton={npcSkeleton}
+            animations={npcAnimations}
+            playing={animPlaying}
+            speed={animSpeed}
+            motionIndex={motionIndex}
+            onMotionCount={setMotionCount}
+          />
         )}
 
         {meshData && viewMode === 'wireframe' && (
@@ -328,6 +357,39 @@ export default function NpcBrowserPage() {
         <div className="absolute bottom-3 left-3 z-30 px-3 py-1.5 rounded-lg bg-gray-900/90 backdrop-blur border border-gray-700/50 shadow-lg">
           <p className="text-sm font-medium text-gray-200">{selected.name}</p>
           <p className="text-[10px] text-gray-500">{selected.category} · {selected.path}</p>
+        </div>
+      )}
+
+      {/* ── Bottom-center: animation controls ── */}
+      {npcAnimations.length > 0 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900/90 backdrop-blur border border-gray-700/50 shadow-lg">
+          <button
+            onClick={() => setAnimPlaying(p => !p)}
+            className="p-1 text-gray-400 hover:text-gray-200"
+            title={animPlaying ? 'Pause' : 'Play'}
+          >
+            {animPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </button>
+          {motionCount > 1 && (
+            <select
+              value={motionIndex}
+              onChange={e => setMotionIndex(Number(e.target.value))}
+              className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300"
+            >
+              {Array.from({ length: motionCount }, (_, i) => (
+                <option key={i} value={i}>Motion {i + 1}</option>
+              ))}
+            </select>
+          )}
+          <select
+            value={animSpeed}
+            onChange={e => setAnimSpeed(Number(e.target.value))}
+            className="bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-xs text-gray-300"
+          >
+            {[0.25, 0.5, 1.0, 1.5, 2.0].map(s => (
+              <option key={s} value={s}>{s}x</option>
+            ))}
+          </select>
         </div>
       )}
 

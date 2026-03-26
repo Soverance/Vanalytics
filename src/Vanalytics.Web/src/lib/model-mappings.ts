@@ -20,6 +20,9 @@ const SLOT_ID_TO_NAME: Record<number, string> = {
   7: 'Main', 8: 'Sub', 9: 'Range',
 }
 
+/** Visual armor slots that have "None" body models when unequipped */
+const VISUAL_ARMOR_SLOTS = [2, 3, 4, 5, 6]
+
 let cachedMappings: ModelMapping[] | null = null
 
 async function loadItemModelMappings(): Promise<ModelMapping[]> {
@@ -29,19 +32,27 @@ async function loadItemModelMappings(): Promise<ModelMapping[]> {
   return cachedMappings!
 }
 
+interface FaceEntry { name: string; path: string }
+let cachedFacePaths: Record<string, FaceEntry[]> | null = null
+
+async function loadFacePaths(): Promise<Record<string, FaceEntry[]>> {
+  if (cachedFacePaths) return cachedFacePaths
+  const res = await fetch('/data/face-paths.json')
+  cachedFacePaths = await res.json()
+  return cachedFacePaths!
+}
+
 /**
- * Given equipped gear and a race ID (1-8), resolves which DAT files to load
- * for each visual equipment slot.
+ * Given equipped gear, a race ID (1-8), and an optional face model ID,
+ * resolves which DAT files to load for each visual slot including the face
+ * and default body parts for unequipped slots.
  *
- * Pipeline:
- * 1. item-model-mappings.json: itemId + slotId → modelId (from Stylist XML, 12,366 entries)
- * 2. model-dat-paths.json: raceId + slotId + modelId → ROM path (from AltanaView CSVs, 20,476 entries)
- *
- * Returns a Map<slotName, romPath> for slots where both lookups succeed.
+ * Returns a Map<slotName, romPath> where slotName includes "Face" for slot 1.
  */
 export function useSlotDatPaths(
   gear: GearEntry[],
   raceId: number | null,
+  faceModelId?: number,
 ): { slotDatPaths: Map<string, string>; loading: boolean } {
   const [slotDatPaths, setSlotDatPaths] = useState<Map<string, string>>(new Map())
   const [loading, setLoading] = useState(true)
@@ -56,13 +67,17 @@ export function useSlotDatPaths(
       }
 
       try {
-        // Step 1: Load item → model ID mappings
-        const itemMappings = await loadItemModelMappings()
+        const [itemMappings, facePaths] = await Promise.all([
+          loadItemModelMappings(),
+          loadFacePaths(),
+        ])
         if (cancelled) return
 
-        // Step 2: For each gear slot, find the model ID
+        // Track which visual armor slots have equipped gear
+        const equippedSlotIds = new Set<number>()
         const slotsToResolve: Array<{ modelId: number; raceId: number; slotId: number; slotName: string }> = []
 
+        // Resolve equipped gear
         for (const gearEntry of gear) {
           const slotId = SLOT_NAME_TO_ID[gearEntry.slot]
           if (!slotId || gearEntry.itemId <= 0) continue
@@ -72,6 +87,7 @@ export function useSlotDatPaths(
           )
           if (!mapping) continue
 
+          equippedSlotIds.add(slotId)
           slotsToResolve.push({
             modelId: mapping.modelId,
             raceId,
@@ -80,7 +96,17 @@ export function useSlotDatPaths(
           })
         }
 
-        // Step 3: Batch resolve model IDs → ROM paths
+        // For unequipped visual armor slots, use model 0 (default body part)
+        for (const slotId of VISUAL_ARMOR_SLOTS) {
+          if (!equippedSlotIds.has(slotId)) {
+            const slotName = SLOT_ID_TO_NAME[slotId]
+            if (slotName) {
+              slotsToResolve.push({ modelId: 0, raceId, slotId, slotName })
+            }
+          }
+        }
+
+        // Batch resolve model IDs → ROM paths
         const pathMap = await resolveModelPaths(slotsToResolve)
         if (cancelled) return
 
@@ -94,6 +120,14 @@ export function useSlotDatPaths(
           }
         }
 
+        // Resolve face DAT path
+        if (faceModelId != null && faceModelId >= 0) {
+          const raceFaces = facePaths[String(raceId)]
+          if (raceFaces && faceModelId < raceFaces.length) {
+            result.set('Face', raceFaces[faceModelId].path)
+          }
+        }
+
         setSlotDatPaths(result)
         setLoading(false)
       } catch {
@@ -103,7 +137,7 @@ export function useSlotDatPaths(
 
     resolve()
     return () => { cancelled = true }
-  }, [gear, raceId])
+  }, [gear, raceId, faceModelId])
 
   return { slotDatPaths, loading }
 }

@@ -2,11 +2,13 @@ import { DatReader } from './DatReader'
 import { parseTextureBlock } from './TextureParser'
 import { parseVertexBlock } from './MeshParser'
 import { parseSkeleton } from './SkeletonParser'
-import type { ParsedDatFile, ParsedMesh, ParsedTexture, ParsedSkeleton } from './types'
+import { parseAnimationDat } from './AnimationParser'
+import type { ParsedDatFile, ParsedMesh, ParsedTexture, ParsedSkeleton, ParsedAnimation } from './types'
 
 const BLOCK_IMG = 0x20
 const BLOCK_BONE = 0x29
 const BLOCK_VERTEX = 0x2A
+export const BLOCK_ANIM = 0x2B
 
 const DATHEAD_SIZE = 8
 const BLOCK_PADDING = 8
@@ -109,7 +111,17 @@ export function parseDatFile(
     }
   }
 
-  return { meshes, textures, skeleton: embeddedSkeleton }
+  // Third pass: parse animation blocks (0x2B) from the same buffer.
+  // NPC/Monster DATs contain embedded animations alongside mesh and skeleton data.
+  let animations: ParsedAnimation[] = []
+  const hasAnimBlocks = blocks.some(b => b.type === BLOCK_ANIM)
+  if (hasAnimBlocks) {
+    try {
+      animations = parseAnimationDat(buffer)
+    } catch { /* skip */ }
+  }
+
+  return { meshes, textures, skeleton: embeddedSkeleton, animations }
 }
 
 /**

@@ -21,10 +21,8 @@ public class EquippedGearConfiguration : IEntityTypeConfiguration<EquippedGear>
             .HasForeignKey(g => g.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne<GameItem>()
-            .WithMany()
-            .HasForeignKey(g => g.ItemId)
-            .OnDelete(DeleteBehavior.NoAction)
-            .IsRequired(false);
+        // ItemId is stored for reference/display but has no FK constraint.
+        // Gear syncs from the addon before items may exist in the GameItems table.
+        builder.HasIndex(g => g.ItemId);
     }
 }

@@ -1,0 +1,219 @@
+=== Windower Player Data Reference ===
+Dumped from a live FFXI session via //va dump (2026-03-24)
+
+=== player ===
+player.name = string                    -- Character name
+player.nation = number                  -- 0=San d'Oria, 1=Bastok, 2=Windurst
+player.linkshell = string               -- Active linkshell name
+player.linkshell_slot = number          -- Active LS slot (1-based)
+player.status = number                  -- 0=idle, 1=fighting, etc.
+player.in_combat = boolean
+player.autorun = boolean
+player.id = number                      -- Entity ID
+player.index = number                   -- Entity index
+player.item_level = number              -- Current iLvl (e.g., 118)
+player.superior_level = number          -- Master level (e.g., 5)
+player.race = number                    -- Via mob.race: 1=Hume M, 2=Hume F, 3=Elvaan M, 4=Elvaan F, 5=Taru M, 6=Taru F, 7=Mithra, 8=Galka
+
+-- Main/Sub job
+player.main_job = string                -- Abbreviation: "THF", "WAR", etc.
+player.main_job_full = string           -- Full name: "Thief"
+player.main_job_level = number          -- e.g., 99
+player.main_job_id = number             -- Numeric job ID (6 = THF)
+player.sub_job = string                 -- e.g., "BLM"
+player.sub_job_full = string            -- e.g., "Black Mage"
+player.sub_job_level = number           -- e.g., 49
+player.sub_job_id = number              -- Numeric job ID
+
+-- Vitals
+player.vitals.hp = number
+player.vitals.max_hp = number
+player.vitals.hpp = number              -- HP percentage (0-100)
+player.vitals.mp = number
+player.vitals.max_mp = number
+player.vitals.mpp = number              -- MP percentage (0-100)
+player.vitals.tp = number               -- TP (0-3000)
+
+-- Jobs table: keyed by uppercase abbreviation, value is level
+player.jobs.WAR = number                -- e.g., 99
+player.jobs.MNK = number
+player.jobs.WHM = number
+-- ... all 22 jobs (WAR MNK WHM BLM RDM THF PLD DRK BST BRD RNG SAM NIN DRG SMN BLU COR PUP DNC SCH GEO RUN)
+
+-- Skills table: keyed by lowercase snake_case name, value is raw skill level (number)
+-- Combat skills
+player.skills.hand_to_hand = number
+player.skills.dagger = number
+player.skills.sword = number
+player.skills.great_sword = number
+player.skills.axe = number
+player.skills.great_axe = number
+player.skills.scythe = number
+player.skills.polearm = number
+player.skills.katana = number
+player.skills.great_katana = number
+player.skills.club = number
+player.skills.staff = number
+player.skills.archery = number
+player.skills.marksmanship = number
+player.skills.throwing = number
+player.skills.shield = number
+player.skills.evasion = number
+player.skills.parrying = number
+player.skills.guard = number
+-- Magic skills
+player.skills.divine_magic = number
+player.skills.healing_magic = number
+player.skills.enhancing_magic = number
+player.skills.enfeebling_magic = number
+player.skills.elemental_magic = number
+player.skills.dark_magic = number
+player.skills.summoning_magic = number
+player.skills.ninjutsu = number
+player.skills.singing = number
+player.skills.wind_instrument = number
+player.skills.stringed_instrument = number
+player.skills.blue_magic = number
+player.skills.geomancy = number
+player.skills.handbell = number
+-- Crafting skills
+player.skills.fishing = number
+player.skills.woodworking = number
+player.skills.smithing = number
+player.skills.goldsmithing = number
+player.skills.clothcraft = number
+player.skills.leathercraft = number
+player.skills.bonecraft = number
+player.skills.alchemy = number
+player.skills.cooking = number
+player.skills.synergy = number
+
+-- Merits table: keyed by lowercase snake_case name, value is merit level (number)
+-- See dump.txt for full list (200+ entries)
+-- Examples:
+player.merits.str = number              -- Stat merits (0-15)
+player.merits.dex = number
+player.merits.max_hp = number
+player.merits.max_mp = number
+player.merits.critical_hit_rate = number
+player.merits.double_attack_rate = number
+player.merits.triple_attack_rate = number
+-- ... job-specific merits, weapon merits, magic merits, etc.
+
+-- Job Points table: keyed by lowercase job abbreviation
+-- Each job has: jp (unspent), jp_spent, cp (capacity points), plus job-specific ability upgrades
+-- Example for THF:
+player.job_points.thf.jp = number       -- Unspent JP
+player.job_points.thf.jp_spent = number -- Total JP spent
+player.job_points.thf.cp = number       -- Capacity points
+player.job_points.thf.sneak_attack_effect = number  -- 0-20
+player.job_points.thf.trick_attack_effect = number
+-- ... each job has ~10-13 ability-specific JP upgrades
+
+-- Master Levels table: structure TBD (was {table} in dump but not expanded)
+player.master_levels = table
+
+-- Buffs table: active status effects (not expanded in dump)
+player.buffs = table
+
+=== info ===
+info.logged_in = boolean
+info.zone = number                      -- Zone ID (use res.zones[id].en for name)
+info.server = number                    -- Server ID (use res.servers[id].en for name)
+info.mog_house = boolean
+info.menu_open = boolean
+info.chat_open = boolean
+info.language = string                  -- "English", "Japanese"
+info.weather = number                   -- Weather type ID
+info.day = number                       -- Vana'diel day of week (0-7)
+info.time = number                      -- Vana'diel time (minutes from midnight)
+info.moon = number                      -- Moon percent (0-100)
+info.moon_phase = number                -- Moon phase ID
+
+=== mob (self) ===
+mob.name = string
+mob.id = number
+mob.index = number
+mob.race = number                       -- 1-8 (race/gender combo)
+mob.hpp = number                        -- HP percent
+mob.status = number
+mob.spawn_type = number                 -- 13 = PC
+mob.x = number                          -- Position
+mob.y = number
+mob.z = number
+mob.facing = number                     -- Radians
+mob.heading = number
+mob.distance = number
+mob.movement_speed = number
+mob.model_scale = number
+mob.model_size = number
+mob.animation_speed = number
+mob.is_npc = boolean
+mob.in_party = boolean
+mob.in_alliance = boolean
+mob.charmed = boolean
+mob.valid_target = boolean
+mob.claim_id = number
+mob.target_index = number
+mob.target_type = number
+-- Equipment model IDs (visible gear models)
+mob.models.1 = number                   -- Race model
+mob.models.2 = number                   -- Head
+mob.models.3 = number                   -- Body
+mob.models.4 = number                   -- Hands
+mob.models.5 = number                   -- Legs
+mob.models.6 = number                   -- Feet
+mob.models.7 = number                   -- Main weapon
+mob.models.8 = number                   -- Sub weapon
+mob.models.9 = number                   -- Range weapon
+
+=== items.equipment ===
+-- Each slot has two fields: inventory index and bag ID
+-- Index of 0 means nothing equipped
+equipment.main = number                 -- Inventory index
+equipment.main_bag = number             -- Bag ID
+equipment.sub = number
+equipment.sub_bag = number
+equipment.range = number
+equipment.range_bag = number
+equipment.ammo = number
+equipment.ammo_bag = number
+equipment.head = number
+equipment.head_bag = number
+equipment.body = number
+equipment.body_bag = number
+equipment.hands = number
+equipment.hands_bag = number
+equipment.legs = number
+equipment.legs_bag = number
+equipment.feet = number
+equipment.feet_bag = number
+equipment.neck = number
+equipment.neck_bag = number
+equipment.waist = number
+equipment.waist_bag = number
+equipment.left_ear = number
+equipment.left_ear_bag = number
+equipment.right_ear = number
+equipment.right_ear_bag = number
+equipment.left_ring = number
+equipment.left_ring_bag = number
+equipment.right_ring = number
+equipment.right_ring_bag = number
+equipment.back = number
+equipment.back_bag = number
+
+-- Bag ID to items table key mapping:
+-- 0=inventory, 1=safe, 2=storage, 3=temporary, 4=locker,
+-- 5=satchel, 6=sack, 7=case, 8=wardrobe, 9=safe2,
+-- 10=wardrobe2, 11=wardrobe3, 12=wardrobe4, 13=wardrobe5,
+-- 14=wardrobe6, 15=wardrobe7, 16=wardrobe8, 17=recycle
+
+=== items.inventory[n] (item structure) ===
+-- Each item in a bag has:
+item.id = number                        -- Item ID (matches res.items)
+item.count = number                     -- Stack count
+item.slot = number                      -- Slot index within bag
+item.status = number                    -- Item status flags
+item.bazaar = number                    -- Bazaar price (0 = not bazaared)
+item.extdata = string                   -- Extended data (augments, etc.)

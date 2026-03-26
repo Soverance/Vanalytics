@@ -1,12 +1,16 @@
+using System.Reflection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Soverance.Auth.Endpoints;
 using Soverance.Auth.Extensions;
+using Soverance.Auth.Models;
 using Soverance.Auth.Services;
 using Soverance.Forum.Extensions;
 using Soverance.Forum.Services;
 using Soverance.Data.Extensions;
+using Vanalytics.Api.Middleware;
 using Vanalytics.Api.Services;
 using Vanalytics.Api.Services.Sync;
 using Vanalytics.Data;
@@ -27,6 +31,20 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 
+// CORS — allow only configured origins (browser-enforced; does not affect non-browser
+// clients like the Windower addon, which use native HTTP and bypass CORS entirely)
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 builder.Services.AddOpenApi("v1", options =>
 {
     options.AddDocumentTransformer((document, context, ct) =>
@@ -38,7 +56,8 @@ builder.Services.AddOpenApi("v1", options =>
             Description = "FFXI character tracking and game data API"
         };
         document.Components ??= new OpenApiComponents();
-        document.Components!.SecuritySchemes["BearerAuth"] = new OpenApiSecurityScheme
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["BearerAuth"] = new OpenApiSecurityScheme
         {
             Type = SecuritySchemeType.Http,
             Scheme = "bearer",
@@ -61,6 +80,8 @@ builder.Services.AddSingleton<VanadielClock>();
 builder.Services.AddScoped<OAuthService>();
 builder.Services.AddSingleton<RateLimiter>();
 builder.Services.AddSingleton<EconomyRateLimiter>();
+builder.Services.AddSingleton<LoginRateLimiter>();
+builder.Services.AddSingleton<SessionRateLimiter>();
 
 // Item image storage: Azure Blob in production, local filesystem in dev
 if (!string.IsNullOrEmpty(builder.Configuration["AzureStorage:ConnectionString"]))
@@ -114,7 +135,41 @@ using (var scope = app.Services.CreateScope())
         await AdminSeeder.SeedAsync(db, adminEmail, adminUsername, adminPassword, logger);
     }
 
+    await ForumSeeder.SeedSystemCategoriesAsync(db);
+
+    // Generate a dev JWT for Scalar API docs pre-authentication
+    if (app.Environment.IsDevelopment())
+    {
+        var adminUser = await db.Set<User>().FirstOrDefaultAsync(u => u.IsSystemAccount);
+        if (adminUser is not null)
+        {
+            var tokenService = scope.ServiceProvider.GetRequiredService<TokenService>();
+            app.Configuration["DevAdminToken"] = tokenService.GenerateAccessToken(adminUser);
+        }
+    }
 }
+
+// Forward proxy headers so RemoteIpAddress reflects the real client IP.
+// Required behind Cloudflare + Azure Container Apps, which both set X-Forwarded-For.
+// In production, KnownProxies/KnownNetworks are cleared to trust all forwarders —
+// safe because Azure Container Apps only exposes the container via its own ingress.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+        // Clear defaults so all proxy IPs in the chain are trusted.
+        // Azure Container Apps + Cloudflare don't have fixed IPs to whitelist.
+        KnownProxies = { },
+        KnownIPNetworks = { },
+    });
+}
+
+// Global error handling — catches unhandled exceptions and returns clean JSON
+app.UseMiddleware<ExceptionHandlerMiddleware>();
+
+// Security headers on every response
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // HTTPS redirection in production (skipped when behind a reverse proxy
 // that terminates TLS, e.g., Azure Container Apps + Cloudflare)
@@ -167,18 +222,58 @@ else
 // Serve the embedded SPA (Vanalytics.Web built into wwwroot/)
 app.UseStaticFiles();
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapOpenApi();
-app.MapScalarApiReference("/api/docs", options =>
+if (app.Environment.IsDevelopment())
 {
-    options.Title = "Vanalytics API";
-});
+    app.MapOpenApi();
+    var devToken = app.Configuration["DevAdminToken"];
+    app.MapScalarApiReference("/api/docs", options =>
+    {
+        options.Title = "Vanalytics API";
+        options.OpenApiRoutePattern = "/openapi/{documentName}.json";
+        if (!string.IsNullOrEmpty(devToken))
+        {
+            options
+                .AddHttpAuthentication("BearerAuth", scheme => scheme.WithToken(devToken))
+                .AddPreferredSecuritySchemes("BearerAuth");
+        }
+    });
+}
 app.MapControllers();
 app.MapSamlEndpoints();
 app.MapSamlAdminEndpoints();
 app.MapSamlExchangeEndpoint();
-app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+var startedAt = DateTimeOffset.UtcNow;
+app.MapGet("/health", async (VanalyticsDbContext db, IHostEnvironment env) =>
+{
+    var dbHealthy = false;
+    try
+    {
+        dbHealthy = await db.Database.CanConnectAsync();
+    }
+    catch
+    {
+        // Connection failure — dbHealthy stays false
+    }
+
+    var version = typeof(Program).Assembly
+        .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion
+        ?? typeof(Program).Assembly.GetName().Version?.ToString()
+        ?? "unknown";
+
+    var status = dbHealthy ? "healthy" : "degraded";
+
+    return Results.Json(new
+    {
+        status,
+        version,
+        environment = env.EnvironmentName,
+        uptime = (DateTimeOffset.UtcNow - startedAt).ToString(@"d\.hh\:mm\:ss"),
+        database = dbHealthy ? "connected" : "unavailable",
+    }, statusCode: dbHealthy ? 200 : 503);
+});
 
 // SPA fallback: serve index.html for unmatched non-file, non-API requests
 app.MapFallbackToFile("index.html");

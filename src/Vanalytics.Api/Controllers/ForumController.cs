@@ -146,11 +146,23 @@ public class ForumController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Body))
             return BadRequest(new { error = "Body is required." });
 
+        if (CountForumImages(request.Body) > MaxImagesPerPost)
+            return BadRequest(new { error = $"Posts cannot contain more than {MaxImagesPerPost} images." });
+
         var sanitizedBody = SanitizeImageSources(request.Body);
         var sanitizedRequest = new CreateThreadRequest(request.Title, sanitizedBody);
 
         var thread = await _forum.CreateThreadAsync(slug, sanitizedRequest, GetUserId());
         if (thread == null) return NotFound();
+
+        // Link attachments to the first post created with the thread
+        var db = HttpContext.RequestServices.GetRequiredService<VanalyticsDbContext>();
+        var firstPost = await db.Set<ForumPost>()
+            .Where(p => p.ThreadId == thread.Id)
+            .OrderBy(p => p.Id)
+            .FirstOrDefaultAsync();
+        if (firstPost != null)
+            await LinkAttachmentsToPost(db, sanitizedBody, firstPost.Id);
 
         return StatusCode(201, thread);
     }
@@ -290,6 +302,11 @@ public class ForumController : ControllerBase
         if (request.Description?.Length > 500)
             return BadRequest(new { error = "Description must be 500 characters or less." });
 
+        var db = HttpContext.RequestServices.GetRequiredService<VanalyticsDbContext>();
+        var category = await db.Set<ForumCategory>().FindAsync(id);
+        if (category == null) return NotFound();
+        if (category.IsSystem) return BadRequest(new { error = "System categories cannot be modified." });
+
         var result = await _forum.UpdateCategoryAsync(id, request);
         return result != null ? Ok(result) : NotFound();
     }
@@ -298,6 +315,11 @@ public class ForumController : ControllerBase
     [HttpDelete("categories/{id}")]
     public async Task<IActionResult> DeleteCategory(int id)
     {
+        var db = HttpContext.RequestServices.GetRequiredService<VanalyticsDbContext>();
+        var category = await db.Set<ForumCategory>().FindAsync(id);
+        if (category == null) return NotFound();
+        if (category.IsSystem) return BadRequest(new { error = "System categories cannot be deleted." });
+
         var result = await _forum.DeleteCategoryAsync(id);
         if (!result) return Conflict(new { error = "Category not found or has threads." });
 
@@ -346,44 +368,46 @@ public class ForumController : ControllerBase
     // === Helpers ===
 
     private const int MaxImagesPerPost = 5;
-    private static readonly string AttachmentPathPrefix = "/forum-attachments/attachments/";
+    private string AttachmentPathPrefix => $"{_attachmentStore.BaseUrl}/attachments/";
 
-    private static int CountForumImages(string html)
+    private int CountForumImages(string html)
     {
+        var prefix = AttachmentPathPrefix;
         var count = 0;
         var searchFrom = 0;
         while (true)
         {
-            var idx = html.IndexOf(AttachmentPathPrefix, searchFrom, StringComparison.OrdinalIgnoreCase);
+            var idx = html.IndexOf(prefix, searchFrom, StringComparison.OrdinalIgnoreCase);
             if (idx < 0) break;
             count++;
-            searchFrom = idx + AttachmentPathPrefix.Length;
+            searchFrom = idx + prefix.Length;
         }
         return count;
     }
 
     private async Task LinkAttachmentsToPost(VanalyticsDbContext db, string html, long postId)
     {
-        var guids = new List<string>();
+        var prefix = AttachmentPathPrefix;
+        var storagePaths = new List<string>();
         var searchFrom = 0;
         while (true)
         {
-            var idx = html.IndexOf(AttachmentPathPrefix, searchFrom, StringComparison.OrdinalIgnoreCase);
+            var idx = html.IndexOf(prefix, searchFrom, StringComparison.OrdinalIgnoreCase);
             if (idx < 0) break;
-            var start = idx + AttachmentPathPrefix.Length;
+            var start = idx + prefix.Length;
             var end = html.IndexOfAny(new[] { '"', '\'', '>' }, start);
             if (end > start)
             {
                 var fileName = html[start..end];
-                guids.Add($"attachments/{fileName}");
+                storagePaths.Add($"attachments/{fileName}");
             }
             searchFrom = start;
         }
 
-        if (guids.Count > 0)
+        if (storagePaths.Count > 0)
         {
             var attachments = await db.Set<ForumAttachment>()
-                .Where(a => guids.Contains(a.StoragePath) && a.PostId == null)
+                .Where(a => storagePaths.Contains(a.StoragePath) && a.PostId == null)
                 .ToListAsync();
             foreach (var a in attachments)
                 a.PostId = postId;
@@ -391,8 +415,9 @@ public class ForumController : ControllerBase
         }
     }
 
-    private static string SanitizeImageSources(string html)
+    private string SanitizeImageSources(string html)
     {
+        var allowedPrefix = _attachmentStore.BaseUrl;
         var result = new System.Text.StringBuilder(html.Length);
         var pos = 0;
         while (pos < html.Length)
@@ -422,7 +447,7 @@ public class ForumController : ControllerBase
                 if (srcEnd > srcStart)
                 {
                     var src = tag[srcStart..srcEnd];
-                    if (src.StartsWith("/forum-attachments/", StringComparison.OrdinalIgnoreCase))
+                    if (src.StartsWith(allowedPrefix, StringComparison.OrdinalIgnoreCase))
                     {
                         result.Append(tag);
                     }

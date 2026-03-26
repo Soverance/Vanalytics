@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Vanalytics.Api.Services;
 using Vanalytics.Core.Enums;
 using Vanalytics.Data;
 
@@ -12,12 +13,17 @@ public class ServersController : ControllerBase
 {
     private readonly VanalyticsDbContext _db;
     private readonly IMemoryCache _cache;
+    private readonly VanadielClock _clock;
 
-    public ServersController(VanalyticsDbContext db, IMemoryCache cache)
+    public ServersController(VanalyticsDbContext db, IMemoryCache cache, VanadielClock clock)
     {
         _db = db;
         _cache = cache;
+        _clock = clock;
     }
+
+    [HttpGet("clock")]
+    public IActionResult GetClock() => Ok(_clock.GetClock());
 
     [HttpGet]
     public async Task<IActionResult> List()

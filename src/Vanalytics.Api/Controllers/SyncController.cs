@@ -1,8 +1,10 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Api.Services;
+using Vanalytics.Core.DTOs.Macros;
 using Vanalytics.Core.DTOs.Sync;
 using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
@@ -88,6 +90,22 @@ public class SyncController : ControllerBase
             };
         }
 
+        // Update character metadata
+        character.FaceModelId = request.FaceModelId;
+        character.SubJob = request.SubJob;
+        character.SubJobLevel = request.SubJobLevel;
+        character.MasterLevel = request.MasterLevel;
+        character.ItemLevel = request.ItemLevel;
+        character.Hp = request.Hp;
+        character.MaxHp = request.MaxHp;
+        character.Mp = request.Mp;
+        character.MaxMp = request.MaxMp;
+        character.Linkshell = request.Linkshell;
+        character.Nation = request.Nation;
+        character.MeritsJson = request.Merits is { Count: > 0 }
+            ? JsonSerializer.Serialize(request.Merits)
+            : null;
+
         // Full state replacement
         await _db.CharacterJobs.Where(j => j.CharacterId == character.Id).ExecuteDeleteAsync();
         await _db.EquippedGear.Where(g => g.CharacterId == character.Id).ExecuteDeleteAsync();
@@ -105,7 +123,10 @@ public class SyncController : ControllerBase
                 CharacterId = character.Id,
                 JobId = jobType,
                 Level = jobEntry.Level,
-                IsActive = jobEntry.Job.Equals(request.ActiveJob, StringComparison.OrdinalIgnoreCase)
+                IsActive = jobType.ToString().Equals(request.ActiveJob, StringComparison.OrdinalIgnoreCase),
+                JP = jobEntry.JP,
+                JPSpent = jobEntry.JPSpent,
+                CP = jobEntry.CP
             });
         }
         _db.CharacterJobs.AddRange(newJobs);
@@ -193,4 +214,175 @@ public class SyncController : ControllerBase
 
         return Ok(new { message = "Sync successful", lastSyncAt = character.LastSyncAt });
     }
+
+    [HttpPost("macros")]
+    public async Task<IActionResult> SyncMacros([FromBody] MacroSyncRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var apiKey = Request.Headers["X-Api-Key"].ToString();
+        if (!_rateLimiter.IsAllowed(apiKey))
+            return StatusCode(429, new { message = "Rate limit exceeded." });
+
+        // Find the character owned by this user (most recently synced)
+        var character = await _db.Characters
+            .OrderByDescending(c => c.LastSyncAt)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+        if (character is null)
+            return NotFound(new { message = "No character found. Sync character data first." });
+
+        foreach (var bookEntry in request.Books)
+        {
+            var book = await _db.MacroBooks
+                .FirstOrDefaultAsync(b => b.CharacterId == character.Id && b.BookNumber == bookEntry.BookNumber);
+
+            if (book is null)
+            {
+                book = new MacroBook
+                {
+                    Id = Guid.NewGuid(),
+                    CharacterId = character.Id,
+                    BookNumber = bookEntry.BookNumber,
+                    ContentHash = bookEntry.ContentHash,
+                    BookTitle = bookEntry.BookTitle,
+                    PendingPush = false,
+                    UpdatedAt = DateTimeOffset.UtcNow
+                };
+                _db.MacroBooks.Add(book);
+            }
+            else
+            {
+                await _db.Macros
+                    .Where(m => m.Page.MacroBookId == book.Id)
+                    .ExecuteDeleteAsync();
+                await _db.MacroPages
+                    .Where(p => p.MacroBookId == book.Id)
+                    .ExecuteDeleteAsync();
+
+                book.ContentHash = bookEntry.ContentHash;
+                book.BookTitle = bookEntry.BookTitle;
+                book.PendingPush = false;
+                book.UpdatedAt = DateTimeOffset.UtcNow;
+            }
+
+            foreach (var pageEntry in bookEntry.Pages)
+            {
+                var page = new MacroPage
+                {
+                    Id = Guid.NewGuid(),
+                    MacroBookId = book.Id,
+                    PageNumber = pageEntry.PageNumber
+                };
+                _db.MacroPages.Add(page);
+
+                foreach (var macroEntry in pageEntry.Macros)
+                {
+                    _db.Macros.Add(new Macro
+                    {
+                        Id = Guid.NewGuid(),
+                        MacroPageId = page.Id,
+                        Set = macroEntry.Set,
+                        Position = macroEntry.Position,
+                        Name = macroEntry.Name,
+                        Icon = macroEntry.Icon,
+                        Line1 = macroEntry.Line1,
+                        Line2 = macroEntry.Line2,
+                        Line3 = macroEntry.Line3,
+                        Line4 = macroEntry.Line4,
+                        Line5 = macroEntry.Line5,
+                        Line6 = macroEntry.Line6
+                    });
+                }
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Macros synced", booksUpdated = request.Books.Count });
+    }
+
+    [HttpGet("macros/pending")]
+    public async Task<IActionResult> GetPendingMacros()
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var character = await _db.Characters
+            .OrderByDescending(c => c.LastSyncAt)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+        if (character is null)
+            return Ok(new { pendingBooks = Array.Empty<int>() });
+
+        var pending = await _db.MacroBooks
+            .Where(b => b.CharacterId == character.Id && b.PendingPush)
+            .Select(b => b.BookNumber)
+            .OrderBy(n => n)
+            .ToArrayAsync();
+
+        return Ok(new { pendingBooks = pending });
+    }
+
+    [HttpGet("macros/{bookNumber:int}")]
+    public async Task<IActionResult> GetMacroBook(int bookNumber)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var character = await _db.Characters
+            .OrderByDescending(c => c.LastSyncAt)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+        if (character is null)
+            return NotFound(new { message = "No character found." });
+
+        var book = await _db.MacroBooks
+            .Include(b => b.Pages).ThenInclude(p => p.Macros)
+            .FirstOrDefaultAsync(b => b.CharacterId == character.Id && b.BookNumber == bookNumber);
+        if (book is null)
+            return NotFound(new { message = $"Macro book {bookNumber} not found." });
+
+        return Ok(MapBookToDetail(book));
+    }
+
+    [HttpDelete("macros/pending/{bookNumber:int}")]
+    public async Task<IActionResult> AcknowledgeMacroBook(int bookNumber)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var character = await _db.Characters
+            .OrderByDescending(c => c.LastSyncAt)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+        if (character is null)
+            return NotFound();
+
+        var book = await _db.MacroBooks
+            .FirstOrDefaultAsync(b => b.CharacterId == character.Id && b.BookNumber == bookNumber);
+        if (book is null)
+            return NotFound();
+
+        book.PendingPush = false;
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    private static MacroBookDetail MapBookToDetail(MacroBook book) => new()
+    {
+        BookNumber = book.BookNumber,
+        ContentHash = book.ContentHash,
+        PendingPush = book.PendingPush,
+        UpdatedAt = book.UpdatedAt,
+        Pages = book.Pages.OrderBy(p => p.PageNumber).Select(p => new MacroPageDetail
+        {
+            PageNumber = p.PageNumber,
+            Macros = p.Macros.OrderBy(m => m.Set).ThenBy(m => m.Position).Select(m => new MacroDetail
+            {
+                Set = m.Set,
+                Position = m.Position,
+                Name = m.Name,
+                Icon = m.Icon,
+                Line1 = m.Line1,
+                Line2 = m.Line2,
+                Line3 = m.Line3,
+                Line4 = m.Line4,
+                Line5 = m.Line5,
+                Line6 = m.Line6
+            }).ToList()
+        }).ToList()
+    };
 }
