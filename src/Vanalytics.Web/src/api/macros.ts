@@ -3,9 +3,9 @@ import { api } from './client'
 export interface MacroBookSummary {
   bookNumber: number
   contentHash: string
+  bookTitle: string
   pendingPush: boolean
   isEmpty: boolean
-  previewLabel: string
   updatedAt: string
 }
 

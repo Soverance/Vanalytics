@@ -6,6 +6,7 @@ public class MacroBook
     public Guid CharacterId { get; set; }
     public int BookNumber { get; set; }
     public string ContentHash { get; set; } = string.Empty;
+    public string BookTitle { get; set; } = string.Empty;
     public bool PendingPush { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 

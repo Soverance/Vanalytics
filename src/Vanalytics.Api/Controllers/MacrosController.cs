@@ -39,17 +39,14 @@ public class MacrosController : ControllerBase
         var summaries = books.Select(b =>
         {
             var allMacros = b.Pages.SelectMany(p => p.Macros).ToList();
-            var firstNonEmpty = allMacros
-                .OrderBy(m => m.Page.PageNumber).ThenBy(m => m.Set).ThenBy(m => m.Position)
-                .FirstOrDefault(m => !string.IsNullOrEmpty(m.Name));
 
             return new MacroBookSummary
             {
                 BookNumber = b.BookNumber,
                 ContentHash = b.ContentHash,
+                BookTitle = !string.IsNullOrWhiteSpace(b.BookTitle) ? b.BookTitle : $"Book {b.BookNumber:D2}",
                 PendingPush = b.PendingPush,
                 IsEmpty = !allMacros.Any(m => !string.IsNullOrEmpty(m.Name)),
-                PreviewLabel = firstNonEmpty?.Name ?? "Empty",
                 UpdatedAt = b.UpdatedAt
             };
         }).ToList();

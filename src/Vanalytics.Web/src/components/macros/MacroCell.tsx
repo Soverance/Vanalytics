@@ -1,4 +1,4 @@
-import { MacroDetail } from '../../api/macros'
+import type { MacroDetail } from '../../api/macros'
 
 interface MacroCellProps {
   macro: MacroDetail | null
@@ -11,7 +11,8 @@ export default function MacroCell({ macro, isSelected, onClick }: MacroCellProps
   return (
     <button
       onClick={onClick}
-      className={`w-20 h-16 rounded border text-center text-xs transition-all flex flex-col items-center justify-center gap-0.5 ${
+      title={macro?.line1 || undefined}
+      className={`w-16 h-12 rounded border text-center text-[11px] transition-all flex flex-col items-center justify-center ${
         isSelected
           ? 'border-blue-400 bg-blue-900/40'
           : isEmpty
@@ -19,10 +20,7 @@ export default function MacroCell({ macro, isSelected, onClick }: MacroCellProps
             : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500'
       }`}
     >
-      {macro && macro.icon > 0 && (
-        <span className="text-[10px] text-gray-500">#{macro.icon}</span>
-      )}
-      <span className="truncate w-full px-1">{isEmpty ? '--' : macro!.name}</span>
+      <span className="truncate w-full px-0.5 leading-tight">{isEmpty ? '--' : macro!.name}</span>
     </button>
   )
 }

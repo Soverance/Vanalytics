@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../../api/client'
-import type { RelicsResponse, RelicWeapon, GameItemDetail } from '../../types/api'
+import type { RelicsResponse, GameItemDetail } from '../../types/api'
 import ItemPreviewBox from '../economy/ItemPreviewBox'
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -92,8 +92,8 @@ export default function RelicsTab({ characterId }: Props) {
 
   return (
     <div>
-      {/* Progress bars per category */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      {/* Compact progress row */}
+      <div className="flex gap-2 mb-4">
         {sortedProgress.map(p => {
           const pct = p.total > 0 ? (p.collected / p.total) * 100 : 0
           const barColor = CATEGORY_COLORS[p.category] ?? 'bg-gray-500'
@@ -101,19 +101,17 @@ export default function RelicsTab({ characterId }: Props) {
             <button
               key={p.category}
               onClick={() => setCategoryFilter(prev => prev === p.category ? '' : p.category)}
-              className={`text-left p-3 rounded-lg border transition-colors ${
+              className={`flex-1 px-2 py-1.5 rounded border text-xs transition-colors ${
                 categoryFilter === p.category
                   ? 'border-blue-500 bg-gray-800'
                   : 'border-gray-700 bg-gray-800/50 hover:bg-gray-800'
               }`}
             >
-              <div className="flex justify-between text-sm mb-1.5">
+              <div className="flex justify-between mb-1">
                 <span className="text-gray-200 font-medium">{p.category}</span>
-                <span className="text-gray-400">
-                  {p.collected}/{p.total}
-                </span>
+                <span className="text-gray-500">{p.collected}/{p.total}</span>
               </div>
-              <div className="h-1.5 rounded-full bg-gray-700 overflow-hidden">
+              <div className="h-1 rounded-full bg-gray-700 overflow-hidden">
                 <div
                   className={`h-full rounded-full ${barColor} transition-all`}
                   style={{ width: `${pct}%` }}
@@ -132,9 +130,9 @@ export default function RelicsTab({ characterId }: Props) {
             : "No ultimate weapons found in this character's history."}
         </p>
       ) : (
-        <div className="max-h-[480px] overflow-y-auto">
+        <div>
           <table className="w-full text-sm">
-            <thead className="sticky top-0 z-10">
+            <thead>
               <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
                 <th className="px-4 py-2 text-left w-12"></th>
                 <th className="px-4 py-2 text-left">Weapon</th>

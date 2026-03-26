@@ -135,7 +135,27 @@ end
 -- JSON encoder (minimal, sufficient for sync payload)
 -----------------------------------------------------------------------
 local function json_encode_string(s)
-    return '"' .. s:gsub('\\', '\\\\'):gsub('"', '\\"'):gsub('\n', '\\n') .. '"'
+    -- Build output byte-by-byte to handle control chars efficiently
+    local out = {}
+    for i = 1, #s do
+        local b = s:byte(i)
+        if b == 0x5C then      -- backslash
+            out[#out+1] = '\\\\'
+        elseif b == 0x22 then  -- double quote
+            out[#out+1] = '\\"'
+        elseif b == 0x0A then  -- newline
+            out[#out+1] = '\\n'
+        elseif b == 0x0D then  -- carriage return
+            out[#out+1] = '\\r'
+        elseif b == 0x09 then  -- tab
+            out[#out+1] = '\\t'
+        elseif b < 0x20 then   -- other control chars
+            out[#out+1] = string.format('\\u%04x', b)
+        else
+            out[#out+1] = s:sub(i, i)
+        end
+    end
+    return '"' .. table.concat(out) .. '"'
 end
 
 local function json_encode(val)
@@ -279,7 +299,7 @@ end
 -- Macro sync functions
 -----------------------------------------------------------------------
 local function find_macro_path()
-    local user_dir = windower.pol_path .. '\\USER'
+    local user_dir = windower.ffxi_path .. 'USER'
     -- Find the most recently modified content ID directory
     local best_dir = nil
     local best_time = 0
@@ -310,61 +330,75 @@ local function sync_macros(force)
 
     local changed_books = {}
     local new_hashes = {}
+    local books_found = 0
+    local titles = macro_lib.parse_titles(macro_path)
 
-    for i = 0, 19 do
-        local filename = string.format('mcr%d.dat', i)
-        local filepath = macro_path .. '\\' .. filename
-        local hash = macro_lib.hash_file(filepath)
+    for book_num = 1, macro_lib.BOOKS_COUNT do
+        local hash_key = 'book' .. book_num
+        local hash = macro_lib.hash_book(macro_path, book_num)
         if hash then
-            local stored_hash = settings.macro_hashes[filename]
+            books_found = books_found + 1
+            local stored_hash = settings.macro_hashes[hash_key]
             if force or hash ~= stored_hash then
-                local book = macro_lib.parse_book(filepath)
+                local book = macro_lib.parse_book(macro_path, book_num)
                 if book then
-                    table.insert(changed_books, macro_lib.book_to_api(book, i, hash))
+                    table.insert(changed_books, macro_lib.book_to_api(book, book_num, hash, titles[book_num]))
+                    new_hashes[hash_key] = hash
                 end
             end
-            new_hashes[filename] = hash
         end
     end
 
-    if #changed_books == 0 then return end
-
-    local payload = json_encode({
-        characterName = player.name,
-        server = server,
-        books = changed_books,
-    })
-
-    local url = settings.ApiUrl .. '/api/sync/macros'
-    local ltn12 = require('ltn12')
-    local response_body = {}
-
-    local result, status_code = http_request({
-        url = url,
-        method = 'POST',
-        headers = {
-            ['Content-Type'] = 'application/json',
-            ['Content-Length'] = tostring(#payload),
-            ['X-Api-Key'] = settings.ApiKey,
-        },
-        source = ltn12.source.string(payload),
-        sink = ltn12.sink.table(response_body),
-    })
-
-    if not result then
-        log_error('Macro sync connection failed: ' .. tostring(status_code))
+    if books_found == 0 then
+        log_error('No macro DAT files found at: ' .. macro_path)
         return
     end
 
-    if status_code == 200 then
-        -- Update stored hashes on success
-        for filename, hash in pairs(new_hashes) do
-            settings.macro_hashes[filename] = hash
+    if #changed_books == 0 then
+        log('Macros: no changes detected (' .. books_found .. ' books checked).')
+        return
+    end
+
+    log('Uploading ' .. #changed_books .. ' macro book(s)...')
+
+    local url = settings.ApiUrl .. '/api/sync/macros'
+    local ltn12 = require('ltn12')
+    local uploaded = 0
+
+    -- Upload one book at a time to avoid timeout on large payloads
+    for _, book in ipairs(changed_books) do
+        local payload = json_encode({ books = { book } })
+        local response_body = {}
+
+        local result, status_code = http_request({
+            url = url,
+            method = 'POST',
+            headers = {
+                ['Content-Type'] = 'application/json',
+                ['Content-Length'] = tostring(#payload),
+                ['X-Api-Key'] = settings.ApiKey,
+            },
+            source = ltn12.source.string(payload),
+            sink = ltn12.sink.table(response_body),
+        })
+
+        if not result then
+            log_error('Macro sync failed on book ' .. book.bookNumber .. ': ' .. tostring(status_code))
+        elseif status_code == 200 then
+            uploaded = uploaded + 1
+            local hash_key = 'book' .. book.bookNumber
+            if new_hashes[hash_key] then
+                settings.macro_hashes[hash_key] = new_hashes[hash_key]
+            end
+        else
+            local resp = table.concat(response_body)
+            log_error('Macro sync failed on book ' .. book.bookNumber .. ' (status ' .. tostring(status_code) .. '): ' .. resp)
         end
+    end
+
+    if uploaded > 0 then
         config.save(settings)
-        log_success('Macro sync: ' .. #changed_books .. ' book(s) uploaded.')
-    else
-        log_error('Macro sync failed with status ' .. tostring(status_code))
+        log_success('Macro sync: ' .. uploaded .. '/' .. #changed_books .. ' book(s) uploaded.')
     end
 end
 
@@ -975,6 +1009,17 @@ windower.register_event('addon command', function(command, ...)
         local mob = windower.ffxi.get_mob_by_id(player.id)
 
         local lines = {}
+
+        -- Dump all known Windower path variables
+        table.insert(lines, '=== Windower Paths ===')
+        table.insert(lines, 'windower.addon_path = ' .. tostring(windower.addon_path or 'nil'))
+        table.insert(lines, 'windower.windower_path = ' .. tostring(windower.windower_path or 'nil'))
+        table.insert(lines, 'windower.pol_path = ' .. tostring(windower.pol_path or 'nil'))
+        table.insert(lines, 'windower.ffxi_path = ' .. tostring(windower.ffxi_path or 'nil'))
+        table.insert(lines, 'windower.script_path = ' .. tostring(windower.script_path or 'nil'))
+        table.insert(lines, 'windower.appdata_path = ' .. tostring(windower.appdata_path or 'nil'))
+        table.insert(lines, '')
+
         local function dump(val, prefix, depth)
             if depth > 4 then
                 table.insert(lines, prefix .. ' = <max depth>')
@@ -1052,8 +1097,24 @@ windower.register_event('addon command', function(command, ...)
                 tracked = tracked + 1
             end
             log('Macro sync: ' .. tracked .. '/20 books tracked.')
+        elseif subcommand == 'dump' then
+            local macro_path = find_macro_path()
+            if not macro_path then
+                log_error('Could not find macro directory.')
+                return
+            end
+            -- Dump mcr0.dat and mcr1.dat (Book 1 and Book 2)
+            for i = 0, 1 do
+                local dat = macro_path .. '\\mcr' .. i .. '.dat'
+                local out = windower.addon_path .. 'mcr' .. i .. '_dump.txt'
+                if macro_lib.dump_dat(dat, out) then
+                    log_success('Dumped mcr' .. i .. '.dat to ' .. out)
+                else
+                    log_error('Failed to dump mcr' .. i .. '.dat')
+                end
+            end
         else
-            log('Macro commands: push | pull | status')
+            log('Macro commands: push | pull | status | dump')
         end
 
     elseif command == 'help' then

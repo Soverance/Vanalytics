@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+/* Themed scrollbars for dark UI panels */
+.styled-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.styled-scrollbar::-webkit-scrollbar-track {
+  background: rgb(17 24 39); /* gray-900 */
+  border-radius: 4px;
+}
+
+.styled-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(55 65 81); /* gray-700 */
+  border-radius: 4px;
+}
+
+.styled-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(75 85 99); /* gray-600 */
+}
+
+/* Firefox */
+.styled-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(55 65 81) rgb(17 24 39);
+}

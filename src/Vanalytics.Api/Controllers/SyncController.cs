@@ -244,6 +244,7 @@ public class SyncController : ControllerBase
                     CharacterId = character.Id,
                     BookNumber = bookEntry.BookNumber,
                     ContentHash = bookEntry.ContentHash,
+                    BookTitle = bookEntry.BookTitle,
                     PendingPush = false,
                     UpdatedAt = DateTimeOffset.UtcNow
                 };
@@ -259,6 +260,7 @@ public class SyncController : ControllerBase
                     .ExecuteDeleteAsync();
 
                 book.ContentHash = bookEntry.ContentHash;
+                book.BookTitle = bookEntry.BookTitle;
                 book.PendingPush = false;
                 book.UpdatedAt = DateTimeOffset.UtcNow;
             }

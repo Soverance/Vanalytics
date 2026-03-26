@@ -145,7 +145,7 @@ export default function CharacterDetailPage() {
                 </button>
               ))}
             </div>
-            <div className="min-h-[400px]">
+            <div className="h-[400px] overflow-y-auto styled-scrollbar">
               {activeTab === 'Jobs' && <JobsGrid jobs={character.jobs} />}
               {activeTab === 'Crafting' && <CraftingTable skills={character.craftingSkills} />}
               {activeTab === 'Relics' && <RelicsTab characterId={character.id} />}

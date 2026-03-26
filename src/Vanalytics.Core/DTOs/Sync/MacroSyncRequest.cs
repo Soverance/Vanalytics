@@ -17,6 +17,9 @@ public class MacroSyncBook
     [Required, MaxLength(64)]
     public string ContentHash { get; set; } = string.Empty;
 
+    [MaxLength(16)]
+    public string BookTitle { get; set; } = string.Empty;
+
     [Required]
     public List<MacroSyncPage> Pages { get; set; } = [];
 }

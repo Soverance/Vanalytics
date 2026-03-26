@@ -236,7 +236,7 @@ export default function InventoryTab({ characterId }: Props) {
             <p className="text-gray-400 text-xs mb-2">
               {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} across all bags
             </p>
-            <div className="max-h-[480px] overflow-y-auto">
+            <div className="max-h-[480px] overflow-y-auto styled-scrollbar">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
@@ -298,7 +298,7 @@ export default function InventoryTab({ characterId }: Props) {
                 {categoryFilter ? 'No items in this category.' : 'This bag is empty.'}
               </p>
             ) : (
-              <div className="max-h-[480px] overflow-y-auto">
+              <div className="max-h-[480px] overflow-y-auto styled-scrollbar">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-gray-800 text-gray-400 text-xs uppercase">

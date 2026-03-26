@@ -5,9 +5,9 @@ public class MacroBookSummary
 {
     public int BookNumber { get; set; }
     public string ContentHash { get; set; } = string.Empty;
+    public string BookTitle { get; set; } = string.Empty;
     public bool PendingPush { get; set; }
     public bool IsEmpty { get; set; }
-    public string PreviewLabel { get; set; } = string.Empty;
     public DateTimeOffset UpdatedAt { get; set; }
 }
 

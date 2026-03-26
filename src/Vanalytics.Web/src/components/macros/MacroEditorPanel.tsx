@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MacroDetail } from '../../api/macros'
+import type { MacroDetail } from '../../api/macros'
 
 const SLASH_COMMANDS = [
   '/ma', '/ja', '/ws', '/pet', '/equip', '/wait',
