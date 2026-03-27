@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useRef } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
+import { EffectComposer, Bloom, SMAA, N8AO, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import type { ParsedZone } from '../../lib/ffxi-dat'
 import SpawnMarkers from './SpawnMarkers'
@@ -139,7 +140,7 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, cameraMode =
   return (
     <Canvas
       camera={{ position: [cx, cy + size * 0.15, cz + size * 0.4], fov: 60, far: farPlane }}
-      gl={{ antialias: true }}
+      gl={{ antialias: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0 }}
       className="w-full h-full"
     >
       {/* Scene lighting — vertex colors contain baked lighting so keep
@@ -184,6 +185,14 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, cameraMode =
           <SpawnSkybeams spawns={filteredSpawns} />
         )}
       </group>
+
+      {/* Post-processing — SMAA replaces MSAA (antialias: false above) */}
+      <EffectComposer multisampling={0}>
+        <SMAA />
+        <N8AO aoRadius={2} intensity={1.5} distanceFalloff={0.5} />
+        <Bloom luminanceThreshold={0.8} luminanceSmoothing={0.4} intensity={0.3} mipmapBlur />
+        <Vignette offset={0.3} darkness={0.4} />
+      </EffectComposer>
     </Canvas>
   )
 }

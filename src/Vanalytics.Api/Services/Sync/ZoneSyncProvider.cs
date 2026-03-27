@@ -350,7 +350,7 @@ public class ZoneSyncProvider : ISyncProvider
         }
 
         // Parse mob_spawn_points: (mobid, spawnslotid, mobname, polutils_name, groupid, minLevel, maxLevel, pos_x, pos_y, pos_z, pos_rot)
-        var spawnRegex = new Regex(@"\((\d+),(\d+),'([^']*)','([^']*)',(\d+),(\d+),(\d+),([-\d.]+),([-\d.]+),([-\d.]+),(\d+)\)");
+        var spawnRegex = new Regex(@"\((\d+),(\d+),'([^']*)','([^']*)',(\d+),(\d+),(\d+),(-?[\d.]+),(-?[\d.]+),(-?[\d.]+),(\d+)\)");
         var parsed = new List<ZoneSpawn>();
         foreach (Match m in spawnRegex.Matches(spawnsSql))
         {
