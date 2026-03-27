@@ -520,6 +520,10 @@ export interface SessionDetail extends SessionSummary {
   expGained: number
   healingDone: number
   eventCount: number
+  limitPointsGained: number
+  accuracy: number
+  critRate: number
+  parryRate: number
 }
 
 export interface SessionEvent {
@@ -556,6 +560,19 @@ export interface SessionEventsResponse {
   events: SessionEvent[]
 }
 
+export interface SessionTrendEntry {
+  sessionId: string
+  date: string
+  durationMinutes: number
+  gilPerHour: number
+  killsPerHour: number
+  dropsPerHour: number
+  totalDamage: number
+  mobsKilled: number
+  itemsDropped: number
+  limitPoints: number
+}
+
 // Inventory types
 export interface InventoryItem {
   itemId: number
@@ -570,6 +587,61 @@ export interface InventoryItem {
 }
 
 export type InventoryByBag = Record<string, InventoryItem[]>
+
+export interface SlotInfo {
+  bag: string
+  slotIndex: number
+  quantity: number
+}
+
+export interface MoveInstruction {
+  itemId: number
+  fromBag: string
+  fromSlot: number
+  toBag: string
+  quantity: number
+}
+
+export interface SuggestedFix {
+  moves: MoveInstruction[]
+}
+
+export interface AnomalyDetails {
+  slots?: SlotInfo[]
+  bagName?: string
+  usedSlots?: number
+  maxSlots?: number
+}
+
+export interface Anomaly {
+  type: 'duplicate' | 'splitStack' | 'nearCapacity'
+  severity: 'info' | 'warning'
+  anomalyKey: string
+  itemId: number | null
+  itemName: string | null
+  bags: string[]
+  details: AnomalyDetails
+  suggestedFix: SuggestedFix | null
+}
+
+export interface MoveOrderResponse {
+  id: number
+  itemId: number
+  itemName: string
+  fromBag: string
+  fromSlot: number
+  toBag: string
+  quantity: number
+  status: string
+  createdAt: string
+}
+
+export interface AnomalyResponse {
+  anomalies: Anomaly[]
+  dismissedCount: number
+  dismissedKeys: string[]
+  pendingMoves: MoveOrderResponse[]
+}
 
 // Relics types
 export interface RelicWeaponVersion {
@@ -599,4 +671,16 @@ export interface RelicCategoryProgress {
 export interface RelicsResponse {
   progress: RelicCategoryProgress[]
   weapons: RelicWeapon[]
+}
+
+export interface ZoneSpawnDto {
+  poolId: number | null
+  name: string
+  x: number
+  y: number
+  z: number
+  rotation: number
+  minLevel: number
+  maxLevel: number
+  isMonster: boolean
 }

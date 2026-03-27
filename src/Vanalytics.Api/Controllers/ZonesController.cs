@@ -32,6 +32,39 @@ public class ZonesController : ControllerBase
         return Ok(zones);
     }
 
+    [HttpGet("{id:int}/spawns")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetSpawns(int id)
+    {
+        var spawns = await _db.ZoneSpawns
+            .Where(s => s.ZoneId == id)
+            .ToListAsync();
+
+        if (spawns.Count == 0)
+            return Ok(Array.Empty<object>());
+
+        // Build poolId → isMonster lookup
+        var poolIds = spawns.Where(s => s.PoolId.HasValue).Select(s => s.PoolId!.Value).Distinct().ToList();
+        var npcPools = await _db.NpcPools
+            .Where(n => poolIds.Contains(n.PoolId))
+            .ToDictionaryAsync(n => n.PoolId, n => n.IsMonster);
+
+        var result = spawns.Select(s => new
+        {
+            s.PoolId,
+            name = s.MobName,
+            s.X,
+            s.Y,
+            s.Z,
+            s.Rotation,
+            s.MinLevel,
+            s.MaxLevel,
+            isMonster = s.PoolId.HasValue && npcPools.TryGetValue(s.PoolId.Value, out var m) ? m : true,
+        });
+
+        return Ok(result);
+    }
+
     [HttpPost("/api/admin/zones/discovered")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddDiscovered([FromBody] DiscoveredZonesRequest request)

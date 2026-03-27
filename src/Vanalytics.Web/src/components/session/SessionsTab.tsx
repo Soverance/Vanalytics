@@ -1,11 +1,11 @@
 // src/Vanalytics.Web/src/components/session/SessionsTab.tsx
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { SessionSummary, SessionListResponse } from '../../types/api'
 import { api } from '../../api/client'
 
 interface SessionsTabProps {
   characterId: string
-  onSelectSession: (sessionId: string) => void
 }
 
 function formatDuration(startedAt: string, endedAt: string | null): string {
@@ -21,7 +21,8 @@ function formatDuration(startedAt: string, endedAt: string | null): string {
   return `${minutes}m ${seconds}s`
 }
 
-export default function SessionsTab({ characterId, onSelectSession }: SessionsTabProps) {
+export default function SessionsTab({ characterId }: SessionsTabProps) {
+  const navigate = useNavigate()
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [page, setPage] = useState(1)
@@ -75,7 +76,7 @@ export default function SessionsTab({ characterId, onSelectSession }: SessionsTa
             {sessions.map((s) => (
               <tr
                 key={s.id}
-                onClick={() => onSelectSession(s.id)}
+                onClick={() => navigate(`/sessions/${s.id}`)}
                 className="bg-gray-900 hover:bg-gray-800 cursor-pointer transition-colors"
               >
                 <td className="px-4 py-3 whitespace-nowrap">

@@ -20,6 +20,7 @@ import BazaarActivityPage from './pages/BazaarActivityPage'
 import VanadielClockPage from './pages/VanadielClockPage'
 import PublicProfilePage from './pages/PublicProfilePage'
 import ModelDebugPage from './pages/ModelDebugPage'
+import SessionReportPage from './pages/SessionReportPage'
 import NpcBrowserPage from './pages/NpcBrowserPage'
 import ZoneBrowserPage from './pages/ZoneBrowserPage'
 import ForumCategoryListPage from './pages/ForumCategoryListPage'
@@ -118,6 +119,7 @@ export default function App() {
             <Route path="/admin/saml" element={<ProtectedRoute requiredRole="Admin"><AdminSamlPage /></ProtectedRoute>} />
             <Route path="/npcs" element={<ProtectedRoute><NpcBrowserPage /></ProtectedRoute>} />
             <Route path="/zones" element={<ProtectedRoute><ZoneBrowserPage /></ProtectedRoute>} />
+            <Route path="/sessions/:id" element={<ProtectedRoute><SessionReportPage /></ProtectedRoute>} />
             <Route path="/debug/models" element={<ProtectedRoute><ModelDebugPage /></ProtectedRoute>} />
 
             {/* Public forum routes */}

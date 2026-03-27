@@ -4,24 +4,29 @@ import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { ParsedZone } from '../../lib/ffxi-dat'
 import SpawnMarkers from './SpawnMarkers'
-import type { SpawnPoint } from '../../lib/ffxi-dat/SpawnParser'
+import SpawnSkybeams from './SpawnSkybeams'
+import type { ZoneSpawnDto } from '../../types/api'
 
 interface ThreeZoneViewerProps {
   zoneData: ParsedZone
   fogDensity?: number  // 0 = off, 0-1 = near/far multiplier (higher = thicker)
   cameraMode?: 'orbit' | 'fly'
   onFlySpeedChange?: (speed: number) => void
-  spawnMarkers?: SpawnPoint[]
+  spawns?: ZoneSpawnDto[]
+  filteredSpawns?: ZoneSpawnDto[]
   showSpawns?: boolean
+  showSkybeams?: boolean
+  onSpawnHover?: (spawn: ZoneSpawnDto | null) => void
+  onSpawnClick?: (spawn: ZoneSpawnDto) => void
 }
 
 const FOG_COLOR = '#b8c8d8'
 
 
-export default function ThreeZoneViewer({ zoneData, fogDensity = 0, cameraMode = 'orbit', onFlySpeedChange, spawnMarkers, showSpawns }: ThreeZoneViewerProps) {
+export default function ThreeZoneViewer({ zoneData, fogDensity = 0, cameraMode = 'orbit', onFlySpeedChange, spawns, filteredSpawns, showSpawns, showSkybeams, onSpawnHover, onSpawnClick }: ThreeZoneViewerProps) {
   const { geometries, materials } = useMemo(() => {
     const geometries: THREE.BufferGeometry[] = []
-    const materials: THREE.MeshBasicMaterial[] = []
+    const materials: THREE.MeshStandardMaterial[] = []
 
     for (const prefab of zoneData.prefabs) {
       const geometry = new THREE.BufferGeometry()
@@ -51,7 +56,7 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, cameraMode =
 
       const tex = zoneData.textures[prefab.materialIndex]
       const useAlpha = prefab.blending > 0
-      let material: THREE.MeshBasicMaterial
+      let material: THREE.MeshStandardMaterial
       if (tex) {
         const rgba = new Uint8Array(tex.rgba)
         const texture = new THREE.DataTexture(rgba, tex.width, tex.height, THREE.RGBAFormat)
@@ -63,16 +68,20 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, cameraMode =
         texture.generateMipmaps = true
         texture.flipY = false
 
-        material = new THREE.MeshBasicMaterial({
+        material = new THREE.MeshStandardMaterial({
           map: texture,
           vertexColors: true,
           side: THREE.DoubleSide,
+          roughness: 0.85,
+          metalness: 0.0,
           ...(useAlpha && { alphaTest: 0.1 }),
         })
       } else {
-        material = new THREE.MeshBasicMaterial({
+        material = new THREE.MeshStandardMaterial({
           vertexColors: true,
           side: THREE.DoubleSide,
+          roughness: 0.85,
+          metalness: 0.0,
         })
       }
 
@@ -133,6 +142,12 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, cameraMode =
       gl={{ antialias: true }}
       className="w-full h-full"
     >
+      {/* Scene lighting — vertex colors contain baked lighting so keep
+          dynamic lights subtle to enhance surface detail without blowing out */}
+      <ambientLight intensity={0.9} color="#d4cfc8" />
+      <directionalLight position={[1, 2, 1]} intensity={0.6} color="#fff4e0" />
+      <directionalLight position={[-1, -0.5, -1]} intensity={0.25} color="#b8c8d8" />
+
       {fogDensity > 0 ? (
         <>
           <SkyDome size={farPlane * 0.9} />
@@ -164,7 +179,10 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, cameraMode =
             />
           )
         })}
-        <SpawnMarkers spawns={spawnMarkers ?? []} visible={showSpawns ?? false} />
+        <SpawnMarkers spawns={spawns ?? []} visible={showSpawns ?? false} onHover={onSpawnHover} onClick={onSpawnClick} />
+        {showSkybeams && filteredSpawns && filteredSpawns.length > 0 && (
+          <SpawnSkybeams spawns={filteredSpawns} />
+        )}
       </group>
     </Canvas>
   )

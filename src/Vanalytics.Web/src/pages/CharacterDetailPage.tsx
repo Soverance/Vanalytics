@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { CharacterDetail, GearEntry, GameItemSummary, GameItemDetail } from '../types/api'
 import { listMacroBooks, getMacroBook, updateMacroBook } from '../api/macros'
@@ -17,7 +17,6 @@ import RelicsTab from '../components/character/RelicsTab'
 import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
 import SessionsTab from '../components/session/SessionsTab'
-import SessionDetailModal from '../components/session/SessionDetailModal'
 import { ApiError } from '../api/client'
 
 const STAT_TABS = ['Jobs', 'Crafting', 'Relics'] as const
@@ -28,13 +27,15 @@ type GearTab = typeof GEAR_TABS[number]
 
 export default function CharacterDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
+  const initialGearTab = (searchParams.get('tab') as GearTab) || 'Equipment'
   const [character, setCharacter] = useState<CharacterDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [swapSlot, setSwapSlot] = useState<string | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
   const [localGear, setLocalGear] = useState<GearEntry[]>([])
   const [activeTab, setActiveTab] = useState<StatTab>('Jobs')
-  const [gearTab, setGearTab] = useState<GearTab>('Equipment')
+  const [gearTab, setGearTab] = useState<GearTab>(initialGearTab)
   const [itemCache, setItemCache] = useState<Map<number, GameItemDetail>>(new Map())
 
   // Macro state
@@ -44,8 +45,6 @@ export default function CharacterDetailPage() {
   const [currentMacroPage, setCurrentMacroPage] = useState(1)
   const [selectedMacro, setSelectedMacro] = useState<{ set: 'Ctrl' | 'Alt'; position: number } | null>(null)
   const [macroError, setMacroError] = useState('')
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
-  const [sessionsRefreshKey, setSessionsRefreshKey] = useState(0)
   const [showShareModal, setShowShareModal] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -379,11 +378,7 @@ export default function CharacterDetailPage() {
         )}
 
         {gearTab === 'Sessions' && (
-          <SessionsTab
-            key={sessionsRefreshKey}
-            characterId={character.id}
-            onSelectSession={setSelectedSessionId}
-          />
+          <SessionsTab characterId={character.id} />
         )}
       </section>
 
@@ -409,14 +404,6 @@ export default function CharacterDetailPage() {
           onExit={() => setFullscreen(false)}
         />
       )}
-      {selectedSessionId && (
-        <SessionDetailModal
-          sessionId={selectedSessionId}
-          onClose={() => setSelectedSessionId(null)}
-          onDeleted={() => setSessionsRefreshKey(k => k + 1)}
-        />
-      )}
-
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => { setShowShareModal(false); setCopied(false) }}>
           <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>

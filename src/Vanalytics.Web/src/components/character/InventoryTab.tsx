@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { api } from '../../api/client'
 import type { InventoryByBag, InventoryItem, GameItemDetail } from '../../types/api'
 import ItemPreviewBox from '../economy/ItemPreviewBox'
+import InventoryAnomalyBanner from './InventoryAnomalyBanner'
 
 const BAG_ORDER = [
   'Inventory', 'Safe', 'Storage', 'Locker',
@@ -205,6 +206,7 @@ export default function InventoryTab({ characterId }: Props) {
 
   return (
     <div className="relative" ref={containerRef}>
+      <InventoryAnomalyBanner characterId={characterId} />
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold">Inventory</h2>
         <div className="relative w-64">

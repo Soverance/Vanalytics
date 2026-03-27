@@ -22,7 +22,8 @@ public class SessionsController : ControllerBase
         SessionEventType.SpellDamage,
         SessionEventType.AbilityDamage,
         SessionEventType.Skillchain,
-        SessionEventType.MagicBurst
+        SessionEventType.MagicBurst,
+        SessionEventType.CriticalHit
     ];
 
     public SessionsController(VanalyticsDbContext db)
@@ -136,6 +137,43 @@ public class SessionsController : ControllerBase
 
         var eventCount = await eventsQuery.CountAsync();
 
+        var limitPointsGained = await eventsQuery
+            .Where(e => e.EventType == SessionEventType.LimitGain)
+            .SumAsync(e => e.Value);
+
+        var meleeHits = await eventsQuery
+            .Where(e => e.EventType == SessionEventType.MeleeDamage)
+            .CountAsync();
+
+        var criticalHits = await eventsQuery
+            .Where(e => e.EventType == SessionEventType.CriticalHit)
+            .CountAsync();
+
+        var misses = await eventsQuery
+            .Where(e => e.EventType == SessionEventType.Miss)
+            .CountAsync();
+
+        var parries = await eventsQuery
+            .Where(e => e.EventType == SessionEventType.Parry)
+            .CountAsync();
+
+        var incomingDamageCount = await eventsQuery
+            .Where(e => e.EventType == SessionEventType.MeleeDamage ||
+                        e.EventType == SessionEventType.CriticalHit ||
+                        e.EventType == SessionEventType.RangedDamage ||
+                        e.EventType == SessionEventType.SpellDamage ||
+                        e.EventType == SessionEventType.AbilityDamage)
+            .CountAsync();
+
+        // Note: incomingDamageCount includes both player-dealt and mob-dealt hits.
+        // A more precise parry rate would filter to mob-dealt only, but we don't
+        // store the player name on the session. This approximation is acceptable.
+
+        var totalSwings = meleeHits + criticalHits + misses;
+        var accuracy = totalSwings > 0 ? (double)(meleeHits + criticalHits) / totalSwings : 0;
+        var critRate = (meleeHits + criticalHits) > 0 ? (double)criticalHits / (meleeHits + criticalHits) : 0;
+        var parryRate = (parries + incomingDamageCount) > 0 ? (double)parries / (parries + incomingDamageCount) : 0;
+
         var durationSeconds = session.EndedAt.HasValue
             ? (session.EndedAt.Value - session.StartedAt).TotalSeconds
             : 0;
@@ -163,7 +201,11 @@ public class SessionsController : ControllerBase
             GilPerHour = gilPerHour,
             ExpGained = expGained,
             HealingDone = healingDone,
-            EventCount = eventCount
+            EventCount = eventCount,
+            LimitPointsGained = limitPointsGained,
+            Accuracy = accuracy,
+            CritRate = critRate,
+            ParryRate = parryRate
         });
     }
 
@@ -253,6 +295,71 @@ public class SessionsController : ControllerBase
             .ToList();
 
         return Ok(timeline);
+    }
+
+    [HttpGet("trends")]
+    public async Task<IActionResult> Trends(
+        [FromQuery] Guid characterId,
+        [FromQuery] string zone)
+    {
+        var userId = GetUserId();
+
+        var character = await _db.Characters
+            .Where(c => c.Id == characterId && c.UserId == userId)
+            .FirstOrDefaultAsync();
+
+        if (character is null) return NotFound();
+
+        var sessions = await _db.Sessions
+            .Where(s => s.CharacterId == characterId
+                        && s.Zone == zone
+                        && s.Status == SessionStatus.Completed
+                        && s.EndedAt.HasValue)
+            .OrderBy(s => s.StartedAt)
+            .Select(s => new
+            {
+                s.Id,
+                s.StartedAt,
+                s.EndedAt,
+                GilEarned = _db.SessionEvents
+                    .Where(e => e.SessionId == s.Id && e.EventType == SessionEventType.GilGain)
+                    .Sum(e => e.Value),
+                MobsKilled = _db.SessionEvents
+                    .Where(e => e.SessionId == s.Id && e.EventType == SessionEventType.MobKill)
+                    .Count(),
+                ItemsDropped = _db.SessionEvents
+                    .Where(e => e.SessionId == s.Id && e.EventType == SessionEventType.ItemDrop)
+                    .Count(),
+                TotalDamage = _db.SessionEvents
+                    .Where(e => e.SessionId == s.Id && DamageTypes.Contains(e.EventType))
+                    .Sum(e => e.Value),
+                LimitPoints = _db.SessionEvents
+                    .Where(e => e.SessionId == s.Id && e.EventType == SessionEventType.LimitGain)
+                    .Sum(e => e.Value)
+            })
+            .ToListAsync();
+
+        var trends = sessions.Select(s =>
+        {
+            var durationMinutes = (s.EndedAt!.Value - s.StartedAt).TotalMinutes;
+            var durationHours = durationMinutes / 60.0;
+
+            return new SessionTrendEntry
+            {
+                SessionId = s.Id,
+                Date = s.StartedAt,
+                DurationMinutes = durationMinutes,
+                GilPerHour = durationHours > 0 ? s.GilEarned / durationHours : 0,
+                KillsPerHour = durationHours > 0 ? s.MobsKilled / durationHours : 0,
+                DropsPerHour = durationHours > 0 ? s.ItemsDropped / durationHours : 0,
+                TotalDamage = s.TotalDamage,
+                MobsKilled = s.MobsKilled,
+                ItemsDropped = s.ItemsDropped,
+                LimitPoints = s.LimitPoints
+            };
+        }).ToList();
+
+        return Ok(trends);
     }
 
     [HttpDelete("{id:guid}")]

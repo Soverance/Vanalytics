@@ -5,9 +5,11 @@ import type { ParsedZone } from '../lib/ffxi-dat'
 import type { ParsedTexture } from '../lib/ffxi-dat/types'
 import ThreeZoneViewer from '../components/zone/ThreeZoneViewer'
 import MinimapOverlay from '../components/zone/MinimapOverlay'
+import SpawnToolbar from '../components/zone/SpawnToolbar'
+import SpawnInfoCard from '../components/zone/SpawnInfoCard'
 import { parseMinimapDat } from '../lib/ffxi-dat/MinimapParser'
-import { parseSpawnDat } from '../lib/ffxi-dat/SpawnParser'
-import type { SpawnPoint } from '../lib/ffxi-dat/SpawnParser'
+import { api } from '../api/client'
+import type { ZoneSpawnDto } from '../types/api'
 import { Search, X, Shuffle, ChevronRight, Clock, Users } from 'lucide-react'
 
 interface ZoneEntry {
@@ -35,7 +37,11 @@ export default function ZoneBrowserPage() {
   const [flySpeed, setFlySpeed] = useState<number | null>(null)
   const [minimapTextures, setMinimapTextures] = useState<ParsedTexture[]>([])
   const [showSpawns, setShowSpawns] = useState(false)
-  const [spawnPoints, setSpawnPoints] = useState<SpawnPoint[]>([])
+  const [spawns, setSpawns] = useState<ZoneSpawnDto[]>([])
+  const [spawnFilter, setSpawnFilter] = useState('')
+  const [selectedSpawn, setSelectedSpawn] = useState<ZoneSpawnDto | null>(null)
+  const [showSkybeams, setShowSkybeams] = useState(true)
+  const [hoveredSpawn, setHoveredSpawn] = useState<ZoneSpawnDto | null>(null)
   const [loading, setLoading] = useState(false)
   const [parseLog, setParseLog] = useState<string[]>([])
   const [browserOpen, setBrowserOpen] = useState(false)
@@ -97,7 +103,9 @@ export default function ZoneBrowserPage() {
     setBrowserOpen(false)
     setZoneData(null)
     setMinimapTextures([])
-    setSpawnPoints([])
+    setSpawns([])
+    setSpawnFilter('')
+    setSelectedSpawn(null)
     setShowSpawns(false)
     setParseLog([])
     setLogOpen(true)
@@ -143,13 +151,11 @@ export default function ZoneBrowserPage() {
         for (const mapPath of mapDatPaths) {
           try {
             const mapBuffer = await ffxi.readFile(mapPath)
-            console.log(`[minimap] loaded ${mapPath}: ${mapBuffer ? mapBuffer.byteLength + ' bytes' : 'null'}`)
             if (mapBuffer) {
               const tex = parseMinimapDat(mapBuffer)
-              console.log(`[minimap] parse result for ${mapPath}:`, tex ? `${tex.width}x${tex.height}` : 'null')
               if (tex) mapTextures.push(tex)
             }
-          } catch (e) { console.warn(`[minimap] error loading ${mapPath}:`, e) }
+          } catch { /* skip */ }
         }
       }
       setMinimapTextures(mapTextures)
@@ -173,16 +179,26 @@ export default function ZoneBrowserPage() {
     loadZone(pick)
   }, [allZones, selectedExpansion, loadZone])
 
-  // Toggle spawn markers — load from npcPath on first enable
-  const handleToggleSpawns = useCallback(async () => {
-    if (!showSpawns && spawnPoints.length === 0 && selected?.npcPath) {
-      try {
-        const buffer = await ffxi.readFile(selected.npcPath)
-        setSpawnPoints(parseSpawnDat(buffer))
-      } catch { /* npcPath unavailable or unreadable */ }
+  // Load spawns from API when spawn display is first enabled
+  useEffect(() => {
+    if (!showSpawns || spawns.length > 0 || !selected) return
+    api<ZoneSpawnDto[]>(`/api/zones/${selected.id}/spawns`)
+      .then(setSpawns)
+      .catch(() => {})
+  }, [showSpawns, spawns.length, selected])
+
+  const filteredSpawns = spawnFilter
+    ? spawns.filter(s => s.name.toLowerCase().includes(spawnFilter.toLowerCase()))
+    : spawns
+
+  // Escape key dismisses selected spawn
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedSpawn(null)
     }
-    setShowSpawns(prev => !prev)
-  }, [showSpawns, spawnPoints.length, selected, ffxi])
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   // ── Not configured states ──
   if (!ffxi.isSupported) {
@@ -262,8 +278,28 @@ export default function ZoneBrowserPage() {
             fogDensity={fogDensity}
             onFlySpeedChange={setFlySpeed}
             cameraMode={cameraMode}
-            spawnMarkers={spawnPoints}
+            spawns={spawnFilter ? filteredSpawns : spawns}
+            filteredSpawns={spawnFilter ? filteredSpawns : undefined}
             showSpawns={showSpawns}
+            showSkybeams={showSkybeams && !!spawnFilter}
+            onSpawnHover={setHoveredSpawn}
+            onSpawnClick={setSelectedSpawn}
+          />
+        )}
+
+        {/* Hovered spawn tooltip */}
+        {hoveredSpawn && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-2 py-1 rounded bg-gray-900/90 text-xs text-gray-200 pointer-events-none">
+            {hoveredSpawn.name}
+            {hoveredSpawn.minLevel > 0 && ` (Lv.${hoveredSpawn.minLevel}–${hoveredSpawn.maxLevel})`}
+          </div>
+        )}
+
+        {/* Selected spawn info card */}
+        {selectedSpawn && (
+          <SpawnInfoCard
+            spawn={selectedSpawn}
+            onClose={() => setSelectedSpawn(null)}
           />
         )}
       </div>
@@ -356,7 +392,7 @@ export default function ZoneBrowserPage() {
           )}
         </div>
         <button
-          onClick={handleToggleSpawns}
+          onClick={() => setShowSpawns(prev => !prev)}
           title="Toggle spawn markers"
           className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg border shadow-lg backdrop-blur transition-colors ${
             showSpawns
@@ -367,6 +403,16 @@ export default function ZoneBrowserPage() {
           <Users className="h-3 w-3" />
           Spawns
         </button>
+        {showSpawns && spawns.length > 0 && (
+          <SpawnToolbar
+            filter={spawnFilter}
+            onFilterChange={setSpawnFilter}
+            showSkybeams={showSkybeams}
+            onToggleSkybeams={() => setShowSkybeams(s => !s)}
+            spawnCount={spawns.length}
+            filteredCount={filteredSpawns.length}
+          />
+        )}
         {cameraMode === 'fly' && flySpeed !== null && (
           <div className="px-2.5 py-1 rounded-lg bg-gray-900/90 backdrop-blur border border-gray-700/50 shadow-lg text-xs text-gray-400" title="Scroll wheel to adjust fly speed">
             Speed <span className="font-mono text-gray-200">{flySpeed.toFixed(2)}</span>

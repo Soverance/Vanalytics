@@ -143,7 +143,7 @@ local function parse_line(line)
     -- BEL after "!" becomes space, so there may be leading space on target — trim it.
     source, target, dmg = line:match("(.+) scores a critical hit!%s*(.+) takes (%d+) points of damage%.")
     if source then
-        return {t='MeleeDamage', s=source, tg=target, v=tonumber(dmg)}
+        return {t='CriticalHit', s=source, tg=target, v=tonumber(dmg)}
     end
 
     -- Melee damage: "Player hits Target for N points of damage."

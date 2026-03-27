@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vanalytics.Data;
 
@@ -11,9 +12,11 @@ using Vanalytics.Data;
 namespace Vanalytics.Data.Migrations
 {
     [DbContext(typeof(VanalyticsDbContext))]
-    partial class VanalyticsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327003830_AddZoneSpawns")]
+    partial class AddZoneSpawns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -746,33 +749,6 @@ namespace Vanalytics.Data.Migrations
                     b.ToTable("CraftingSkills");
                 });
 
-            modelBuilder.Entity("Vanalytics.Core.Models.DismissedAnomaly", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("AnomalyKey")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("DismissedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId", "AnomalyKey")
-                        .IsUnique();
-
-                    b.ToTable("DismissedAnomalies");
-                });
-
             modelBuilder.Entity("Vanalytics.Core.Models.EquippedGear", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1043,48 +1019,6 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "ChangedAt");
 
                     b.ToTable("InventoryChanges");
-                });
-
-            modelBuilder.Entity("Vanalytics.Core.Models.InventoryMoveOrder", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("FromBag")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FromSlot")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ItemId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ToBag")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId", "Status");
-
-                    b.ToTable("InventoryMoveOrders");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.ItemModelMapping", b =>
@@ -1755,17 +1689,6 @@ namespace Vanalytics.Data.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("Vanalytics.Core.Models.DismissedAnomaly", b =>
-                {
-                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
-                        .WithMany()
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
             modelBuilder.Entity("Vanalytics.Core.Models.EquippedGear", b =>
                 {
                     b.HasOne("Vanalytics.Core.Models.Character", "Character")
@@ -1778,17 +1701,6 @@ namespace Vanalytics.Data.Migrations
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.InventoryChange", b =>
-                {
-                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
-                        .WithMany()
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
-            modelBuilder.Entity("Vanalytics.Core.Models.InventoryMoveOrder", b =>
                 {
                     b.HasOne("Vanalytics.Core.Models.Character", "Character")
                         .WithMany()

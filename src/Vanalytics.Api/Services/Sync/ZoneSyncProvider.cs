@@ -16,6 +16,12 @@ public class ZoneSyncProvider : ISyncProvider
     private const string ZoneSettingsUrl =
         "https://raw.githubusercontent.com/LandSandBoat/server/base/sql/zone_settings.sql";
 
+    private const string LsbMobGroupsUrl =
+        "https://raw.githubusercontent.com/LandSandBoat/server/base/sql/mob_groups.sql";
+
+    private const string LsbMobSpawnPointsUrl =
+        "https://raw.githubusercontent.com/LandSandBoat/server/base/sql/mob_spawn_points.sql";
+
     public string ProviderId => "zones";
     public string DisplayName => "Zone Data";
 
@@ -48,6 +54,9 @@ public class ZoneSyncProvider : ISyncProvider
 
         // Phase 2: LandSandBoat Enrichment
         await RunLsbEnrichmentAsync(db, progress, ct);
+
+        // Phase 3: Spawn Data Sync
+        await RunSpawnSyncAsync(progress, ct);
 
         progress.Report(new SyncProgressEvent
         {
@@ -290,6 +299,130 @@ public class ZoneSyncProvider : ISyncProvider
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
             Message = $"[Phase 2/2 — LSB Enrichment] {enriched} zones enriched with names and regions."
+        });
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase 3: Spawn Data Sync
+    // -------------------------------------------------------------------------
+
+    private async Task RunSpawnSyncAsync(IProgress<SyncProgressEvent> progress, CancellationToken ct)
+    {
+        progress.Report(new SyncProgressEvent
+        {
+            ProviderId = ProviderId,
+            Type = SyncEventType.Progress,
+            Message = "Phase 3: Syncing spawn points from LandSandBoat..."
+        });
+
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var http = _httpClientFactory.CreateClient();
+        http.Timeout = TimeSpan.FromSeconds(60);
+
+        string groupsSql, spawnsSql;
+        try
+        {
+            groupsSql = await http.GetStringAsync(LsbMobGroupsUrl, ct);
+            spawnsSql = await http.GetStringAsync(LsbMobSpawnPointsUrl, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to download spawn SQL files from LandSandBoat");
+            progress.Report(new SyncProgressEvent
+            {
+                ProviderId = ProviderId,
+                Type = SyncEventType.Progress,
+                Message = "Phase 3: Skipped — could not download spawn data."
+            });
+            return;
+        }
+
+        // Parse mob_groups: (groupid, poolid, zoneid, name, ...)
+        var groupPoolMap = new Dictionary<(int zoneId, int groupId), int>();
+        var groupRegex = new Regex(@"\((\d+),(\d+),(\d+),'([^']*)'");
+        foreach (Match m in groupRegex.Matches(groupsSql))
+        {
+            var groupId = int.Parse(m.Groups[1].Value);
+            var poolId = int.Parse(m.Groups[2].Value);
+            var zoneId = int.Parse(m.Groups[3].Value);
+            groupPoolMap[(zoneId, groupId)] = poolId;
+        }
+
+        // Parse mob_spawn_points: (mobid, spawnslotid, mobname, polutils_name, groupid, minLevel, maxLevel, pos_x, pos_y, pos_z, pos_rot)
+        var spawnRegex = new Regex(@"\((\d+),(\d+),'([^']*)','([^']*)',(\d+),(\d+),(\d+),([-\d.]+),([-\d.]+),([-\d.]+),(\d+)\)");
+        var parsed = new List<ZoneSpawn>();
+        foreach (Match m in spawnRegex.Matches(spawnsSql))
+        {
+            var mobId = int.Parse(m.Groups[1].Value);
+            var zoneId = (mobId >> 12) & 0xFFF;
+            var mobName = m.Groups[4].Value; // polutils_name (human-readable, has spaces)
+            var groupId = int.Parse(m.Groups[5].Value);
+            var minLevel = int.Parse(m.Groups[6].Value);
+            var maxLevel = int.Parse(m.Groups[7].Value);
+            var posX = float.Parse(m.Groups[8].Value, System.Globalization.CultureInfo.InvariantCulture);
+            var posY = float.Parse(m.Groups[9].Value, System.Globalization.CultureInfo.InvariantCulture);
+            var posZ = float.Parse(m.Groups[10].Value, System.Globalization.CultureInfo.InvariantCulture);
+            var posRot = float.Parse(m.Groups[11].Value, System.Globalization.CultureInfo.InvariantCulture);
+
+            // Skip placeholder positions (all 1.000 means "not yet placed")
+            if (posX == 1.0f && posY == 1.0f && posZ == 1.0f) continue;
+
+            groupPoolMap.TryGetValue((zoneId, groupId), out var poolId);
+
+            parsed.Add(new ZoneSpawn
+            {
+                ZoneId = zoneId,
+                GroupId = groupId,
+                PoolId = poolId > 0 ? poolId : null,
+                MobName = mobName.Replace('_', ' '),
+                X = posX,
+                Y = posY,
+                Z = posZ,
+                Rotation = posRot * (MathF.PI / 128f),
+                MinLevel = minLevel,
+                MaxLevel = maxLevel,
+            });
+        }
+
+        // Filter to valid zones
+        var validZoneIds = await db.Zones.Select(z => z.Id).ToListAsync(ct);
+        var validSet = new HashSet<int>(validZoneIds);
+        parsed = parsed.Where(s => validSet.Contains(s.ZoneId)).ToList();
+
+        // Full replace strategy
+        var existingCount = await db.ZoneSpawns.CountAsync(ct);
+        if (existingCount > 0)
+        {
+            db.ZoneSpawns.RemoveRange(db.ZoneSpawns);
+            await db.SaveChangesAsync(ct);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var spawn in parsed)
+        {
+            spawn.CreatedAt = now;
+            spawn.UpdatedAt = now;
+        }
+
+        // Batch insert
+        const int batchSize = 1000;
+        for (var i = 0; i < parsed.Count; i += batchSize)
+        {
+            var batch = parsed.Skip(i).Take(batchSize);
+            db.ZoneSpawns.AddRange(batch);
+            await db.SaveChangesAsync(ct);
+        }
+
+        _logger.LogInformation("Spawn sync: {Count} spawns across {Zones} zones (from {Groups} group mappings)",
+            parsed.Count, parsed.Select(s => s.ZoneId).Distinct().Count(), groupPoolMap.Count);
+
+        progress.Report(new SyncProgressEvent
+        {
+            ProviderId = ProviderId,
+            Type = SyncEventType.Progress,
+            Message = $"Phase 3: Synced {parsed.Count} spawn points.",
+            Added = parsed.Count,
         });
     }
 

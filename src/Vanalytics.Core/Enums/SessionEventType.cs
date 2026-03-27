@@ -22,5 +22,6 @@ public enum SessionEventType
     ItemLost,
     TreasureHunter,
     Miss,
-    Parry
+    Parry,
+    CriticalHit
 }

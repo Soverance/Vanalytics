@@ -25,6 +25,10 @@ public class SessionDetailResponse : SessionSummaryResponse
     public long ExpGained { get; set; }
     public long HealingDone { get; set; }
     public int EventCount { get; set; }
+    public long LimitPointsGained { get; set; }
+    public double Accuracy { get; set; }
+    public double CritRate { get; set; }
+    public double ParryRate { get; set; }
 }
 
 public class SessionEventResponse
@@ -47,4 +51,18 @@ public class SessionTimelineEntry
     public long Healing { get; set; }
     public long Gil { get; set; }
     public int Kills { get; set; }
+}
+
+public class SessionTrendEntry
+{
+    public Guid SessionId { get; set; }
+    public DateTimeOffset Date { get; set; }
+    public double DurationMinutes { get; set; }
+    public double GilPerHour { get; set; }
+    public double KillsPerHour { get; set; }
+    public double DropsPerHour { get; set; }
+    public long TotalDamage { get; set; }
+    public int MobsKilled { get; set; }
+    public int ItemsDropped { get; set; }
+    public long LimitPoints { get; set; }
 }
