@@ -16,5 +16,6 @@ public enum InventoryBag
     Wardrobe5,
     Wardrobe6,
     Wardrobe7,
-    Wardrobe8
+    Wardrobe8,
+    Safe2
 }

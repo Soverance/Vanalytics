@@ -26,6 +26,7 @@ export interface UserProfile {
   apiKeyCreatedAt: string | null
   role: UserRole
   oAuthProvider: string | null
+  defaultServer: string | null
   createdAt: string
 }
 
@@ -682,5 +683,5 @@ export interface ZoneSpawnDto {
   rotation: number
   minLevel: number
   maxLevel: number
-  isMonster: boolean
+  isMonster: boolean | null
 }

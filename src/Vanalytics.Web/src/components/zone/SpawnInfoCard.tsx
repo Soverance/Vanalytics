@@ -13,8 +13,8 @@ export default function SpawnInfoCard({ spawn, onClose }: SpawnInfoCardProps) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-gray-100">{spawn.name}</h3>
-          <span className={`text-xs ${spawn.isMonster ? 'text-red-400' : 'text-blue-400'}`}>
-            {spawn.isMonster ? 'Monster' : 'NPC'}
+          <span className={`text-xs ${spawn.isMonster === true ? 'text-red-400' : spawn.isMonster === false ? 'text-blue-400' : 'text-green-400'}`}>
+            {spawn.isMonster === true ? 'Monster' : spawn.isMonster === false ? 'NPC' : 'Unknown'}
           </span>
         </div>
         <button onClick={onClose} className="p-0.5 text-gray-500 hover:text-gray-300">

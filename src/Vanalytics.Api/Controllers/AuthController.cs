@@ -182,7 +182,23 @@ public class AuthController : ControllerBase
             ApiKeyCreatedAt = user.ApiKeyCreatedAt,
             Role = user.Role.ToString(),
             OAuthProvider = user.OAuthProvider,
+            DefaultServer = user.DefaultServer,
             CreatedAt = user.CreatedAt
         });
+    }
+
+    [Authorize]
+    [HttpPut("me/server")]
+    public async Task<IActionResult> UpdateDefaultServer([FromBody] UpdateDefaultServerRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var user = await _db.Users.FindAsync(userId);
+        if (user is null) return NotFound();
+
+        user.DefaultServer = string.IsNullOrWhiteSpace(request.Server) ? null : request.Server.Trim();
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { defaultServer = user.DefaultServer });
     }
 }

@@ -116,33 +116,53 @@ export function decompressDXT3(data: Uint8Array, width: number, height: number):
  * The header flag byte determines the format:
  *   0xA1 = IMGINFOA1 (DXT compressed, with ddsType field)
  *   0x81 = IMGINFO81 (DXT compressed, variant)
+ *   0xB1 = IMGINFOB1 (256-color palette-indexed, BGRA palette + 8-bit pixels)
  *   0x01 = Raw 8-bit indexed with palette
- *   0xB1 = IMGINFOB1 variant
  *
  * IMGINFOA1 layout (69 bytes):
  *   flg(1) + id(16) + unk(4) + width(4) + height(4) + unk2(24) + widthbyte(4)
  *   + ddsType(4) + ddsSize(4) + noBlock(4)
  *
+ * IMGINFOB1 layout:
+ *   flg(1) + id(16) + unk(4) + width(4) + height(4) + padding(35)
+ *   = 64-byte header, then 256-entry BGRA palette (1024 bytes),
+ *   then width×height bytes of indexed pixel data.
+ *   Falls back to DXT decoding if data doesn't fit indexed format.
+ *
  * ddsType: "3TXD" = DXT3, "1TXD" = DXT1 (stored as reversed ASCII)
  *
  * Reference: TDWAnalysis.h IMGINFOA1 struct
  */
+
+const B1_HEADER_SIZE = 64
+const B1_PALETTE_ENTRIES = 256
+const B1_PALETTE_SIZE = B1_PALETTE_ENTRIES * 4 // 1024 bytes (BGRA per entry)
+
 export function parseTextureBlock(
   reader: DatReader,
   dataOffset: number,
-  _dataLength: number,
+  dataLength: number,
 ): { name: string; texture: ParsedTexture } | null {
   reader.seek(dataOffset)
 
   const flg = reader.readUint8()
 
-  // Currently only handle 0xA1 (DXT with ddsType header)
-  if (flg !== 0xA1 && flg !== 0x81) return null
+  if (flg !== 0xA1 && flg !== 0x81 && flg !== 0xB1) {
+    console.warn(`[TextureParser] Unsupported texture format 0x${flg.toString(16).toUpperCase()} at offset ${dataOffset}`)
+    return null
+  }
 
   const id = reader.readString(16)
   reader.skip(4) // dwnazo1
   const width = reader.readInt32()
   const height = reader.readInt32()
+
+  if (width <= 0 || width > 4096 || height <= 0 || height > 4096) return null
+
+  if (flg === 0xB1) {
+    return parseB1Texture(reader, dataOffset, dataLength, id.trim(), width, height)
+  }
+
   reader.skip(24) // dwnazo2[6]
   reader.skip(4)  // widthbyte
 
@@ -194,6 +214,87 @@ export function parseTextureBlock(
     }
   }
 
+  return null
+}
+
+/**
+ * Parse a 0xB1 palette-indexed texture.
+ * Format: 64-byte header → 256-entry BGRA palette (1024 bytes) → 8-bit indexed pixels.
+ * Falls back to DXT decoding if data doesn't fit the indexed layout.
+ */
+function parseB1Texture(
+  reader: DatReader,
+  dataOffset: number,
+  dataLength: number,
+  name: string,
+  width: number,
+  height: number,
+): { name: string; texture: ParsedTexture } | null {
+  const paletteOffset = dataOffset + B1_HEADER_SIZE
+  const pixelOffset = paletteOffset + B1_PALETTE_SIZE
+  const pixelCount = width * height
+
+  // Check if data fits the palette-indexed layout
+  if (pixelOffset + pixelCount > dataOffset + dataLength) {
+    // Not enough data for indexed format — try DXT fallback
+    return parseB1AsDXT(reader, dataOffset, dataLength, name, width, height)
+  }
+
+  // Read the 256-entry BGRA palette
+  reader.seek(paletteOffset)
+  const palette = reader.readBytes(B1_PALETTE_SIZE)
+
+  // Read indexed pixel data
+  reader.seek(pixelOffset)
+  const indices = reader.readBytes(pixelCount)
+
+  // Convert indexed pixels to RGBA (no vertical flip — zone textures are top-down)
+  // Palette format is BGRA; alpha 0x80 means fully opaque in FFXI's palette convention
+  const rgba = new Uint8Array(pixelCount * 4)
+  for (let i = 0; i < pixelCount; i++) {
+    const idx = indices[i]
+    const pOff = idx * 4
+    const d = i * 4
+    rgba[d + 0] = palette[pOff + 2] // R (from BGRA byte 2)
+    rgba[d + 1] = palette[pOff + 1] // G (from BGRA byte 1)
+    rgba[d + 2] = palette[pOff + 0] // B (from BGRA byte 0)
+    // FFXI palette alpha: 0x80 = opaque, 0x00 = transparent
+    const a = palette[pOff + 3]
+    rgba[d + 3] = a > 0 ? 255 : 0
+  }
+
+  return { name, texture: { width, height, rgba } }
+}
+
+/** Fallback: try DXT decoding for 0xB1 blocks that don't fit the indexed format. */
+function parseB1AsDXT(
+  reader: DatReader,
+  dataOffset: number,
+  dataLength: number,
+  name: string,
+  width: number,
+  height: number,
+): { name: string; texture: ParsedTexture } | null {
+  const blocksX = Math.max(1, Math.ceil(width / 4))
+  const blocksY = Math.max(1, Math.ceil(height / 4))
+  const expectedDXT3 = blocksX * blocksY * 16
+  const expectedDXT1 = blocksX * blocksY * 8
+
+  if (dataLength >= expectedDXT3 + B1_HEADER_SIZE) {
+    const pixelOffset = dataOffset + dataLength - expectedDXT3
+    reader.seek(pixelOffset)
+    const pixelData = reader.readBytes(expectedDXT3)
+    return { name, texture: { width, height, rgba: decompressDXT3(pixelData, width, height) } }
+  }
+
+  if (dataLength >= expectedDXT1 + B1_HEADER_SIZE) {
+    const pixelOffset = dataOffset + dataLength - expectedDXT1
+    reader.seek(pixelOffset)
+    const pixelData = reader.readBytes(expectedDXT1)
+    return { name, texture: { width, height, rgba: decompressDXT1(pixelData, width, height) } }
+  }
+
+  console.warn(`[TextureParser] 0xB1 texture "${name}" (${width}×${height}) doesn't fit indexed or DXT layout`)
   return null
 }
 

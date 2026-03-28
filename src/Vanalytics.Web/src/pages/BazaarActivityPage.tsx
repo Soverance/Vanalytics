@@ -1,10 +1,12 @@
 // src/Vanalytics.Web/src/pages/BazaarActivityPage.tsx
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import type { GameServer, BazaarZoneGroup as BazaarZoneGroupType } from '../types/api'
 import BazaarZoneGroup from '../components/economy/BazaarZoneGroup'
 
 export default function BazaarActivityPage() {
+  const { user } = useAuth()
   const [servers, setServers] = useState<GameServer[]>([])
   const [selectedServer, setSelectedServer] = useState('')
   const [groups, setGroups] = useState<BazaarZoneGroupType[]>([])
@@ -15,7 +17,10 @@ export default function BazaarActivityPage() {
       .then((r) => r.ok ? r.json() : [])
       .then((s: GameServer[]) => {
         setServers(s)
-        if (s.length > 0) setSelectedServer(s[0].name)
+        const defaultName = user?.defaultServer
+        const match = defaultName ? s.find(sv => sv.name === defaultName) : null
+        if (match) setSelectedServer(match.name)
+        else if (s.length > 0) setSelectedServer(s[0].name)
       })
       .catch(() => {})
   }, [])

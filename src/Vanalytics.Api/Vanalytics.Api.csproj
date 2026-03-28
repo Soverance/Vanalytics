@@ -2,10 +2,12 @@
 
   <PropertyGroup>
     <UserSecretsId>a3f7c2e1-8d4b-4f5a-9c6e-2b1d3e4f5a6b</UserSecretsId>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="..\..\addon\vanalytics\**" CopyToOutputDirectory="PreserveNewest" Link="addon\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="Data\*.json" CopyToOutputDirectory="PreserveNewest" Link="Data\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

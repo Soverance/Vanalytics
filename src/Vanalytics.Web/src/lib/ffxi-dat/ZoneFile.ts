@@ -57,9 +57,32 @@ function readMmbName(decryptedData: Uint8Array): string {
   return new TextDecoder('utf-8').decode(bytes.subarray(0, end)).trim()
 }
 
+/**
+ * Extract named textures from a DAT file (companion texture DATs).
+ * Returns a map of texture name → ParsedTexture for merging into the zone's texture pool.
+ */
+export function parseTexturesFromDat(
+  buffer: ArrayBuffer,
+): Map<string, ParsedTexture> {
+  const reader = new DatReader(buffer)
+  const blocks = parseBlockChain(reader)
+  const result = new Map<string, ParsedTexture>()
+  const imgBlocks = blocks.filter(b => b.type === BLOCK_IMG)
+  for (const block of imgBlocks) {
+    try {
+      const parsed = parseTextureBlock(reader, block.dataOffset + BLOCK_PADDING, block.dataLength - BLOCK_PADDING)
+      if (parsed && !result.has(parsed.name)) {
+        result.set(parsed.name, parsed.texture)
+      }
+    } catch { /* skip */ }
+  }
+  return result
+}
+
 export function parseZoneFile(
   buffer: ArrayBuffer,
-  onProgress?: (message: string) => void
+  onProgress?: (message: string) => void,
+  supplementalTextures?: Map<string, ParsedTexture>,
 ): ParsedZone {
   const reader = new DatReader(buffer)
   const blocks = parseBlockChain(reader)
@@ -74,23 +97,58 @@ export function parseZoneFile(
   const imgBlocks = blocks.filter(b => b.type === BLOCK_IMG)
   onProgress?.(`Parsing ${imgBlocks.length} textures...`)
   const textureNameMap = new Map<string, number>()
+  const duplicateNames: string[] = []
   for (const block of imgBlocks) {
     try {
       const result = parseTextureBlock(reader, block.dataOffset + BLOCK_PADDING, block.dataLength - BLOCK_PADDING)
       if (result) {
-        textureNameMap.set(result.name, textures.length)
+        if (textureNameMap.has(result.name)) {
+          duplicateNames.push(`"${result.name}" (first=${textureNameMap.get(result.name)}, dup=${textures.length}, ${result.texture.width}×${result.texture.height})`)
+          // Keep first occurrence — later duplicates are often weather/LOD variants
+        } else {
+          textureNameMap.set(result.name, textures.length)
+        }
         textures.push(result.texture)
       }
     } catch { /* skip */ }
   }
   onProgress?.(`Textures: ${textures.length} parsed (${textureNameMap.size} named)`)
+  console.log('[ZoneFile] textureNameMap entries:', Array.from(textureNameMap.keys()).sort())
+  if (duplicateNames.length > 0) {
+    console.warn(`[ZoneFile] ${duplicateNames.length} duplicate texture names (last wins):`, duplicateNames)
+  }
+  // Log first 10 textures with dimensions and first pixel to verify data integrity
+  console.log('[ZoneFile] First textures:', textures.slice(0, 10).map((t, i) => {
+    const r = t.rgba[0], g = t.rgba[1], b = t.rgba[2], a = t.rgba[3]
+    return `[${i}] ${t.width}×${t.height} px0=(${r},${g},${b},${a})`
+  }))
+
+  // Merge supplemental textures from companion DATs (only add names not already present)
+  if (supplementalTextures) {
+    let added = 0
+    for (const [name, tex] of supplementalTextures) {
+      if (!textureNameMap.has(name)) {
+        textureNameMap.set(name, textures.length)
+        textures.push(tex)
+        added++
+      }
+    }
+    if (added > 0) {
+      onProgress?.(`Supplemental textures: ${added} added from companion DATs`)
+      console.log(`[ZoneFile] ${added} supplemental textures merged, total now ${textures.length}`)
+    }
+  }
 
   // ── Pass 2: MMB prefabs (with name tracking) ──
   const mmbBlocks = blocks.filter(b => b.type === BLOCK_MMB)
   onProgress?.(`Parsing ${mmbBlocks.length} MMB blocks...`)
 
-  // Map: MMB name → { startIdx, count } in the flat prefabs array
-  const mmbNameMap = new Map<string, { startIdx: number; count: number }>()
+  // Map: MMB name → array of { startIdx, count } in the flat prefabs array.
+  // Multiple MMB blocks can share a name (different pieces of the same area).
+  const mmbNameMap = new Map<string, { startIdx: number; count: number }[]>()
+
+  // MMB block names for sky objects rendered by our procedural sky instead
+  const skyObjectNames = new Set(['sunsphere', 'moonsphere'])
 
   for (let i = 0; i < mmbBlocks.length; i++) {
     const block = mmbBlocks[i]
@@ -101,26 +159,60 @@ export function parseZoneFile(
       const blockData = new Uint8Array(buffer, start, len)
       const decryptedData = decodeMmb(blockData)
       const name = readMmbName(decryptedData)
+
+      // Skip sky objects — rendered by our procedural sky instead
+      if (skyObjectNames.has(name)) continue
+
       const meshes = parseMmbBlock(decryptedData)
 
       // Resolve texture names to material indices
       for (const mesh of meshes) {
+        if (!mesh.textureName) {
+          // Blank texture name — resolved after all MMB blocks are parsed
+          mesh.materialIndex = -1
+          continue
+        }
         const texIdx = textureNameMap.get(mesh.textureName)
         if (texIdx !== undefined) {
           mesh.materialIndex = texIdx
+        } else {
+          mesh.materialIndex = -1
         }
       }
 
       if (meshes.length > 0) {
         const startIdx = prefabs.length
         prefabs.push(...meshes)
-        // Store the FIRST mapping for this name (some names may repeat)
-        if (!mmbNameMap.has(name)) {
-          mmbNameMap.set(name, { startIdx, count: meshes.length })
+        // Accumulate ALL blocks per name — zones have multiple blocks with the same name
+        let arr = mmbNameMap.get(name)
+        if (!arr) {
+          arr = []
+          mmbNameMap.set(name, arr)
         }
+        arr.push({ startIdx, count: meshes.length })
       }
     } catch { /* skip */ }
   }
+  // Assign fallback texture to blank-name meshes using the zone's most-used texture.
+  // These meshes have 16 ASCII spaces as their texture name (blank), meaning they
+  // should use the zone's primary terrain texture. We find it by usage frequency.
+  const texUsage = new Map<number, number>()
+  for (const p of prefabs) {
+    if (p.materialIndex >= 0) texUsage.set(p.materialIndex, (texUsage.get(p.materialIndex) || 0) + 1)
+  }
+  let fallbackTexIdx = -1
+  let fallbackMax = 0
+  for (const [idx, count] of texUsage) {
+    if (count > fallbackMax) { fallbackMax = count; fallbackTexIdx = idx }
+  }
+  if (fallbackTexIdx >= 0) {
+    let count = 0
+    for (const p of prefabs) {
+      if (p.materialIndex === -1) { p.materialIndex = fallbackTexIdx; count++ }
+    }
+    if (count > 0) console.log(`[ZoneFile] ${count} untextured meshes → fallback texture[${fallbackTexIdx}]`)
+  }
+
   onProgress?.(`MMB: ${prefabs.length} meshes from ${mmbBlocks.length} blocks, ${mmbNameMap.size} unique names`)
 
   // ── Pass 3: MZB transforms (with name-based lookup) ──
@@ -147,16 +239,18 @@ export function parseZoneFile(
         if (end === -1) end = 16
         const name = new TextDecoder('utf-8').decode(idBytes.subarray(0, end)).trim()
 
-        const mapping = mmbNameMap.get(name)
-        if (!mapping) continue
+        const mappings = mmbNameMap.get(name)
+        if (!mappings) continue
 
         const inst = rawInstances[i]
-        // Create one instance per mesh in the MMB block
-        for (let m = 0; m < mapping.count; m++) {
-          instances.push({
-            meshIndex: mapping.startIdx + m,
-            transform: inst.transform,
-          })
+        // Create instances for ALL meshes across ALL MMB blocks with this name
+        for (const mapping of mappings) {
+          for (let m = 0; m < mapping.count; m++) {
+            instances.push({
+              meshIndex: mapping.startIdx + m,
+              transform: inst.transform,
+            })
+          }
         }
       }
     } catch (err) {
@@ -183,7 +277,7 @@ export function parseZoneFile(
         let end = idBytes.indexOf(0)
         if (end === -1) end = 16
         const name = new TextDecoder('utf-8').decode(idBytes.subarray(0, end)).trim()
-        if (mmbNameMap.has(name)) matched++
+        if (mmbNameMap.has(name) && mmbNameMap.get(name)!.length > 0) matched++
       }
     }
     return { total, matched }

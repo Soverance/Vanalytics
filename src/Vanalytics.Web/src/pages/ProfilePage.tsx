@@ -1,16 +1,17 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { api, ApiError } from '../api/client'
 import UserAvatar from '../components/UserAvatar'
-import type { ApiKeyResponse } from '../types/api'
+import type { ApiKeyResponse, GameServer } from '../types/api'
 import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
 import { Copy, Check } from 'lucide-react'
 
-type Tab = 'session' | 'apikeys' | 'ffxi'
+type Tab = 'session' | 'preferences' | 'apikeys' | 'ffxi'
 
 const tabs: { id: Tab; label: string }[] = [
   { id: 'session', label: 'Session' },
+  { id: 'preferences', label: 'Preferences' },
   { id: 'apikeys', label: 'API Keys' },
   { id: 'ffxi', label: 'FFXI Installation' },
 ]
@@ -43,6 +44,41 @@ export default function ProfilePage() {
   const [keyLoading, setKeyLoading] = useState(false)
   const [keyError, setKeyError] = useState('')
   const [copied, setCopied] = useState(false)
+
+  // Server preference state
+  const [servers, setServers] = useState<GameServer[]>([])
+  const [selectedDefaultServer, setSelectedDefaultServer] = useState(user?.defaultServer ?? '')
+  const [serverSaving, setServerSaving] = useState(false)
+  const [serverSaved, setServerSaved] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/servers')
+      .then(r => r.ok ? r.json() : [])
+      .then((s: GameServer[]) => setServers(s))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    setSelectedDefaultServer(user?.defaultServer ?? '')
+  }, [user?.defaultServer])
+
+  const handleSaveServer = async () => {
+    setServerSaving(true)
+    setServerSaved(false)
+    try {
+      await api('/api/auth/me/server', {
+        method: 'PUT',
+        body: JSON.stringify({ server: selectedDefaultServer || null }),
+      })
+      await refreshUser()
+      setServerSaved(true)
+      setTimeout(() => setServerSaved(false), 2000)
+    } catch {
+      // silently fail
+    } finally {
+      setServerSaving(false)
+    }
+  }
 
   const handleCopyKey = useCallback(() => {
     if (!apiKey) return
@@ -232,6 +268,37 @@ export default function ProfilePage() {
             >
               Logout
             </button>
+          </section>
+        </div>
+      )}
+
+      {/* Preferences tab */}
+      {activeTab === 'preferences' && (
+        <div className="space-y-6">
+          <section className="rounded-lg border border-gray-800 bg-gray-900 p-6 max-w-lg">
+            <h2 className="text-lg font-semibold mb-1">Default Server</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Your home server is used as the default selection for bazaar activity, price history, and other server-specific views.
+            </p>
+            <div className="flex items-center gap-3">
+              <select
+                value={selectedDefaultServer}
+                onChange={(e) => setSelectedDefaultServer(e.target.value)}
+                className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 flex-1"
+              >
+                <option value="">None (use first available)</option>
+                {servers.map((s) => (
+                  <option key={s.id} value={s.name}>{s.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleSaveServer}
+                disabled={serverSaving || selectedDefaultServer === (user?.defaultServer ?? '')}
+                className="px-4 py-2 text-sm rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
+              >
+                {serverSaving ? 'Saving...' : serverSaved ? 'Saved!' : 'Save'}
+              </button>
+            </div>
           </section>
         </div>
       )}

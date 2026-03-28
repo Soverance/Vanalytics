@@ -59,7 +59,7 @@ public class ZonesController : ControllerBase
             s.Rotation,
             s.MinLevel,
             s.MaxLevel,
-            isMonster = s.PoolId.HasValue && npcPools.TryGetValue(s.PoolId.Value, out var m) ? m : true,
+            isMonster = s.PoolId.HasValue && npcPools.TryGetValue(s.PoolId.Value, out var m) ? m : (bool?)null,
         });
 
         return Ok(result);

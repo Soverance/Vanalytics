@@ -20,6 +20,7 @@ local log_error_fn = nil
 local bag_keys = {
     {key = 'inventory', name = 'Inventory'},
     {key = 'safe', name = 'Safe'},
+    {key = 'safe2', name = 'Safe2'},
     {key = 'storage', name = 'Storage'},
     {key = 'locker', name = 'Locker'},
     {key = 'satchel', name = 'Satchel'},

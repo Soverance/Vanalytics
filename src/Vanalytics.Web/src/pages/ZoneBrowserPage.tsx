@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
-import { parseZoneFile } from '../lib/ffxi-dat'
+import { parseZoneFile, parseTexturesFromDat } from '../lib/ffxi-dat'
 import type { ParsedZone } from '../lib/ffxi-dat'
 import type { ParsedTexture } from '../lib/ffxi-dat/types'
 import ThreeZoneViewer from '../components/zone/ThreeZoneViewer'
 import MinimapOverlay from '../components/zone/MinimapOverlay'
 import SpawnToolbar from '../components/zone/SpawnToolbar'
-import SpawnInfoCard from '../components/zone/SpawnInfoCard'
 import { parseMinimapDat } from '../lib/ffxi-dat/MinimapParser'
 import { api } from '../api/client'
 import type { ZoneSpawnDto } from '../types/api'
@@ -40,9 +39,12 @@ export default function ZoneBrowserPage() {
   const [showSpawns, setShowSpawns] = useState(false)
   const [spawns, setSpawns] = useState<ZoneSpawnDto[]>([])
   const [spawnFilter, setSpawnFilter] = useState('')
-  const [selectedSpawn, setSelectedSpawn] = useState<ZoneSpawnDto | null>(null)
   const [showSkybeams, setShowSkybeams] = useState(true)
   const [hoveredSpawn, setHoveredSpawn] = useState<ZoneSpawnDto | null>(null)
+  const [spawnsLoading, setSpawnsLoading] = useState(false)
+  const [hoverPos, setHoverPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [flyToTarget, setFlyToTarget] = useState<{ x: number; y: number; z: number } | null>(null)
+  const [debugVertexColors, setDebugVertexColors] = useState(false)
   const [loading, setLoading] = useState(false)
   const [parseLog, setParseLog] = useState<string[]>([])
   const [browserOpen, setBrowserOpen] = useState(false)
@@ -106,7 +108,7 @@ export default function ZoneBrowserPage() {
     setMinimapTextures([])
     setSpawns([])
     setSpawnFilter('')
-    setSelectedSpawn(null)
+    setFlyToTarget(null)
     setShowSpawns(false)
     setParseLog([])
     setLogOpen(true)
@@ -136,7 +138,31 @@ export default function ZoneBrowserPage() {
       }
       log(`Read ${buffer.byteLength} bytes`)
 
-      const parsed = parseZoneFile(buffer, log)
+      // Try loading companion texture DATs at adjacent file paths.
+      // FFXI zones often split textures across nearby DATs (±1-2 from model).
+      const supplementalTextures = new Map<string, ParsedTexture>()
+      const pathMatch = zone.modelPath!.match(/^(.+\/)(\d+)(\.DAT)$/i)
+      if (pathMatch) {
+        const [, dir, fileNumStr, ext] = pathMatch
+        const fileNum = parseInt(fileNumStr, 10)
+        for (const offset of [-1, 1, -2, 2]) {
+          const companionNum = fileNum + offset
+          if (companionNum < 0) continue
+          const companionPath = `${dir}${companionNum}${ext}`
+          try {
+            const companionBuf = await ffxi.readFile(companionPath)
+            if (companionBuf) {
+              const texMap = parseTexturesFromDat(companionBuf)
+              if (texMap.size > 0) {
+                for (const [name, tex] of texMap) supplementalTextures.set(name, tex)
+                log(`Companion ${companionPath}: ${texMap.size} textures`)
+              }
+            }
+          } catch { /* companion doesn't exist or isn't readable */ }
+        }
+      }
+
+      const parsed = parseZoneFile(buffer, log, supplementalTextures.size > 0 ? supplementalTextures : undefined)
       log(`Prefabs: ${parsed.prefabs.length}, Instances: ${parsed.instances.length}, Textures: ${parsed.textures.length}`)
 
       if (parsed.prefabs.length > 0) {
@@ -183,23 +209,16 @@ export default function ZoneBrowserPage() {
   // Load spawns from API when spawn display is first enabled
   useEffect(() => {
     if (!showSpawns || spawns.length > 0 || !selected) return
+    setSpawnsLoading(true)
     api<ZoneSpawnDto[]>(`/api/zones/${selected.id}/spawns`)
       .then(setSpawns)
       .catch(() => {})
+      .finally(() => setSpawnsLoading(false))
   }, [showSpawns, spawns.length, selected])
 
   const filteredSpawns = spawnFilter
     ? spawns.filter(s => s.name.toLowerCase().includes(spawnFilter.toLowerCase()))
     : spawns
-
-  // Escape key dismisses selected spawn
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelectedSpawn(null)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
 
   // ── Not configured states ──
   if (!ffxi.isSupported) {
@@ -245,7 +264,7 @@ export default function ZoneBrowserPage() {
     // Fixed positioning: fills viewport to the right of the sidebar
     <div className="fixed inset-0 lg:left-64 z-10 bg-gray-950 overflow-hidden">
       {/* ── 3D Viewport (fills entire area) ── */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" onPointerDown={() => setHoveredSpawn(null)}>
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-950/80 z-20">
             <p className="text-sm text-gray-400 animate-pulse">Loading zone...</p>
@@ -281,28 +300,44 @@ export default function ZoneBrowserPage() {
             onFlySpeedChange={setFlySpeed}
             cameraMode={cameraMode}
             spawns={spawnFilter ? filteredSpawns : spawns}
-            filteredSpawns={spawnFilter ? filteredSpawns : undefined}
             showSpawns={showSpawns}
-            showSkybeams={showSkybeams && !!spawnFilter}
-            onSpawnHover={setHoveredSpawn}
-            onSpawnClick={setSelectedSpawn}
+            showSkybeams={showSpawns && showSkybeams}
+            onSpawnHover={(spawn, pos) => { setHoveredSpawn(spawn); if (pos) setHoverPos(pos) }}
+            flyToTarget={flyToTarget}
+            debugVertexColors={debugVertexColors}
           />
         )}
 
-        {/* Hovered spawn tooltip */}
+        {/* Hovered spawn tooltip — follows cursor */}
         {hoveredSpawn && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-2 py-1 rounded bg-gray-900/90 text-xs text-gray-200 pointer-events-none">
-            {hoveredSpawn.name}
-            {hoveredSpawn.minLevel > 0 && ` (Lv.${hoveredSpawn.minLevel}–${hoveredSpawn.maxLevel})`}
+          <div
+            className="fixed z-50 pointer-events-none"
+            style={{ left: hoverPos.x + 14, top: hoverPos.y - 12 }}
+          >
+            <div className="bg-gray-900/95 backdrop-blur border border-gray-700 rounded-lg px-3 py-2 shadow-xl min-w-[200px]">
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{
+                    backgroundColor: hoveredSpawn.isMonster === true ? '#ff4444' : hoveredSpawn.isMonster === false ? '#4488ff' : '#44cc88',
+                  }}
+                />
+                <span className="text-sm font-semibold text-gray-100">{hoveredSpawn.name}</span>
+              </div>
+              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-400">
+                <span className={hoveredSpawn.isMonster === true ? 'text-red-400' : hoveredSpawn.isMonster === false ? 'text-blue-400' : 'text-green-400'}>
+                  {hoveredSpawn.isMonster === true ? 'Monster' : hoveredSpawn.isMonster === false ? 'NPC' : 'Unknown'}
+                </span>
+                {hoveredSpawn.poolId && <span>Pool: <span className="text-gray-300">{hoveredSpawn.poolId}</span></span>}
+                {(hoveredSpawn.minLevel > 0 || hoveredSpawn.maxLevel > 0) && (
+                  <span>Lv. <span className="text-gray-300">{hoveredSpawn.minLevel}–{hoveredSpawn.maxLevel}</span></span>
+                )}
+              </div>
+              <div className="mt-1 text-[10px] font-mono text-gray-500">
+                {hoveredSpawn.x.toFixed(1)}, {hoveredSpawn.y.toFixed(1)}, {hoveredSpawn.z.toFixed(1)}
+              </div>
+            </div>
           </div>
-        )}
-
-        {/* Selected spawn info card */}
-        {selectedSpawn && (
-          <SpawnInfoCard
-            spawn={selectedSpawn}
-            onClose={() => setSelectedSpawn(null)}
-          />
         )}
       </div>
 
@@ -421,7 +456,13 @@ export default function ZoneBrowserPage() {
           <Users className="h-3 w-3" />
           Spawns
         </button>
-        {showSpawns && spawns.length > 0 && (
+        {showSpawns && spawnsLoading && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-900/90 backdrop-blur border border-gray-700/50 shadow-lg">
+            <div className="w-3 h-3 border-2 border-gray-500 border-t-gray-200 rounded-full animate-spin" />
+            <span className="text-xs text-gray-400">Loading spawns...</span>
+          </div>
+        )}
+        {showSpawns && !spawnsLoading && spawns.length > 0 && (
           <SpawnToolbar
             filter={spawnFilter}
             onFilterChange={setSpawnFilter}
@@ -429,8 +470,25 @@ export default function ZoneBrowserPage() {
             onToggleSkybeams={() => setShowSkybeams(s => !s)}
             spawnCount={spawns.length}
             filteredCount={filteredSpawns.length}
+            spawns={spawns}
+            onSelectSpawn={(spawn) => {
+              setFlyToTarget({ x: spawn.x, y: spawn.y, z: spawn.z })
+              setHoveredSpawn(spawn)
+              setHoverPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+            }}
           />
         )}
+        <button
+          onClick={() => setDebugVertexColors(d => !d)}
+          className={`px-2.5 py-1 text-xs rounded-lg border shadow-lg backdrop-blur transition-colors ${
+            debugVertexColors
+              ? 'bg-yellow-600/90 border-yellow-500/50 text-white'
+              : 'bg-gray-900/90 border-gray-700/50 text-gray-400 hover:text-gray-200'
+          }`}
+          title="Debug: show vertex colors only (no textures)"
+        >
+          VCol
+        </button>
         {cameraMode === 'fly' && flySpeed !== null && (
           <div className="px-2.5 py-1 rounded-lg bg-gray-900/90 backdrop-blur border border-gray-700/50 shadow-lg text-xs text-gray-400" title="Scroll wheel to adjust fly speed">
             Speed <span className="font-mono text-gray-200">{flySpeed.toFixed(2)}</span>

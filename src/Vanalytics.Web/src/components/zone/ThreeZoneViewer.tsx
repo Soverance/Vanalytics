@@ -15,11 +15,12 @@ interface ThreeZoneViewerProps {
   cameraMode?: 'orbit' | 'fly'
   onFlySpeedChange?: (speed: number) => void
   spawns?: ZoneSpawnDto[]
-  filteredSpawns?: ZoneSpawnDto[]
   showSpawns?: boolean
   showSkybeams?: boolean
-  onSpawnHover?: (spawn: ZoneSpawnDto | null) => void
-  onSpawnClick?: (spawn: ZoneSpawnDto) => void
+  onSpawnHover?: (spawn: ZoneSpawnDto | null, screenPos?: { x: number; y: number }) => void
+  flyToTarget?: { x: number; y: number; z: number } | null
+  /** Debug: strip all textures and render vertex colors only */
+  debugVertexColors?: boolean
 }
 
 /** Returns sky colors, fog color, and exposure multiplier for a given hour (0-24) */
@@ -106,8 +107,18 @@ function patchZoneShader(
       uniform float fogHeightBase;
       uniform float fogHeightRange;`
     )
-    // Force fully opaque output — DXT3 alpha values would otherwise cause
-    // semi-transparency artifacts on ground/wall tiles
+    // Fix DXT3 alpha artifacts: ground/wall tiles can have near-zero alpha in
+    // DXT3 data despite having colored pixels.  Before THREE's alphatest_fragment
+    // runs, boost alpha to 1.0 for any pixel with visible color (luminance > 0.05).
+    // Black transparent pixels (foliage sprite backgrounds) keep their low alpha
+    // and get discarded by the normal alphaTest.
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <alphatest_fragment>',
+      `float _lum = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
+      if (_lum > 0.05) gl_FragColor.a = 1.0;
+      #include <alphatest_fragment>`
+    )
+    // Force fully opaque output for surviving fragments
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <premultiplied_alpha_fragment>',
       `#include <premultiplied_alpha_fragment>
@@ -136,6 +147,19 @@ const WATER_NAME_RE = /water|sea|umi|wtr|river|wave|pool|lake|aqua|suimen|suime|
 function isWaterMesh(prefab: { textureName?: string; blending: number }): boolean {
   return WATER_NAME_RE.test(prefab.textureName ?? '')
 }
+
+/** Texture name category prefixes for FFXI's built-in sky/weather/effect system.
+ *  These meshes are cloud layers, sky gradients, stars, moon geometry, and
+ *  environmental effects (crystals, mist, rainbows, teleport FX, lens flares)
+ *  that either conflict with our procedural sky or require special blend modes
+ *  (additive/alpha) that we don't replicate — rendering them opaque produces
+ *  wrong colors (e.g. blue surfaces in Ru'Aun Gardens). */
+const SKY_WEATHER_RE = /^(aura|fine|suny|wind|star|moon|effect|lf\d+)\s/i
+
+function isSkyWeatherMesh(prefab: { textureName?: string }): boolean {
+  return SKY_WEATHER_RE.test(prefab.textureName ?? '')
+}
+
 
 
 const WATER_VERT = /* glsl */ `
@@ -271,7 +295,9 @@ function SkyAnimator({ skyMaterial, timeOfDayRef }: { skyMaterial: THREE.ShaderM
   return null
 }
 
-export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 12, cameraMode = 'orbit', onFlySpeedChange, spawns, filteredSpawns, showSpawns, showSkybeams, onSpawnHover, onSpawnClick }: ThreeZoneViewerProps) {
+export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 12, cameraMode = 'orbit', onFlySpeedChange, spawns, showSpawns, showSkybeams, onSpawnHover, flyToTarget, debugVertexColors = false }: ThreeZoneViewerProps) {
+  const hoveringSpawn = useRef(false)
+
   // Shared uniform refs for height fog — values updated once bounding box is known
   const fogUniforms = useRef({
     fogHeightBase: { value: 0 },
@@ -406,11 +432,24 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 
     const materials: THREE.Material[] = []
     const waterMaterials: THREE.ShaderMaterial[] = []
 
-    // ── Build geometry + materials per prefab ──
+    // ── Build geometry + materials per prefab (keyed by original index) ──
     const uniqueTextureNames = new Set<string>()
     const waterNames: string[] = []
+    const skippedNames: string[] = []
 
-    for (const prefab of zoneData.prefabs) {
+    // Use Maps keyed by original prefab index to keep alignment with instances
+    const geoMap = new Map<number, THREE.BufferGeometry>()
+    const matMap = new Map<number, THREE.Material>()
+
+    for (let prefabIdx = 0; prefabIdx < zoneData.prefabs.length; prefabIdx++) {
+      const prefab = zoneData.prefabs[prefabIdx]
+
+      // Skip FFXI's built-in sky/weather meshes — we use our own procedural sky
+      if (isSkyWeatherMesh(prefab)) {
+        if (prefab.textureName) skippedNames.push(prefab.textureName)
+        continue
+      }
+
       const geometry = new THREE.BufferGeometry()
 
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(prefab.vertices), 3))
@@ -436,9 +475,10 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 
 
       geometry.computeBoundingBox()
       geometries.push(geometry)
+      geoMap.set(prefabIdx, geometry)
 
       // Build texture (shared between water and standard paths)
-      const tex = zoneData.textures[prefab.materialIndex]
+      const tex = debugVertexColors ? null : zoneData.textures[prefab.materialIndex]
       let texture: THREE.DataTexture | null = null
       if (tex) {
         texture = new THREE.DataTexture(new Uint8Array(tex.rgba), tex.width, tex.height, THREE.RGBAFormat)
@@ -458,25 +498,37 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 
         const waterMat = createWaterMaterial(texture)
         waterMaterials.push(waterMat)
         materials.push(waterMat)
+        matMap.set(prefabIdx, waterMat)
       } else {
         // Unlit material — FFXI bakes all lighting into vertex colors.
         // blending>0 meshes use alphaTest for cutout (trees, foliage with flag set).
-        // The shader also discards black+transparent pixels universally (patchZoneShader)
-        // to catch foliage with blending=0.
+        // patchZoneShader boosts alpha for colored pixels before the test, so ground
+        // tiles with low DXT3 alpha survive while black foliage backgrounds discard.
         const useAlpha = prefab.blending > 0
         const mat = new THREE.MeshBasicMaterial({
           ...(texture && { map: texture }),
           vertexColors: true,
           side: THREE.DoubleSide,
-          ...(useAlpha && { alphaTest: 0.1 }),
+          ...(useAlpha && {
+            alphaTest: 0.1,
+            // Pull alpha-cutout overlays (foliage, detail decals) slightly toward camera
+            // to prevent z-fighting with the ground surface beneath them
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -1,
+          }),
         })
         patchZoneShader(mat, fogUniforms.current)
         materials.push(mat)
+        matMap.set(prefabIdx, mat)
       }
     }
 
-    // Log texture names for water debugging
+    // Log texture/sky info
     console.log('[ZoneViewer] Unique texture names:', Array.from(uniqueTextureNames).sort())
+    if (skippedNames.length > 0) {
+      console.log('[ZoneViewer] Skipped sky/weather meshes:', skippedNames)
+    }
     if (waterNames.length > 0) {
       console.log('[ZoneViewer] Water meshes detected:', waterNames)
     } else {
@@ -486,6 +538,8 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 
     // ── Group instances by prefab → create InstancedMesh objects ──
     const groups = new Map<number, THREE.Matrix4[]>()
     for (const inst of zoneData.instances) {
+      // Skip instances that reference sky/weather prefabs
+      if (!geoMap.has(inst.meshIndex)) continue
       let arr = groups.get(inst.meshIndex)
       if (!arr) {
         arr = []
@@ -498,8 +552,8 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 
 
     const instancedMeshes: THREE.InstancedMesh[] = []
     for (const [meshIdx, matrices] of groups) {
-      const geo = geometries[meshIdx]
-      const mat = materials[meshIdx]
+      const geo = geoMap.get(meshIdx)
+      const mat = matMap.get(meshIdx)
       if (!geo || !mat) continue
 
       const mesh = new THREE.InstancedMesh(geo, mat, matrices.length)
@@ -526,7 +580,7 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 
 
     return { instancedMeshes, waterMaterials, totalInstances: zoneData.instances.length, disposeAll }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zoneData])
+  }, [zoneData, debugVertexColors])
 
   const { center, size, farPlane } = useMemo(() => {
     const bbox = new THREE.Box3()
@@ -566,8 +620,8 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 
 
   return (
     <Canvas
-      camera={{ position: [cx, cy + size * 0.15, cz + size * 0.4], fov: 60, far: farPlane }}
-      gl={{ antialias: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
+      camera={{ position: [cx, cy + size * 0.15, cz + size * 0.4], fov: 60, near: 1, far: farPlane }}
+      gl={{ antialias: false, logarithmicDepthBuffer: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
       className="w-full h-full"
     >
       {/* SkyAnimator runs every frame — updates sky uniforms, exposure, and fog color from timeOfDayRef */}
@@ -587,8 +641,10 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 
       {cameraMode === 'orbit' ? (
         <SmartOrbitControls defaultTarget={center} size={size} />
       ) : (
-        <FlyCamera center={center} size={size} onSpeedChange={onFlySpeedChange} />
+        <FlyCamera center={center} size={size} onSpeedChange={onFlySpeedChange} hoveringSpawnRef={hoveringSpawn} />
       )}
+
+      <CameraFlyTo target={flyToTarget ?? null} />
 
       {/* FFXI uses inverted Y — flip with Math.PI rotation like entity viewer.
           Instanced rendering: one InstancedMesh per prefab group, created imperatively. */}
@@ -596,9 +652,12 @@ export default function ThreeZoneViewer({ zoneData, fogDensity = 0, timeOfDay = 
         {instancedMeshes.map((mesh, i) => (
           <primitive key={i} object={mesh} />
         ))}
-        <SpawnMarkers spawns={spawns ?? []} visible={showSpawns ?? false} onHover={onSpawnHover} onClick={onSpawnClick} />
-        {showSkybeams && filteredSpawns && filteredSpawns.length > 0 && (
-          <SpawnSkybeams spawns={filteredSpawns} />
+        <SpawnMarkers spawns={spawns ?? []} visible={showSpawns ?? false} onHover={(spawn, pos) => {
+          hoveringSpawn.current = spawn !== null
+          onSpawnHover?.(spawn, pos)
+        }} />
+        {showSkybeams && spawns && spawns.length > 0 && (
+          <SpawnSkybeams spawns={spawns} />
         )}
       </group>
 
@@ -635,8 +694,8 @@ function BackgroundUpdater({ timeOfDayRef }: { timeOfDayRef: React.RefObject<num
     return () => { scene.background = null }
   }, [scene])
   useFrame(() => {
-    const params = getTimeOfDayParams(timeOfDayRef.current)
     if (scene.background instanceof THREE.Color) {
+      const params = getTimeOfDayParams(timeOfDayRef.current)
       scene.background.setRGB(params.sky[0] * 0.3, params.sky[1] * 0.3, params.sky[2] * 0.3)
     }
   })
@@ -683,7 +742,48 @@ function SmartOrbitControls({ size }: { defaultTarget: THREE.Vector3; size: numb
   return <OrbitControls target={target} maxDistance={size * 5} />
 }
 
-function FlyCamera({ center, size, onSpeedChange }: { center: THREE.Vector3; size: number; onSpeedChange?: (speed: number) => void }) {
+/** Smoothly animates the camera to look at a target position from a nearby offset */
+function CameraFlyTo({ target }: { target: { x: number; y: number; z: number } | null }) {
+  const { camera } = useThree()
+  const animating = useRef(false)
+  const startPos = useRef(new THREE.Vector3())
+  const endPos = useRef(new THREE.Vector3())
+  const endLook = useRef(new THREE.Vector3())
+  const progress = useRef(0)
+
+  useEffect(() => {
+    if (!target) return
+    // Exit pointer lock so the fly camera doesn't fight with the animation
+    if (document.pointerLockElement) document.exitPointerLock()
+    // The scene group has rotation=[Math.PI, 0, 0] which inverts both Y and Z.
+    // Convert spawn local coords to world space for the camera.
+    const worldTarget = new THREE.Vector3(target.x, -target.y, -target.z)
+    // Position camera slightly above and offset so the spawn is centered in view
+    const dir = new THREE.Vector3().subVectors(camera.position, worldTarget)
+    dir.y = 0
+    if (dir.lengthSq() < 0.01) dir.set(0, 0, 1) // fallback if camera is directly above
+    dir.normalize().multiplyScalar(25)
+    startPos.current.copy(camera.position)
+    endPos.current.copy(worldTarget).add(dir).setY(worldTarget.y + 15)
+    endLook.current.copy(worldTarget)
+    progress.current = 0
+    animating.current = true
+  }, [target, camera])
+
+  useFrame((_, delta) => {
+    if (!animating.current) return
+    progress.current = Math.min(1, progress.current + delta * 1.5)
+    // Smooth ease-out
+    const t = 1 - Math.pow(1 - progress.current, 3)
+    camera.position.lerpVectors(startPos.current, endPos.current, t)
+    camera.lookAt(endLook.current)
+    if (progress.current >= 1) animating.current = false
+  })
+
+  return null
+}
+
+function FlyCamera({ center, size, onSpeedChange, hoveringSpawnRef }: { center: THREE.Vector3; size: number; onSpeedChange?: (speed: number) => void; hoveringSpawnRef: React.RefObject<boolean> }) {
   const { camera, gl } = useThree()
   const moveState = useRef({ forward: false, backward: false, left: false, right: false, up: false, down: false })
   const speed = useRef(size * 0.003)
@@ -720,6 +820,7 @@ function FlyCamera({ center, size, onSpeedChange }: { center: THREE.Vector3; siz
       onSpeedChange?.(speed.current)
     }
     const onClick = () => {
+      if (hoveringSpawnRef.current) return
       gl.domElement.requestPointerLock()
     }
     const onPointerLockChange = () => {

@@ -1,6 +1,7 @@
 // src/Vanalytics.Web/src/pages/ItemDetailPage.tsx
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import type { GameItemDetail, PriceHistoryResponse, CrossServerResponse, GameServer, BazaarListingItem } from '../types/api'
 import ItemStatsTable from '../components/economy/ItemStatsTable'
 import PriceHistoryChart from '../components/economy/PriceHistoryChart'
@@ -15,6 +16,7 @@ import ItemModelViewer from '../components/character/ItemModelViewer'
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [item, setItem] = useState<GameItemDetail | null>(null)
   const [prices, setPrices] = useState<PriceHistoryResponse | null>(null)
   const [crossServer, setCrossServer] = useState<CrossServerResponse | null>(null)
@@ -38,7 +40,11 @@ export default function ItemDetailPage() {
       .then((r) => r.ok ? r.json() : [])
       .then((s: GameServer[]) => {
         setServers(s)
-        if (s.length > 0 && !selectedServer) setSelectedServer(s[0].name)
+        if (s.length > 0 && !selectedServer) {
+          const defaultName = user?.defaultServer
+          const match = defaultName ? s.find(sv => sv.name === defaultName) : null
+          setSelectedServer(match ? match.name : s[0].name)
+        }
       })
       .catch(() => {})
   }, [id])

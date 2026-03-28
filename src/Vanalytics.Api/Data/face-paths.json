@@ -1,0 +1,82 @@
+{
+  "1": [
+    {"name":"F1A","path":"ROM/27/87.dat"},{"name":"F1B","path":"ROM/27/88.dat"},
+    {"name":"F2A","path":"ROM/27/89.dat"},{"name":"F2B","path":"ROM/27/90.dat"},
+    {"name":"F3A","path":"ROM/27/91.dat"},{"name":"F3B","path":"ROM/27/92.dat"},
+    {"name":"F4A","path":"ROM/27/93.dat"},{"name":"F4B","path":"ROM/27/94.dat"},
+    {"name":"F5A","path":"ROM/27/95.dat"},{"name":"F5B","path":"ROM/27/96.dat"},
+    {"name":"F6A","path":"ROM/27/97.dat"},{"name":"F6B","path":"ROM/27/98.dat"},
+    {"name":"F7A","path":"ROM/27/99.dat"},{"name":"F7B","path":"ROM/27/100.dat"},
+    {"name":"F8A","path":"ROM/27/101.dat"},{"name":"F8B","path":"ROM/27/102.dat"}
+  ],
+  "2": [
+    {"name":"F1A","path":"ROM/32/63.dat"},{"name":"F1B","path":"ROM/32/64.dat"},
+    {"name":"F2A","path":"ROM/32/65.dat"},{"name":"F2B","path":"ROM/32/66.dat"},
+    {"name":"F3A","path":"ROM/32/67.dat"},{"name":"F3B","path":"ROM/32/68.dat"},
+    {"name":"F4A","path":"ROM/32/69.dat"},{"name":"F4B","path":"ROM/32/70.dat"},
+    {"name":"F5A","path":"ROM/32/71.dat"},{"name":"F5B","path":"ROM/32/72.dat"},
+    {"name":"F6A","path":"ROM/32/73.dat"},{"name":"F6B","path":"ROM/32/74.dat"},
+    {"name":"F7A","path":"ROM/32/75.dat"},{"name":"F7B","path":"ROM/32/76.dat"},
+    {"name":"F8A","path":"ROM/32/77.dat"},{"name":"F8B","path":"ROM/32/78.dat"}
+  ],
+  "3": [
+    {"name":"F1A","path":"ROM/37/36.dat"},{"name":"F1B","path":"ROM/37/37.dat"},
+    {"name":"F2A","path":"ROM/37/38.dat"},{"name":"F2B","path":"ROM/37/39.dat"},
+    {"name":"F3A","path":"ROM/37/40.dat"},{"name":"F3B","path":"ROM/37/41.dat"},
+    {"name":"F4A","path":"ROM/37/42.dat"},{"name":"F4B","path":"ROM/37/43.dat"},
+    {"name":"F5A","path":"ROM/37/44.dat"},{"name":"F5B","path":"ROM/37/45.dat"},
+    {"name":"F6A","path":"ROM/37/46.dat"},{"name":"F6B","path":"ROM/37/47.dat"},
+    {"name":"F7A","path":"ROM/37/48.dat"},{"name":"F7B","path":"ROM/37/49.dat"},
+    {"name":"F8A","path":"ROM/37/50.dat"},{"name":"F8B","path":"ROM/37/51.dat"}
+  ],
+  "4": [
+    {"name":"F1A","path":"ROM/42/9.dat"},{"name":"F1B","path":"ROM/42/10.dat"},
+    {"name":"F2A","path":"ROM/42/11.dat"},{"name":"F2B","path":"ROM/42/12.dat"},
+    {"name":"F3A","path":"ROM/42/13.dat"},{"name":"F3B","path":"ROM/42/14.dat"},
+    {"name":"F4A","path":"ROM/42/15.dat"},{"name":"F4B","path":"ROM/42/16.dat"},
+    {"name":"F5A","path":"ROM/42/17.dat"},{"name":"F5B","path":"ROM/42/18.dat"},
+    {"name":"F6A","path":"ROM/42/19.dat"},{"name":"F6B","path":"ROM/42/20.dat"},
+    {"name":"F7A","path":"ROM/42/21.dat"},{"name":"F7B","path":"ROM/42/22.dat"},
+    {"name":"F8A","path":"ROM/42/23.dat"},{"name":"F8B","path":"ROM/42/24.dat"}
+  ],
+  "5": [
+    {"name":"F1A","path":"ROM/46/98.dat"},{"name":"F1B","path":"ROM/46/99.dat"},
+    {"name":"F2A","path":"ROM/46/100.dat"},{"name":"F2B","path":"ROM/46/101.dat"},
+    {"name":"F3A","path":"ROM/46/102.dat"},{"name":"F3B","path":"ROM/46/103.dat"},
+    {"name":"F4A","path":"ROM/46/104.dat"},{"name":"F4B","path":"ROM/46/105.dat"},
+    {"name":"F5A","path":"ROM/46/106.dat"},{"name":"F5B","path":"ROM/46/107.dat"},
+    {"name":"F6A","path":"ROM/46/108.dat"},{"name":"F6B","path":"ROM/46/109.dat"},
+    {"name":"F7A","path":"ROM/46/110.dat"},{"name":"F7B","path":"ROM/46/111.dat"},
+    {"name":"F8A","path":"ROM/46/112.dat"},{"name":"F8B","path":"ROM/46/113.dat"}
+  ],
+  "6": [
+    {"name":"F1A","path":"ROM/51/55.dat"},{"name":"F1B","path":"ROM/51/56.dat"},
+    {"name":"F2A","path":"ROM/51/57.dat"},{"name":"F2B","path":"ROM/51/58.dat"},
+    {"name":"F3A","path":"ROM/51/59.dat"},{"name":"F3B","path":"ROM/51/60.dat"},
+    {"name":"F4A","path":"ROM/51/61.dat"},{"name":"F4B","path":"ROM/51/62.dat"},
+    {"name":"F5A","path":"ROM/51/63.dat"},{"name":"F5B","path":"ROM/51/64.dat"},
+    {"name":"F6A","path":"ROM/51/65.dat"},{"name":"F6B","path":"ROM/51/66.dat"},
+    {"name":"F7A","path":"ROM/51/67.dat"},{"name":"F7B","path":"ROM/51/68.dat"},
+    {"name":"F8A","path":"ROM/51/69.dat"},{"name":"F8B","path":"ROM/51/70.dat"}
+  ],
+  "7": [
+    {"name":"F1A","path":"ROM/51/94.dat"},{"name":"F1B","path":"ROM/51/95.dat"},
+    {"name":"F2A","path":"ROM/51/96.dat"},{"name":"F2B","path":"ROM/51/97.dat"},
+    {"name":"F3A","path":"ROM/51/98.dat"},{"name":"F3B","path":"ROM/51/99.dat"},
+    {"name":"F4A","path":"ROM/51/100.dat"},{"name":"F4B","path":"ROM/51/101.dat"},
+    {"name":"F5A","path":"ROM/51/102.dat"},{"name":"F5B","path":"ROM/51/103.dat"},
+    {"name":"F6A","path":"ROM/51/104.dat"},{"name":"F6B","path":"ROM/51/105.dat"},
+    {"name":"F7A","path":"ROM/51/106.dat"},{"name":"F7B","path":"ROM/51/107.dat"},
+    {"name":"F8A","path":"ROM/51/108.dat"},{"name":"F8B","path":"ROM/51/109.dat"}
+  ],
+  "8": [
+    {"name":"F1A","path":"ROM/56/64.dat"},{"name":"F1B","path":"ROM/56/65.dat"},
+    {"name":"F2A","path":"ROM/56/66.dat"},{"name":"F2B","path":"ROM/56/67.dat"},
+    {"name":"F3A","path":"ROM/56/68.dat"},{"name":"F3B","path":"ROM/56/69.dat"},
+    {"name":"F4A","path":"ROM/56/70.dat"},{"name":"F4B","path":"ROM/56/71.dat"},
+    {"name":"F5A","path":"ROM/56/72.dat"},{"name":"F5B","path":"ROM/56/73.dat"},
+    {"name":"F6A","path":"ROM/56/74.dat"},{"name":"F6B","path":"ROM/56/75.dat"},
+    {"name":"F7A","path":"ROM/56/76.dat"},{"name":"F7B","path":"ROM/56/77.dat"},
+    {"name":"F8A","path":"ROM/56/78.dat"},{"name":"F8B","path":"ROM/56/79.dat"}
+  ]
+}

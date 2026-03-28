@@ -48,7 +48,7 @@ export function parseMmbBlock(data: Uint8Array): MmbMeshResult[] {
 
   // ── SMMBHeader (44 bytes) ──
   // char imgID[16], int pieces, float x1,x2,y1,y2,z1,z2, uint offsetBlockHeader
-  reader.skip(16) // imgID
+  reader.skip(16) // imgID (block identifier, not a texture reference)
   const pieces = reader.readInt32()
   reader.skip(24) // bbox: 6 floats
   const offsetBlockHeader = reader.readUint32()

@@ -5,6 +5,6 @@ export { parseTextures, parseTextureBlock, decompressDXT1, decompressDXT3 } from
 export { parseSkeleton, SKELETON_PATHS, mat4TransformPoint } from './SkeletonParser'
 export { FileTableResolver, modelToPath, resolveModelPaths } from './FileTableResolver'
 export type { ParsedMesh, ParsedTexture, ParsedSkeleton, ParsedBone, ParsedDatFile, ParsedZoneMesh, ZoneMeshInstance, ParsedZone } from './types'
-export { parseZoneFile } from './ZoneFile'
+export { parseZoneFile, parseTexturesFromDat } from './ZoneFile'
 export { parseAnimationDat } from './AnimationParser'
 export type { ParsedAnimation, AnimationBone } from './types'
