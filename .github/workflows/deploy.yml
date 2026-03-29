@@ -95,43 +95,50 @@ jobs:
           GOOGLE_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           MICROSOFT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
         run: |
+          SECRETS="sql-connection-string=$SQL_CONN"
+          SECRETS="$SECRETS admin-password=$ADMIN_PASS"
+          SECRETS="$SECRETS jwt-secret=$JWT_SEC"
+          SECRETS="$SECRETS azure-storage-connection-string=$AZURE_STORAGE"
+          [ -n "$GOOGLE_SECRET" ] && SECRETS="$SECRETS google-client-secret=$GOOGLE_SECRET"
+          [ -n "$MICROSOFT_SECRET" ] && SECRETS="$SECRETS microsoft-client-secret=$MICROSOFT_SECRET"
           az containerapp secret set \
             --name vanalytics \
             --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
-            --secrets \
-              sql-connection-string="$SQL_CONN" \
-              admin-password="$ADMIN_PASS" \
-              jwt-secret="$JWT_SEC" \
-              azure-storage-connection-string="$AZURE_STORAGE" \
-              google-client-secret="$GOOGLE_SECRET" \
-              microsoft-client-secret="$MICROSOFT_SECRET"
+            --secrets $SECRETS
 
       - name: Deploy to Container App
+        env:
+          GOOGLE_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          MICROSOFT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
         run: |
+          ENV_VARS="ConnectionStrings__DefaultConnection=secretref:sql-connection-string"
+          ENV_VARS="$ENV_VARS ADMIN_EMAIL=${{ vars.ADMIN_EMAIL }}"
+          ENV_VARS="$ENV_VARS ADMIN_USERNAME=${{ vars.ADMIN_USERNAME }}"
+          ENV_VARS="$ENV_VARS ADMIN_PASSWORD=secretref:admin-password"
+          ENV_VARS="$ENV_VARS Jwt__Secret=secretref:jwt-secret"
+          ENV_VARS="$ENV_VARS Jwt__Issuer=${{ vars.JWT_ISSUER }}"
+          ENV_VARS="$ENV_VARS Jwt__Audience=${{ vars.JWT_AUDIENCE }}"
+          ENV_VARS="$ENV_VARS Jwt__AccessTokenExpirationMinutes=15"
+          ENV_VARS="$ENV_VARS Jwt__RefreshTokenExpirationDays=7"
+          ENV_VARS="$ENV_VARS ASPNETCORE_ENVIRONMENT=Production"
+          ENV_VARS="$ENV_VARS DISABLE_HTTPS_REDIRECT=true"
+          ENV_VARS="$ENV_VARS Authentication__AzureAd__ClientId=${{ vars.AZURE_AD_CLIENT_ID }}"
+          ENV_VARS="$ENV_VARS Authentication__AzureAd__Domain=${{ vars.AZURE_AD_DOMAIN }}"
+          ENV_VARS="$ENV_VARS Authentication__AzureAd__TenantId=${{ vars.AZURE_AD_TENANT_ID }}"
+          ENV_VARS="$ENV_VARS AzureStorage__ConnectionString=secretref:azure-storage-connection-string"
+          if [ -n "$GOOGLE_SECRET" ]; then
+            ENV_VARS="$ENV_VARS OAuth__Google__ClientId=${{ vars.GOOGLE_CLIENT_ID }}"
+            ENV_VARS="$ENV_VARS OAuth__Google__ClientSecret=secretref:google-client-secret"
+          fi
+          if [ -n "$MICROSOFT_SECRET" ]; then
+            ENV_VARS="$ENV_VARS OAuth__Microsoft__ClientId=${{ vars.MICROSOFT_CLIENT_ID }}"
+            ENV_VARS="$ENV_VARS OAuth__Microsoft__ClientSecret=secretref:microsoft-client-secret"
+          fi
           az containerapp update \
             --name vanalytics \
             --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
             --image soveranceacr.azurecr.io/vanalytics:v${{ needs.build.outputs.version }} \
-            --set-env-vars \
-              ConnectionStrings__DefaultConnection=secretref:sql-connection-string \
-              ADMIN_EMAIL="${{ vars.ADMIN_EMAIL }}" \
-              ADMIN_USERNAME="${{ vars.ADMIN_USERNAME }}" \
-              ADMIN_PASSWORD=secretref:admin-password \
-              Jwt__Secret=secretref:jwt-secret \
-              "Jwt__Issuer=${{ vars.JWT_ISSUER }}" \
-              "Jwt__Audience=${{ vars.JWT_AUDIENCE }}" \
-              Jwt__AccessTokenExpirationMinutes=15 \
-              Jwt__RefreshTokenExpirationDays=7 \
-              ASPNETCORE_ENVIRONMENT=Production \
-              DISABLE_HTTPS_REDIRECT=true \
-              "Authentication__AzureAd__ClientId=${{ vars.AZURE_AD_CLIENT_ID }}" \
-              "Authentication__AzureAd__Domain=${{ vars.AZURE_AD_DOMAIN }}" \
-              "Authentication__AzureAd__TenantId=${{ vars.AZURE_AD_TENANT_ID }}" \
-              AzureStorage__ConnectionString=secretref:azure-storage-connection-string \
-              "OAuth__Google__ClientId=${{ vars.GOOGLE_CLIENT_ID }}" \
-              OAuth__Google__ClientSecret=secretref:google-client-secret \
-              "OAuth__Microsoft__ClientId=${{ vars.MICROSOFT_CLIENT_ID }}" \
-              OAuth__Microsoft__ClientSecret=secretref:microsoft-client-secret
+            --set-env-vars $ENV_VARS
 
   release:
     name: Release
