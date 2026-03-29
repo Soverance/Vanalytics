@@ -67,7 +67,12 @@ public class OAuthService
                 ["scope"] = "openid email profile"
             }));
 
-        tokenResponse.EnsureSuccessStatusCode();
+        if (!tokenResponse.IsSuccessStatusCode)
+        {
+            var errorBody = await tokenResponse.Content.ReadAsStringAsync();
+            throw new HttpRequestException(
+                $"Microsoft token exchange failed ({tokenResponse.StatusCode}): {errorBody}");
+        }
         var tokenData = await JsonSerializer.DeserializeAsync<OAuthTokenResponse>(
             await tokenResponse.Content.ReadAsStreamAsync());
 

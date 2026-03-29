@@ -96,9 +96,9 @@ public class AuthController : ControllerBase
         {
             return BadRequest(new { message = $"Unsupported OAuth provider: {provider}" });
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
-            return BadRequest(new { message = "Failed to authenticate with OAuth provider" });
+            return BadRequest(new { message = $"Failed to authenticate with OAuth provider: {ex.Message}" });
         }
 
         // Find existing user by OAuth ID, or fall back to email match.

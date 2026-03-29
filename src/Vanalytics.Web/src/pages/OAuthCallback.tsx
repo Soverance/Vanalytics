@@ -20,7 +20,7 @@ export default function OAuthCallback() {
     const redirectUri = `${window.location.origin}/oauth/callback`
     oauthLogin(provider, code, redirectUri)
       .then(() => navigate('/characters', { replace: true }))
-      .catch(() => setError('OAuth login failed. Please try again.'))
+      .catch((err) => setError(err?.message || 'OAuth login failed. Please try again.'))
   }, [])
 
   if (error) {
