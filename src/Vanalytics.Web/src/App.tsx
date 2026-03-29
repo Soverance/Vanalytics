@@ -96,6 +96,9 @@ export default function App() {
           {/* OAuth callback */}
           <Route path="/oauth/callback" element={<OAuthCallback />} />
 
+          {/* Redirect /login to landing page */}
+          <Route path="/login" element={<Navigate to="/" replace />} />
+
           {/* App pages with sidebar layout */}
           <Route element={<Layout />}>
             {/* Public server routes (no auth required) */}

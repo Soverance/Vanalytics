@@ -29,31 +29,6 @@ public class AuthController : ControllerBase
         _loginRateLimiter = loginRateLimiter;
     }
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
-    {
-        if (await _db.Users.AnyAsync(u => u.Email == request.Email))
-            return Conflict(new { message = "Email already registered" });
-
-        if (await _db.Users.AnyAsync(u => u.Username == request.Username))
-            return Conflict(new { message = "Username already taken" });
-
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = request.Email,
-            Username = request.Username,
-            PasswordHash = PasswordHasher.HashPassword(request.Password),
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
-
-        _db.Users.Add(user);
-        await _db.SaveChangesAsync();
-
-        return Ok(await _authResponseService.GenerateAuthResponseAsync(_db, user));
-    }
-
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {

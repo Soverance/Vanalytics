@@ -1,10 +1,4 @@
 // Auth
-export interface RegisterRequest {
-  email: string
-  username: string
-  password: string
-}
-
 export interface LoginRequest {
   email: string
   password: string
@@ -302,6 +296,20 @@ export interface AdminUser {
   characterCount: number
   createdAt: string
   updatedAt: string
+}
+
+export interface CreateUserRequest {
+  email: string
+  username: string
+  role: UserRole
+}
+
+export interface CreateUserResponse {
+  id: string
+  email: string
+  username: string
+  role: string
+  generatedPassword: string
 }
 
 // Items / Economy

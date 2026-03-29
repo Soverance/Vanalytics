@@ -1,12 +1,11 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { api, storeTokens, clearTokens, getStoredTokens } from '../api/client'
-import type { AuthResponse, UserProfile, RegisterRequest, LoginRequest } from '../types/api'
+import type { AuthResponse, UserProfile, LoginRequest } from '../types/api'
 
 interface AuthState {
   user: UserProfile | null
   loading: boolean
   login: (req: LoginRequest) => Promise<void>
-  register: (req: RegisterRequest) => Promise<void>
   oauthLogin: (provider: string, code: string, redirectUri: string) => Promise<void>
   samlExchange: (code: string) => Promise<void>
   refreshUser: () => Promise<void>
@@ -33,16 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (req: LoginRequest) => {
     const auth = await api<AuthResponse>('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(req),
-    })
-    storeTokens(auth.accessToken, auth.refreshToken)
-    const profile = await api<UserProfile>('/api/auth/me')
-    setUser(profile)
-  }
-
-  const register = async (req: RegisterRequest) => {
-    const auth = await api<AuthResponse>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(req),
     })
@@ -87,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, oauthLogin, samlExchange, refreshUser, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, oauthLogin, samlExchange, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   )
