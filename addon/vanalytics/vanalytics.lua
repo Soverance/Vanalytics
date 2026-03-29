@@ -726,6 +726,10 @@ local function read_character_state()
         maxMp = player.vitals.max_mp,
         linkshell = player.linkshell,
         nation = player.nation,
+        titleId = player.title_id,
+        titleName = (player.title_id and player.title_id > 0 and res.titles[player.title_id])
+            and res.titles[player.title_id].en
+            or '',
         merits = merits,
         jobs = jobs,
         gear = gear,

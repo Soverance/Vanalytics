@@ -251,6 +251,8 @@ public class CharactersController : ControllerBase
         MaxMp = c.MaxMp,
         Linkshell = c.Linkshell,
         Nation = c.Nation,
+        TitleId = c.TitleId,
+        Title = c.Title,
         Merits = c.MeritsJson != null
             ? JsonSerializer.Deserialize<Dictionary<string, int>>(c.MeritsJson)
             : null,

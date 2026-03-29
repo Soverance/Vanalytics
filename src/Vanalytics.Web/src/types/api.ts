@@ -58,6 +58,8 @@ export interface CharacterDetail {
   maxMp?: number
   linkshell?: string
   nation?: number
+  titleId?: number
+  title?: string
   merits?: Record<string, number>
   jobs: JobEntry[]
   gear: GearEntry[]

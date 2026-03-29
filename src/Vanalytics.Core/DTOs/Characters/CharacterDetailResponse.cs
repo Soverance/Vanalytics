@@ -20,6 +20,8 @@ public class CharacterDetailResponse
     public int? MaxMp { get; set; }
     public string? Linkshell { get; set; }
     public int? Nation { get; set; }
+    public int? TitleId { get; set; }
+    public string? Title { get; set; }
     public Dictionary<string, int>? Merits { get; set; }
     public FavoriteAnimationDto? FavoriteAnimation { get; set; }
 

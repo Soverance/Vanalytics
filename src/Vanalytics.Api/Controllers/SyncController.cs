@@ -102,6 +102,8 @@ public class SyncController : ControllerBase
         character.MaxMp = request.MaxMp;
         character.Linkshell = request.Linkshell;
         character.Nation = request.Nation;
+        character.TitleId = request.TitleId;
+        character.Title = request.TitleName;
         character.MeritsJson = request.Merits is { Count: > 0 }
             ? JsonSerializer.Serialize(request.Merits)
             : null;

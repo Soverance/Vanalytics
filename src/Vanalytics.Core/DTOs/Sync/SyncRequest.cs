@@ -27,6 +27,10 @@ public class SyncRequest
     public int? MaxMp { get; set; }
     public string? Linkshell { get; set; }
     public int? Nation { get; set; }
+    public int? TitleId { get; set; }
+
+    [MaxLength(128)]
+    public string? TitleName { get; set; }
     public Dictionary<string, int>? Merits { get; set; }
     public List<SyncModelEntry> Models { get; set; } = [];
 

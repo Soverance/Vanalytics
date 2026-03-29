@@ -23,6 +23,8 @@ public class Character
     public int? MaxMp { get; set; }
     public string? Linkshell { get; set; }
     public int? Nation { get; set; }
+    public int? TitleId { get; set; }
+    public string? Title { get; set; }
     public string? MeritsJson { get; set; }
     public string? FavoriteAnimationJson { get; set; }
     public DateTimeOffset? LastSyncAt { get; set; }
