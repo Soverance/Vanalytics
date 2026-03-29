@@ -19,6 +19,9 @@ services:
     build:
       context: .
       dockerfile: src/Vanalytics.Api/Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+        VITE_MICROSOFT_CLIENT_ID: "${MICROSOFT_CLIENT_ID}"
     ports:
       - "5000:8080"
     environment:
@@ -34,6 +37,10 @@ services:
       Jwt__RefreshTokenExpirationDays: "7"
       ItemImages__BasePath: "/app/item-images"
       AzureStorage__ConnectionString: "${AZURE_STORAGE_CONNECTION_STRING:-}"
+      OAuth__Google__ClientId: "${GOOGLE_CLIENT_ID}"
+      OAuth__Google__ClientSecret: "${GOOGLE_CLIENT_SECRET}"
+      OAuth__Microsoft__ClientId: "${MICROSOFT_CLIENT_ID}"
+      OAuth__Microsoft__ClientSecret: "${MICROSOFT_CLIENT_SECRET}"
     volumes:
       - itemimages:/app/item-images
     depends_on:

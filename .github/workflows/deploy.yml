@@ -7,10 +7,12 @@
 #
 # Secrets: ACR_USERNAME, ACR_PASSWORD, AZURE_CREDENTIALS,
 #          SQL_CONNECTION_STRING, ADMIN_PASSWORD, JWT_SECRET,
-#          AZURE_STORAGE_CONNECTION_STRING
+#          AZURE_STORAGE_CONNECTION_STRING,
+#          GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_SECRET
 # Variables: AZURE_RESOURCE_GROUP, ADMIN_EMAIL, ADMIN_USERNAME,
 #            JWT_ISSUER, JWT_AUDIENCE,
-#            AZURE_AD_CLIENT_ID, AZURE_AD_DOMAIN, AZURE_AD_TENANT_ID
+#            AZURE_AD_CLIENT_ID, AZURE_AD_DOMAIN, AZURE_AD_TENANT_ID,
+#            GOOGLE_CLIENT_ID, MICROSOFT_CLIENT_ID
 
 name: Build and Deploy
 
@@ -56,6 +58,8 @@ jobs:
         run: |
           docker build -f src/Vanalytics.Api/Dockerfile . \
             --build-arg APP_VERSION=${{ steps.version.outputs.version }} \
+            --build-arg VITE_GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }} \
+            --build-arg VITE_MICROSOFT_CLIENT_ID=${{ vars.MICROSOFT_CLIENT_ID }} \
             -t soveranceacr.azurecr.io/vanalytics:v${{ steps.version.outputs.version }} \
             -t soveranceacr.azurecr.io/vanalytics:latest
 
@@ -88,6 +92,8 @@ jobs:
           ADMIN_PASS: ${{ secrets.ADMIN_PASSWORD }}
           JWT_SEC: ${{ secrets.JWT_SECRET }}
           AZURE_STORAGE: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          GOOGLE_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          MICROSOFT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
         run: |
           az containerapp secret set \
             --name vanalytics \
@@ -96,7 +102,9 @@ jobs:
               sql-connection-string="$SQL_CONN" \
               admin-password="$ADMIN_PASS" \
               jwt-secret="$JWT_SEC" \
-              azure-storage-connection-string="$AZURE_STORAGE"
+              azure-storage-connection-string="$AZURE_STORAGE" \
+              google-client-secret="$GOOGLE_SECRET" \
+              microsoft-client-secret="$MICROSOFT_SECRET"
 
       - name: Deploy to Container App
         run: |
@@ -119,7 +127,11 @@ jobs:
               "Authentication__AzureAd__ClientId=${{ vars.AZURE_AD_CLIENT_ID }}" \
               "Authentication__AzureAd__Domain=${{ vars.AZURE_AD_DOMAIN }}" \
               "Authentication__AzureAd__TenantId=${{ vars.AZURE_AD_TENANT_ID }}" \
-              AzureStorage__ConnectionString=secretref:azure-storage-connection-string
+              AzureStorage__ConnectionString=secretref:azure-storage-connection-string \
+              "OAuth__Google__ClientId=${{ vars.GOOGLE_CLIENT_ID }}" \
+              OAuth__Google__ClientSecret=secretref:google-client-secret \
+              "OAuth__Microsoft__ClientId=${{ vars.MICROSOFT_CLIENT_ID }}" \
+              OAuth__Microsoft__ClientSecret=secretref:microsoft-client-secret
 
   release:
     name: Release

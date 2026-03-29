@@ -95,8 +95,18 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
     [equippedIds, itemCache],
   )
 
-  // Base stats: race + job + merits (per LandSandBoat charutils.cpp)
+  // Whether we have real server-side stats from packet 0x061
+  const hasPacketStats = character.baseStr != null
+
+  // Base stats: prefer packet data, fall back to LandSandBoat formula
   const baseStats = useMemo<BaseStats | null>(() => {
+    if (hasPacketStats) {
+      return {
+        hp: character.maxHp ?? 0, mp: character.maxMp ?? 0,
+        str: character.baseStr!, dex: character.baseDex!, vit: character.baseVit!,
+        agi: character.baseAgi!, int: character.baseInt!, mnd: character.baseMnd!, chr: character.baseChr!,
+      }
+    }
     if (!hasRaceAndJob) return null
     const stats = calculateBaseStats(
       character.race,
@@ -118,10 +128,17 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
     }
 
     return stats
-  }, [character.race, character.gender, activeJob, character.subJob, character.subJobLevel, character.merits, hasRaceAndJob])
+  }, [character, activeJob, hasRaceAndJob, hasPacketStats])
 
-  // Bonus stats: equipment only (per LandSandBoat modifier system)
+  // Bonus stats: prefer packet added stats, fall back to equipment sum
   const bonusStats = useMemo<BaseStats | null>(() => {
+    if (hasPacketStats) {
+      return {
+        hp: 0, mp: 0,
+        str: character.addedStr ?? 0, dex: character.addedDex ?? 0, vit: character.addedVit ?? 0,
+        agi: character.addedAgi ?? 0, int: character.addedInt ?? 0, mnd: character.addedMnd ?? 0, chr: character.addedChr ?? 0,
+      }
+    }
     if (!allItemsLoaded) return null
     const bonus: BaseStats = { hp: 0, mp: 0, str: 0, dex: 0, vit: 0, agi: 0, int: 0, mnd: 0, chr: 0 }
 
@@ -136,20 +153,22 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
     }
 
     return bonus
-  }, [equippedIds, itemCache, allItemsLoaded])
+  }, [character, equippedIds, itemCache, allItemsLoaded, hasPacketStats])
 
-  // Combat stats from equipment only
+  // Combat stats: use packet Attack/Defense when available, equipment-based for other stats
   const combatStats = useMemo<Record<CombatStatKey, number> | null>(() => {
-    if (!allItemsLoaded) return null
+    if (!allItemsLoaded && !hasPacketStats) return null
     const totals = {} as Record<CombatStatKey, number>
     for (const key of COMBAT_STAT_KEYS) totals[key] = 0
 
-    for (const id of equippedIds) {
-      const item = itemCache.get(id)
-      if (!item) continue
-      for (const key of COMBAT_STAT_KEYS) {
-        const val = item[key]
-        if (val != null) totals[key] += val
+    if (allItemsLoaded) {
+      for (const id of equippedIds) {
+        const item = itemCache.get(id)
+        if (!item) continue
+        for (const key of COMBAT_STAT_KEYS) {
+          const val = item[key]
+          if (val != null) totals[key] += val
+        }
       }
     }
 
@@ -161,8 +180,12 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
       }
     }
 
+    // Override Attack/Defense with real server values when available
+    if (character.attack != null) totals.attack = character.attack
+    if (character.defense != null) totals.def = character.defense
+
     return totals
-  }, [equippedIds, itemCache, allItemsLoaded, activeJob])
+  }, [equippedIds, itemCache, allItemsLoaded, activeJob, character, hasPacketStats])
 
   return (
     <div>

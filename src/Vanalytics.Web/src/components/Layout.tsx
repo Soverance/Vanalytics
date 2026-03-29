@@ -185,9 +185,11 @@ function LayoutInner() {
           )}
         </nav>
 
-        {version && (
-          <div className="px-4 py-2 text-[11px] text-gray-600">v{version}</div>
-        )}
+        <div className="px-4 py-2 flex items-center gap-3 text-[11px] text-gray-600">
+          {version && <span>v{version}</span>}
+          <a href="https://soverance.com/terms" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 transition-colors">Terms</a>
+          <a href="https://soverance.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 transition-colors">Privacy</a>
+        </div>
 
         {/* User profile */}
         <NavLink

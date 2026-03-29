@@ -9,6 +9,7 @@ _addon.commands = {'vanalytics', 'va'}
 
 local config = require('config')
 local res = require('resources')
+require('pack')
 local session = require('session')
 local inventory = require('inventory')
 local macro_lib = require('macros')
@@ -28,6 +29,9 @@ local last_sync_time = nil
 local last_sync_status = 'Never synced'
 local sync_timer = nil
 local MIN_INTERVAL = 5
+local current_title_id = 0
+local packet_stats = nil  -- populated from incoming packet 0x061
+local playtime_seconds = nil  -- populated from incoming packet 0x00A
 
 -----------------------------------------------------------------------
 -- Utility: chat log output
@@ -726,9 +730,9 @@ local function read_character_state()
         maxMp = player.vitals.max_mp,
         linkshell = player.linkshell,
         nation = player.nation,
-        titleId = player.title_id,
-        titleName = (player.title_id and player.title_id > 0 and res.titles[player.title_id])
-            and res.titles[player.title_id].en
+        titleId = current_title_id,
+        titleName = (current_title_id > 0 and res.titles[current_title_id])
+            and res.titles[current_title_id].en
             or '',
         merits = merits,
         jobs = jobs,
@@ -763,6 +767,18 @@ local function read_character_state()
         if #models > 0 then
             state.models = models
         end
+    end
+
+    -- Merge packet-captured stats (from 0x061) into the sync payload
+    if packet_stats then
+        for k, v in pairs(packet_stats) do
+            state[k] = v
+        end
+    end
+
+    -- Playtime from packet 0x00A
+    if playtime_seconds and playtime_seconds > 0 then
+        state.playtimeSeconds = playtime_seconds
     end
 
     return state
@@ -924,9 +940,11 @@ local work_queue = {}
 
 local function enqueue_sync_work()
     -- Queue each sync task as a separate frame's work
+    -- Macros are intentionally excluded — use //va macros push to sync manually.
+    -- Auto-syncing macros risks overwriting saved macros with empty defaults
+    -- when logging in from a fresh FFXI installation.
     table.insert(work_queue, function() do_sync() end)
     table.insert(work_queue, function() scan_bazaars() end)
-    table.insert(work_queue, function() sync_macros(false) end)
 end
 
 -- Single prerender handler registered once at load time
@@ -950,6 +968,65 @@ windower.register_event('prerender', function()
 
     -- Check if session needs auto-flush
     session.check_auto_flush()
+end)
+
+-----------------------------------------------------------------------
+-- Packet capture: read title from Char Stats packet (0x061)
+-----------------------------------------------------------------------
+windower.register_event('incoming chunk', function(id, data)
+    if id == 0x061 then
+        current_title_id = data:unpack('H', 0x44 + 1) or 0
+
+        -- Base stats (unsigned short)
+        local baseStr = data:unpack('H', 0x14 + 1)
+        local baseDex = data:unpack('H', 0x16 + 1)
+        local baseVit = data:unpack('H', 0x18 + 1)
+        local baseAgi = data:unpack('H', 0x1A + 1)
+        local baseInt = data:unpack('H', 0x1C + 1)
+        local baseMnd = data:unpack('H', 0x1E + 1)
+        local baseChr = data:unpack('H', 0x20 + 1)
+
+        -- Added stats from gear/buffs (signed short)
+        local addedStr = data:unpack('h', 0x22 + 1)
+        local addedDex = data:unpack('h', 0x24 + 1)
+        local addedVit = data:unpack('h', 0x26 + 1)
+        local addedAgi = data:unpack('h', 0x28 + 1)
+        local addedInt = data:unpack('h', 0x2A + 1)
+        local addedMnd = data:unpack('h', 0x2C + 1)
+        local addedChr = data:unpack('h', 0x2E + 1)
+
+        -- Combat stats (unsigned short)
+        local attack  = data:unpack('H', 0x30 + 1)
+        local defense = data:unpack('H', 0x32 + 1)
+
+        -- Elemental resistances (signed short)
+        local resFire      = data:unpack('h', 0x34 + 1)
+        local resIce       = data:unpack('h', 0x36 + 1)
+        local resWind      = data:unpack('h', 0x38 + 1)
+        local resEarth     = data:unpack('h', 0x3A + 1)
+        local resLightning = data:unpack('h', 0x3C + 1)
+        local resWater     = data:unpack('h', 0x3E + 1)
+        local resLight     = data:unpack('h', 0x40 + 1)
+        local resDark      = data:unpack('h', 0x42 + 1)
+
+        -- Nation rank and rank points (unsigned short)
+        local nationRank   = data:unpack('H', 0x46 + 1)
+        local rankPoints   = data:unpack('H', 0x48 + 1)
+
+        packet_stats = {
+            baseStr = baseStr, baseDex = baseDex, baseVit = baseVit, baseAgi = baseAgi,
+            baseInt = baseInt, baseMnd = baseMnd, baseChr = baseChr,
+            addedStr = addedStr, addedDex = addedDex, addedVit = addedVit, addedAgi = addedAgi,
+            addedInt = addedInt, addedMnd = addedMnd, addedChr = addedChr,
+            attack = attack, defense = defense,
+            resFire = resFire, resIce = resIce, resWind = resWind, resEarth = resEarth,
+            resLightning = resLightning, resWater = resWater, resLight = resLight, resDark = resDark,
+            nationRank = nationRank, rankPoints = rankPoints,
+        }
+    elseif id == 0x00A then
+        -- Playtime in seconds (uint32 at offset 0xA0)
+        playtime_seconds = data:unpack('I', 0xA0 + 1) or 0
+    end
 end)
 
 -- TODO: Packet capture for AH history (0x0E7) and bazaar contents (0x109)

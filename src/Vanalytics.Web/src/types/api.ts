@@ -58,8 +58,39 @@ export interface CharacterDetail {
   maxMp?: number
   linkshell?: string
   nation?: number
+  nationRank?: number
+  rankPoints?: number
   titleId?: number
   title?: string
+  // Base stats (from packet 0x061)
+  baseStr?: number
+  baseDex?: number
+  baseVit?: number
+  baseAgi?: number
+  baseInt?: number
+  baseMnd?: number
+  baseChr?: number
+  // Added stats from gear/buffs (from packet 0x061)
+  addedStr?: number
+  addedDex?: number
+  addedVit?: number
+  addedAgi?: number
+  addedInt?: number
+  addedMnd?: number
+  addedChr?: number
+  // Combat stats (from packet 0x061)
+  attack?: number
+  defense?: number
+  // Elemental resistances (from packet 0x061)
+  resFire?: number
+  resIce?: number
+  resWind?: number
+  resEarth?: number
+  resLightning?: number
+  resWater?: number
+  resLight?: number
+  resDark?: number
+  playtimeSeconds?: number
   merits?: Record<string, number>
   jobs: JobEntry[]
   gear: GearEntry[]

@@ -27,10 +27,46 @@ public class SyncRequest
     public int? MaxMp { get; set; }
     public string? Linkshell { get; set; }
     public int? Nation { get; set; }
+    public int? NationRank { get; set; }
+    public int? RankPoints { get; set; }
     public int? TitleId { get; set; }
 
     [MaxLength(128)]
     public string? TitleName { get; set; }
+    // Base stats (from packet 0x061)
+    public int? BaseStr { get; set; }
+    public int? BaseDex { get; set; }
+    public int? BaseVit { get; set; }
+    public int? BaseAgi { get; set; }
+    public int? BaseInt { get; set; }
+    public int? BaseMnd { get; set; }
+    public int? BaseChr { get; set; }
+
+    // Added stats from gear/buffs (from packet 0x061)
+    public int? AddedStr { get; set; }
+    public int? AddedDex { get; set; }
+    public int? AddedVit { get; set; }
+    public int? AddedAgi { get; set; }
+    public int? AddedInt { get; set; }
+    public int? AddedMnd { get; set; }
+    public int? AddedChr { get; set; }
+
+    // Combat stats (from packet 0x061)
+    public int? Attack { get; set; }
+    public int? Defense { get; set; }
+
+    // Elemental resistances (from packet 0x061)
+    public int? ResFire { get; set; }
+    public int? ResIce { get; set; }
+    public int? ResWind { get; set; }
+    public int? ResEarth { get; set; }
+    public int? ResLightning { get; set; }
+    public int? ResWater { get; set; }
+    public int? ResLight { get; set; }
+    public int? ResDark { get; set; }
+
+    public int? PlaytimeSeconds { get; set; }
+
     public Dictionary<string, int>? Merits { get; set; }
     public List<SyncModelEntry> Models { get; set; } = [];
 

@@ -6,6 +6,7 @@ import JobsGrid from '../components/JobsGrid'
 import CraftingTable from '../components/CraftingTable'
 import StatusPanel from '../components/character/StatusPanel'
 import EquipmentGrid from '../components/character/EquipmentGrid'
+import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
 
 const STAT_TABS = ['Jobs', 'Crafting'] as const
 type StatTab = typeof STAT_TABS[number]
@@ -71,46 +72,10 @@ export default function PublicProfilePage() {
 
   if (!character) return null
 
-  const nationNames: Record<number, string> = { 0: "San d'Oria", 1: 'Bastok', 2: 'Windurst' }
-
-  const activeJob = character.jobs.find(j => j.isActive)
-  const jobSubLine = activeJob
-    ? `${activeJob.job}/${character.subJob ?? '???'}`
-    : null
-
-  const infoParts = [
-    character.race,
-    character.gender,
-    character.nation != null ? nationNames[character.nation] : null,
-    character.linkshell ? `LS: ${character.linkshell}` : null,
-  ].filter(Boolean)
-
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
       <main className="mx-auto max-w-5xl px-4 py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-2xl font-bold">{character.name}</h1>
-            <span className="text-gray-400 text-sm">{character.server}</span>
-          </div>
-          {character.title && (
-            <p className="text-sm text-gray-400 italic">{character.title}</p>
-          )}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400 mt-1">
-            {jobSubLine && <span className="text-gray-200 font-medium">{jobSubLine}</span>}
-            {character.masterLevel != null && character.masterLevel > 0 && (
-              <span>ML{character.masterLevel}</span>
-            )}
-            {character.itemLevel != null && character.itemLevel > 0 && (
-              <span>iLvl {character.itemLevel}</span>
-            )}
-            {infoParts.length > 0 && <span>{infoParts.join(' · ')}</span>}
-            {character.lastSyncAt && (
-              <span>Last sync: {new Date(character.lastSyncAt).toLocaleString()}</span>
-            )}
-          </div>
-        </div>
+        <CharacterProfileHeader character={character} />
 
         {/* Stats section: Jobs / Crafting tabs + Status panel */}
         <section className="mb-8">
