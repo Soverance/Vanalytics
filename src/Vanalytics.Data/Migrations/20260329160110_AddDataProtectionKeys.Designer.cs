@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vanalytics.Data;
 
@@ -11,9 +12,11 @@ using Vanalytics.Data;
 namespace Vanalytics.Data.Migrations
 {
     [DbContext(typeof(VanalyticsDbContext))]
-    partial class VanalyticsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260329160110_AddDataProtectionKeys")]
+    partial class AddDataProtectionKeys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -586,56 +589,8 @@ namespace Vanalytics.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("AddedAgi")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("AddedChr")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("AddedDex")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("AddedInt")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("AddedMnd")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("AddedStr")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("AddedVit")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Attack")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BaseAgi")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BaseChr")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BaseDex")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BaseInt")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BaseMnd")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BaseStr")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BaseVit")
-                        .HasColumnType("int");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<int?>("Defense")
-                        .HasColumnType("int");
 
                     b.Property<int?>("FaceModelId")
                         .HasColumnType("int");
@@ -685,37 +640,7 @@ namespace Vanalytics.Data.Migrations
                     b.Property<int?>("Nation")
                         .HasColumnType("int");
 
-                    b.Property<int?>("NationRank")
-                        .HasColumnType("int");
-
                     b.Property<int?>("Race")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("RankPoints")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ResDark")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ResEarth")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ResFire")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ResIce")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ResLight")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ResLightning")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ResWater")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ResWind")
                         .HasColumnType("int");
 
                     b.Property<string>("Server")

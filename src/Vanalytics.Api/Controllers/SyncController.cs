@@ -102,8 +102,34 @@ public class SyncController : ControllerBase
         character.MaxMp = request.MaxMp;
         character.Linkshell = request.Linkshell;
         character.Nation = request.Nation;
+        character.NationRank = request.NationRank;
+        character.RankPoints = request.RankPoints;
         character.TitleId = request.TitleId;
         character.Title = request.TitleName;
+        character.BaseStr = request.BaseStr;
+        character.BaseDex = request.BaseDex;
+        character.BaseVit = request.BaseVit;
+        character.BaseAgi = request.BaseAgi;
+        character.BaseInt = request.BaseInt;
+        character.BaseMnd = request.BaseMnd;
+        character.BaseChr = request.BaseChr;
+        character.AddedStr = request.AddedStr;
+        character.AddedDex = request.AddedDex;
+        character.AddedVit = request.AddedVit;
+        character.AddedAgi = request.AddedAgi;
+        character.AddedInt = request.AddedInt;
+        character.AddedMnd = request.AddedMnd;
+        character.AddedChr = request.AddedChr;
+        character.Attack = request.Attack;
+        character.Defense = request.Defense;
+        character.ResFire = request.ResFire;
+        character.ResIce = request.ResIce;
+        character.ResWind = request.ResWind;
+        character.ResEarth = request.ResEarth;
+        character.ResLightning = request.ResLightning;
+        character.ResWater = request.ResWater;
+        character.ResLight = request.ResLight;
+        character.ResDark = request.ResDark;
         character.MeritsJson = request.Merits is { Count: > 0 }
             ? JsonSerializer.Serialize(request.Merits)
             : null;

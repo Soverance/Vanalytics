@@ -18,6 +18,7 @@ import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
 import SessionsTab from '../components/session/SessionsTab'
 import { ApiError } from '../api/client'
+import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
 
 const STAT_TABS = ['Jobs', 'Crafting', 'Relics'] as const
 type StatTab = typeof STAT_TABS[number]
@@ -146,58 +147,18 @@ export default function CharacterDetailPage() {
   if (loading) return <p className="text-gray-400">Loading...</p>
   if (!character) return <p className="text-red-400">Character not found.</p>
 
-  const nationNames: Record<number, string> = { 0: "San d'Oria", 1: 'Bastok', 2: 'Windurst' }
-
-  const activeJob = character.jobs.find(j => j.isActive)
-  const jobSubLine = activeJob
-    ? `${activeJob.job}/${character.subJob ?? '???'}`
-    : null
-
-  const infoParts = [
-    character.race,
-    character.gender,
-    character.nation != null ? nationNames[character.nation] : null,
-    character.linkshell ? `LS: ${character.linkshell}` : null,
-  ].filter(Boolean)
-
   return (
     <div>
       <Link to="/characters" className="text-sm text-blue-400 hover:underline mb-4 inline-block">
         &larr; Back to Characters
       </Link>
 
-      <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">{character.name}</h1>
-          <span className="text-gray-400 text-sm self-baseline">{character.server}</span>
-          <button
-            onClick={character.isPublic ? () => setShowShareModal(true) : handleTogglePublic}
-            className={`ml-auto flex items-center gap-1.5 rounded px-3 py-1 text-xs font-medium transition-colors ${
-              character.isPublic
-                ? 'bg-green-900/40 text-green-400 border border-green-700 hover:bg-green-900/60'
-                : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700 hover:text-gray-200'
-            }`}
-          >
-            {character.isPublic ? 'Public Profile' : 'Make Public'}
-          </button>
-        </div>
-        {character.title && (
-          <p className="text-sm text-gray-400 italic">{character.title}</p>
-        )}
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400 mt-1">
-          {jobSubLine && <span className="text-gray-200 font-medium">{jobSubLine}</span>}
-          {character.masterLevel != null && character.masterLevel > 0 && (
-            <span>ML{character.masterLevel}</span>
-          )}
-          {character.itemLevel != null && character.itemLevel > 0 && (
-            <span>iLvl {character.itemLevel}</span>
-          )}
-          {infoParts.length > 0 && <span>{infoParts.join(' · ')}</span>}
-          {character.lastSyncAt && (
-            <span>Last sync: {new Date(character.lastSyncAt).toLocaleString()}</span>
-          )}
-        </div>
-      </div>
+      <CharacterProfileHeader
+        character={character}
+        showPublicButton
+        onTogglePublic={handleTogglePublic}
+        onShareClick={() => setShowShareModal(true)}
+      />
 
       <section className="mb-8">
         <div className="flex gap-8">

@@ -1,4 +1,8 @@
 FROM node:22-alpine AS frontend
+ARG VITE_GOOGLE_CLIENT_ID=""
+ARG VITE_MICROSOFT_CLIENT_ID=""
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+ENV VITE_MICROSOFT_CLIENT_ID=$VITE_MICROSOFT_CLIENT_ID
 WORKDIR /app
 COPY src/Vanalytics.Web/package.json src/Vanalytics.Web/package-lock.json ./
 RUN npm ci
