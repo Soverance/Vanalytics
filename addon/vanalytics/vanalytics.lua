@@ -940,9 +940,11 @@ local work_queue = {}
 
 local function enqueue_sync_work()
     -- Queue each sync task as a separate frame's work
+    -- Macros are intentionally excluded — use //va macros push to sync manually.
+    -- Auto-syncing macros risks overwriting saved macros with empty defaults
+    -- when logging in from a fresh FFXI installation.
     table.insert(work_queue, function() do_sync() end)
     table.insert(work_queue, function() scan_bazaars() end)
-    table.insert(work_queue, function() sync_macros(false) end)
 end
 
 -- Single prerender handler registered once at load time
