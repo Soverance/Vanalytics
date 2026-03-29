@@ -12,7 +12,7 @@ const OAUTH_CONFIG = {
   microsoft: {
     clientId: import.meta.env.VITE_MICROSOFT_CLIENT_ID || '',
     authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-    scope: 'openid email profile',
+    scope: 'openid email profile User.Read',
   },
 }
 

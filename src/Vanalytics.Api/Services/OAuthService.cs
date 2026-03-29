@@ -64,7 +64,7 @@ public class OAuthService
                 ["client_secret"] = _config["OAuth:Microsoft:ClientSecret"]!,
                 ["redirect_uri"] = redirectUri,
                 ["grant_type"] = "authorization_code",
-                ["scope"] = "openid email profile"
+                ["scope"] = "openid email profile User.Read"
             }));
 
         if (!tokenResponse.IsSuccessStatusCode)
