@@ -5,7 +5,7 @@ import type {
   CertificateValidateRequest,
   CertificateValidateResponse,
   SamlStatusResponse,
-} from '@common/types/saml'
+} from '@soverance/web'
 
 export type { SamlConfigResponse, SamlConfigUpdateRequest, CertificateValidateRequest, CertificateValidateResponse, SamlStatusResponse }
 

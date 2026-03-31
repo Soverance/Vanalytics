@@ -13,9 +13,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Vanalytics.Core\Vanalytics.Core.csproj" />
     <ProjectReference Include="..\Vanalytics.Data\Vanalytics.Data.csproj" />
-    <ProjectReference Include="..\lib\Common\src\Soverance.Auth\Soverance.Auth.csproj" />
-    <ProjectReference Include="..\lib\Common\src\Soverance.Data\Soverance.Data.csproj" />
-    <ProjectReference Include="..\lib\Common\src\Soverance.Forum\Soverance.Forum.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +23,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Scalar.AspNetCore" Version="2.13.13" />
+    <PackageReference Include="Soverance.Auth" Version="1.0.0" />
+    <PackageReference Include="Soverance.Data" Version="1.0.0" />
+    <PackageReference Include="Soverance.Forum" Version="1.0.0" />
   </ItemGroup>
 
   <PropertyGroup>

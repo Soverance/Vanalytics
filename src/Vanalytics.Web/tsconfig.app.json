@@ -23,10 +23,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
-    "paths": {
-      "@common/*": ["../../lib/Common/src/Soverance.Web/*", "./common-web/*"]
-    },
     "typeRoots": ["node_modules/@types"]
   },
-  "include": ["src", "../../lib/Common/src/Soverance.Web"]
+  "include": ["src"]
 }

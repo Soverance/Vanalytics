@@ -2,8 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Vanalytics.Core\Vanalytics.Core.csproj" />
-    <ProjectReference Include="..\lib\Common\src\Soverance.Data\Soverance.Data.csproj" />
-    <ProjectReference Include="..\lib\Common\src\Soverance.Forum\Soverance.Forum.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -11,6 +9,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Soverance.Data" Version="1.0.0" />
+    <PackageReference Include="Soverance.Forum" Version="1.0.0" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,4 +1,4 @@
-import SamlTab from '@common/components/SamlTab'
+import { SamlTab } from '@soverance/web'
 import { getSamlConfig, updateSamlConfig, validateCertificate } from '../api/saml'
 
 export default function AdminSamlPage() {

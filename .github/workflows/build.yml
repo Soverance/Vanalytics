@@ -16,13 +16,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-        with:
-          submodules: recursive
 
       - name: Setup .NET 10.0 SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+          source-url: https://nuget.pkg.github.com/Soverance/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Release configuration
         run: dotnet build Vanalytics.slnx --configuration Release
