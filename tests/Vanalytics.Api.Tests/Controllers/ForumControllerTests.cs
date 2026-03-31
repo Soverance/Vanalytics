@@ -471,6 +471,76 @@ public class ForumControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetPosts_HidesDeletedPosts_ForRegularUsers()
+    {
+        // Arrange: create category, thread, reply, then soft-delete the reply
+        var modToken = await GetModeratorTokenAsync("delmod1@test.com", "delmod1");
+        var catResp = await _client.SendAsync(Authed(HttpMethod.Post, "/api/forum/categories", modToken,
+            new CreateCategoryRequest("DelTest1", "For deletion test")));
+        var cat = await catResp.Content.ReadFromJsonAsync<JsonElement>();
+        var catSlug = cat.GetProperty("slug").GetString()!;
+
+        var memberToken = await CreateUserAndGetTokenAsync("delmem1@test.com", "delmem1");
+        var threadResp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/categories/{catSlug}/threads", memberToken,
+            new CreateThreadRequest("Deletion Test", "First post body")));
+        var thread = await threadResp.Content.ReadFromJsonAsync<JsonElement>();
+        var threadId = thread.GetProperty("id").GetInt32();
+
+        // Create a reply as member
+        var replyResp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/threads/{threadId}/posts", memberToken,
+            new CreatePostRequest("This reply will be deleted")));
+        var reply = await replyResp.Content.ReadFromJsonAsync<JsonElement>();
+        var replyId = reply.GetProperty("id").GetInt64();
+
+        // Soft-delete the reply via moderator
+        await _client.SendAsync(Authed(HttpMethod.Delete, $"/api/forum/posts/{replyId}/moderate", modToken));
+
+        // Act: fetch posts as regular user
+        var postsResp = await _client.GetFromJsonAsync<JsonElement>($"/api/forum/threads/{threadId}/posts");
+        var posts = postsResp.GetProperty("posts").EnumerateArray().ToList();
+
+        // Assert: deleted post should NOT be visible
+        Assert.All(posts, p => Assert.False(p.GetProperty("isDeleted").GetBoolean()));
+    }
+
+    [Fact]
+    public async Task GetPosts_ShowsDeletedPosts_ForModerators()
+    {
+        // Arrange: create category, thread, reply, then soft-delete the reply
+        var modToken = await GetModeratorTokenAsync("delmod2@test.com", "delmod2");
+        var catResp = await _client.SendAsync(Authed(HttpMethod.Post, "/api/forum/categories", modToken,
+            new CreateCategoryRequest("DelTest2", "For deletion mod test")));
+        var cat = await catResp.Content.ReadFromJsonAsync<JsonElement>();
+        var catSlug = cat.GetProperty("slug").GetString()!;
+
+        var memberToken = await CreateUserAndGetTokenAsync("delmem2@test.com", "delmem2");
+        var threadResp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/categories/{catSlug}/threads", memberToken,
+            new CreateThreadRequest("Deletion Mod Test", "First post body")));
+        var thread = await threadResp.Content.ReadFromJsonAsync<JsonElement>();
+        var threadId = thread.GetProperty("id").GetInt32();
+
+        // Create a reply as member
+        var replyResp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/threads/{threadId}/posts", memberToken,
+            new CreatePostRequest("This reply will be deleted")));
+        var reply = await replyResp.Content.ReadFromJsonAsync<JsonElement>();
+        var replyId = reply.GetProperty("id").GetInt64();
+
+        // Soft-delete the reply via moderator
+        await _client.SendAsync(Authed(HttpMethod.Delete, $"/api/forum/posts/{replyId}/moderate", modToken));
+
+        // Act: fetch posts as moderator (set auth header for GetFromJsonAsync)
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", modToken);
+        var postsResp = await _client.GetFromJsonAsync<JsonElement>($"/api/forum/threads/{threadId}/posts");
+        _client.DefaultRequestHeaders.Authorization = null;
+        var posts = postsResp.GetProperty("posts").EnumerateArray().ToList();
+
+        // Assert: should see the deleted post with null body
+        var deletedPost = posts.First(p => p.GetProperty("id").GetInt64() == replyId);
+        Assert.True(deletedPost.GetProperty("isDeleted").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, deletedPost.GetProperty("body").ValueKind);
+    }
+
+    [Fact]
     public async Task CreatePost_ExternalImageStripped()
     {
         var token = await GetModeratorTokenAsync("sanitize@test.com", "sanitize");

@@ -114,7 +114,8 @@ public class ForumController : ControllerBase
         [FromQuery] int limit = 25)
     {
         var currentUserId = GetOptionalUserId();
-        var (posts, hasMore) = await _forum.GetPostsAsync(threadId, afterId, limit, currentUserId);
+        var isModerator = User.IsInRole("Moderator") || User.IsInRole("Admin");
+        var (posts, hasMore) = await _forum.GetPostsAsync(threadId, afterId, limit, currentUserId, isModerator);
 
         var authorIds = posts.Select(p => p.AuthorId).Distinct();
         var authors = await _authors.ResolveAuthorsAsync(authorIds);
