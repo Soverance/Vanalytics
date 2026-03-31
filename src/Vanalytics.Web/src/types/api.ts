@@ -284,6 +284,10 @@ export interface PaginatedSearchResults {
   hasMore: boolean
 }
 
+export interface PurgeResponse {
+  threadDeleted: boolean
+}
+
 // Admin
 export interface AdminUser {
   id: string

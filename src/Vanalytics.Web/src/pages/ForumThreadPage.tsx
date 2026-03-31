@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { Pin, Lock } from 'lucide-react'
 import { api, ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -11,8 +11,13 @@ function isModerator(user: UserProfile | null): boolean {
   return user?.role === 'Moderator' || user?.role === 'Admin'
 }
 
+function isAdmin(user: UserProfile | null): boolean {
+  return user?.role === 'Admin'
+}
+
 export default function ForumThreadPage() {
   const { categorySlug, threadSlug } = useParams<{ categorySlug: string; threadSlug: string }>()
+  const navigate = useNavigate()
   const { user } = useAuth()
 
   const [thread, setThread] = useState<ThreadDetailResponse | null>(null)
@@ -92,6 +97,15 @@ export default function ForumThreadPage() {
   }
 
   const mod = isModerator(user)
+  const admin = isAdmin(user)
+
+  const handlePurged = (threadDeleted: boolean) => {
+    if (threadDeleted) {
+      navigate(`/forum/${categorySlug}`)
+    } else {
+      if (thread) fetchPosts(thread.id)
+    }
+  }
 
   if (loadingThread) {
     return (
@@ -167,14 +181,17 @@ export default function ForumThreadPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {posts.map(post => (
+          {posts.map((post, index) => (
             <ForumPost
               key={post.id}
               post={post}
+              isFirstPost={index === 0}
               isAuthor={user?.id === post.authorId}
               isModerator={mod}
+              isAdmin={admin}
               isAuthenticated={user !== null}
               onUpdated={onPostCreated}
+              onPurged={handlePurged}
             />
           ))}
         </div>

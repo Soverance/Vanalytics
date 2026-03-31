@@ -1,25 +1,30 @@
 import { useState } from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Flame } from 'lucide-react'
 import { api } from '../../api/client'
-import type { EnrichedPostResponse } from '../../types/api'
+import type { EnrichedPostResponse, PurgeResponse } from '../../types/api'
 import ForumAuthorBadge from './ForumAuthorBadge'
 import ForumVoteButton from './ForumVoteButton'
 import ForumEditor from './ForumEditor'
 
 interface Props {
   post: EnrichedPostResponse
+  isFirstPost?: boolean
   isAuthor: boolean
   isModerator: boolean
+  isAdmin: boolean
   isAuthenticated: boolean
   onUpdated: () => void
+  onPurged: (threadDeleted: boolean) => void
 }
 
-export default function ForumPost({ post, isAuthor, isModerator, isAuthenticated, onUpdated }: Props) {
+export default function ForumPost({ post, isFirstPost, isAuthor, isModerator, isAdmin, isAuthenticated, onUpdated, onPurged }: Props) {
   const [editing, setEditing] = useState(false)
   const [editBody, setEditBody] = useState(post.body ?? '')
+  const [purging, setPurging] = useState(false)
 
   const canEdit = (isAuthor || isModerator) && !post.isDeleted
   const canDelete = (isAuthor || isModerator) && !post.isDeleted
+  const canPurge = isAdmin
 
   const saveEdit = async () => {
     if (!editBody.trim()) return
@@ -40,12 +45,40 @@ export default function ForumPost({ post, isAuthor, isModerator, isAuthenticated
     onUpdated()
   }
 
+  const purgePost = async () => {
+    const warning = isFirstPost
+      ? 'PURGE this post?\n\nThis is the first post in the thread. Purging it will permanently delete the ENTIRE THREAD and all its posts and attachments. This cannot be undone.'
+      : 'PURGE this post?\n\nThis will permanently delete this post and its attachments. This cannot be undone.'
+    if (!confirm(warning)) return
+    setPurging(true)
+    try {
+      const result = await api<PurgeResponse>(`/api/forum/posts/${post.id}/purge`, { method: 'DELETE' })
+      onPurged(result.threadDeleted)
+    } catch {
+      alert('Failed to purge post')
+    } finally {
+      setPurging(false)
+    }
+  }
+
   if (post.isDeleted) {
     return (
       <div className="flex gap-4 rounded-lg border border-gray-800/50 bg-gray-900/30 p-4">
         <ForumAuthorBadge username={post.authorUsername} postCount={post.authorPostCount} joinedAt={post.authorJoinedAt} />
         <div className="flex-1">
-          <p className="text-gray-600 italic text-sm">[This post has been deleted]</p>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-600 italic text-sm">[This post has been deleted]</p>
+            {canPurge && (
+              <button
+                onClick={purgePost}
+                disabled={purging}
+                className="text-gray-600 hover:text-red-500 p-1 disabled:opacity-50"
+                title="Purge permanently"
+              >
+                <Flame className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -79,6 +112,11 @@ export default function ForumPost({ post, isAuthor, isModerator, isAuthenticated
               {canDelete && (
                 <button onClick={deletePost} className="text-gray-600 hover:text-red-400 p-1" title="Delete">
                   <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {canPurge && (
+                <button onClick={purgePost} disabled={purging} className="text-gray-600 hover:text-red-500 p-1 disabled:opacity-50" title="Purge permanently">
+                  <Flame className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
