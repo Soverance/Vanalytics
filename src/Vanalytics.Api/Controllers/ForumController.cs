@@ -69,7 +69,8 @@ public class ForumController : ControllerBase
         var category = await _forum.GetCategoryBySlugAsync(slug);
         if (category == null) return NotFound();
 
-        var (threads, hasMore) = await _forum.GetThreadsAsync(slug, afterLastPostAtTicks, afterId, limit);
+        var isModerator = User.IsInRole("Moderator") || User.IsInRole("Admin");
+        var (threads, hasMore) = await _forum.GetThreadsAsync(slug, afterLastPostAtTicks, afterId, limit, isModerator);
 
         var authorIds = threads.Select(t => t.AuthorId).Distinct();
         var authors = await _authors.ResolveAuthorsAsync(authorIds);

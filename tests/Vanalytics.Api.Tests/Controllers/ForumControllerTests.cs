@@ -541,6 +541,54 @@ public class ForumControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetThreads_ReplyCount_ExcludesDeletedPosts_ForRegularUsers()
+    {
+        // Arrange: create category, thread, and replies
+        var modToken = await GetModeratorTokenAsync("rcmod@test.com", "rcmod");
+        var catResp = await _client.SendAsync(Authed(HttpMethod.Post, "/api/forum/categories", modToken,
+            new CreateCategoryRequest("ReplyCountTest", "For reply count test")));
+        var cat = await catResp.Content.ReadFromJsonAsync<JsonElement>();
+        var catSlug = cat.GetProperty("slug").GetString()!;
+
+        var memberToken = await CreateUserAndGetTokenAsync("rcmem@test.com", "rcmem");
+
+        // Create thread
+        var threadResp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/categories/{catSlug}/threads", memberToken,
+            new CreateThreadRequest("Reply Count Test", "First post body")));
+        var thread = await threadResp.Content.ReadFromJsonAsync<JsonElement>();
+        var threadId = thread.GetProperty("id").GetInt32();
+
+        // Create 2 replies
+        var reply1Resp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/threads/{threadId}/posts", memberToken,
+            new CreatePostRequest("Reply 1")));
+        var reply2Resp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/threads/{threadId}/posts", memberToken,
+            new CreatePostRequest("Reply 2")));
+        var reply1Id = (await reply1Resp.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
+
+        // Soft-delete one reply via moderator
+        await _client.SendAsync(Authed(HttpMethod.Delete, $"/api/forum/posts/{reply1Id}/moderate", modToken));
+
+        // Act: get threads as regular user
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", memberToken);
+        var threadsRes = await _client.GetFromJsonAsync<JsonElement>($"/api/forum/categories/{catSlug}/threads");
+        _client.DefaultRequestHeaders.Authorization = null;
+        var threads = threadsRes.GetProperty("threads").EnumerateArray().ToList();
+        var targetThread = threads.First(t => t.GetProperty("title").GetString() == "Reply Count Test");
+
+        // Assert: reply count should be 1 (excludes deleted reply, excludes OP)
+        Assert.Equal(1, targetThread.GetProperty("replyCount").GetInt32());
+
+        // Act: get threads as moderator — should see 2
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", modToken);
+        var modThreadsRes = await _client.GetFromJsonAsync<JsonElement>($"/api/forum/categories/{catSlug}/threads");
+        _client.DefaultRequestHeaders.Authorization = null;
+        var modThreads = modThreadsRes.GetProperty("threads").EnumerateArray().ToList();
+        var modTargetThread = modThreads.First(t => t.GetProperty("title").GetString() == "Reply Count Test");
+
+        Assert.Equal(2, modTargetThread.GetProperty("replyCount").GetInt32());
+    }
+
+    [Fact]
     public async Task CreatePost_ExternalImageStripped()
     {
         var token = await GetModeratorTokenAsync("sanitize@test.com", "sanitize");
