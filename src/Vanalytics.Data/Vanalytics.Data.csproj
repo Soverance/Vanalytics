@@ -9,7 +9,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Soverance.Data" Version="1.0.1" />
+    <PackageReference Include="Soverance.Data" Version="1.0.2" />
     <PackageReference Include="Soverance.Forum" Version="1.0.3" />
   </ItemGroup>
 

@@ -139,6 +139,7 @@ jobs:
           if [ -n "$MICROSOFT_SECRET" ]; then
             ENV_VARS+=("OAuth__Microsoft__ClientId=${{ vars.MICROSOFT_CLIENT_ID }}")
             ENV_VARS+=("OAuth__Microsoft__ClientSecret=secretref:microsoft-client-secret")
+            ENV_VARS+=("Authentication__AzureAd__ClientSecret=secretref:microsoft-client-secret")
           fi
           az containerapp update \
             --name vanalytics \

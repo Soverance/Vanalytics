@@ -95,6 +95,15 @@ if (!string.IsNullOrEmpty(builder.Configuration["AzureStorage:ConnectionString"]
     builder.Services.AddSingleton<IForumAttachmentStore, AzureBlobForumAttachmentStore>();
 else
     builder.Services.AddSingleton<IForumAttachmentStore, LocalForumAttachmentStore>();
+
+// Avatar storage: Azure Blob in production
+if (!string.IsNullOrEmpty(builder.Configuration["AzureStorage:ConnectionString"]))
+    builder.Services.AddSingleton<IAvatarStore, AzureBlobAvatarStore>();
+
+// Graph API photo service for SAML avatar sync (uses HttpClient via DI)
+if (!string.IsNullOrEmpty(builder.Configuration["Authentication:AzureAd:ClientSecret"]))
+    builder.Services.AddHttpClient<IGraphPhotoService, GraphPhotoService>();
+
 builder.Services.AddHttpClient("PlayOnline", client =>
 {
     client.Timeout = TimeSpan.FromSeconds(15);
