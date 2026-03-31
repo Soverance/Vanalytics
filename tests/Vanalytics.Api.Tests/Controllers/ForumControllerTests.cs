@@ -121,6 +121,27 @@ public class ForumControllerTests : IAsyncLifetime
         return auth!.AccessToken;
     }
 
+    private async Task PromoteToAdminAsync(string email)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var user = await db.Users.FirstAsync(u => u.Email == email);
+        user.Role = UserRole.Admin;
+        await db.SaveChangesAsync();
+    }
+
+    private async Task<string> GetAdminTokenAsync(string email, string username)
+    {
+        await CreateUserAndGetTokenAsync(email, username);
+        await PromoteToAdminAsync(email);
+
+        // Re-login to get a token with the updated Admin role claim
+        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest
+        { Email = email, Password = "Password123!" });
+        var auth = await loginResp.Content.ReadFromJsonAsync<AuthResponse>();
+        return auth!.AccessToken;
+    }
+
     // ===== Tests =====
 
     [Fact]
@@ -613,5 +634,108 @@ public class ForumControllerTests : IAsyncLifetime
         var resultBody = post.GetProperty("body").GetString()!;
         Assert.DoesNotContain("evil.com", resultBody);
         Assert.Contains("/forum-attachments/attachments/good.png", resultBody);
+    }
+
+    // ===== Purge Tests =====
+
+    [Fact]
+    public async Task PurgePost_RequiresAdminRole()
+    {
+        var memberToken = await CreateUserAndGetTokenAsync("purgeauth@test.com", "purgeauth");
+        var modToken = await GetModeratorTokenAsync("purgemod@test.com", "purgemod");
+
+        // Create category and thread
+        var catResp = await _client.SendAsync(Authed(HttpMethod.Post, "/api/forum/categories", modToken,
+            new CreateCategoryRequest("PurgeAuthCat", "For purge auth test")));
+        var cat = await catResp.Content.ReadFromJsonAsync<JsonElement>();
+        var catSlug = cat.GetProperty("slug").GetString()!;
+
+        var threadResp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/categories/{catSlug}/threads", memberToken,
+            new CreateThreadRequest("Purge Auth Test", "Body")));
+        var thread = await threadResp.Content.ReadFromJsonAsync<JsonElement>();
+        var threadId = thread.GetProperty("id").GetInt32();
+
+        // Create a reply
+        var replyResp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/threads/{threadId}/posts", memberToken,
+            new CreatePostRequest("Reply to purge")));
+        var replyId = (await replyResp.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
+
+        // Regular user: should get 403
+        var res1 = await _client.SendAsync(Authed(HttpMethod.Delete, $"/api/forum/posts/{replyId}/purge", memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, res1.StatusCode);
+
+        // Moderator: should get 403
+        var res2 = await _client.SendAsync(Authed(HttpMethod.Delete, $"/api/forum/posts/{replyId}/purge", modToken));
+        Assert.Equal(HttpStatusCode.Forbidden, res2.StatusCode);
+    }
+
+    [Fact]
+    public async Task PurgePost_DeletesSinglePost_WhenNotFirstPost()
+    {
+        var memberToken = await CreateUserAndGetTokenAsync("purgesingle@test.com", "purgesingle");
+        var adminToken = await GetAdminTokenAsync("purgeadmin1@test.com", "purgeadmin1");
+
+        // Create category and thread
+        var catResp = await _client.SendAsync(Authed(HttpMethod.Post, "/api/forum/categories", adminToken,
+            new CreateCategoryRequest("PurgeSingleCat", "For purge single test")));
+        var cat = await catResp.Content.ReadFromJsonAsync<JsonElement>();
+        var catSlug = cat.GetProperty("slug").GetString()!;
+
+        var threadResp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/categories/{catSlug}/threads", memberToken,
+            new CreateThreadRequest("Purge Single Test", "First post")));
+        var thread = await threadResp.Content.ReadFromJsonAsync<JsonElement>();
+        var threadId = thread.GetProperty("id").GetInt32();
+        var threadSlug = thread.GetProperty("slug").GetString()!;
+
+        // Create a reply
+        var replyResp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/threads/{threadId}/posts", memberToken,
+            new CreatePostRequest("Reply to purge")));
+        var replyId = (await replyResp.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
+
+        // Purge the reply as admin
+        var purgeRes = await _client.SendAsync(Authed(HttpMethod.Delete, $"/api/forum/posts/{replyId}/purge", adminToken));
+        Assert.Equal(HttpStatusCode.OK, purgeRes.StatusCode);
+
+        var body = await purgeRes.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.False(body.GetProperty("threadDeleted").GetBoolean());
+
+        // Thread should still exist
+        var threadCheck = await _client.GetAsync($"/api/forum/categories/{catSlug}/threads/{threadSlug}");
+        Assert.Equal(HttpStatusCode.OK, threadCheck.StatusCode);
+    }
+
+    [Fact]
+    public async Task PurgePost_DeletesEntireThread_WhenFirstPost()
+    {
+        var memberToken = await CreateUserAndGetTokenAsync("purgefirst@test.com", "purgefirst");
+        var adminToken = await GetAdminTokenAsync("purgeadmin2@test.com", "purgeadmin2");
+
+        // Create category and thread
+        var catResp = await _client.SendAsync(Authed(HttpMethod.Post, "/api/forum/categories", adminToken,
+            new CreateCategoryRequest("PurgeThreadCat", "For purge thread test")));
+        var cat = await catResp.Content.ReadFromJsonAsync<JsonElement>();
+        var catSlug = cat.GetProperty("slug").GetString()!;
+
+        var threadResp = await _client.SendAsync(Authed(HttpMethod.Post, $"/api/forum/categories/{catSlug}/threads", memberToken,
+            new CreateThreadRequest("Purge Thread Test", "First post body")));
+        var thread = await threadResp.Content.ReadFromJsonAsync<JsonElement>();
+        var threadId = thread.GetProperty("id").GetInt32();
+        var threadSlug = thread.GetProperty("slug").GetString()!;
+
+        // Get the first post ID
+        var postsResp = await _client.GetAsync($"/api/forum/threads/{threadId}/posts");
+        var postsBody = await postsResp.Content.ReadFromJsonAsync<JsonElement>();
+        var firstPostId = postsBody.GetProperty("posts").EnumerateArray().First().GetProperty("id").GetInt64();
+
+        // Purge the first post as admin
+        var purgeRes = await _client.SendAsync(Authed(HttpMethod.Delete, $"/api/forum/posts/{firstPostId}/purge", adminToken));
+        Assert.Equal(HttpStatusCode.OK, purgeRes.StatusCode);
+
+        var body = await purgeRes.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(body.GetProperty("threadDeleted").GetBoolean());
+
+        // Thread should no longer exist
+        var threadCheck = await _client.GetAsync($"/api/forum/categories/{catSlug}/threads/{threadSlug}");
+        Assert.Equal(HttpStatusCode.NotFound, threadCheck.StatusCode);
     }
 }

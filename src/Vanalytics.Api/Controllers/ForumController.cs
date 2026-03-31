@@ -367,6 +367,23 @@ public class ForumController : ControllerBase
         return result ? NoContent() : NotFound();
     }
 
+    // === Purge (Admin only) ===
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("posts/{postId}/purge")]
+    public async Task<IActionResult> PurgePost(long postId)
+    {
+        var result = await _forum.PurgePostAsync(postId,
+            storagePath => _attachmentStore.DeleteAsync(storagePath));
+        return result switch
+        {
+            PurgeResult.NotFound => NotFound(),
+            PurgeResult.PostPurged => Ok(new { threadDeleted = false }),
+            PurgeResult.ThreadPurged => Ok(new { threadDeleted = true }),
+            _ => NotFound()
+        };
+    }
+
     // === Helpers ===
 
     private const int MaxImagesPerPost = 5;
