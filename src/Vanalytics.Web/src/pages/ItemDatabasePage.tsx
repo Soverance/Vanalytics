@@ -7,6 +7,7 @@ import CategoryTree from '../components/economy/CategoryTree'
 import StatFilterPanel from '../components/economy/StatFilterPanel'
 import ItemCard from '../components/economy/ItemCard'
 import ItemTable from '../components/economy/ItemTable'
+import ExplorationView from '../components/economy/ExplorationView'
 
 const JOBS = [
   'WAR', 'MNK', 'WHM', 'BLM', 'RDM', 'THF', 'PLD', 'DRK', 'BST', 'BRD', 'RNG',
@@ -73,6 +74,18 @@ export default function ItemDatabasePage() {
   // Fetch data and sync URL
   useEffect(() => {
     syncUrl()
+
+    // Skip fetching the full item list when no filters are active (exploration view showing)
+    const filtersActive = !!(
+      query || category || subCategory || job || minLevel || maxLevel ||
+      statFilters.some(sf => sf.min || sf.max)
+    )
+    if (!filtersActive) {
+      setLoading(false)
+      setResult(null)
+      return
+    }
+
     setLoading(true)
     const params = new URLSearchParams()
     if (query) params.set('q', query)
@@ -121,11 +134,18 @@ export default function ItemDatabasePage() {
       .map(sf => ({ value: sf.stat, label: sf.stat })),
   ]
 
+  const hasActiveFilters = !!(
+    query || category || subCategory || job || minLevel || maxLevel ||
+    statFilters.some(sf => sf.min || sf.max)
+  )
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-2">Item Database</h1>
       <p className="text-sm text-gray-500 mb-6">
-        Browse {result?.totalCount?.toLocaleString() ?? '...'} items from Vana'diel
+        {hasActiveFilters
+          ? `Browse ${result?.totalCount?.toLocaleString() ?? '...'} items from Vana'diel`
+          : "Explore the items of Vana'diel"}
       </p>
 
       <div className="grid gap-4 lg:grid-cols-4 mb-6">
@@ -173,49 +193,53 @@ export default function ItemDatabasePage() {
           </div>
 
           {/* Sort + View toggle bar */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => { setSortBy(e.target.value); setSortDir('asc') }}
-                className="rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none"
-              >
-                {sortOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              <button
-                onClick={() => setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')}
-                className="rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-400 hover:text-gray-200 transition-colors"
-              >
-                {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
-              </button>
-            </div>
+          {hasActiveFilters && (
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => { setSortBy(e.target.value); setSortDir('asc') }}
+                  className="rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none"
+                >
+                  {sortOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  className="rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-400 hover:text-gray-200 transition-colors"
+                >
+                  {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
+                </button>
+              </div>
 
-            <div className="flex gap-1">
-              <button
-                onClick={() => setViewMode('cards')}
-                title="Card view"
-                className={`p-1.5 rounded transition-colors ${
-                  viewMode === 'cards' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'
-                }`}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                title="Table view"
-                className={`p-1.5 rounded transition-colors ${
-                  viewMode === 'table' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'
-                }`}
-              >
-                <List className="h-4 w-4" />
-              </button>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setViewMode('cards')}
+                  title="Card view"
+                  className={`p-1.5 rounded transition-colors ${
+                    viewMode === 'cards' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('table')}
+                  title="Table view"
+                  className={`p-1.5 rounded transition-colors ${
+                    viewMode === 'table' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  <List className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
-          {loading ? (
+          {!hasActiveFilters ? (
+            <ExplorationView />
+          ) : loading ? (
             <p className="text-gray-400">Loading items...</p>
           ) : result && result.items.length > 0 ? (
             <>

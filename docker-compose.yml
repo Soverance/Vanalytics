@@ -19,6 +19,8 @@ services:
     build:
       context: .
       dockerfile: src/Vanalytics.Api/Dockerfile
+      secrets:
+        - github_token
       args:
         VITE_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
         VITE_MICROSOFT_CLIENT_ID: "${MICROSOFT_CLIENT_ID}"
@@ -51,12 +53,18 @@ services:
     build:
       context: .
       dockerfile: src/Vanalytics.Web/Dockerfile
+      secrets:
+        - github_token
     ports:
       - "3000:3000"
     environment:
       API_PROXY_TARGET: "http://api:8080"
     depends_on:
       - api
+
+secrets:
+  github_token:
+    environment: GITHUB_TOKEN
 
 volumes:
   sqldata:

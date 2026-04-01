@@ -111,8 +111,8 @@ export default function ItemDetailPage() {
             {!item.isNoAuction && <span className="text-xs text-green-400">AH</span>}
             <span className="text-xs text-gray-600">Stack: {item.stackSize}</span>
           </div>
-          {/* Compare button */}
-          <div className="mt-2">
+          {/* Compare button and info links */}
+          <div className="flex items-center gap-3 mt-2">
             {item && (
               isSelected(item.itemId) ? (
                 <button
@@ -147,6 +147,24 @@ export default function ItemDetailPage() {
                 </button>
               )
             )}
+            <span className="text-gray-600">|</span>
+            <span className="text-xs text-gray-500">Info:</span>
+            <a
+              href={`https://www.bg-wiki.com/ffxi/${encodeURIComponent(item.name.replace(/ /g, '_'))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-400 hover:text-blue-300 hover:underline"
+            >
+              [BG Wiki]
+            </a>
+            <a
+              href={`https://www.ffxiah.com/item/${item.itemId}/${encodeURIComponent(item.name.toLowerCase().replace(/ /g, '-'))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-400 hover:text-blue-300 hover:underline"
+            >
+              [FFXIAH]
+            </a>
           </div>
           </div>
         </div>
