@@ -299,6 +299,7 @@ export interface AdminUser {
   id: string
   email: string
   username: string
+  displayName: string | null
   role: UserRole
   isSystemAccount: boolean
   hasApiKey: boolean
