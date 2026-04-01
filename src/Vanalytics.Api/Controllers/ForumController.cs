@@ -83,6 +83,7 @@ public class ForumController : ControllerBase
                 t.AuthorId, t.ReplyCount, t.VoteCount,
                 t.CreatedAt, t.LastPostAt,
                 author?.Username ?? "[deleted]",
+                author?.DisplayName,
                 author?.AvatarHash);
         }).ToList();
 
@@ -104,6 +105,7 @@ public class ForumController : ControllerBase
             thread.IsPinned, thread.IsLocked, thread.IsDeleted, thread.AuthorId,
             thread.CreatedAt, thread.LastPostAt,
             author?.Username ?? "[deleted]",
+            author?.DisplayName,
             author?.AvatarHash));
     }
 
@@ -130,6 +132,7 @@ public class ForumController : ControllerBase
                 p.VoteCount, p.CurrentUserVoted,
                 p.CreatedAt, p.UpdatedAt,
                 author?.Username ?? "[deleted]",
+                author?.DisplayName,
                 author?.AvatarHash,
                 author?.PostCount ?? 0,
                 author?.JoinedAt ?? DateTimeOffset.MinValue);

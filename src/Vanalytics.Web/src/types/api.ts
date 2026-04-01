@@ -16,6 +16,7 @@ export interface UserProfile {
   id: string
   email: string
   username: string
+  displayName: string | null
   hasApiKey: boolean
   apiKeyCreatedAt: string | null
   role: UserRole
@@ -218,6 +219,7 @@ export interface EnrichedThreadSummaryResponse {
   createdAt: string
   lastPostAt: string
   authorUsername: string
+  authorDisplayName: string | null
   authorAvatarHash: string | null
 }
 
@@ -235,6 +237,7 @@ export interface ThreadDetailResponse {
   createdAt: string
   lastPostAt: string
   authorUsername: string
+  authorDisplayName: string | null
   authorAvatarHash: string | null
 }
 
@@ -249,6 +252,7 @@ export interface EnrichedPostResponse {
   createdAt: string
   updatedAt: string | null
   authorUsername: string
+  authorDisplayName: string | null
   authorAvatarHash: string | null
   authorPostCount: number
   authorJoinedAt: string

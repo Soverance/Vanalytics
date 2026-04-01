@@ -206,7 +206,7 @@ export default function ForumThreadPage() {
               <h1 className="text-xl font-bold text-gray-100">{thread.title}</h1>
             </div>
             <p className="text-sm text-gray-500">
-              by <span className="text-gray-400">{thread.authorUsername}</span>
+              by <span className="text-gray-400">{thread.authorDisplayName ?? thread.authorUsername}</span>
               {' · '}
               {new Date(thread.createdAt).toLocaleDateString()}
             </p>
