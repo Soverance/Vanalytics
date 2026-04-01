@@ -45,7 +45,7 @@ function LandingContent() {
           <img src="/vanalytics-typography-horizontal-logo.png" alt="Vana'lytics" className="max-w-[280px]" />
         </div>
         <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-          Real-time character tracking, 3D model viewers, and in-game tools for Final Fantasy XI private servers.
+          Character tracker, 3D model viewer, and in-game tool set for Final Fantasy XI.
         </p>
         <button
           onClick={openLogin}

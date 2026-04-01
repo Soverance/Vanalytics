@@ -16,7 +16,7 @@ import AdminItemsPage from './pages/AdminItemsPage'
 import AdminSamlPage from './pages/AdminSamlPage'
 import ItemDatabasePage from './pages/ItemDatabasePage'
 import ItemDetailPage from './pages/ItemDetailPage'
-import BazaarActivityPage from './pages/BazaarActivityPage'
+// import BazaarActivityPage from './pages/BazaarActivityPage' // hidden until bazaar sync bugs resolved
 import VanadielClockPage from './pages/VanadielClockPage'
 import PublicProfilePage from './pages/PublicProfilePage'
 import ModelDebugPage from './pages/ModelDebugPage'
@@ -115,7 +115,7 @@ export default function App() {
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/items" element={<ProtectedRoute><ItemDatabasePage /></ProtectedRoute>} />
             <Route path="/items/:id" element={<ProtectedRoute><ItemDetailPage /></ProtectedRoute>} />
-            <Route path="/bazaar" element={<ProtectedRoute><BazaarActivityPage /></ProtectedRoute>} />
+            {/* <Route path="/bazaar" element={<ProtectedRoute><BazaarActivityPage /></ProtectedRoute>} /> */}
 <Route path="/setup" element={<ProtectedRoute><SetupGuidePage /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute requiredRole="Admin"><AdminUsersPage /></ProtectedRoute>} />
             <Route path="/admin/data" element={<ProtectedRoute requiredRole="Admin"><AdminItemsPage /></ProtectedRoute>} />
