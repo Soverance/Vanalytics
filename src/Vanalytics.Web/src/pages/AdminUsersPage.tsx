@@ -239,9 +239,9 @@ export default function AdminUsersPage() {
               <tr key={u.id} className="border-b border-gray-800 last:border-0">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <UserAvatar username={u.username} size="sm" />
+                    <UserAvatar username={u.username} displayName={u.displayName} size="sm" />
                     <div className="min-w-0">
-                      <p className="font-medium text-gray-200 truncate">{u.username}</p>
+                      <p className="font-medium text-gray-200 truncate">{u.displayName ?? u.username}</p>
                       <p className="text-xs text-gray-500 truncate">{u.email}</p>
                     </div>
                   </div>

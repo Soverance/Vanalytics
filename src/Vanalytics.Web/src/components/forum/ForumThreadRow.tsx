@@ -39,8 +39,8 @@ export default function ForumThreadRow({ thread, categorySlug, isModerator, onTo
         {thread.isDeleted && <span className="ml-2 text-xs text-red-400 font-normal">[Deleted]</span>}
       </span>
       <div className="flex items-center gap-1.5 shrink-0">
-        <UserAvatar username={thread.authorUsername} size="sm" />
-        <span className="text-xs text-gray-500 hidden sm:inline">{thread.authorUsername}</span>
+        <UserAvatar username={thread.authorUsername} displayName={thread.authorDisplayName} size="sm" />
+        <span className="text-xs text-gray-500 hidden sm:inline">{thread.authorDisplayName ?? thread.authorUsername}</span>
       </div>
       <span className="text-xs text-gray-600 shrink-0 w-16 text-right">{thread.replyCount} replies</span>
       <span className="text-xs text-gray-600 shrink-0 w-14 text-right">{thread.voteCount} votes</span>

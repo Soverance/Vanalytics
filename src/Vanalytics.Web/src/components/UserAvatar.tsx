@@ -1,5 +1,6 @@
 interface Props {
   username: string
+  displayName?: string | null
   avatarUrl?: string | null
   size?: 'sm' | 'md' | 'lg'
 }
@@ -22,15 +23,16 @@ function getColor(name: string) {
   return colors[Math.abs(hash) % colors.length]
 }
 
-export default function UserAvatar({ username, avatarUrl, size = 'md' }: Props) {
-  const initials = username.slice(0, 2).toUpperCase()
-  const color = getColor(username)
+export default function UserAvatar({ username, displayName, avatarUrl, size = 'md' }: Props) {
+  const name = displayName ?? username
+  const initials = name.slice(0, 2).toUpperCase()
+  const color = getColor(name)
 
   if (avatarUrl) {
     return (
       <img
         src={avatarUrl}
-        alt={username}
+        alt={name}
         referrerPolicy="no-referrer"
         className={`${sizes[size]} rounded-full object-cover shrink-0`}
       />

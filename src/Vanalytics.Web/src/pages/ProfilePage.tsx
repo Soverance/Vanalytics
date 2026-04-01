@@ -160,9 +160,9 @@ export default function ProfilePage() {
     <div>
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
-        <UserAvatar username={user.username} avatarUrl={user.avatarUrl} size="lg" />
+        <UserAvatar username={user.username} displayName={user.displayName} avatarUrl={user.avatarUrl} size="lg" />
         <div>
-          <h1 className="text-2xl font-bold">{user.username}</h1>
+          <h1 className="text-2xl font-bold">{user.displayName ?? user.username}</h1>
           <p className="text-gray-400">{user.email}</p>
           {user.oAuthProvider && (
             <p className="text-sm text-gray-500 mt-1">
