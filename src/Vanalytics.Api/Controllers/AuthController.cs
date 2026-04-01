@@ -86,6 +86,8 @@ public class AuthController : ControllerBase
         if (user is not null && userInfo.AvatarUrl is not null)
         {
             user.AvatarUrl = userInfo.AvatarUrl;
+            if (userInfo.Name != null)
+                user.DisplayName = userInfo.Name;
             user.UpdatedAt = DateTimeOffset.UtcNow;
             await _db.SaveChangesAsync();
         }
@@ -102,15 +104,12 @@ public class AuthController : ControllerBase
             }
             else
             {
-                var username = userInfo.Name;
-                if (await _db.Users.AnyAsync(u => u.Username == username))
-                    username = $"{username}_{Guid.NewGuid().ToString()[..6]}";
-
                 user = new User
                 {
                     Id = Guid.NewGuid(),
                     Email = userInfo.Email,
-                    Username = username,
+                    Username = userInfo.Email,
+                    DisplayName = userInfo.Name,
                     AvatarUrl = userInfo.AvatarUrl,
                     OAuthProvider = userInfo.Provider,
                     OAuthId = userInfo.ProviderId,
@@ -162,6 +161,7 @@ public class AuthController : ControllerBase
             Id = user.Id,
             Email = user.Email,
             Username = user.Username,
+            DisplayName = user.DisplayName,
             HasApiKey = user.ApiKey is not null,
             ApiKeyCreatedAt = user.ApiKeyCreatedAt,
             Role = user.Role.ToString(),
