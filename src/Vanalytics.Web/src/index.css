@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+@theme {
+  --animate-orb-pulse: orb-pulse 6s ease-in-out infinite;
+  --animate-lava-glow: lava-glow 4s ease-in-out infinite;
+}
+
+@keyframes orb-pulse {
+  0%, 100% {
+    opacity: 0.15;
+    filter: drop-shadow(0 0 80px rgba(139, 92, 246, 0.4)) drop-shadow(0 0 160px rgba(59, 130, 246, 0.2));
+  }
+  50% {
+    opacity: 0.22;
+    filter: drop-shadow(0 0 100px rgba(139, 92, 246, 0.6)) drop-shadow(0 0 200px rgba(59, 130, 246, 0.35));
+  }
+}
+
+@keyframes lava-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
 /* Themed scrollbars for dark UI panels */
 .styled-scrollbar::-webkit-scrollbar {
   width: 8px;

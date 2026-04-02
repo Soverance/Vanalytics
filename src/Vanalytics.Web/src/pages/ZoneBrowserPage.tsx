@@ -9,7 +9,7 @@ import SpawnToolbar from '../components/zone/SpawnToolbar'
 import { parseMinimapDat } from '../lib/ffxi-dat/MinimapParser'
 import { api } from '../api/client'
 import type { ZoneSpawnDto } from '../types/api'
-import { Search, X, Shuffle, ChevronRight, Clock, Users } from 'lucide-react'
+import { Search, X, Shuffle, ChevronRight, Clock, Users, Play, Pause } from 'lucide-react'
 
 interface ZoneEntry {
   id: number
@@ -34,6 +34,7 @@ export default function ZoneBrowserPage() {
   const [cameraMode, setCameraMode] = useState<'orbit' | 'fly'>('fly')
   const [fogDensity, setFogDensity] = useState(0.5)  // 0=off, 0.5=default, 1=thick
   const [timeOfDay, setTimeOfDay] = useState(12)    // 0-24 hour clock
+  const [cyclePlaying, setCyclePlaying] = useState(true)
   const [flySpeed, setFlySpeed] = useState<number | null>(null)
   const [minimapTextures, setMinimapTextures] = useState<ParsedTexture[]>([])
   const [showSpawns, setShowSpawns] = useState(false)
@@ -53,6 +54,15 @@ export default function ZoneBrowserPage() {
   const searchRef = useRef<HTMLInputElement>(null)
 
   const log = (msg: string) => setParseLog(prev => [...prev, msg])
+
+  // Auto-advance day/night cycle (~2 min per full cycle)
+  useEffect(() => {
+    if (!cyclePlaying || fogDensity === 0) return
+    const interval = setInterval(() => {
+      setTimeOfDay(t => (t + 0.02) % 24)
+    }, 100)
+    return () => clearInterval(interval)
+  }, [cyclePlaying, fogDensity])
 
   // Load zones from API
   useEffect(() => {
@@ -431,6 +441,13 @@ export default function ZoneBrowserPage() {
         </div>
         {fogDensity > 0 && (
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-900/90 backdrop-blur border border-gray-700/50 shadow-lg">
+            <button
+              onClick={() => setCyclePlaying(p => !p)}
+              title={cyclePlaying ? 'Pause day/night cycle' : 'Play day/night cycle'}
+              className="text-gray-400 hover:text-gray-200 transition-colors"
+            >
+              {cyclePlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+            </button>
             <span className="text-xs text-gray-400 w-6">{Math.floor(timeOfDay).toString().padStart(2, '0')}h</span>
             <input
               type="range"
@@ -438,7 +455,10 @@ export default function ZoneBrowserPage() {
               max="24"
               step="0.5"
               value={timeOfDay}
-              onChange={(e) => setTimeOfDay(parseFloat(e.target.value))}
+              onChange={(e) => {
+                setCyclePlaying(false)
+                setTimeOfDay(parseFloat(e.target.value))
+              }}
               className="w-20 h-1 accent-amber-500"
               title={`Time of day: ${Math.floor(timeOfDay).toString().padStart(2, '0')}:${((timeOfDay % 1) * 60).toString().padStart(2, '0')}`}
             />

@@ -232,6 +232,67 @@ public class ItemsController : ControllerBase
         return Ok(mappings);
     }
 
+    [HttpGet("random")]
+    public async Task<IActionResult> Random([FromQuery] int count = 6)
+    {
+        if (count < 1 || count > 20) count = 6;
+
+        // Spotlight: one random Weapon or Armor item
+        var spotlight = await _db.GameItems
+            .Where(i => i.Category == "Weapons" || i.Category == "Armor")
+            .OrderBy(i => Guid.NewGuid())
+            .Take(1)
+            .Select(i => new
+            {
+                i.ItemId, i.Name, i.NameJa, i.NameLong,
+                i.Description, i.DescriptionJa,
+                i.Category, i.Type, i.Flags, i.StackSize,
+                i.Level, i.ItemLevel, i.Jobs, i.Races, i.Slots, i.Skill,
+                i.Damage, i.Delay, i.DEF,
+                i.HP, i.MP,
+                i.STR, i.DEX, i.VIT, i.AGI, i.INT, i.MND, i.CHR,
+                i.Accuracy, i.Attack,
+                i.RangedAccuracy, i.RangedAttack,
+                i.MagicAccuracy, i.MagicDamage, i.MagicEvasion,
+                i.Evasion, i.Enmity, i.Haste,
+                i.StoreTP, i.TPBonus,
+                i.PhysicalDamageTaken, i.MagicDamageTaken,
+                i.IconPath, i.PreviewImagePath,
+                IsRare = (i.Flags & 0x8000) != 0,
+                IsExclusive = (i.Flags & 0x4000) != 0,
+                IsNoAuction = (i.Flags & 0x0040) != 0,
+            })
+            .FirstOrDefaultAsync();
+
+        // Supporting items: random from any category
+        var supporting = await _db.GameItems
+            .OrderBy(i => Guid.NewGuid())
+            .Take(count - 1)
+            .Select(i => new
+            {
+                i.ItemId, i.Name, i.NameJa, i.NameLong,
+                i.Description, i.DescriptionJa,
+                i.Category, i.Type, i.Flags, i.StackSize,
+                i.Level, i.ItemLevel, i.Jobs, i.Races, i.Slots, i.Skill,
+                i.Damage, i.Delay, i.DEF,
+                i.HP, i.MP,
+                i.STR, i.DEX, i.VIT, i.AGI, i.INT, i.MND, i.CHR,
+                i.Accuracy, i.Attack,
+                i.RangedAccuracy, i.RangedAttack,
+                i.MagicAccuracy, i.MagicDamage, i.MagicEvasion,
+                i.Evasion, i.Enmity, i.Haste,
+                i.StoreTP, i.TPBonus,
+                i.PhysicalDamageTaken, i.MagicDamageTaken,
+                i.IconPath, i.PreviewImagePath,
+                IsRare = (i.Flags & 0x8000) != 0,
+                IsExclusive = (i.Flags & 0x4000) != 0,
+                IsNoAuction = (i.Flags & 0x0040) != 0,
+            })
+            .ToListAsync();
+
+        return Ok(new { spotlight, supporting });
+    }
+
     [HttpGet("categories")]
     public async Task<IActionResult> Categories()
     {
