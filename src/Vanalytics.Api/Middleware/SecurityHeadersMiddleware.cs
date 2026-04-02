@@ -47,7 +47,7 @@ public class SecurityHeadersMiddleware
             "img-src 'self' blob: data: https://*.blob.core.windows.net https://*.googleusercontent.com",
             "font-src 'self'",
             "connect-src 'self'",
-            "media-src 'none'",
+            "media-src 'self'",
             "object-src 'none'",
             "frame-ancestors 'none'",
             "base-uri 'self'",
