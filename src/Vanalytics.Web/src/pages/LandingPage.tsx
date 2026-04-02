@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLoginModal, LoginModalProvider } from '../context/LoginModalContext'
 import LoginModal from '../components/LoginModal'
@@ -45,6 +45,7 @@ const features = [
       'See your character in full 3D with real-time gear updates. Browse your inventory, review session performance, and edit macros — all synced automatically from the game through a lightweight Windower addon.',
     media: '/img/landing/character-tracker.webp',
     type: 'image' as const,
+    cta: { label: 'Sign In to Get Started', action: 'login' as const },
   },
   {
     title: 'Explore the World',
@@ -52,6 +53,7 @@ const features = [
       'Browse every weapon, armor piece, and NPC rendered in 3D. Fly through zone environments with dynamic lighting and spawn overlays. All models are parsed directly from the game\'s data files.',
     media: '/img/landing/model-viewers.webm',
     type: 'video' as const,
+    cta: { label: 'Browse the Database →', action: '/items' as const },
   },
   {
     title: 'Seamless Sync',
@@ -59,6 +61,7 @@ const features = [
       'A lightweight Windower addon pushes your character data to Vanalytics in real-time. Generate an API key, install the addon, and your jobs, gear, inventory, and crafting skills appear automatically.',
     media: '/img/landing/windower-addon.webm',
     type: 'video' as const,
+    cta: { label: 'View Setup Guide →', action: '/setup' as const },
   },
 ]
 
@@ -111,12 +114,20 @@ function LandingContent() {
         <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
           Character tracker, model viewer, and in-game tools for Final Fantasy XI.
         </p>
-        <button
-          onClick={openLogin}
-          className="rounded-lg bg-blue-600 px-8 py-3 text-lg font-medium hover:bg-blue-500 transition-colors"
-        >
-          Get Started
-        </button>
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={openLogin}
+            className="rounded-lg bg-blue-600 px-8 py-3 text-lg font-medium hover:bg-blue-500 transition-colors"
+          >
+            Get Started
+          </button>
+          <Link
+            to="/items"
+            className="rounded-lg border border-gray-600 px-8 py-3 text-lg font-medium text-gray-300 hover:border-gray-400 hover:text-white transition-colors"
+          >
+            Explore
+          </Link>
+        </div>
       </div>
 
       {/* Feature sections */}
@@ -153,8 +164,22 @@ function LandingContent() {
               </div>
               <div className={`w-full lg:w-1/2 ${imageLeft ? '' : 'lg:order-1'}`}>
                 <h2 className="text-2xl font-bold mb-4">{feature.title}</h2>
-                <p className="text-gray-400 leading-relaxed">{feature.description}</p>
-
+                <p className="text-gray-400 leading-relaxed mb-4">{feature.description}</p>
+                {feature.cta.action === 'login' ? (
+                  <button
+                    onClick={openLogin}
+                    className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                  >
+                    {feature.cta.label}
+                  </button>
+                ) : (
+                  <Link
+                    to={feature.cta.action}
+                    className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                  >
+                    {feature.cta.label}
+                  </Link>
+                )}
               </div>
             </div>
           )
