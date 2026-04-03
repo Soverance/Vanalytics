@@ -3,6 +3,7 @@ import { api, ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useLoginModal } from '../context/LoginModalContext'
 import type { CharacterSummary } from '../types/api'
+import LoadingSpinner from '../components/LoadingSpinner'
 import CharacterCard from '../components/CharacterCard'
 import ConfirmModal from '../components/ConfirmModal'
 import { Link } from 'react-router-dom'
@@ -40,7 +41,7 @@ export default function CharactersPage() {
     }
   }
 
-  if (authLoading) return <p className="text-gray-400">Loading...</p>
+  if (authLoading) return <LoadingSpinner />
 
   if (!user) {
     return (
@@ -59,7 +60,7 @@ export default function CharactersPage() {
     )
   }
 
-  if (loading) return <p className="text-gray-400">Loading characters...</p>
+  if (loading) return <LoadingSpinner />
 
   return (
     <div>

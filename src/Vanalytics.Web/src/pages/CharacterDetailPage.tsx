@@ -4,6 +4,7 @@ import { api } from '../api/client'
 import type { CharacterDetail, GearEntry, GameItemSummary, GameItemDetail } from '../types/api'
 import { listMacroBooks, getMacroBook, updateMacroBook } from '../api/macros'
 import type { MacroBookSummary, MacroBookDetail } from '../api/macros'
+import LoadingSpinner from '../components/LoadingSpinner'
 import JobsGrid from '../components/JobsGrid'
 import CraftingTable from '../components/CraftingTable'
 import ModelViewer from '../components/character/ModelViewer'
@@ -144,7 +145,7 @@ export default function CharacterDetailPage() {
     }
   }
 
-  if (loading) return <p className="text-gray-400">Loading...</p>
+  if (loading) return <LoadingSpinner />
   if (!character) return <p className="text-red-400">Character not found.</p>
 
   return (

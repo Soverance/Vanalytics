@@ -300,13 +300,6 @@ function SyncTab() {
             </dd>
           </div>
           <div>
-            <dt className="font-medium text-gray-300">Sync says "Character does not have an active license"</dt>
-            <dd className="text-gray-500 mt-1">
-              The character you're logged into does not have an active Vanalytics license.
-              Visit the web app to activate one.
-            </dd>
-          </div>
-          <div>
             <dt className="font-medium text-gray-300">Sync says "Rate limit exceeded"</dt>
             <dd className="text-gray-500 mt-1">
               The API allows a maximum of 20 sync requests per hour. Increase your sync interval

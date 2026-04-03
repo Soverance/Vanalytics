@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { SessionSummary, SessionListResponse } from '../../types/api'
 import { api } from '../../api/client'
+import LoadingSpinner from '../LoadingSpinner'
 
 interface SessionsTabProps {
   characterId: string
@@ -45,7 +46,7 @@ export default function SessionsTab({ characterId }: SessionsTabProps) {
       .finally(() => setLoading(false))
   }, [page, characterId])
 
-  if (loading) return <p className="text-gray-400">Loading...</p>
+  if (loading) return <LoadingSpinner />
 
   if (sessions.length === 0) {
     return (
