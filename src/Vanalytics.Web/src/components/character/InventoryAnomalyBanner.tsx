@@ -51,6 +51,12 @@ export default function InventoryAnomalyBanner({ characterId }: InventoryAnomaly
 
   useEffect(() => { fetchAnomalies() }, [characterId])
 
+  // Poll every 15 seconds to pick up move completions from the addon
+  useEffect(() => {
+    const id = setInterval(fetchAnomalies, 15000)
+    return () => clearInterval(id)
+  }, [characterId])
+
   const handleIgnoreItem = async (itemId: number) => {
     await api(`/api/characters/${characterId}/inventory/dismiss`, {
       method: 'POST',

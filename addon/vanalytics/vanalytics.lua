@@ -1104,6 +1104,14 @@ moves_lib.init({
     log_error = log_error,
     log_success = log_success,
     enqueue = function(fn) table.insert(work_queue, fn) end,
+    inventory_sync = function()
+        local player = windower.ffxi.get_player()
+        local info = windower.ffxi.get_info()
+        if player and info then
+            local server_name = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
+            inventory.sync(player.name, server_name)
+        end
+    end,
 })
 
 local function enqueue_sync_work()

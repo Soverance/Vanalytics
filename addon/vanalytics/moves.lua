@@ -12,6 +12,7 @@ local log_fn = nil
 local log_error_fn = nil
 local log_success_fn = nil
 local enqueue_fn = nil -- function to add work to the main work queue
+local inventory_sync_fn = nil -- function to trigger inventory re-sync
 
 -- Pending moves from last poll
 local pending_moves = nil
@@ -73,6 +74,7 @@ function moves.init(deps)
     log_error_fn = deps.log_error
     log_success_fn = deps.log_success
     enqueue_fn = deps.enqueue
+    inventory_sync_fn = deps.inventory_sync
 end
 
 -----------------------------------------------------------------------
@@ -399,14 +401,48 @@ function moves.execute()
 
     local succeeded_ids = {}
     local failed_count = 0
+    local total_expected = #executable
+    local completed_count = 0
+
+    -- Called after each move finishes (success or failure).
+    -- When all moves are done, acknowledges and triggers inventory sync.
+    local function on_move_complete()
+        completed_count = completed_count + 1
+        if completed_count < total_expected then return end
+
+        -- All moves finished — enqueue the acknowledge + sync
+        enqueue_fn(function()
+            if #succeeded_ids > 0 then
+                local ltn12 = require('ltn12')
+                local payload = json_encode_fn({ moveIds = succeeded_ids })
+                local response_body = {}
+
+                http_request_fn({
+                    url = settings.ApiUrl .. '/api/sync/inventory/moves/acknowledge',
+                    method = 'POST',
+                    headers = {
+                        ['Content-Type'] = 'application/json',
+                        ['Content-Length'] = tostring(#payload),
+                        ['X-Api-Key'] = settings.ApiKey,
+                    },
+                    source = ltn12.source.string(payload),
+                    sink = ltn12.sink.table(response_body),
+                })
+            end
+
+            if inventory_sync_fn then
+                enqueue_fn(function() inventory_sync_fn() end)
+            end
+
+            pending_moves = nil
+        end)
+    end
 
     for _, m in ipairs(executable) do
         local is_direct = m.fromBag == 'Inventory' or m.toBag == 'Inventory'
-
         local desc = m.quantity .. 'x ' .. m.itemName .. ': ' .. m.fromBag .. ' -> ' .. m.toBag
 
         if is_direct then
-            -- Direct move: one packet, one verification
             enqueue_direct_move(m, m.fromBag, m.fromSlot, m.toBag,
                 function(ok)
                     if ok then
@@ -415,20 +451,22 @@ function moves.execute()
                     else
                         failed_count = failed_count + 1
                     end
+                    on_move_complete()
                 end,
                 function(reason) log_error_fn('Failed to move ' .. desc .. ' — ' .. reason) end)
         else
-            -- Two-step move: Source -> Inventory -> Destination
             local step1_ok = false
 
             enqueue_direct_move(m, m.fromBag, m.fromSlot, 'Inventory',
                 function(ok)
                     step1_ok = ok
-                    if not ok then failed_count = failed_count + 1 end
+                    if not ok then
+                        failed_count = failed_count + 1
+                        on_move_complete()
+                    end
                 end,
                 function(reason) log_error_fn('Failed to move ' .. desc .. ' — ' .. reason) end)
 
-            -- Wait for game to process before looking up the item in Inventory
             for _ = 1, 60 do
                 enqueue_fn(function() end)
             end
@@ -440,6 +478,7 @@ function moves.execute()
                 if not inv_slot then
                     log_error_fn('Failed to move ' .. desc .. ' — item not found in Inventory after step 1')
                     failed_count = failed_count + 1
+                    on_move_complete()
                     return
                 end
 
@@ -451,38 +490,12 @@ function moves.execute()
                         else
                             failed_count = failed_count + 1
                         end
+                        on_move_complete()
                     end,
                     function(reason) log_error_fn('Failed to move ' .. desc .. ' — ' .. reason .. ' (item may be in Inventory)') end)
             end)
         end
     end
-
-    -- Enqueue the acknowledge call after all moves
-    enqueue_fn(function()
-        if #succeeded_ids > 0 then
-            local ltn12 = require('ltn12')
-            local payload = json_encode_fn({ moveIds = succeeded_ids })
-            local response_body = {}
-
-            local result, status_code = http_request_fn({
-                url = settings.ApiUrl .. '/api/sync/inventory/moves/acknowledge',
-                method = 'POST',
-                headers = {
-                    ['Content-Type'] = 'application/json',
-                    ['Content-Length'] = tostring(#payload),
-                    ['X-Api-Key'] = settings.ApiKey,
-                },
-                source = ltn12.source.string(payload),
-                sink = ltn12.sink.table(response_body),
-            })
-
-            if not result or status_code ~= 200 then
-                log_error_fn('Failed to sync move results with server. Moves may re-appear on next sync.')
-            end
-        end
-
-        pending_moves = nil
-    end)
 end
 
 return moves
