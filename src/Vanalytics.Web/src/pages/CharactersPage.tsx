@@ -45,17 +45,60 @@ export default function CharactersPage() {
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <h1 className="text-2xl font-bold mb-3">Sign in to view your characters</h1>
-        <p className="text-gray-400 max-w-md mb-6">
-          Track your FFXI characters with real-time gear updates, inventory sync, and session analytics.
-        </p>
-        <button
-          onClick={openLogin}
-          className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
-        >
-          Sign In
-        </button>
+      <div className="space-y-8">
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <h1 className="text-2xl font-bold mb-3">Sign in to view your characters</h1>
+          <p className="text-gray-400 max-w-md mb-6">
+            Track your FFXI characters with real-time gear updates, inventory sync, and session analytics.
+          </p>
+          <button
+            onClick={openLogin}
+            className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
+          >
+            Sign In
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-4">
+          <div className="h-px flex-1 bg-gray-800" />
+          <span className="text-sm text-gray-500">or explore without an account</span>
+          <div className="h-px flex-1 bg-gray-800" />
+        </div>
+
+        {/* Explore cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Link
+            to="/items"
+            className="rounded-lg border border-gray-800 border-l-2 border-l-blue-500 bg-gray-900 p-5 hover:bg-gray-800/50 transition-colors"
+          >
+            <Package className="h-6 w-6 text-blue-400 mb-3" />
+            <h3 className="text-base font-semibold">Items</h3>
+            <p className="text-sm text-gray-400 mt-1">
+              Browse every weapon, armor piece, and item in Vana'diel.
+            </p>
+          </Link>
+          <Link
+            to="/zones"
+            className="rounded-lg border border-gray-800 border-l-2 border-l-green-500 bg-gray-900 p-5 hover:bg-gray-800/50 transition-colors"
+          >
+            <Map className="h-6 w-6 text-green-400 mb-3" />
+            <h3 className="text-base font-semibold">Zones</h3>
+            <p className="text-sm text-gray-400 mt-1">
+              Fly through 3D zone environments from the game.
+            </p>
+          </Link>
+          <Link
+            to="/npcs"
+            className="rounded-lg border border-gray-800 border-l-2 border-l-purple-500 bg-gray-900 p-5 hover:bg-gray-800/50 transition-colors"
+          >
+            <Bug className="h-6 w-6 text-purple-400 mb-3" />
+            <h3 className="text-base font-semibold">NPCs</h3>
+            <p className="text-sm text-gray-400 mt-1">
+              View 3D models of every NPC and monster.
+            </p>
+          </Link>
+        </div>
       </div>
     )
   }

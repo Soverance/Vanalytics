@@ -1220,6 +1220,7 @@ windower.register_event('addon command', function(command, ...)
     if command == 'sync' then
         log('Syncing...')
         do_sync()
+        moves_lib.check_pending()
 
     elseif command == 'status' then
         local interval = get_effective_interval()
