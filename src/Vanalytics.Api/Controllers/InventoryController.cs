@@ -45,6 +45,18 @@ public class InventoryController : ControllerBase
         if (character.UserId != userId)
             return StatusCode(403, new { message = "Character is not owned by this account" });
 
+        // Full sync: wipe existing inventory records and start fresh.
+        // Must SaveChanges before processing adds so EF's change tracker
+        // doesn't conflict (same entity marked Deleted then Modified).
+        if (request.FullSync)
+        {
+            var existing = await _db.CharacterInventories
+                .Where(ci => ci.CharacterId == character.Id)
+                .ToListAsync();
+            _db.CharacterInventories.RemoveRange(existing);
+            await _db.SaveChangesAsync();
+        }
+
         var processed = 0;
 
         foreach (var change in request.Changes)

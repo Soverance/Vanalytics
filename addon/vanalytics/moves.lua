@@ -2,6 +2,7 @@
 -- Inventory move order polling, validation, and execution module
 
 local moves = {}
+local res = require('resources')
 
 -- Dependencies (set via init)
 local settings = nil
@@ -16,6 +17,48 @@ local inventory_sync_fn = nil -- function to trigger inventory re-sync
 
 -- Pending moves from last poll
 local pending_moves = nil
+
+-----------------------------------------------------------------------
+-- File logger: writes detailed move execution logs to moves.log
+-- in the addon directory. Each execution session is timestamped.
+-----------------------------------------------------------------------
+local log_file = nil
+
+local function mlog(msg)
+    if not log_file then
+        local path = windower.addon_path .. 'moves.log'
+        log_file = io.open(path, 'a')
+        if not log_file then return end
+    end
+    log_file:write(os.date('[%Y-%m-%d %H:%M:%S] ') .. msg .. '\n')
+    log_file:flush()
+end
+
+local function mlog_move_order(m)
+    mlog('  Move order: id=' .. tostring(m.id)
+        .. ' itemId=' .. tostring(m.itemId)
+        .. ' item="' .. tostring(m.itemName) .. '"'
+        .. ' qty=' .. tostring(m.quantity)
+        .. ' from=' .. tostring(m.fromBag) .. ':' .. tostring(m.fromSlot)
+        .. ' to=' .. tostring(m.toBag))
+end
+
+local function mlog_bag_contents(bag_key, item_id)
+    local items = windower.ffxi.get_items()
+    if not items then mlog('    (cannot read items)'); return end
+    local bag = items[bag_key]
+    if not bag then mlog('    bag "' .. bag_key .. '" not accessible'); return end
+    local found = false
+    for slot_index, item in pairs(bag) do
+        if type(item) == 'table' and item.id == item_id then
+            mlog('    found itemId=' .. item.id .. ' qty=' .. tostring(item.count) .. ' at ' .. bag_key .. ':' .. slot_index)
+            found = true
+        end
+    end
+    if not found then
+        mlog('    itemId=' .. item_id .. ' NOT found in ' .. bag_key)
+    end
+end
 
 -----------------------------------------------------------------------
 -- API bag name -> Windower bag ID mapping
@@ -207,19 +250,28 @@ end
 --   0x0B: unknown (0x52 in all captured real packets)
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
--- Find an existing partial stack of an item in a destination bag.
+-- Find an existing partial stack of an item in a destination bag
+-- that has room for the given quantity.
 -- Returns the slot index if found, or 0x52 (auto-place) if no
--- existing stack exists.
+-- existing stack has room.
 -----------------------------------------------------------------------
-local function find_stack_slot(to_bag_key, item_id)
+local function find_stack_slot(to_bag_key, item_id, quantity)
     if not to_bag_key then return 0x52 end
     local items = windower.ffxi.get_items()
     if not items then return 0x52 end
     local bag = items[to_bag_key]
     if not bag then return 0x52 end
+
+    -- Look up the item's max stack size from game resources
+    local item_res = res.items[item_id]
+    local stack_max = item_res and item_res.stack or 99
+
     for slot_index, item in pairs(bag) do
         if type(item) == 'table' and item.id == item_id then
-            return slot_index
+            local available = stack_max - (item.count or 0)
+            if available >= quantity then
+                return slot_index
+            end
         end
     end
     return 0x52
@@ -243,36 +295,56 @@ end
 -----------------------------------------------------------------------
 -- Find the CURRENT slot of an item in a bag by reading live game data.
 -- The database slot index may be stale if inventory changed since sync.
+-- Prefers the slot matching hint_slot if provided, otherwise picks
+-- the slot with the smallest quantity (to free slots by emptying
+-- the smallest stacks first during consolidation).
 -- Returns the 1-based slot index, or nil if not found.
 -----------------------------------------------------------------------
-local function find_current_slot(bag_key, item_id)
+local function find_current_slot(bag_key, item_id, hint_slot)
     local items = windower.ffxi.get_items()
     if not items then return nil end
     local bag = items[bag_key]
     if not bag then return nil end
-    for slot_index, item in pairs(bag) do
-        if type(item) == 'table' and item.id == item_id then
-            return slot_index
+
+    -- If the hint slot still has the right item, use it
+    if hint_slot then
+        local hint_item = bag[hint_slot]
+        if hint_item and type(hint_item) == 'table' and hint_item.id == item_id then
+            return hint_slot
         end
     end
-    return nil
+
+    -- Otherwise find the slot with the smallest quantity (best for freeing slots)
+    local best_slot = nil
+    local best_qty = math.huge
+    for slot_index, item in pairs(bag) do
+        if type(item) == 'table' and item.id == item_id then
+            local qty = item.count or 0
+            if qty < best_qty then
+                best_qty = qty
+                best_slot = slot_index
+            end
+        end
+    end
+    return best_slot
 end
 
 function moves.on_outgoing_packet(id, data)
 end
 
 -----------------------------------------------------------------------
--- Check if an item is still in the expected source slot
--- Returns true if the item is still there (move failed), false if gone
+-- Read the current quantity of an item in a specific slot.
+-- Returns the count if the item is there, 0 if the slot is empty
+-- or has a different item, nil if the bag is unreadable.
 -----------------------------------------------------------------------
-local function item_still_in_slot(from_bag_key, from_slot, item_id)
+local function get_slot_quantity(bag_key, slot_index, item_id)
     local items = windower.ffxi.get_items()
-    if not items then return true end  -- assume failure if can't read
-    local bag = items[from_bag_key]
-    if not bag then return true end
-    local slot = bag[from_slot]
-    if not slot or type(slot) ~= 'table' then return false end  -- slot empty = moved
-    return slot.id == item_id
+    if not items then return nil end
+    local bag = items[bag_key]
+    if not bag then return nil end
+    local slot = bag[slot_index]
+    if not slot or type(slot) ~= 'table' or slot.id ~= item_id then return 0 end
+    return slot.count or 0
 end
 
 -----------------------------------------------------------------------
@@ -296,55 +368,155 @@ end
 -- Enqueue a single direct move (fromBag -> toBag) with verification.
 -- Calls on_result(true) or on_result(false) after verification.
 -----------------------------------------------------------------------
------------------------------------------------------------------------
--- on_error: optional callback for detailed failure reason.
--- If nil, failures are silent (the caller handles reporting).
+-- Enqueue a single logical move with stack-aware splitting.
+-- Fills existing partial stacks in the destination first, then
+-- auto-places remainder. Each partial fill is a separate packet
+-- with its own verify cycle.
 -----------------------------------------------------------------------
 local function enqueue_direct_move(m, from_bag, from_slot_hint, to_bag, on_result, on_error)
     local from_bag_id = api_to_bag_id[from_bag]
     local to_bag_id = api_to_bag_id[to_bag]
     local from_bag_key = api_to_bag_key[from_bag]
+    local to_bag_key = api_to_bag_key[to_bag]
 
-    local injected_slot = nil
-
-    -- Frame 1: find current slot and inject packet
+    -- Plan and execute on the first frame
     enqueue_fn(function()
+        mlog('MOVE: ' .. tostring(m.itemName) .. ' qty=' .. m.quantity .. ' ' .. from_bag .. ' -> ' .. to_bag)
+
         if not from_bag_id or not to_bag_id then
+            mlog('  ABORT: unknown bag ID')
             if on_error then on_error('unknown bag: ' .. tostring(from_bag) .. ' / ' .. tostring(to_bag)) end
             on_result(false)
             return
         end
 
-        local actual_slot = find_current_slot(from_bag_key, m.itemId)
-        if not actual_slot then
+        -- Find the source slot
+        local source_slot = find_current_slot(from_bag_key, m.itemId, from_slot_hint)
+        if not source_slot then
+            mlog('  ABORT: item not found in source bag')
             if on_error then on_error('item not found in ' .. from_bag) end
             on_result(false)
             return
         end
 
-        injected_slot = actual_slot
-        local to_bag_key = api_to_bag_key[to_bag]
-        local dest_slot = find_stack_slot(to_bag_key, m.itemId)
-        inject_move(m.quantity, from_bag_id, actual_slot, to_bag_id, dest_slot)
-    end)
+        local source_qty = get_slot_quantity(from_bag_key, source_slot, m.itemId) or 0
+        local qty_to_move = math.min(m.quantity, source_qty)
+        mlog('  source_slot=' .. source_slot .. ' source_qty=' .. source_qty .. ' qty_to_move=' .. qty_to_move)
+        mlog_bag_contents(from_bag_key, m.itemId)
 
-    -- Wait ~1 second for game to process
-    for _ = 1, 60 do
-        enqueue_fn(function() end)
-    end
-
-    -- Verify the specific slot we moved from is now empty
-    enqueue_fn(function()
-        if not injected_slot then
+        if qty_to_move <= 0 then
+            mlog('  ABORT: nothing to move')
+            if on_error then on_error('no quantity to move from ' .. from_bag) end
             on_result(false)
             return
         end
 
-        if not item_still_in_slot(from_bag_key, injected_slot, m.itemId) then
-            on_result(true)
-        else
-            if on_error then on_error('item did not leave ' .. from_bag .. ' slot ' .. injected_slot) end
-            on_result(false)
+        -- Build a list of sub-moves: fill partial stacks first, then auto-place
+        local sub_moves = {}
+        local remaining = qty_to_move
+
+        -- Look up stack max from game resources
+        local item_res = res.items[m.itemId]
+        local stack_max = item_res and item_res.stack or 99
+
+        -- Find destination stacks with room (exclude source slot if same bag)
+        local same_bag = from_bag_key == to_bag_key
+        if to_bag_key then
+            local items = windower.ffxi.get_items()
+            if items and items[to_bag_key] then
+                local dest_bag = items[to_bag_key]
+                local partials = {}
+                for slot_idx, item in pairs(dest_bag) do
+                    if type(item) == 'table' and item.id == m.itemId then
+                        -- Skip the source slot if source and destination are the same bag
+                        if not (same_bag and slot_idx == source_slot) then
+                            local avail = stack_max - (item.count or 0)
+                            if avail > 0 then
+                                table.insert(partials, { slot = slot_idx, available = avail })
+                            end
+                        end
+                    end
+                end
+                table.sort(partials, function(a, b) return a.available < b.available end)
+
+                for _, p in ipairs(partials) do
+                    if remaining <= 0 then break end
+                    local fill = math.min(remaining, p.available)
+                    table.insert(sub_moves, { qty = fill, dest_slot = p.slot })
+                    remaining = remaining - fill
+                    mlog('  plan: fill dest slot ' .. p.slot .. ' with ' .. fill .. ' (available=' .. p.available .. ')')
+                end
+            end
+        end
+
+        -- Any remaining goes to auto-place
+        if remaining > 0 then
+            table.insert(sub_moves, { qty = remaining, dest_slot = 0x52 })
+            mlog('  plan: auto-place remaining ' .. remaining)
+        end
+
+        mlog('  total sub-moves: ' .. #sub_moves)
+
+        -- Track overall success across sub-moves
+        local sub_total = #sub_moves
+        local sub_done = 0
+        local any_moved = false
+
+        local function on_sub_complete(ok)
+            if ok then any_moved = true end
+            sub_done = sub_done + 1
+            if sub_done >= sub_total then
+                if any_moved then
+                    on_result(true)
+                else
+                    if on_error then on_error('no items moved from ' .. from_bag .. ' slot ' .. source_slot) end
+                    on_result(false)
+                end
+            end
+        end
+
+        -- Enqueue each sub-move with its own inject + wait + verify cycle
+        for _, sub in ipairs(sub_moves) do
+            local sub_source_slot = source_slot -- always from the same source slot
+
+            enqueue_fn(function()
+                -- Re-read source quantity (may have decreased from prior sub-move)
+                local current_qty = get_slot_quantity(from_bag_key, sub_source_slot, m.itemId) or 0
+                local actual_qty = math.min(sub.qty, current_qty)
+                mlog('  SUB-INJECT: ' .. actual_qty .. ' from ' .. from_bag .. ':' .. sub_source_slot .. ' to destSlot=' .. sub.dest_slot)
+
+                if actual_qty <= 0 then
+                    mlog('  SUB-SKIP: source slot empty')
+                    on_sub_complete(true) -- source already empty = success
+                    return
+                end
+
+                local qty_before_sub = current_qty
+                inject_move(actual_qty, from_bag_id, sub_source_slot, to_bag_id, sub.dest_slot)
+
+                -- Store for verification closure
+                sub._qty_before = qty_before_sub
+            end)
+
+            -- Wait for game
+            for _ = 1, 60 do
+                enqueue_fn(function() end)
+            end
+
+            -- Verify
+            enqueue_fn(function()
+                local qty_after = get_slot_quantity(from_bag_key, sub_source_slot, m.itemId) or 0
+                local qty_before_sub = sub._qty_before or 0
+                mlog('  SUB-VERIFY: slot ' .. sub_source_slot .. ' qty_before=' .. qty_before_sub .. ' qty_after=' .. qty_after)
+
+                if qty_after < qty_before_sub then
+                    mlog('  SUB-PASS: decreased by ' .. (qty_before_sub - qty_after))
+                    on_sub_complete(true)
+                else
+                    mlog('  SUB-FAIL: unchanged')
+                    on_sub_complete(false)
+                end
+            end)
         end
     end)
 end
@@ -362,7 +534,13 @@ function moves.execute()
         return
     end
 
+    mlog('========================================')
+    mlog('EXECUTE: ' .. #pending_moves .. ' pending move(s)')
+    mlog('========================================')
+
     local accessible = get_accessible_bags()
+    mlog('Accessible bags:')
+    for bag_name, _ in pairs(accessible) do mlog('  ' .. bag_name) end
 
     -- Partition into executable and skipped
     local executable = {}
@@ -411,8 +589,10 @@ function moves.execute()
         if completed_count < total_expected then return end
 
         -- All moves finished — enqueue the acknowledge + sync
+        mlog('ALL COMPLETE: succeeded=' .. #succeeded_ids .. ' failed=' .. failed_count)
         enqueue_fn(function()
             if #succeeded_ids > 0 then
+                mlog('ACKNOWLEDGE: posting ' .. #succeeded_ids .. ' move IDs')
                 local ltn12 = require('ltn12')
                 local payload = json_encode_fn({ moveIds = succeeded_ids })
                 local response_body = {}
@@ -438,9 +618,14 @@ function moves.execute()
         end)
     end
 
-    for _, m in ipairs(executable) do
+    mlog('Executable: ' .. #executable .. ', Skipped: ' .. #skipped)
+
+    for i, m in ipairs(executable) do
         local is_direct = m.fromBag == 'Inventory' or m.toBag == 'Inventory'
         local desc = m.quantity .. 'x ' .. m.itemName .. ': ' .. m.fromBag .. ' -> ' .. m.toBag
+
+        mlog('--- Move ' .. i .. '/' .. #executable .. ': ' .. desc .. ' (direct=' .. tostring(is_direct) .. ') ---')
+        mlog_move_order(m)
 
         if is_direct then
             enqueue_direct_move(m, m.fromBag, m.fromSlot, m.toBag,
@@ -455,45 +640,50 @@ function moves.execute()
                 end,
                 function(reason) log_error_fn('Failed to move ' .. desc .. ' — ' .. reason) end)
         else
-            local step1_ok = false
-
+            -- Two-step: step 2 is triggered FROM step 1's on_result callback
+            -- so it runs AFTER step 1's sub-moves complete.
             enqueue_direct_move(m, m.fromBag, m.fromSlot, 'Inventory',
                 function(ok)
-                    step1_ok = ok
                     if not ok then
                         failed_count = failed_count + 1
                         on_move_complete()
+                        return
                     end
+
+                    -- Step 1 succeeded — wait, then find item in Inventory and do step 2
+                    for _ = 1, 60 do
+                        enqueue_fn(function() end)
+                    end
+
+                    enqueue_fn(function()
+                        mlog('STEP2 LOOKUP: searching Inventory for itemId=' .. tostring(m.itemId))
+                        mlog_bag_contents('inventory', m.itemId)
+
+                        local inv_slot = find_current_slot('inventory', m.itemId)
+                        if not inv_slot then
+                            mlog('STEP2 ABORT: item not found in Inventory')
+                            log_error_fn('Failed to move ' .. desc .. ' — item not found in Inventory after step 1')
+                            failed_count = failed_count + 1
+                            on_move_complete()
+                            return
+                        end
+
+                        mlog('STEP2: found at Inventory slot ' .. inv_slot .. ', moving to ' .. m.toBag)
+
+                        enqueue_direct_move(m, 'Inventory', inv_slot, m.toBag,
+                            function(ok2)
+                                if ok2 then
+                                    log_success_fn('Moved ' .. desc)
+                                    table.insert(succeeded_ids, m.id)
+                                else
+                                    failed_count = failed_count + 1
+                                end
+                                on_move_complete()
+                            end,
+                            function(reason) log_error_fn('Failed to move ' .. desc .. ' — ' .. reason .. ' (item may be in Inventory)') end)
+                    end)
                 end,
                 function(reason) log_error_fn('Failed to move ' .. desc .. ' — ' .. reason) end)
-
-            for _ = 1, 60 do
-                enqueue_fn(function() end)
-            end
-
-            enqueue_fn(function()
-                if not step1_ok then return end
-
-                local inv_slot = find_current_slot('inventory', m.itemId)
-                if not inv_slot then
-                    log_error_fn('Failed to move ' .. desc .. ' — item not found in Inventory after step 1')
-                    failed_count = failed_count + 1
-                    on_move_complete()
-                    return
-                end
-
-                enqueue_direct_move(m, 'Inventory', inv_slot, m.toBag,
-                    function(ok)
-                        if ok then
-                            log_success_fn('Moved ' .. desc)
-                            table.insert(succeeded_ids, m.id)
-                        else
-                            failed_count = failed_count + 1
-                        end
-                        on_move_complete()
-                    end,
-                    function(reason) log_error_fn('Failed to move ' .. desc .. ' — ' .. reason .. ' (item may be in Inventory)') end)
-            end)
         end
     end
 end

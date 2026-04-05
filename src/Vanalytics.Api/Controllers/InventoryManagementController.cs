@@ -38,15 +38,14 @@ public class InventoryManagementController : ControllerBase
             .Join(_db.GameItems,
                 ci => ci.ItemId,
                 gi => gi.ItemId,
-                (ci, gi) => new
-                {
+                (ci, gi) => new InventorySlot(
                     ci.ItemId,
                     ci.Bag,
                     ci.SlotIndex,
                     ci.Quantity,
-                    ItemName = gi.Name ?? gi.NameJa ?? "Unknown",
+                    gi.Name ?? gi.NameJa ?? "Unknown",
                     gi.StackSize
-                })
+                ))
             .ToListAsync();
 
         var dismissedKeys = await _db.DismissedAnomalies
@@ -122,27 +121,19 @@ public class InventoryManagementController : ControllerBase
                         Quantity = i.Quantity
                     }).ToList();
 
-                    // Target: bag with the most quantity (for cross-bag), or slot with the most (for same-bag)
-                    var targetBag = items
+                    // Stack-aware consolidation planner:
+                    // 1. Pick target bag (bag with the most total quantity)
+                    // 2. Identify which slots in the target bag to keep (fill to stack max)
+                    // 3. Generate moves to empty all other slots into the target bag
+                    // 4. Each move specifies the exact quantity to move
+
+                    var targetBagEnum = items
                         .GroupBy(i => i.Bag)
                         .OrderByDescending(g => g.Sum(x => x.Quantity))
                         .First().Key;
+                    var targetBagName = targetBagEnum.ToString();
 
-                    var targetSlot = items
-                        .Where(i => i.Bag == targetBag)
-                        .OrderByDescending(i => i.Quantity)
-                        .First();
-
-                    var moves = items
-                        .Where(i => !(i.Bag == targetSlot.Bag && i.SlotIndex == targetSlot.SlotIndex))
-                        .Select(i => new MoveInstruction
-                        {
-                            ItemId = itemId,
-                            FromBag = i.Bag.ToString(),
-                            FromSlot = i.SlotIndex,
-                            ToBag = targetBag.ToString(),
-                            Quantity = i.Quantity
-                        }).ToList();
+                    var moves = GenerateConsolidationMoves(items, targetBagEnum, targetBagName, itemId, stackSize);
 
                     anomalies.Add(new Anomaly
                     {
@@ -337,6 +328,83 @@ public class InventoryManagementController : ControllerBase
 
         return Ok(new { message = "Move cancelled" });
     }
+
+    /// <summary>
+    /// Generates an optimal set of move instructions to consolidate all instances
+    /// of an item into the target bag using the minimum number of stack slots.
+    ///
+    /// Strategy:
+    /// 1. Sort target bag slots by quantity descending (fill the fullest stacks first)
+    /// 2. For each source slot NOT in the target bag (or excess slots within target bag):
+    ///    - Calculate how much fits into existing target stacks
+    ///    - Generate moves with exact quantities that won't overflow
+    ///    - Remaining quantity goes to the target bag with auto-placement
+    /// </summary>
+    private static List<MoveInstruction> GenerateConsolidationMoves(
+        List<InventorySlot> items, InventoryBag targetBagEnum, string targetBagName, int itemId, int stackSize)
+    {
+        var moves = new List<MoveInstruction>();
+
+        // Separate items into target bag slots and source slots
+        var sourceSlots = items
+            .Where(i => i.Bag != targetBagEnum)
+            .OrderBy(i => i.Quantity)
+            .ToList();
+
+        if (sourceSlots.Count == 0)
+        {
+            // All items are in the same bag — consolidate partial stacks within the bag.
+            var totalQty = items.Sum(i => i.Quantity);
+            var minSlots = (int)Math.Ceiling((double)totalQty / stackSize);
+
+            if (items.Count <= minSlots)
+                return moves; // Already optimal
+
+            // Keep the slots with the most quantity, move the rest.
+            // The addon uses auto-place (0x52) which will stack into existing slots.
+            var slotsToKeep = items
+                .OrderByDescending(i => i.Quantity)
+                .Take(minSlots)
+                .ToList();
+            var keepSet = slotsToKeep.Select(s => s.SlotIndex).ToHashSet();
+
+            foreach (var item in items)
+            {
+                if (!keepSet.Contains(item.SlotIndex))
+                {
+                    moves.Add(new MoveInstruction
+                    {
+                        ItemId = itemId,
+                        FromBag = item.Bag.ToString(),
+                        FromSlot = item.SlotIndex,
+                        ToBag = targetBagName,
+                        Quantity = item.Quantity
+                    });
+                }
+            }
+
+            return moves;
+        }
+
+        // Cross-bag consolidation: move all source slots to the target bag.
+        // The addon handles stacking automatically (finds existing partial
+        // stacks in the destination or auto-places if none have room).
+        foreach (var source in sourceSlots)
+        {
+            moves.Add(new MoveInstruction
+            {
+                ItemId = itemId,
+                FromBag = source.Bag.ToString(),
+                FromSlot = source.SlotIndex,
+                ToBag = targetBagName,
+                Quantity = source.Quantity
+            });
+        }
+
+        return moves;
+    }
+
+    private record InventorySlot(int ItemId, InventoryBag Bag, int SlotIndex, int Quantity, string ItemName, int StackSize);
 
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

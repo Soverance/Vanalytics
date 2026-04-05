@@ -154,16 +154,18 @@ end
 function inventory.sync(character_name, server)
     local current_snapshot = inventory.read_snapshot()
 
-    -- First run: treat entire inventory as "Added" so the server gets the full state
-    if previous_snapshot == nil then
+    -- First run: treat entire inventory as "Added" so the server gets the full state.
+    -- Also flag as fullSync so the backend clears stale records first.
+    local is_full_sync = previous_snapshot == nil
+    if is_full_sync then
         previous_snapshot = {}
     end
 
     -- Compute diff (on first run, everything in current is "new" vs empty previous)
     local changes = inventory.compute_diff(previous_snapshot, current_snapshot)
 
-    -- No changes, return silently
-    if #changes == 0 then
+    -- No changes and not a full sync, return silently
+    if #changes == 0 and not is_full_sync then
         return
     end
 
@@ -184,6 +186,7 @@ function inventory.sync(character_name, server)
         characterName = character_name,
         server = server,
         changes = api_changes,
+        fullSync = is_full_sync,
     }
 
     local payload = json_encode_fn(body)

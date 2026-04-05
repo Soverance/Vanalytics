@@ -12,6 +12,13 @@ public class InventorySyncRequest
 
     [Required]
     public List<InventoryChangeEntry> Changes { get; set; } = [];
+
+    /// <summary>
+    /// When true, all existing inventory records for this character are deleted
+    /// before processing the changes. Used on the first sync after addon load
+    /// to reconcile stale data.
+    /// </summary>
+    public bool FullSync { get; set; }
 }
 
 public class InventoryChangeEntry
