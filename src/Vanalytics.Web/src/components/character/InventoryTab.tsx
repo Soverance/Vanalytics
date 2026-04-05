@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client'
-import type { InventoryByBag, InventoryItem, GameItemDetail } from '../../types/api'
+import type { InventoryByBag, InventoryItem, GameItemDetail, AnomalyResponse } from '../../types/api'
 import ItemPreviewBox from '../economy/ItemPreviewBox'
 import InventoryAnomalyBanner from './InventoryAnomalyBanner'
 
@@ -42,6 +42,8 @@ export default function InventoryTab({ characterId }: Props) {
   const [inventory, setInventory] = useState<InventoryByBag | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeBag, setActiveBag] = useState<string>('')
+  const [activeView, setActiveView] = useState<'anomalies' | 'bag'>('bag')
+  const [anomalyCount, setAnomalyCount] = useState(0)
   const [search, setSearch] = useState('')
   const [tableExpanded, setTableExpanded] = useState(false)
   const [sortField, setSortField] = useState<SortField>('itemName')
@@ -54,8 +56,7 @@ export default function InventoryTab({ characterId }: Props) {
   const [itemDetailCache, setItemDetailCache] = useState<Map<number, GameItemDetail>>(new Map())
   const containerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    setLoading(true)
+  const fetchInventory = useCallback(() => {
     api<InventoryByBag>(`/api/characters/${characterId}/inventory`)
       .then(data => {
         setInventory(data)
@@ -64,6 +65,25 @@ export default function InventoryTab({ characterId }: Props) {
       })
       .catch(() => setInventory(null))
       .finally(() => setLoading(false))
+  }, [characterId])
+
+  useEffect(() => {
+    setLoading(true)
+    fetchInventory()
+  }, [characterId])
+
+  // Poll every 15 seconds to pick up inventory changes from the addon
+  useEffect(() => {
+    const id = setInterval(fetchInventory, 15000)
+    return () => clearInterval(id)
+  }, [fetchInventory])
+
+  // Anomaly count is updated via the onAnomalyCountChange callback from InventoryAnomalyBanner.
+  // We also need an initial count before the user clicks the Anomalies tab (banner hasn't mounted yet).
+  useEffect(() => {
+    api<AnomalyResponse>(`/api/characters/${characterId}/inventory/anomalies`)
+      .then(data => setAnomalyCount(data.anomalies.length))
+      .catch(() => {})
   }, [characterId])
 
   const availableBags = useMemo(() => {
@@ -231,7 +251,6 @@ export default function InventoryTab({ characterId }: Props) {
 
   return (
     <div className="relative" ref={containerRef}>
-      <InventoryAnomalyBanner characterId={characterId} />
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold">Inventory</h2>
         <div className="relative w-64">
@@ -289,12 +308,28 @@ export default function InventoryTab({ characterId }: Props) {
       {!isSearching && (
         <>
           <div className="flex flex-wrap items-center gap-1 border-b border-gray-700 mb-4">
+            {/* Anomalies tab — always first */}
+            <button
+              onClick={() => { setActiveView('anomalies'); setTableExpanded(false) }}
+              className={`px-3 py-2 text-sm font-medium transition-colors ${
+                activeView === 'anomalies'
+                  ? 'text-blue-400 border-b-2 border-blue-400 -mb-px'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              Anomalies
+              {anomalyCount > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-amber-600 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+                  {anomalyCount}
+                </span>
+              )}
+            </button>
             {availableBags.map(bag => (
               <button
                 key={bag}
-                onClick={() => handleBagClick(bag)}
+                onClick={() => { setActiveView('bag'); handleBagClick(bag) }}
                 className={`px-3 py-2 text-sm font-medium transition-colors ${
-                  activeBag === bag && tableExpanded
+                  activeView === 'bag' && activeBag === bag && tableExpanded
                     ? 'text-blue-400 border-b-2 border-blue-400 -mb-px'
                     : 'text-gray-500 hover:text-gray-300'
                 }`}
@@ -305,7 +340,7 @@ export default function InventoryTab({ characterId }: Props) {
                 </span>
               </button>
             ))}
-            {tableExpanded && (
+            {activeView === 'bag' && tableExpanded && (
               <select
                 value={categoryFilter}
                 onChange={e => setCategoryFilter(e.target.value)}
@@ -319,7 +354,13 @@ export default function InventoryTab({ characterId }: Props) {
             )}
           </div>
 
-          {tableExpanded && (
+          {/* Anomalies tab content */}
+          {activeView === 'anomalies' && (
+            <InventoryAnomalyBanner characterId={characterId} onAnomalyCountChange={setAnomalyCount} />
+          )}
+
+          {/* Bag tab content */}
+          {activeView === 'bag' && tableExpanded && (
             activeItems.length === 0 ? (
               <p className="text-gray-400 text-sm py-4">
                 {categoryFilter ? 'No items in this category.' : 'This bag is empty.'}

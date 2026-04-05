@@ -4,6 +4,7 @@ import type { AnomalyResponse, Anomaly } from '../../types/api'
 
 interface InventoryAnomalyBannerProps {
   characterId: string
+  onAnomalyCountChange?: (count: number) => void
 }
 
 const BAG_OPTIONS = [
@@ -34,7 +35,7 @@ const BAG_LABELS: Record<string, string> = {
 
 const bagLabel = (key: string) => BAG_LABELS[key] ?? key
 
-export default function InventoryAnomalyBanner({ characterId }: InventoryAnomalyBannerProps) {
+export default function InventoryAnomalyBanner({ characterId, onAnomalyCountChange }: InventoryAnomalyBannerProps) {
   const [data, setData] = useState<AnomalyResponse | null>(null)
   const [showDismissed, setShowDismissed] = useState(false)
   const [overrideBags, setOverrideBags] = useState<Record<string, string>>({})
@@ -44,7 +45,10 @@ export default function InventoryAnomalyBanner({ characterId }: InventoryAnomaly
   const fetchAnomalies = () => {
     if (initialLoadRef.current) setLoading(true)
     api<AnomalyResponse>(`/api/characters/${characterId}/inventory/anomalies`)
-      .then(setData)
+      .then(data => {
+        setData(data)
+        onAnomalyCountChange?.(data.anomalies.length)
+      })
       .catch(() => setData(null))
       .finally(() => { setLoading(false); initialLoadRef.current = false })
   }
@@ -104,12 +108,17 @@ export default function InventoryAnomalyBanner({ characterId }: InventoryAnomaly
     fetchAnomalies()
   }
 
-  if (loading || !data) return null
-  if (data.anomalies.length === 0 && data.pendingMoves.length === 0 && data.dismissedCount === 0) return null
+  if (loading) return <p className="text-gray-400 text-sm py-4">Checking for anomalies...</p>
+  if (!data) return <p className="text-gray-500 text-sm py-4">Failed to load anomaly data.</p>
+
+  const hasAnomalies = data.anomalies.length > 0
+  const hasPending = data.pendingMoves.length > 0
+  const hasDismissed = data.dismissedCount > 0
 
   return (
-    <div className="mb-4 space-y-3">
-      {data.pendingMoves.length > 0 && (
+    <div className="space-y-3">
+      {/* Pending moves */}
+      {hasPending && (
         <div className="rounded-lg border border-blue-800 bg-blue-950/30 p-3">
           <h4 className="text-sm font-medium text-blue-400 mb-2">
             Pending Moves ({data.pendingMoves.length})
@@ -132,22 +141,12 @@ export default function InventoryAnomalyBanner({ characterId }: InventoryAnomaly
         </div>
       )}
 
-      {data.anomalies.length > 0 && (
+      {/* Active anomalies */}
+      {hasAnomalies ? (
         <div className="rounded-lg border border-amber-800 bg-amber-950/30 p-3">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-amber-400">
-              {data.anomalies.length} inventory issue{data.anomalies.length !== 1 ? 's' : ''} found
-            </h4>
-            {data.dismissedCount > 0 && (
-              <button
-                onClick={() => setShowDismissed(!showDismissed)}
-                className="text-xs text-gray-500 hover:text-gray-400"
-              >
-                {data.dismissedCount} dismissed {showDismissed ? '▴' : '▾'}
-              </button>
-            )}
-          </div>
-
+          <h4 className="text-sm font-medium text-amber-400 mb-2">
+            {data.anomalies.length} inventory issue{data.anomalies.length !== 1 ? 's' : ''} found
+          </h4>
           <div className="space-y-3">
             {data.anomalies.map((a) => (
               <AnomalyCard
@@ -164,10 +163,30 @@ export default function InventoryAnomalyBanner({ characterId }: InventoryAnomaly
             ))}
           </div>
         </div>
+      ) : (
+        <div className="rounded-lg border border-green-800/50 bg-green-950/20 p-4">
+          <p className="text-sm text-green-400">No inventory anomalies detected.</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Your inventory is optimized — no duplicate or consolidatable items found.
+          </p>
+        </div>
       )}
 
-      {showDismissed && data.dismissedKeys.length > 0 && (
-        <DismissedList dismissedKeys={data.dismissedKeys} onUndismiss={handleUndismiss} />
+      {/* Dismissed anomalies — always accessible */}
+      {hasDismissed && (
+        <div>
+          <button
+            onClick={() => setShowDismissed(!showDismissed)}
+            className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
+          >
+            {data.dismissedCount} dismissed anomal{data.dismissedCount !== 1 ? 'ies' : 'y'} {showDismissed ? '▴' : '▾'}
+          </button>
+          {showDismissed && (
+            <div className="mt-2">
+              <DismissedList dismissedKeys={data.dismissedKeys} onUndismiss={handleUndismiss} />
+            </div>
+          )}
+        </div>
       )}
     </div>
   )
@@ -245,7 +264,7 @@ function AnomalyCard({ anomaly, overrideBag, onOverrideBag, onResolve, onDismiss
 }
 
 function DismissedList({ dismissedKeys, onUndismiss }: {
-  dismissedKeys: string[]
+  dismissedKeys: { key: string; label: string }[]
   onUndismiss: (key: string) => void
 }) {
   if (dismissedKeys.length === 0) return null
@@ -254,11 +273,11 @@ function DismissedList({ dismissedKeys, onUndismiss }: {
     <div className="rounded-lg border border-gray-800 bg-gray-900 p-3">
       <h4 className="text-xs font-medium text-gray-500 uppercase mb-2">Dismissed</h4>
       <div className="space-y-1">
-        {dismissedKeys.map((key) => (
-          <div key={key} className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">{key}</span>
+        {dismissedKeys.map((entry) => (
+          <div key={entry.key} className="flex items-center justify-between text-sm">
+            <span className="text-gray-500">{entry.label}</span>
             <button
-              onClick={() => onUndismiss(key)}
+              onClick={() => onUndismiss(entry.key)}
               className="text-xs text-blue-400 hover:text-blue-300"
             >
               Un-dismiss

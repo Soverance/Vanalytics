@@ -178,11 +178,47 @@ public class InventoryManagementController : ControllerBase
             }
         }
 
+        // Resolve item IDs in dismissed keys to friendly labels
+        var dismissedItemIds = dismissedKeys
+            .Select(k =>
+            {
+                var parts = k.Split(':');
+                return parts.Length == 2 && int.TryParse(parts[1], out var id) ? id : -1;
+            })
+            .Where(id => id >= 0)
+            .Distinct()
+            .ToList();
+
+        var itemNames = dismissedItemIds.Count > 0
+            ? await _db.GameItems
+                .Where(g => dismissedItemIds.Contains(g.ItemId))
+                .ToDictionaryAsync(g => g.ItemId, g => g.Name ?? g.NameJa ?? "Unknown")
+            : new Dictionary<int, string>();
+
+        var dismissedEntries = dismissedKeys.Select(key =>
+        {
+            var parts = key.Split(':');
+            var type = parts.Length >= 1 ? parts[0] : key;
+            var value = parts.Length >= 2 ? parts[1] : "";
+
+            var label = type switch
+            {
+                "duplicate" when int.TryParse(value, out var id) && itemNames.TryGetValue(id, out var name)
+                    => $"Duplicate: {name}",
+                "ignoreItem" when int.TryParse(value, out var id) && itemNames.TryGetValue(id, out var name)
+                    => $"Always ignore: {name}",
+                "nearCapacity" => $"Near capacity: {value}",
+                _ => key
+            };
+
+            return new DismissedEntry { Key = key, Label = label };
+        }).ToList();
+
         return Ok(new AnomalyResponse
         {
             Anomalies = anomalies,
             DismissedCount = dismissedKeys.Count,
-            DismissedKeys = dismissedKeys,
+            DismissedKeys = dismissedEntries,
             PendingMoves = pendingMoves
         });
     }

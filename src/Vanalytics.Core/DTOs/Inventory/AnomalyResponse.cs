@@ -6,7 +6,7 @@ public class AnomalyResponse
 {
     public List<Anomaly> Anomalies { get; set; } = [];
     public int DismissedCount { get; set; }
-    public List<string> DismissedKeys { get; set; } = [];
+    public List<DismissedEntry> DismissedKeys { get; set; } = [];
     public List<MoveOrderResponse> PendingMoves { get; set; } = [];
 }
 
@@ -63,6 +63,12 @@ public class MoveOrderResponse
     public int Quantity { get; set; }
     public string Status { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }
+}
+
+public class DismissedEntry
+{
+    public string Key { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
 }
 
 public class DismissRequest

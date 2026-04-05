@@ -744,7 +744,7 @@ export interface MoveOrderResponse {
 export interface AnomalyResponse {
   anomalies: Anomaly[]
   dismissedCount: number
-  dismissedKeys: string[]
+  dismissedKeys: { key: string; label: string }[]
   pendingMoves: MoveOrderResponse[]
 }
 
