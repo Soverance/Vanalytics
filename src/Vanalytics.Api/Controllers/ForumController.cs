@@ -191,6 +191,12 @@ public class ForumController : ControllerBase
         if (CountForumImages(request.Body) > MaxImagesPerPost)
             return BadRequest(new { error = $"Posts cannot contain more than {MaxImagesPerPost} images." });
 
+        // System categories (e.g. News) are admin-only for thread creation
+        var category = await _forum.GetCategoryBySlugAsync(slug);
+        if (category == null) return NotFound();
+        if (category.IsSystem && !User.IsInRole("Admin"))
+            return Forbid();
+
         var sanitizedBody = SanitizeImageSources(request.Body);
         var sanitizedRequest = new CreateThreadRequest(request.Title, sanitizedBody);
 

@@ -64,11 +64,13 @@ export default function AnimationControls({
     }
   }, [groups])
 
-  // ONE initialization effect: runs when groups become available (or change).
+  // ONE initialization effect: runs when animation groups have finished loading.
   // Picks favorite if available, otherwise defaults to Emote bow.
   // Only runs ONCE per component mount (guarded by initializedRef).
+  // Must wait for loading=false so the full group set (not just the "Basic" skeleton
+  // group) is available — otherwise the favorite's category won't be found.
   useEffect(() => {
-    if (groups.length === 0 || initializedRef.current) return
+    if (loading || groups.length === 0 || initializedRef.current) return
     initializedRef.current = true
 
     // Try favorite first
@@ -91,7 +93,7 @@ export default function AnimationControls({
       if (emoteIdx >= 0) animIdx = emoteIdx
     }
     selectAnimation(category, animIdx)
-  }, [groups, favoriteAnimation, selectAnimation])
+  }, [loading, groups, favoriteAnimation, selectAnimation])
 
   // If favorite arrives AFTER initialization (async character load),
   // re-initialize with the favorite.
