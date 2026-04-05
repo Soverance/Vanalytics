@@ -620,11 +620,17 @@ function moves.execute()
 
     mlog('Executable: ' .. #executable .. ', Skipped: ' .. #skipped)
 
-    for i, m in ipairs(executable) do
+    -- Process moves one-by-one: complete the full round-trip (step 1 + step 2)
+    -- for each item before starting the next. This avoids piling all items into
+    -- Inventory simultaneously and gives the player timely chat feedback.
+    local function process_move(index)
+        if index > #executable then return end
+
+        local m = executable[index]
         local is_direct = m.fromBag == 'Inventory' or m.toBag == 'Inventory'
         local desc = m.quantity .. 'x ' .. m.itemName .. ': ' .. m.fromBag .. ' -> ' .. m.toBag
 
-        mlog('--- Move ' .. i .. '/' .. #executable .. ': ' .. desc .. ' (direct=' .. tostring(is_direct) .. ') ---')
+        mlog('--- Move ' .. index .. '/' .. #executable .. ': ' .. desc .. ' (direct=' .. tostring(is_direct) .. ') ---')
         mlog_move_order(m)
 
         if is_direct then
@@ -637,16 +643,17 @@ function moves.execute()
                         failed_count = failed_count + 1
                     end
                     on_move_complete()
+                    process_move(index + 1)
                 end,
                 function(reason) log_error_fn('Failed to move ' .. desc .. ' — ' .. reason) end)
         else
-            -- Two-step: step 2 is triggered FROM step 1's on_result callback
-            -- so it runs AFTER step 1's sub-moves complete.
+            -- Two-step: complete step 1 + step 2 before starting next move.
             enqueue_direct_move(m, m.fromBag, m.fromSlot, 'Inventory',
                 function(ok)
                     if not ok then
                         failed_count = failed_count + 1
                         on_move_complete()
+                        process_move(index + 1)
                         return
                     end
 
@@ -665,6 +672,7 @@ function moves.execute()
                             log_error_fn('Failed to move ' .. desc .. ' — item not found in Inventory after step 1')
                             failed_count = failed_count + 1
                             on_move_complete()
+                            process_move(index + 1)
                             return
                         end
 
@@ -679,6 +687,7 @@ function moves.execute()
                                     failed_count = failed_count + 1
                                 end
                                 on_move_complete()
+                                process_move(index + 1)
                             end,
                             function(reason) log_error_fn('Failed to move ' .. desc .. ' — ' .. reason .. ' (item may be in Inventory)') end)
                     end)
@@ -686,6 +695,8 @@ function moves.execute()
                 function(reason) log_error_fn('Failed to move ' .. desc .. ' — ' .. reason) end)
         end
     end
+
+    process_move(1)
 end
 
 return moves
