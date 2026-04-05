@@ -18,6 +18,7 @@ public class Anomaly
     public int? ItemId { get; set; }
     public string? ItemName { get; set; }
     public List<string> Bags { get; set; } = [];
+    public bool IsEquipment { get; set; }
     public AnomalyDetails Details { get; set; } = new();
     public SuggestedFix? SuggestedFix { get; set; }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api } from '../../api/client'
 import type { AnomalyResponse, Anomaly } from '../../types/api'
 
@@ -19,15 +19,25 @@ export default function InventoryAnomalyBanner({ characterId }: InventoryAnomaly
   const [overrideBags, setOverrideBags] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
+  const initialLoadRef = useRef(true)
   const fetchAnomalies = () => {
-    setLoading(true)
+    if (initialLoadRef.current) setLoading(true)
     api<AnomalyResponse>(`/api/characters/${characterId}/inventory/anomalies`)
       .then(setData)
       .catch(() => setData(null))
-      .finally(() => setLoading(false))
+      .finally(() => { setLoading(false); initialLoadRef.current = false })
   }
 
   useEffect(() => { fetchAnomalies() }, [characterId])
+
+  const handleIgnoreItem = async (itemId: number) => {
+    await api(`/api/characters/${characterId}/inventory/dismiss`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ anomalyKey: `ignoreItem:${itemId}` }),
+    })
+    fetchAnomalies()
+  }
 
   const handleDismiss = async (anomalyKey: string) => {
     await api(`/api/characters/${characterId}/inventory/dismiss`, {
@@ -122,6 +132,7 @@ export default function InventoryAnomalyBanner({ characterId }: InventoryAnomaly
                 }
                 onResolve={() => handleResolve(a)}
                 onDismiss={() => handleDismiss(a.anomalyKey)}
+                onIgnoreItem={a.itemId != null ? () => handleIgnoreItem(a.itemId!) : undefined}
               />
             ))}
           </div>
@@ -135,12 +146,13 @@ export default function InventoryAnomalyBanner({ characterId }: InventoryAnomaly
   )
 }
 
-function AnomalyCard({ anomaly, overrideBag, onOverrideBag, onResolve, onDismiss }: {
+function AnomalyCard({ anomaly, overrideBag, onOverrideBag, onResolve, onDismiss, onIgnoreItem }: {
   anomaly: Anomaly
   overrideBag: string | undefined
   onOverrideBag: (bag: string) => void
   onResolve: () => void
   onDismiss: () => void
+  onIgnoreItem?: () => void
 }) {
   if (anomaly.type === 'nearCapacity') {
     return (
@@ -153,7 +165,7 @@ function AnomalyCard({ anomaly, overrideBag, onOverrideBag, onResolve, onDismiss
     )
   }
 
-  const typeLabel = anomaly.type === 'duplicate' ? 'Duplicate' : 'Split Stack'
+  const typeLabel = 'Duplicate'
   const targetBag = overrideBag || anomaly.suggestedFix?.moves[0]?.toBag || ''
 
   return (
@@ -171,8 +183,16 @@ function AnomalyCard({ anomaly, overrideBag, onOverrideBag, onResolve, onDismiss
             ))}
           </div>
         </div>
-        <button onClick={onDismiss} className="text-xs text-gray-500 hover:text-gray-400 shrink-0">Dismiss</button>
+        <div className="flex items-center gap-2 shrink-0">
+          {anomaly.type === 'duplicate' && anomaly.isEquipment && onIgnoreItem && (
+            <button onClick={onIgnoreItem} className="text-xs text-blue-400 hover:text-blue-300">Always Ignore</button>
+          )}
+          <button onClick={onDismiss} className="text-xs text-gray-500 hover:text-gray-400">Dismiss</button>
+        </div>
       </div>
+      {anomaly.type === 'duplicate' && anomaly.isEquipment && (
+        <p className="text-xs text-gray-600 mt-1">Items with different augments may appear as duplicates.</p>
+      )}
       {anomaly.suggestedFix && (
         <div className="flex items-center gap-2 mt-2">
           <span className="text-gray-500 text-xs">Consolidate to:</span>

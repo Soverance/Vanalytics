@@ -56,6 +56,13 @@ public class InventoryManagementController : ControllerBase
 
         var dismissedSet = new HashSet<string>(dismissedKeys);
 
+        // Item-level exclusions: "ignoreItem:{itemId}" keys mean skip all anomalies for that item
+        var ignoredItemIds = dismissedKeys
+            .Where(k => k.StartsWith("ignoreItem:"))
+            .Select(k => int.TryParse(k.AsSpan("ignoreItem:".Length), out var id) ? id : -1)
+            .Where(id => id >= 0)
+            .ToHashSet();
+
         var pendingMoveItemIds = await _db.InventoryMoveOrders
             .Where(m => m.CharacterId == characterId && m.Status == MoveOrderStatus.Pending)
             .Select(m => m.ItemId)
@@ -92,10 +99,21 @@ public class InventoryManagementController : ControllerBase
             var stackSize = items[0].StackSize;
             var bags = items.Select(i => i.Bag.ToString()).Distinct().ToList();
 
-            if (bags.Count >= 2)
+            // Flag as duplicate if item exists in multiple bags, OR if stackable
+            // item occupies more slots than necessary (partial stacks).
+            var isMultiBag = bags.Count >= 2;
+            var isPartialStack = false;
+            if (stackSize > 1 && items.Count >= 2)
+            {
+                var totalQty = items.Sum(i => i.Quantity);
+                var minSlots = (int)Math.Ceiling((double)totalQty / stackSize);
+                isPartialStack = items.Count > minSlots;
+            }
+
+            if (isMultiBag || isPartialStack)
             {
                 var key = $"duplicate:{itemId}";
-                if (!dismissedSet.Contains(key) && !pendingItemSet.Contains(itemId))
+                if (!dismissedSet.Contains(key) && !pendingItemSet.Contains(itemId) && !ignoredItemIds.Contains(itemId))
                 {
                     var slots = items.Select(i => new SlotInfo
                     {
@@ -104,13 +122,19 @@ public class InventoryManagementController : ControllerBase
                         Quantity = i.Quantity
                     }).ToList();
 
+                    // Target: bag with the most quantity (for cross-bag), or slot with the most (for same-bag)
                     var targetBag = items
                         .GroupBy(i => i.Bag)
                         .OrderByDescending(g => g.Sum(x => x.Quantity))
                         .First().Key;
 
+                    var targetSlot = items
+                        .Where(i => i.Bag == targetBag)
+                        .OrderByDescending(i => i.Quantity)
+                        .First();
+
                     var moves = items
-                        .Where(i => i.Bag != targetBag)
+                        .Where(i => !(i.Bag == targetSlot.Bag && i.SlotIndex == targetSlot.SlotIndex))
                         .Select(i => new MoveInstruction
                         {
                             ItemId = itemId,
@@ -128,53 +152,10 @@ public class InventoryManagementController : ControllerBase
                         ItemId = itemId,
                         ItemName = itemName,
                         Bags = bags,
+                        IsEquipment = stackSize == 1,
                         Details = new AnomalyDetails { Slots = slots },
                         SuggestedFix = moves.Count > 0 ? new SuggestedFix { Moves = moves } : null
                     });
-                }
-            }
-
-            if (stackSize > 1 && items.Count >= 2)
-            {
-                var totalQty = items.Sum(i => i.Quantity);
-                var minSlots = (int)Math.Ceiling((double)totalQty / stackSize);
-
-                if (items.Count > minSlots)
-                {
-                    var key = $"splitStack:{itemId}";
-                    if (!dismissedSet.Contains(key) && !pendingItemSet.Contains(itemId))
-                    {
-                        var slots = items.Select(i => new SlotInfo
-                        {
-                            Bag = i.Bag.ToString(),
-                            SlotIndex = i.SlotIndex,
-                            Quantity = i.Quantity
-                        }).ToList();
-
-                        var targetSlot = items.OrderByDescending(i => i.Quantity).First();
-                        var moves = items
-                            .Where(i => !(i.Bag == targetSlot.Bag && i.SlotIndex == targetSlot.SlotIndex))
-                            .Select(i => new MoveInstruction
-                            {
-                                ItemId = itemId,
-                                FromBag = i.Bag.ToString(),
-                                FromSlot = i.SlotIndex,
-                                ToBag = targetSlot.Bag.ToString(),
-                                Quantity = i.Quantity
-                            }).ToList();
-
-                        anomalies.Add(new Anomaly
-                        {
-                            Type = "splitStack",
-                            Severity = "info",
-                            AnomalyKey = key,
-                            ItemId = itemId,
-                            ItemName = itemName,
-                            Bags = bags,
-                            Details = new AnomalyDetails { Slots = slots },
-                            SuggestedFix = moves.Count > 0 ? new SuggestedFix { Moves = moves } : null
-                        });
-                    }
                 }
             }
         }

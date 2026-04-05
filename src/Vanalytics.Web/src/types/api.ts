@@ -711,12 +711,13 @@ export interface AnomalyDetails {
 }
 
 export interface Anomaly {
-  type: 'duplicate' | 'splitStack' | 'nearCapacity'
+  type: 'duplicate' | 'nearCapacity'
   severity: 'info' | 'warning'
   anomalyKey: string
   itemId: number | null
   itemName: string | null
   bags: string[]
+  isEquipment: boolean
   details: AnomalyDetails
   suggestedFix: SuggestedFix | null
 }
