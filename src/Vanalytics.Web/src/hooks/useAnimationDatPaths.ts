@@ -18,11 +18,12 @@ export function useAnimationDatPaths(raceId: number | null): {
   loading: boolean
 } {
   const [groups, setGroups] = useState<AnimationGroup[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(raceId !== null)
 
   useEffect(() => {
     if (!raceId) {
       setGroups([])
+      setLoading(false)
       return
     }
 
