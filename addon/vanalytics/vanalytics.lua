@@ -120,8 +120,55 @@ local craft_skill_ids = {
 }
 
 -----------------------------------------------------------------------
--- Combat, magic, and automaton skill ID maps
+-- Combat, magic, and automaton skill maps
+-- Name-based keys match windower.ffxi.get_player().skills (lowercase).
+-- ID-based keys are fallback for alternative Windower versions.
 -----------------------------------------------------------------------
+local combat_skill_names = {
+    ['hand-to-hand']    = 'HandToHand',
+    ['dagger']          = 'Dagger',
+    ['sword']           = 'Sword',
+    ['great sword']     = 'GreatSword',
+    ['axe']             = 'Axe',
+    ['great axe']       = 'GreatAxe',
+    ['scythe']          = 'Scythe',
+    ['polearm']         = 'Polearm',
+    ['katana']          = 'Katana',
+    ['great katana']    = 'GreatKatana',
+    ['club']            = 'Club',
+    ['staff']           = 'Staff',
+    ['archery']         = 'Archery',
+    ['marksmanship']    = 'Marksmanship',
+    ['throwing']        = 'Throwing',
+    ['guard']           = 'Guard',
+    ['evasion']         = 'Evasion',
+    ['shield']          = 'Shield',
+    ['parrying']        = 'Parrying',
+}
+
+local magic_skill_names = {
+    ['divine magic']        = 'DivineMagic',
+    ['healing magic']       = 'HealingMagic',
+    ['enhancing magic']     = 'EnhancingMagic',
+    ['enfeebling magic']    = 'EnfeeblingMagic',
+    ['elemental magic']     = 'ElementalMagic',
+    ['dark magic']          = 'DarkMagic',
+    ['summoning magic']     = 'SummoningMagic',
+    ['ninjutsu']            = 'Ninjutsu',
+    ['singing']             = 'Singing',
+    ['stringed instrument'] = 'StringedInstrument',
+    ['wind instrument']     = 'WindInstrument',
+    ['blue magic']          = 'BlueMagic',
+    ['geomancy']            = 'Geomancy',
+    ['handbell']            = 'Handbell',
+}
+
+local automaton_skill_names = {
+    ['automaton melee']   = 'AutomatonMelee',
+    ['automaton archery'] = 'AutomatonArchery',
+    ['automaton magic']   = 'AutomatonMagic',
+}
+
 local combat_skill_ids = {
     [1]  = 'HandToHand',
     [2]  = 'Dagger',
@@ -752,15 +799,16 @@ local function read_character_state()
     end
 
     -- Collect combat, magic, and automaton skills
+    -- Try name-based keys first (lowercase strings), fall back to numeric IDs
     local skills = {}
     if player.skills then
-        local all_skill_ids = {}
-        for id, name in pairs(combat_skill_ids) do all_skill_ids[id] = name end
-        for id, name in pairs(magic_skill_ids) do all_skill_ids[id] = name end
-        for id, name in pairs(automaton_skill_ids) do all_skill_ids[id] = name end
+        local all_skill_names = {}
+        for k, v in pairs(combat_skill_names) do all_skill_names[k] = v end
+        for k, v in pairs(magic_skill_names) do all_skill_names[k] = v end
+        for k, v in pairs(automaton_skill_names) do all_skill_names[k] = v end
 
-        for skill_id, skill_name in pairs(all_skill_ids) do
-            local skill = player.skills[skill_id]
+        for skill_key, skill_name in pairs(all_skill_names) do
+            local skill = player.skills[skill_key]
             if skill then
                 local level = 0
                 local cap = 0
@@ -776,6 +824,35 @@ local function read_character_state()
                         level = level,
                         cap = cap,
                     })
+                end
+            end
+        end
+
+        -- Fall back to ID-based keys if name-based yielded nothing
+        if #skills == 0 then
+            local all_skill_ids = {}
+            for id, name in pairs(combat_skill_ids) do all_skill_ids[id] = name end
+            for id, name in pairs(magic_skill_ids) do all_skill_ids[id] = name end
+            for id, name in pairs(automaton_skill_ids) do all_skill_ids[id] = name end
+
+            for skill_id, skill_name in pairs(all_skill_ids) do
+                local skill = player.skills[skill_id]
+                if skill then
+                    local level = 0
+                    local cap = 0
+                    if type(skill) == 'table' then
+                        level = skill.level or 0
+                        cap = skill.cap or 0
+                    else
+                        level = tonumber(skill) or 0
+                    end
+                    if level > 0 then
+                        table.insert(skills, {
+                            skill = skill_name,
+                            level = level,
+                            cap = cap,
+                        })
+                    end
                 end
             end
         end
