@@ -68,7 +68,7 @@ public class UsersController : ControllerBase
         {
             user.Username,
             user.DisplayName,
-            AvatarUrl = (string?)null,
+            user.AvatarUrl,
             JoinedAt = user.CreatedAt,
             PostCount = postCount,
             RecentPosts = recentPosts,

@@ -38,7 +38,7 @@ export default function UserProfilePage() {
     <div className="space-y-6 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <UserAvatar username={profile.username} displayName={profile.displayName} size="lg" />
+        <UserAvatar username={profile.username} displayName={profile.displayName} avatarUrl={profile.avatarUrl} size="lg" />
         <div>
           <h1 className="text-xl font-bold text-gray-100">{profile.displayName ?? profile.username}</h1>
           {profile.displayName && <p className="text-sm text-gray-500">@{profile.username}</p>}
