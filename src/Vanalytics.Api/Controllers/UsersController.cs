@@ -27,6 +27,7 @@ public class UsersController : ControllerBase
                 u.Id,
                 u.Username,
                 u.DisplayName,
+                u.AvatarUrl,
                 u.CreatedAt,
             })
             .FirstOrDefaultAsync();
@@ -68,7 +69,7 @@ public class UsersController : ControllerBase
         {
             user.Username,
             user.DisplayName,
-            AvatarUrl = (string?)null,
+            user.AvatarUrl,
             JoinedAt = user.CreatedAt,
             PostCount = postCount,
             RecentPosts = recentPosts,
