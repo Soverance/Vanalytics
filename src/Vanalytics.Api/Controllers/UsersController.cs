@@ -27,6 +27,7 @@ public class UsersController : ControllerBase
                 u.Id,
                 u.Username,
                 u.DisplayName,
+                u.AvatarUrl,
                 u.CreatedAt,
             })
             .FirstOrDefaultAsync();
