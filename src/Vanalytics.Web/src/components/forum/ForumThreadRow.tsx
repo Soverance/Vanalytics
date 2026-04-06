@@ -39,7 +39,7 @@ export default function ForumThreadRow({ thread, categorySlug, isModerator, onTo
         {thread.isDeleted && <span className="ml-2 text-xs text-red-400 font-normal">[Deleted]</span>}
       </span>
       <div className="flex items-center gap-1.5 shrink-0">
-        <UserAvatar username={thread.authorUsername} displayName={thread.authorDisplayName} size="sm" />
+        <UserAvatar username={thread.authorUsername} displayName={thread.authorDisplayName} avatarUrl={thread.authorAvatarHash} size="sm" />
         <span className="text-xs text-gray-500 hidden sm:inline">{thread.authorDisplayName ?? thread.authorUsername}</span>
       </div>
       <span className="text-xs text-gray-600 shrink-0 w-16 text-right">{thread.replyCount} replies</span>
