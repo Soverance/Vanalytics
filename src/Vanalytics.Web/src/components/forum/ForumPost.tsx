@@ -64,7 +64,7 @@ export default function ForumPost({ post, isFirstPost, isAuthor, isModerator, is
   if (post.isDeleted) {
     return (
       <div id={`post-${post.id}`} className="flex gap-4 rounded-lg border border-gray-800/50 bg-gray-900/30 p-4">
-        <ForumAuthorBadge username={post.authorUsername} displayName={post.authorDisplayName} postCount={post.authorPostCount} joinedAt={post.authorJoinedAt} />
+        <ForumAuthorBadge username={post.authorUsername} displayName={post.authorDisplayName} avatarUrl={post.authorAvatarHash} postCount={post.authorPostCount} joinedAt={post.authorJoinedAt} />
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <p className="text-gray-600 italic text-sm">[This post has been deleted]</p>
@@ -100,7 +100,7 @@ export default function ForumPost({ post, isFirstPost, isAuthor, isModerator, is
 
   return (
     <div id={`post-${post.id}`} className="flex gap-4 rounded-lg border border-gray-800 bg-gray-900 p-4">
-      <ForumAuthorBadge username={post.authorUsername} displayName={post.authorDisplayName} postCount={post.authorPostCount} joinedAt={post.authorJoinedAt} />
+      <ForumAuthorBadge username={post.authorUsername} displayName={post.authorDisplayName} avatarUrl={post.authorAvatarHash} postCount={post.authorPostCount} joinedAt={post.authorJoinedAt} />
       <div className="flex-1 min-w-0">
         {editing ? (
           <div className="space-y-2">

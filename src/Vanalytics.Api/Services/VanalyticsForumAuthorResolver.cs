@@ -22,7 +22,7 @@ public class VanalyticsForumAuthorResolver : IForumAuthorResolver
 
         var users = await _db.Set<User>()
             .Where(u => ids.Contains(u.Id))
-            .Select(u => new { u.Id, u.Username, u.DisplayName, u.Email, u.CreatedAt })
+            .Select(u => new { u.Id, u.Username, u.DisplayName, u.AvatarUrl, u.CreatedAt })
             .ToListAsync();
 
         var postCounts = await _db.Set<ForumPost>()
@@ -39,7 +39,7 @@ public class VanalyticsForumAuthorResolver : IForumAuthorResolver
                 u.Id,
                 u.Username,
                 u.DisplayName,
-                u.Email,
+                u.AvatarUrl,
                 countMap.GetValueOrDefault(u.Id),
                 u.CreatedAt));
     }
