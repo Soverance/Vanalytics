@@ -107,7 +107,8 @@ public class CharactersController : ControllerBase
                     ItemName = gi.Name ?? gi.NameJa ?? "Unknown",
                     gi.IconPath,
                     gi.Category,
-                    gi.StackSize
+                    gi.StackSize,
+                    gi.BaseSell
                 })
             .OrderBy(i => i.Bag)
             .ThenBy(i => i.ItemName)

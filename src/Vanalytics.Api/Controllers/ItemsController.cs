@@ -151,6 +151,7 @@ public class ItemsController : ControllerBase
                 IsRare = (i.Flags & 0x8000) != 0,
                 IsExclusive = (i.Flags & 0x4000) != 0,
                 IsNoAuction = (i.Flags & 0x0040) != 0,
+                i.BaseSell,
                 // Stats for table view
                 i.Damage, i.Delay, i.DEF,
                 i.HP, i.MP,
@@ -207,6 +208,7 @@ public class ItemsController : ControllerBase
             IsRare = item.IsRare,
             IsExclusive = item.IsExclusive,
             IsNoAuction = item.IsNoAuction,
+            item.BaseSell,
         });
     }
 

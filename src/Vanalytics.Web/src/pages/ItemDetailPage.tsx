@@ -82,6 +82,7 @@ export default function ItemDetailPage() {
                     enmity: item.enmity, haste: item.haste,
                     storeTP: item.storeTP, tpBonus: item.tpBonus,
                     physicalDamageTaken: item.physicalDamageTaken, magicDamageTaken: item.magicDamageTaken,
+                    baseSell: item.baseSell,
                   })}
                   disabled={isFull}
                   className="rounded bg-gray-700 px-3 py-1 text-xs font-medium text-gray-300 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -145,8 +146,18 @@ export default function ItemDetailPage() {
           </div>
         </div>
 
-        {/* Right column: Who's using this? */}
-        <div className="lg:col-span-2">
+        {/* Right column: Economy + Who's using this? */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="rounded-lg border border-gray-800 bg-gray-900 p-4">
+            <h2 className="text-sm font-semibold text-gray-400 mb-3">Economy</h2>
+            {item.baseSell && item.baseSell > 0 ? (
+              <p className="text-sm text-gray-200">
+                NPC Sell Price: <span className="text-yellow-400 font-medium">{item.baseSell.toLocaleString()} gil</span>
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500">This item cannot be sold to NPCs.</p>
+            )}
+          </div>
           <div className="rounded-lg border border-gray-800 bg-gray-900 p-4">
             <ItemOwners itemId={item.itemId} />
           </div>

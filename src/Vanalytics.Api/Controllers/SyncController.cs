@@ -278,6 +278,10 @@ public class SyncController : ControllerBase
         if (character is null)
             return NotFound(new { message = "No character found. Sync character data first." });
 
+        var booksUpdated = 0;
+        var conflicts = new List<int>();
+        var bookResults = new List<MacroSyncBookResult>();
+
         foreach (var bookEntry in request.Books)
         {
             var book = await _db.MacroBooks
@@ -299,6 +303,13 @@ public class SyncController : ControllerBase
             }
             else
             {
+                // Track conflicts: books that had pending web edits
+                if (book.PendingPush)
+                    conflicts.Add(book.BookNumber);
+
+                // Snapshot before overwriting
+                await SnapshotBookIfNotEmpty(book, "addon push", _db);
+
                 await _db.Macros
                     .Where(m => m.Page.MacroBookId == book.Id)
                     .ExecuteDeleteAsync();
@@ -306,7 +317,6 @@ public class SyncController : ControllerBase
                     .Where(p => p.MacroBookId == book.Id)
                     .ExecuteDeleteAsync();
 
-                book.ContentHash = bookEntry.ContentHash;
                 book.BookTitle = bookEntry.BookTitle;
                 book.PendingPush = false;
                 book.UpdatedAt = DateTimeOffset.UtcNow;
@@ -341,10 +351,26 @@ public class SyncController : ControllerBase
                     });
                 }
             }
+
+            // Compute content hash from new data
+            book.ContentHash = MacrosController.ComputeContentHash(bookEntry);
+            booksUpdated++;
+
+            bookResults.Add(new MacroSyncBookResult
+            {
+                BookNumber = book.BookNumber,
+                ContentHash = book.ContentHash
+            });
         }
 
         await _db.SaveChangesAsync();
-        return Ok(new { message = "Macros synced", booksUpdated = request.Books.Count });
+        return Ok(new MacroSyncResponse
+        {
+            Message = "Macros synced",
+            BooksUpdated = booksUpdated,
+            Conflicts = conflicts,
+            Books = bookResults
+        });
     }
 
     [HttpGet("macros/pending")]
@@ -491,6 +517,57 @@ public class SyncController : ControllerBase
             }).ToList()
         }).ToList()
     };
+
+    private async Task SnapshotBookIfNotEmpty(MacroBook book, string reason, VanalyticsDbContext db)
+    {
+        var pages = await db.MacroPages
+            .Where(p => p.MacroBookId == book.Id)
+            .Include(p => p.Macros)
+            .OrderBy(p => p.PageNumber)
+            .ToListAsync();
+
+        if (pages.Count == 0) return;
+
+        var snapshotData = pages.Select(p => new
+        {
+            p.PageNumber,
+            Macros = p.Macros.OrderBy(m => m.Set).ThenBy(m => m.Position).Select(m => new
+            {
+                m.Set,
+                m.Position,
+                m.Name,
+                m.Icon,
+                m.Line1,
+                m.Line2,
+                m.Line3,
+                m.Line4,
+                m.Line5,
+                m.Line6
+            })
+        });
+
+        db.MacroBookSnapshots.Add(new MacroBookSnapshot
+        {
+            Id = Guid.NewGuid(),
+            MacroBookId = book.Id,
+            BookNumber = book.BookNumber,
+            ContentHash = book.ContentHash,
+            BookTitle = book.BookTitle,
+            SnapshotData = JsonSerializer.Serialize(snapshotData),
+            Reason = reason,
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+
+        // Prune to 5 snapshots
+        var excess = await db.MacroBookSnapshots
+            .Where(s => s.MacroBookId == book.Id)
+            .OrderByDescending(s => s.CreatedAt)
+            .Skip(5)
+            .ToListAsync();
+
+        if (excess.Count > 0)
+            db.MacroBookSnapshots.RemoveRange(excess);
+    }
 }
 
 public class AcknowledgeMovesRequest

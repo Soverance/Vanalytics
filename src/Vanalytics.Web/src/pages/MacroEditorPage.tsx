@@ -4,6 +4,7 @@ import { listMacroBooks, getMacroBook, updateMacroBook } from '../api/macros'
 import type { MacroBookSummary, MacroBookDetail } from '../api/macros'
 import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
+import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
 import { ApiError } from '../api/client'
 
 export default function MacroEditorPage() {
@@ -15,6 +16,7 @@ export default function MacroEditorPage() {
   const [selectedMacro, setSelectedMacro] = useState<{ set: 'Ctrl' | 'Alt'; position: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [showHistory, setShowHistory] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -33,6 +35,7 @@ export default function MacroEditorPage() {
     setSelectedBookNumber(bookNumber)
     setSelectedMacro(null)
     setCurrentPage(1)
+    setShowHistory(false)
     try {
       const detail = await getMacroBook(id, bookNumber)
       setSelectedBook(detail)
@@ -92,7 +95,7 @@ export default function MacroEditorPage() {
                 >
                   <span className="truncate block">{book.bookTitle}</span>
                   {book.pendingPush && (
-                    <span className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                    <span className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-yellow-400" title="Edited on web — waiting for addon to pull" />
                   )}
                 </button>
               )
@@ -100,6 +103,14 @@ export default function MacroEditorPage() {
           </div>
         ))}
         <div className="border-b border-gray-700" />
+        {selectedBookNumber && (
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="text-xs text-blue-400 hover:text-blue-300 ml-2"
+          >
+            {showHistory ? 'Close History' : 'History'}
+          </button>
+        )}
       </div>
 
       {/* Macro grid + editor */}
@@ -117,8 +128,18 @@ export default function MacroEditorPage() {
               />
             </div>
 
-            {/* Editor panel */}
-            {selectedMacro && (() => {
+            {/* History or Editor panel */}
+            {showHistory && selectedBookNumber && id ? (
+              <MacroHistoryPanel
+                characterId={id}
+                bookNumber={selectedBookNumber}
+                onRestore={(detail) => {
+                  setSelectedBook(detail)
+                  listMacroBooks(id).then(setBooks)
+                }}
+                onClose={() => setShowHistory(false)}
+              />
+            ) : selectedMacro && (() => {
               const page = selectedBook.pages.find(p => p.pageNumber === currentPage)
               const macro = page?.macros.find(m => m.set === selectedMacro.set && m.position === selectedMacro.position)
               if (!macro) return null

@@ -46,6 +46,11 @@ public class GameItem
     public int? TPBonus { get; set; }
     public int? PhysicalDamageTaken { get; set; }
     public int? MagicDamageTaken { get; set; }
+    /// <summary>
+    /// NPC vendor buyback price (from LandSandBoat item_basic.BaseSell).
+    /// Null = not yet synced, 0 = cannot be sold to NPCs.
+    /// </summary>
+    public int? BaseSell { get; set; }
     public string? IconPath { get; set; }
     public string? PreviewImagePath { get; set; }
     public DateTimeOffset CreatedAt { get; set; }

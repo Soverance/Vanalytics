@@ -413,201 +413,12 @@ local function find_macro_path()
     return user_dir .. '\\' .. best_dir
 end
 
--- Stored file timestamps from last macro check (avoids re-hashing unchanged files)
-local macro_file_timestamps = {}
-
-local function sync_macros(force)
-    if settings.ApiKey == '' then return end
-
-    local player = windower.ffxi.get_player()
-    if not player then return end
-
-    local info = windower.ffxi.get_info()
-    local server = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
-
-    local macro_path = find_macro_path()
-    if not macro_path then
-        log_error('Could not find macro directory.')
-        return
-    end
-
-    -- Single dir command to get all file timestamps (cheap compared to reading 200 files)
-    local new_timestamps = macro_lib.get_file_timestamps(macro_path)
-
-    local changed_books = {}
-    local new_hashes = {}
-    local books_found = 0
-    local titles = nil  -- lazy-loaded only if needed
-
-    for book_num = 1, macro_lib.BOOKS_COUNT do
-        local hash_key = 'book' .. book_num
-
-        -- Fast path: skip books whose files haven't been modified since last check
-        if not force and not macro_lib.book_files_changed(macro_path, book_num, macro_file_timestamps, new_timestamps) then
-            -- Check if we have a stored hash (i.e., we've seen this book before)
-            if settings.macro_hashes[hash_key] then
-                books_found = books_found + 1
-            end
-        else
-            -- Files changed (or force) — compute hash to confirm actual content change
-            local hash = macro_lib.hash_book(macro_path, book_num)
-            if hash then
-                books_found = books_found + 1
-                local stored_hash = settings.macro_hashes[hash_key]
-                if force or hash ~= stored_hash then
-                    if not titles then
-                        titles = macro_lib.parse_titles(macro_path)
-                    end
-                    local book = macro_lib.parse_book(macro_path, book_num)
-                    if book then
-                        table.insert(changed_books, macro_lib.book_to_api(book, book_num, hash, titles[book_num]))
-                        new_hashes[hash_key] = hash
-                    end
-                end
-            end
+-- Migrate macro hash format from string to {local, remote} table
+if settings.macro_hashes then
+    for key, value in pairs(settings.macro_hashes) do
+        if type(value) == 'string' then
+            settings.macro_hashes[key] = { ['local'] = value, remote = '' }
         end
-    end
-
-    -- Update stored timestamps for next cycle
-    macro_file_timestamps = new_timestamps
-
-    if books_found == 0 then
-        log_error('No macro DAT files found at: ' .. macro_path)
-        return
-    end
-
-    if #changed_books == 0 then
-        return
-    end
-
-    log('Uploading ' .. #changed_books .. ' macro book(s)...')
-
-    local url = settings.ApiUrl .. '/api/sync/macros'
-    local ltn12 = require('ltn12')
-    local uploaded = 0
-
-    -- Upload one book at a time to avoid timeout on large payloads
-    for _, book in ipairs(changed_books) do
-        local payload = json_encode({ books = { book } })
-        local response_body = {}
-
-        local result, status_code = http_request({
-            url = url,
-            method = 'POST',
-            headers = {
-                ['Content-Type'] = 'application/json',
-                ['Content-Length'] = tostring(#payload),
-                ['X-Api-Key'] = settings.ApiKey,
-            },
-            source = ltn12.source.string(payload),
-            sink = ltn12.sink.table(response_body),
-        })
-
-        if not result then
-            log_error('Macro sync failed on book ' .. book.bookNumber .. ': ' .. tostring(status_code))
-        elseif status_code == 200 then
-            uploaded = uploaded + 1
-            local hash_key = 'book' .. book.bookNumber
-            if new_hashes[hash_key] then
-                settings.macro_hashes[hash_key] = new_hashes[hash_key]
-            end
-        else
-            local resp = table.concat(response_body)
-            log_error('Macro sync failed on book ' .. book.bookNumber .. ' (status ' .. tostring(status_code) .. '): ' .. resp)
-        end
-    end
-
-    if uploaded > 0 then
-        config.save(settings)
-        log_success('Macro sync: ' .. uploaded .. '/' .. #changed_books .. ' book(s) uploaded.')
-    end
-end
-
-local function check_pending_macros(macro_path)
-    if settings.ApiKey == '' then return end
-
-    local player = windower.ffxi.get_player()
-    if not player then return end
-
-    local info = windower.ffxi.get_info()
-    local server = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
-
-    if not macro_path then
-        macro_path = find_macro_path()
-    end
-    if not macro_path then
-        log_error('Could not find macro directory.')
-        return
-    end
-
-    local url = settings.ApiUrl .. '/api/sync/macros/pending'
-    local ltn12 = require('ltn12')
-    local response_body = {}
-
-    local result, status_code = http_request({
-        url = url,
-        method = 'GET',
-        headers = {
-            ['X-Api-Key'] = settings.ApiKey,
-        },
-        sink = ltn12.sink.table(response_body),
-    })
-
-    if not result or status_code ~= 200 then return end
-
-    local body = table.concat(response_body)
-    local pending = json_decode(body)
-    if not pending or not pending.pendingBooks or #pending.pendingBooks == 0 then return end
-
-    local files_written = 0
-
-    for _, book_number in ipairs(pending.pendingBooks) do
-        -- GET the full book data
-        local book_url = settings.ApiUrl .. '/api/sync/macros/' .. book_number
-        local book_response = {}
-        local br, bs = http_request({
-            url = book_url,
-            method = 'GET',
-            headers = {
-                ['X-Api-Key'] = settings.ApiKey,
-            },
-            sink = ltn12.sink.table(book_response),
-        })
-
-        if br and bs == 200 then
-            local book_data = json_decode(table.concat(book_response))
-            if book_data then
-                local book = macro_lib.api_to_book(book_data)
-                local book_idx = book_number - 1
-                local filename = string.format('mcr%d.dat', book_idx)
-                local filepath = macro_path .. '\\' .. filename
-                if macro_lib.write_book(filepath, book) then
-                    files_written = files_written + 1
-                    -- Update hash so we don't re-upload what we just downloaded
-                    local new_hash = macro_lib.hash_file(filepath)
-                    if new_hash then
-                        settings.macro_hashes[filename] = new_hash
-                    end
-                end
-
-                -- DELETE to acknowledge receipt
-                local ack_response = {}
-                http_request({
-                    url = settings.ApiUrl .. '/api/sync/macros/pending/' .. book_number,
-                    method = 'DELETE',
-                    headers = {
-                        ['X-Api-Key'] = settings.ApiKey,
-                    },
-                    sink = ltn12.sink.table(ack_response),
-                })
-            end
-        end
-    end
-
-    if files_written > 0 then
-        config.save(settings)
-        log_success('Macro pull: ' .. files_written .. ' book(s) written.')
-        windower.send_command('input /reloadmacros')
     end
 end
 
@@ -1384,37 +1195,48 @@ windower.register_event('addon command', function(command, ...)
         log_success('API URL set to: ' .. url)
 
     elseif command == 'macros' then
-        local subcommand = args[1] and args[1]:lower() or 'help'
-        if subcommand == 'push' then
-            log('Force-uploading all macro books...')
-            sync_macros(true)
-        elseif subcommand == 'pull' then
-            log('Checking for pending macro updates...')
-            check_pending_macros(nil)
-        elseif subcommand == 'status' then
-            local tracked = 0
-            for _ in pairs(settings.macro_hashes) do
-                tracked = tracked + 1
+        local macro_path = find_macro_path()
+        if not macro_path then
+            windower.add_to_chat(207, '[Vanalytics] Could not find macro directory.')
+            return
+        end
+
+        local sub = args[1] and args[1]:lower() or ''
+        local flag = args[2] and args[2]:lower() or ''
+        local force = (flag == '--force')
+
+        local log_fn = function(msg)
+            windower.add_to_chat(207, '[Vanalytics] ' .. msg)
+        end
+
+        if sub == 'push' then
+            macro_lib.push(macro_path, settings, http_request, json_encode, json_decode, settings.ApiUrl, settings.ApiKey, force, log_fn)
+            config.save(settings)
+
+        elseif sub == 'pull' then
+            local pulled = macro_lib.pull(macro_path, settings, http_request, json_decode, settings.ApiUrl, settings.ApiKey, force, log_fn)
+            config.save(settings)
+            if #pulled > 0 then
+                windower.send_command('input /reloadmacros')
             end
-            log('Macro sync: ' .. tracked .. '/20 books tracked.')
-        elseif subcommand == 'dump' then
-            local macro_path = find_macro_path()
-            if not macro_path then
-                log_error('Could not find macro directory.')
-                return
+
+        elseif sub == 'status' then
+            local count = 0
+            if settings.macro_hashes then
+                for _ in pairs(settings.macro_hashes) do count = count + 1 end
             end
-            -- Dump mcr0.dat and mcr1.dat (Book 1 and Book 2)
-            for i = 0, 1 do
-                local dat = macro_path .. '\\mcr' .. i .. '.dat'
-                local out = windower.addon_path .. 'mcr' .. i .. '_dump.txt'
-                if macro_lib.dump_dat(dat, out) then
-                    log_success('Dumped mcr' .. i .. '.dat to ' .. out)
-                else
-                    log_error('Failed to dump mcr' .. i .. '.dat')
-                end
-            end
+            windower.add_to_chat(207, '[Vanalytics] Tracking ' .. count .. ' macro book(s).')
+
+        elseif sub == 'dump' then
+            local mcr0 = macro_path .. '/' .. macro_lib.dat_filename(0)
+            local mcr1 = macro_path .. '/' .. macro_lib.dat_filename(1)
+            local dump_path = windower.addon_path .. 'data/'
+            macro_lib.dump_dat(mcr0, dump_path .. 'mcr0_dump.txt')
+            macro_lib.dump_dat(mcr1, dump_path .. 'mcr1_dump.txt')
+            windower.add_to_chat(207, '[Vanalytics] Macro DAT dumps saved to addon data folder.')
+
         else
-            log('Macro commands: push | pull | status | dump')
+            windower.add_to_chat(207, '[Vanalytics] Usage: //va macros <push|pull|status|dump> [--force]')
         end
 
     elseif command == 'moves' then
@@ -1441,9 +1263,9 @@ windower.register_event('addon command', function(command, ...)
         log('//va session flush   - Manually upload buffered events')
         log('//va session cleanup - Delete old session files')
         log('//va session debug   - Toggle debug mode (logs unmatched chat lines)')
-        log('//va macros push     - Force upload all macro books')
-        log('//va macros pull     - Check for pending macro updates')
-        log('//va macros status   - Show tracked macro book count')
+        log('//va macros push [--force]  - Upload changed macro books')
+        log('//va macros pull [--force]  - Download pending macro updates')
+        log('//va macros status         - Show tracked macro book count')
         log('//va moves execute   - Execute pending inventory move orders')
         log('//va moves status    - Show pending move order details')
         log('//va help         - Show this help')

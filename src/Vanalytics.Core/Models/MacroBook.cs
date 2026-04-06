@@ -12,4 +12,5 @@ public class MacroBook
 
     public Character Character { get; set; } = null!;
     public List<MacroPage> Pages { get; set; } = [];
+    public List<MacroBookSnapshot> Snapshots { get; set; } = [];
 }

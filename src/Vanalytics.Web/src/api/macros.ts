@@ -67,3 +67,21 @@ export function updateMacroBook(characterId: string, bookNumber: number, data: M
     body: JSON.stringify(data),
   })
 }
+
+export interface MacroBookSnapshotSummary {
+  id: string
+  contentHash: string
+  bookTitle: string
+  reason: string
+  createdAt: string
+}
+
+export function getMacroBookHistory(characterId: string, bookNumber: number) {
+  return api<MacroBookSnapshotSummary[]>(`/api/macros/${characterId}/${bookNumber}/history`)
+}
+
+export function restoreMacroBook(characterId: string, bookNumber: number, snapshotId: string) {
+  return api<MacroBookDetail>(`/api/macros/${characterId}/${bookNumber}/restore/${snapshotId}`, {
+    method: 'POST',
+  })
+}

@@ -13,6 +13,8 @@
 --   So Book 1 = files 0-9 (mcr.dat through mcr9.dat)
 --      Book 2 = files 10-19 (mcr10.dat through mcr19.dat)
 
+local ltn12 = require('ltn12')
+
 local macros = {}
 
 local HEADER_SIZE = 24
@@ -178,6 +180,32 @@ function macros.write_page(filepath, page)
     return true
 end
 
+-- Write all 10 pages of a book to their correct DAT files
+function macros.write_book(macro_path, book_number, book)
+    local success = true
+    for page_num = 1, PAGES_PER_BOOK do
+        local file_idx = macros.file_index(book_number, page_num)
+        local filename = macros.dat_filename(file_idx)
+        local filepath = macro_path .. '/' .. filename
+
+        local page = book.pages[page_num]
+        if page == nil then
+            -- Create empty page
+            page = { ctrl = {}, alt = {} }
+            for i = 1, MACROS_PER_SET do
+                page.ctrl[i] = { set = 'Ctrl', position = i, name = '', icon = 0, line1 = '', line2 = '', line3 = '', line4 = '', line5 = '', line6 = '' }
+                page.alt[i] = { set = 'Alt', position = i, name = '', icon = 0, line1 = '', line2 = '', line3 = '', line4 = '', line5 = '', line6 = '' }
+            end
+        end
+
+        if not macros.write_page(filepath, page) then
+            log('Error writing page ' .. page_num .. ' of book ' .. book_number)
+            success = false
+        end
+    end
+    return success
+end
+
 -- Convert a parsed book to the API JSON structure
 function macros.book_to_api(book, book_number, content_hash, title)
     local api_book = {
@@ -281,6 +309,37 @@ function macros.hash_book(macro_path, book_number)
     end
 
     if not found_any then return nil end
+    return string.format('%08x', hash)
+end
+
+-- Compute DJB2 hash from in-memory book data (matches hash_book output from disk)
+function macros.hash_book_from_data(book)
+    local hash = 5381
+    for page_num = 1, PAGES_PER_BOOK do
+        local page = book.pages[page_num]
+        if page then
+            -- Hash ctrl macros then alt macros, matching write_page order
+            for i = 1, MACROS_PER_SET do
+                local macro = page.ctrl[i]
+                if macro then
+                    local data = macros.write_macro(macro)
+                    for j = 1, #data do
+                        hash = ((hash * 33) + string.byte(data, j)) % 0xFFFFFFFF
+                    end
+                end
+            end
+            for i = 1, MACROS_PER_SET do
+                local macro = page.alt[i]
+                if macro then
+                    local data = macros.write_macro(macro)
+                    for j = 1, #data do
+                        hash = ((hash * 33) + string.byte(data, j)) % 0xFFFFFFFF
+                    end
+                end
+            end
+        end
+    end
+    if hash == 5381 then return nil end
     return string.format('%08x', hash)
 end
 
@@ -407,7 +466,234 @@ function macros.book_files_changed(macro_path, book_number, old_timestamps, new_
     return false
 end
 
+macros.write_macro = write_macro
 macros.PAGES_PER_BOOK = PAGES_PER_BOOK
 macros.BOOKS_COUNT = BOOKS_COUNT
+
+-----------------------------------------------------------------------
+-- Push: upload changed macro books to server
+-- http_fn: function(params) matching LuaSocket request signature
+-- json_encode/json_decode: serialization functions from host addon
+-----------------------------------------------------------------------
+function macros.push(macro_path, settings, http_fn, json_encode, json_decode, base_url, api_key, force, log_fn)
+    -- Check for pending web edits (conflict detection)
+    if not force then
+        local pending_resp = {}
+        local _, pending_code = http_fn({
+            url = base_url .. '/api/sync/macros/pending',
+            method = 'GET',
+            headers = { ['X-Api-Key'] = api_key },
+            sink = ltn12.sink.table(pending_resp),
+        })
+        if pending_code == 200 then
+            local pending_body = table.concat(pending_resp)
+            if pending_body and #pending_body > 0 then
+                local pending = json_decode(pending_body)
+                if pending and pending.pendingBooks and #pending.pendingBooks > 0 then
+                    local book_list = table.concat(pending.pendingBooks, ', ')
+                    log_fn('Warning: Books ' .. book_list .. ' have pending web edits that will be overwritten.')
+                    log_fn("Use '//va macros push --force' to proceed.")
+                    return false
+                end
+            end
+        end
+    end
+
+    -- Timestamp-based change detection
+    local new_timestamps = macros.get_file_timestamps(macro_path)
+    local old_timestamps = settings.macro_file_timestamps or {}
+    local titles = macros.parse_titles(macro_path)
+    local changed_books = {}
+
+    for book_num = 1, BOOKS_COUNT do
+        local files_changed = macros.book_files_changed(macro_path, book_num, old_timestamps, new_timestamps)
+        if files_changed then
+            local new_hash = macros.hash_book(macro_path, book_num)
+            local key = 'book' .. book_num
+            local old_entry = settings.macro_hashes and settings.macro_hashes[key]
+            local old_hash = type(old_entry) == 'table' and old_entry['local'] or old_entry
+
+            if new_hash and new_hash ~= old_hash then
+                local book = macros.parse_book(macro_path, book_num)
+                if book then
+                    local title = titles[book_num] or ('Book' .. string.format('%02d', book_num))
+                    local api_book = macros.book_to_api(book, book_num, new_hash, title)
+                    table.insert(changed_books, { book_num = book_num, api_book = api_book, local_hash = new_hash })
+                end
+            end
+        end
+    end
+
+    if #changed_books == 0 then
+        log_fn('No macro changes detected.')
+        return true
+    end
+
+    -- Initialize hash table if needed
+    if not settings.macro_hashes then settings.macro_hashes = {} end
+
+    -- Upload one book at a time
+    local total_updated = 0
+    for _, entry in ipairs(changed_books) do
+        local request_body = json_encode({ books = { entry.api_book } })
+        local response_body = {}
+        local _, resp_code = http_fn({
+            url = base_url .. '/api/sync/macros',
+            method = 'POST',
+            headers = {
+                ['X-Api-Key'] = api_key,
+                ['Content-Type'] = 'application/json',
+                ['Content-Length'] = tostring(#request_body)
+            },
+            source = ltn12.source.string(request_body),
+            sink = ltn12.sink.table(response_body),
+        })
+
+        if resp_code == 200 then
+            local key = 'book' .. entry.book_num
+            local resp_text = table.concat(response_body)
+            local resp = resp_text and #resp_text > 0 and json_decode(resp_text) or nil
+
+            -- Store both local DJB2 and remote SHA256
+            local remote_hash = ''
+            if resp and resp.books then
+                for _, b in ipairs(resp.books) do
+                    if b.bookNumber == entry.book_num then
+                        remote_hash = b.contentHash or ''
+                        break
+                    end
+                end
+            end
+            settings.macro_hashes[key] = { ['local'] = entry.local_hash, remote = remote_hash }
+            total_updated = total_updated + 1
+
+            -- Report conflicts
+            if resp and resp.conflicts and #resp.conflicts > 0 then
+                local conflict_list = table.concat(resp.conflicts, ', ')
+                log_fn('Note: Books ' .. conflict_list .. ' had pending web edits that were overwritten (snapshots saved).')
+            end
+        else
+            log_fn('Error syncing book ' .. entry.book_num .. ': HTTP ' .. tostring(resp_code))
+        end
+    end
+
+    settings.macro_file_timestamps = new_timestamps
+    log_fn('Pushed ' .. total_updated .. ' book(s) to server.')
+    return true
+end
+
+-----------------------------------------------------------------------
+-- Pull: download pending macro books from server
+-- http_fn: function(params) matching LuaSocket request signature
+-- json_decode: deserialization function from host addon
+-----------------------------------------------------------------------
+function macros.pull(macro_path, settings, http_fn, json_decode, base_url, api_key, force, log_fn)
+    -- Check for local changes (conflict detection)
+    if not force then
+        local new_timestamps = macros.get_file_timestamps(macro_path)
+        local old_timestamps = settings.macro_file_timestamps or {}
+        local locally_changed = {}
+
+        for book_num = 1, BOOKS_COUNT do
+            if macros.book_files_changed(macro_path, book_num, old_timestamps, new_timestamps) then
+                local new_hash = macros.hash_book(macro_path, book_num)
+                local key = 'book' .. book_num
+                local old_entry = settings.macro_hashes and settings.macro_hashes[key]
+                local old_hash = type(old_entry) == 'table' and old_entry['local'] or old_entry
+                if new_hash and new_hash ~= old_hash then
+                    table.insert(locally_changed, book_num)
+                end
+            end
+        end
+
+        if #locally_changed > 0 then
+            local book_list = table.concat(locally_changed, ', ')
+            log_fn("Warning: Books " .. book_list .. " have local changes that haven't been pushed.")
+            log_fn("Use '//va macros pull --force' to overwrite local files.")
+            return {}
+        end
+    end
+
+    -- Check for pending server changes
+    local pending_resp = {}
+    local _, pending_code = http_fn({
+        url = base_url .. '/api/sync/macros/pending',
+        method = 'GET',
+        headers = { ['X-Api-Key'] = api_key },
+        sink = ltn12.sink.table(pending_resp),
+    })
+
+    if pending_code ~= 200 then
+        log_fn('Error checking pending macros: HTTP ' .. tostring(pending_code))
+        return {}
+    end
+
+    local pending_body = table.concat(pending_resp)
+    if not pending_body or #pending_body == 0 then
+        log_fn('No pending changes to pull.')
+        return {}
+    end
+
+    local pending = json_decode(pending_body)
+    if not pending or not pending.pendingBooks or #pending.pendingBooks == 0 then
+        log_fn('No pending changes to pull.')
+        return {}
+    end
+
+    -- Initialize hash table if needed
+    if not settings.macro_hashes then settings.macro_hashes = {} end
+
+    local pulled = {}
+
+    for _, book_number in ipairs(pending.pendingBooks) do
+        local book_resp = {}
+        local _, book_code = http_fn({
+            url = base_url .. '/api/sync/macros/' .. book_number,
+            method = 'GET',
+            headers = { ['X-Api-Key'] = api_key },
+            sink = ltn12.sink.table(book_resp),
+        })
+
+        if book_code == 200 then
+            local book_text = table.concat(book_resp)
+            if book_text and #book_text > 0 then
+                local book_data = json_decode(book_text)
+                local book = macros.api_to_book(book_data)
+
+                if macros.write_book(macro_path, book_number, book) then
+                    -- Update local hash from written data
+                    local local_hash = macros.hash_book_from_data(book)
+                    local remote_hash = book_data.contentHash or ''
+                    local key = 'book' .. book_number
+                    settings.macro_hashes[key] = { ['local'] = local_hash or '', remote = remote_hash }
+
+                    -- Acknowledge receipt
+                    local ack_resp = {}
+                    http_fn({
+                        url = base_url .. '/api/sync/macros/pending/' .. book_number,
+                        method = 'DELETE',
+                        headers = { ['X-Api-Key'] = api_key },
+                        sink = ltn12.sink.table(ack_resp),
+                    })
+
+                    table.insert(pulled, book_number)
+                    log_fn('Pulled book ' .. book_number .. ' successfully.')
+                else
+                    log_fn('Error writing book ' .. book_number .. ' to DAT files.')
+                end
+            else
+                log_fn('Error fetching book ' .. book_number .. ': empty response.')
+            end
+        else
+            log_fn('Error fetching book ' .. book_number .. ': HTTP ' .. tostring(book_code))
+        end
+    end
+
+    -- Update timestamps after writing
+    settings.macro_file_timestamps = macros.get_file_timestamps(macro_path)
+
+    log_fn('Pulled ' .. #pulled .. ' book(s) from server.')
+    return pulled
+end
 
 return macros

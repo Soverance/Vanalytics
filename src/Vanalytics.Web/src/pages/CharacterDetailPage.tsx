@@ -17,6 +17,7 @@ import InventoryTab from '../components/character/InventoryTab'
 import RelicsTab from '../components/character/RelicsTab'
 import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
+import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
 import SessionsTab from '../components/session/SessionsTab'
 import { ApiError } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
@@ -47,6 +48,7 @@ export default function CharacterDetailPage() {
   const [currentMacroPage, setCurrentMacroPage] = useState(1)
   const [selectedMacro, setSelectedMacro] = useState<{ set: 'Ctrl' | 'Alt'; position: number } | null>(null)
   const [macroError, setMacroError] = useState('')
+  const [showMacroHistory, setShowMacroHistory] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -137,6 +139,7 @@ export default function CharacterDetailPage() {
     setSelectedBookNumber(bookNumber)
     setSelectedMacro(null)
     setCurrentMacroPage(1)
+    setShowMacroHistory(false)
     try {
       const detail = await getMacroBook(id, bookNumber)
       setSelectedBook(detail)
@@ -279,7 +282,7 @@ export default function CharacterDetailPage() {
                           >
                             <span className="truncate block">{book.bookTitle}</span>
                             {book.pendingPush && (
-                              <span className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                              <span className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-yellow-400" title="Edited on web — waiting for addon to pull" />
                             )}
                           </button>
                         )
@@ -287,6 +290,14 @@ export default function CharacterDetailPage() {
                     </div>
                   ))}
                   <div className="border-b border-gray-700" />
+                  {selectedBookNumber && (
+                    <button
+                      onClick={() => setShowMacroHistory(!showMacroHistory)}
+                      className="text-xs text-blue-400 hover:text-blue-300 ml-2"
+                    >
+                      {showMacroHistory ? 'Close History' : 'History'}
+                    </button>
+                  )}
                 </div>
 
                 {/* Macro grid + editor */}
@@ -303,7 +314,17 @@ export default function CharacterDetailPage() {
                         />
                       </div>
 
-                      {selectedMacro && (() => {
+                      {showMacroHistory && selectedBookNumber && id ? (
+                        <MacroHistoryPanel
+                          characterId={id}
+                          bookNumber={selectedBookNumber}
+                          onRestore={(detail) => {
+                            setSelectedBook(detail)
+                            listMacroBooks(id).then(setMacroBooks)
+                          }}
+                          onClose={() => setShowMacroHistory(false)}
+                        />
+                      ) : selectedMacro && (() => {
                         const page = selectedBook.pages.find(p => p.pageNumber === currentMacroPage)
                         const macro = page?.macros.find(m => m.set === selectedMacro.set && m.position === selectedMacro.position)
                         if (!macro) return null

@@ -16,6 +16,7 @@ public class ItemSyncProvider : ISyncProvider
     private const string DescriptionsLuaUrl = "https://raw.githubusercontent.com/Windower/Resources/master/resources_data/item_descriptions.lua";
     private const string ModelMappingsUrl = "https://raw.githubusercontent.com/LandSandBoat/server/base/sql/item_equipment.sql";
     private const string MobPoolsUrl = "https://raw.githubusercontent.com/LandSandBoat/server/base/sql/mob_pools.sql";
+    private const string ItemBasicUrl = "https://raw.githubusercontent.com/LandSandBoat/server/base/sql/item_basic.sql";
     private const int BatchSize = 1000;
 
     public string ProviderId => "items";
@@ -37,7 +38,7 @@ public class ItemSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Started,
-            Message = "[Phase 1/3 — Items] Downloading item data from Windower Resources..."
+            Message = "[Phase 1/4 — Items] Downloading item data from Windower Resources..."
         });
 
         var client = _httpClientFactory.CreateClient();
@@ -50,7 +51,7 @@ public class ItemSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = "[Phase 1/3 — Items] Parsing item data..."
+            Message = "[Phase 1/4 — Items] Parsing item data..."
         });
 
         var items = Services.LuaResourceParser.ParseItems(itemsLua);
@@ -111,7 +112,7 @@ public class ItemSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = $"[Phase 1/3 — Items] Found {newItems.Count} new, {changedItems.Count} changed, {skipped} unchanged items.",
+            Message = $"[Phase 1/4 — Items] Found {newItems.Count} new, {changedItems.Count} changed, {skipped} unchanged items.",
             Total = total
         });
 
@@ -138,7 +139,7 @@ public class ItemSyncProvider : ISyncProvider
                 {
                     ProviderId = ProviderId,
                     Type = SyncEventType.Progress,
-                    Message = $"[Phase 1/3 — Items] Inserted {added} of {newItems.Count} new items...",
+                    Message = $"[Phase 1/4 — Items] Inserted {added} of {newItems.Count} new items...",
                     Current = added,
                     Total = total,
                     Added = added,
@@ -214,7 +215,7 @@ public class ItemSyncProvider : ISyncProvider
                 {
                     ProviderId = ProviderId,
                     Type = SyncEventType.Progress,
-                    Message = $"[Phase 1/3 — Items] Updated {updated} of {changedItems.Count} changed items...",
+                    Message = $"[Phase 1/4 — Items] Updated {updated} of {changedItems.Count} changed items...",
                     Current = added + updated,
                     Total = total,
                     Added = added,
@@ -234,11 +235,14 @@ public class ItemSyncProvider : ISyncProvider
         // Phase 3: Sync NPC/Monster pool data from LandSandBoat
         await SyncNpcPoolsAsync(db, client, progress, ct);
 
+        // Phase 4: Sync NPC sell prices from LandSandBoat
+        await SyncBaseSellAsync(db, client, progress, ct);
+
         progress.Report(new SyncProgressEvent
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Completed,
-            Message = $"Sync complete: {added} added, {updated} updated, {skipped} unchanged. Model mappings and NPC pools updated.",
+            Message = $"Sync complete: {added} added, {updated} updated, {skipped} unchanged. Model mappings, NPC pools, and sell prices updated.",
             Current = total,
             Total = total,
             Added = added,
@@ -277,7 +281,7 @@ public class ItemSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = "[Phase 2/3 — Model Mappings] Downloading from LandSandBoat...",
+            Message = "[Phase 2/4 — Model Mappings] Downloading from LandSandBoat...",
             Current = itemsAdded + itemsUpdated,
             Total = itemsTotal
         });
@@ -321,7 +325,7 @@ public class ItemSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = $"[Phase 2/3 — Model Mappings] Parsed {parsed.Count} entries. Updating database..."
+            Message = $"[Phase 2/4 — Model Mappings] Parsed {parsed.Count} entries. Updating database..."
         });
 
         // Load existing mappings for comparison
@@ -390,7 +394,7 @@ public class ItemSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = $"[Phase 2/3 — Model Mappings] {modelAdded} added, {modelUpdated} updated, {modelSkipped} unchanged."
+            Message = $"[Phase 2/4 — Model Mappings] {modelAdded} added, {modelUpdated} updated, {modelSkipped} unchanged."
         });
     }
 
@@ -409,7 +413,7 @@ public class ItemSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = "[Phase 3/3 — NPC Pools] Downloading mob pool data from LandSandBoat..."
+            Message = "[Phase 3/4 — NPC Pools] Downloading mob pool data from LandSandBoat..."
         });
 
         string sql;
@@ -424,7 +428,7 @@ public class ItemSyncProvider : ISyncProvider
             {
                 ProviderId = ProviderId,
                 Type = SyncEventType.Progress,
-                Message = "[Phase 3/3 — NPC Pools] Download failed — skipped."
+                Message = "[Phase 3/4 — NPC Pools] Download failed — skipped."
             });
             return;
         }
@@ -464,7 +468,7 @@ public class ItemSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = $"[Phase 3/3 — NPC Pools] Parsed {parsed.Count} NPC pools. Updating database..."
+            Message = $"[Phase 3/4 — NPC Pools] Parsed {parsed.Count} NPC pools. Updating database..."
         });
 
         // Load existing pools for comparison
@@ -520,7 +524,7 @@ public class ItemSyncProvider : ISyncProvider
                     {
                         ProviderId = ProviderId,
                         Type = SyncEventType.Progress,
-                        Message = $"[Phase 3/3 — NPC Pools] Inserted {npcAdded} pools so far..."
+                        Message = $"[Phase 3/4 — NPC Pools] Inserted {npcAdded} pools so far..."
                     });
                 }
             }
@@ -537,7 +541,103 @@ public class ItemSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = $"[Phase 3/3 — NPC Pools] {npcAdded} added, {npcUpdated} updated, {npcSkipped} unchanged."
+            Message = $"[Phase 3/4 — NPC Pools] {npcAdded} added, {npcUpdated} updated, {npcSkipped} unchanged."
+        });
+    }
+
+    /// <summary>
+    /// Sync NPC vendor buyback prices from LandSandBoat's item_basic.sql.
+    /// Parses BaseSell (column 9) from INSERT statements and updates only changed records.
+    /// </summary>
+    private async Task SyncBaseSellAsync(
+        VanalyticsDbContext db, HttpClient client,
+        IProgress<SyncProgressEvent> progress,
+        CancellationToken ct)
+    {
+        progress.Report(new SyncProgressEvent
+        {
+            ProviderId = ProviderId,
+            Type = SyncEventType.Progress,
+            Message = "[Phase 4/4 — Sell Prices] Downloading item_basic.sql from LandSandBoat..."
+        });
+
+        string sql;
+        try
+        {
+            sql = await client.GetStringAsync(ItemBasicUrl, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to download item_basic.sql — skipping BaseSell sync");
+            progress.Report(new SyncProgressEvent
+            {
+                ProviderId = ProviderId,
+                Type = SyncEventType.Progress,
+                Message = "[Phase 4/4 — Sell Prices] Download failed — skipped."
+            });
+            return;
+        }
+
+        // Parse INSERT statements:
+        // (itemId,subid,'name','sortname',stackSize,flags,aH,noSale,BaseSell,...)
+        var parsed = new Dictionary<int, int>();
+        var regex = new System.Text.RegularExpressions.Regex(
+            @"\((\d+),\d+,'[^']*','[^']*',\d+,\d+,\d+,\d+,(\d+)");
+
+        foreach (System.Text.RegularExpressions.Match match in regex.Matches(sql))
+        {
+            var itemId = int.Parse(match.Groups[1].Value);
+            var baseSell = int.Parse(match.Groups[2].Value);
+            parsed[itemId] = baseSell;
+        }
+
+        progress.Report(new SyncProgressEvent
+        {
+            ProviderId = ProviderId,
+            Type = SyncEventType.Progress,
+            Message = $"[Phase 4/4 — Sell Prices] Parsed {parsed.Count} entries. Checking for changes..."
+        });
+
+        // Load existing BaseSell values for change detection
+        var existing = await db.GameItems
+            .AsNoTracking()
+            .Where(i => parsed.Keys.Contains(i.ItemId))
+            .Select(i => new { i.ItemId, i.BaseSell })
+            .ToDictionaryAsync(i => i.ItemId, i => i.BaseSell, ct);
+
+        var now = DateTimeOffset.UtcNow;
+        var sellUpdated = 0;
+        var sellSkipped = 0;
+
+        foreach (var (itemId, baseSell) in parsed)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            if (!existing.TryGetValue(itemId, out var current))
+                continue; // Item doesn't exist in our DB yet — skip
+
+            if (current == baseSell)
+            {
+                sellSkipped++;
+                continue;
+            }
+
+            await db.GameItems
+                .Where(i => i.ItemId == itemId)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(i => i.BaseSell, baseSell)
+                    .SetProperty(i => i.UpdatedAt, now), ct);
+
+            sellUpdated++;
+        }
+
+        _logger.LogInformation("BaseSell sync: {Updated} updated, {Skipped} unchanged", sellUpdated, sellSkipped);
+
+        progress.Report(new SyncProgressEvent
+        {
+            ProviderId = ProviderId,
+            Type = SyncEventType.Progress,
+            Message = $"[Phase 4/4 — Sell Prices] {sellUpdated} updated, {sellSkipped} unchanged."
         });
     }
 
@@ -566,7 +666,8 @@ public class ItemSyncProvider : ISyncProvider
             item.MagicAccuracy, item.MagicDamage, item.MagicEvasion, item.Evasion,
             item.Enmity, item.Haste, item.StoreTP, item.TPBonus,
             item.PhysicalDamageTaken, item.MagicDamageTaken,
-            item.Description, item.DescriptionJa);
+            item.Description, item.DescriptionJa,
+            item.BaseSell);
     }
 
     private static string ComputeHash(params object?[] values)

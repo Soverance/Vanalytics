@@ -29,6 +29,7 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<CharacterInventory> CharacterInventories => Set<CharacterInventory>();
     public DbSet<InventoryChange> InventoryChanges => Set<InventoryChange>();
     public DbSet<MacroBook> MacroBooks => Set<MacroBook>();
+    public DbSet<MacroBookSnapshot> MacroBookSnapshots => Set<MacroBookSnapshot>();
     public DbSet<MacroPage> MacroPages => Set<MacroPage>();
     public DbSet<Macro> Macros => Set<Macro>();
     public DbSet<DismissedAnomaly> DismissedAnomalies => Set<DismissedAnomaly>();

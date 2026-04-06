@@ -32,8 +32,10 @@ const BAG_LABELS: Record<string, string> = {
   Wardrobe8: 'Mog Wardrobe 8',
 }
 
-type SortField = 'itemName' | 'category' | 'quantity'
+type SortField = 'itemName' | 'category' | 'quantity' | 'value'
 type SortDir = 'asc' | 'desc'
+
+const formatGil = (amount: number) => amount.toLocaleString()
 
 interface Props {
   characterId: string
@@ -43,7 +45,7 @@ export default function InventoryTab({ characterId }: Props) {
   const [inventory, setInventory] = useState<InventoryByBag | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeBag, setActiveBag] = useState<string>('')
-  const [activeView, setActiveView] = useState<'anomalies' | 'bag'>('bag')
+  const [activeView, setActiveView] = useState<'anomalies' | 'bag' | 'sellAdvisor'>('bag')
   const [anomalyCount, setAnomalyCount] = useState(0)
   const [search, setSearch] = useState('')
   const [tableExpanded, setTableExpanded] = useState(false)
@@ -200,6 +202,27 @@ export default function InventoryTab({ characterId }: Props) {
     return counts
   }, [selection])
 
+  const sellableItems = useMemo(() => {
+    if (!inventory) return []
+    const items: (InventoryItem & { bag: string; totalValue: number })[] = []
+    for (const bag of BAG_ORDER) {
+      const bagItems = inventory[bag]
+      if (!bagItems) continue
+      for (const item of bagItems) {
+        if (item.baseSell && item.baseSell > 0) {
+          items.push({ ...item, bag, totalValue: item.quantity * item.baseSell })
+        }
+      }
+    }
+    items.sort((a, b) => b.totalValue - a.totalValue)
+    return items
+  }, [inventory])
+
+  const totalSellableGil = useMemo(
+    () => sellableItems.reduce((sum, i) => sum + i.totalValue, 0),
+    [sellableItems]
+  )
+
   const isSearching = search.length > 0
 
   const searchResults = useMemo(() => {
@@ -231,6 +254,7 @@ export default function InventoryTab({ characterId }: Props) {
       if (sortField === 'itemName') cmp = a.itemName.localeCompare(b.itemName)
       else if (sortField === 'category') cmp = (a.category ?? '').localeCompare(b.category ?? '')
       else if (sortField === 'quantity') cmp = a.quantity - b.quantity
+      else if (sortField === 'value') cmp = ((a.quantity * (a.baseSell ?? 0)) - (b.quantity * (b.baseSell ?? 0)))
       return sortDir === 'desc' ? -cmp : cmp
     })
 
@@ -357,6 +381,11 @@ export default function InventoryTab({ characterId }: Props) {
         <td className="px-4 py-1.5 text-right text-gray-300">
           {item.quantity}{item.stackSize > 1 ? `/${item.stackSize}` : ''}
         </td>
+        <td className="px-4 py-1.5 text-right text-gray-400">
+          {item.baseSell && item.baseSell > 0
+            ? formatGil(item.quantity * item.baseSell)
+            : '\u2014'}
+        </td>
       </tr>
     )
   }
@@ -411,6 +440,7 @@ export default function InventoryTab({ characterId }: Props) {
                     <th className="px-4 py-2 text-left">Category</th>
                     <th className="px-4 py-2 text-left">Bag</th>
                     <th className="px-4 py-2 text-right w-20">Qty</th>
+                    <th className="px-4 py-2 text-right w-20">Value</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -443,6 +473,16 @@ export default function InventoryTab({ characterId }: Props) {
                   {anomalyCount}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => { setActiveView('sellAdvisor'); setTableExpanded(false) }}
+              className={`px-3 py-2 text-sm font-medium transition-colors ${
+                activeView === 'sellAdvisor'
+                  ? 'text-blue-400 border-b-2 border-blue-400 -mb-px'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              Sell Advisor
             </button>
             {availableBags.map(bag => (
               <button
@@ -488,6 +528,57 @@ export default function InventoryTab({ characterId }: Props) {
             <InventoryAnomalyBanner characterId={characterId} onAnomalyCountChange={setAnomalyCount} />
           )}
 
+          {/* Sell Advisor tab content */}
+          {activeView === 'sellAdvisor' && (
+            <div>
+              <div className="rounded-lg border border-green-800/50 bg-green-950/20 p-3 mb-4">
+                <p className="text-sm text-green-400">
+                  Total sellable value: <span className="font-semibold">{formatGil(totalSellableGil)} gil</span>
+                  {' '}across {sellableItems.length} item{sellableItems.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              {sellableItems.length === 0 ? (
+                <p className="text-gray-400 text-sm py-4">No sellable items found in your inventory.</p>
+              ) : (
+                <div className="max-h-[480px] overflow-y-auto styled-scrollbar">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 z-10">
+                      <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
+                        <th className="px-4 py-2 text-left w-12"></th>
+                        <th className="px-4 py-2 text-left">Item</th>
+                        <th className="px-4 py-2 text-left">Bag</th>
+                        <th className="px-4 py-2 text-right w-16">Qty</th>
+                        <th className="px-4 py-2 text-right w-20">Unit</th>
+                        <th className="px-4 py-2 text-right w-24">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sellableItems.map(item => (
+                        <tr key={`${item.bag}-${item.slotIndex}`} className="border-t border-gray-700/50 hover:bg-gray-800/50">
+                          <td className="px-4 py-1.5">
+                            {item.iconPath && (
+                              <img src={`/item-images/${item.iconPath}`} alt="" className="w-8 h-auto object-contain" loading="lazy" />
+                            )}
+                          </td>
+                          <td className="px-4 py-1.5 text-gray-100">
+                            {item.itemName}
+                            <span className="ml-2 text-gray-600 text-xs">#{item.itemId}</span>
+                          </td>
+                          <td className="px-4 py-1.5 text-gray-400">{BAG_LABELS[item.bag] ?? item.bag}</td>
+                          <td className="px-4 py-1.5 text-right text-gray-300">
+                            {item.quantity}{item.stackSize > 1 ? `/${item.stackSize}` : ''}
+                          </td>
+                          <td className="px-4 py-1.5 text-right text-gray-400">{formatGil(item.baseSell!)}</td>
+                          <td className="px-4 py-1.5 text-right text-yellow-400 font-medium">{formatGil(item.totalValue)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Bag tab content */}
           {activeView === 'bag' && tableExpanded && (
             activeItems.length === 0 ? (
@@ -516,6 +607,12 @@ export default function InventoryTab({ characterId }: Props) {
                       </th>
                       <th className="px-4 py-2 text-right cursor-pointer hover:text-gray-200 select-none w-20" onClick={() => handleSort('quantity')}>
                         Qty{sortIndicator('quantity')}
+                      </th>
+                      <th
+                        className="px-4 py-2 text-right cursor-pointer hover:text-gray-200 select-none w-20"
+                        onClick={() => handleSort('value')}
+                      >
+                        Value{sortIndicator('value')}
                       </th>
                     </tr>
                   </thead>
