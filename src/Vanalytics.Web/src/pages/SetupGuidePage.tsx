@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { Download } from 'lucide-react'
 import AuthLink from '../components/AuthLink'
 
-type Tab = 'install' | 'commands' | 'sync' | 'macros' | 'sessions' | 'inventory'
+type Tab = 'install' | 'commands' | 'sync' | 'macros' | 'sessions' | 'inventory' | 'moves'
 
 const tabs: { id: Tab; label: string }[] = [
   { id: 'install', label: 'Install' },
@@ -13,6 +13,7 @@ const tabs: { id: Tab; label: string }[] = [
   { id: 'macros', label: 'Macros' },
   { id: 'sessions', label: 'Sessions' },
   { id: 'inventory', label: 'Inventory' },
+  { id: 'moves', label: 'Moves' },
 ]
 
 function Step({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {
@@ -145,6 +146,7 @@ function InstallTab() {
 ├── vanalytics.lua
 ├── inventory.lua
 ├── macros.lua
+├── moves.lua
 ├── session.lua
 └── settings.xml`}</CodeBlock>
         <a
@@ -231,10 +233,17 @@ function CommandsTab() {
 
       <SectionHeading>Macro Sync</SectionHeading>
       <CommandTable>
-        <CommandRow command="//va macros push" description="Force-upload all 20 macro books to the server" />
-        <CommandRow command="//va macros pull" description="Check for and download pending macro edits made on the web" />
-        <CommandRow command="//va macros status" description="Show how many of the 20 macro books are currently tracked" />
-        <CommandRow command="//va macros dump" description="Dump the raw contents of macro DAT files for debugging" />
+        <CommandRow command="//va macros push [--force]" description="Upload macro books whose content has changed since the last push; --force uploads all 20 books unconditionally" />
+        <CommandRow command="//va macros pull [--force]" description="Download pending macro edits queued on the web; --force re-downloads all tracked books" />
+        <CommandRow command="//va macros status" description="Show how many macro books the addon is currently tracking" />
+        <CommandRow command="//va macros diag" description="Show per-book change-detection state (local hash, remote hash, mtime) for troubleshooting" />
+        <CommandRow command="//va macros dump" description="Dump the raw contents of macro DAT files to text for debugging" />
+      </CommandTable>
+
+      <SectionHeading>Inventory Moves</SectionHeading>
+      <CommandTable>
+        <CommandRow command="//va moves status" description="Show pending inventory move orders queued on the web" />
+        <CommandRow command="//va moves execute" description="Execute all pending moves via in-game packet injection" />
       </CommandTable>
 
       <div className="rounded-lg border border-gray-800 bg-gray-900 p-5 mt-2">
@@ -258,13 +267,29 @@ function SyncTab() {
 
       <SectionHeading>What Gets Synced</SectionHeading>
       <InfoBox>
+        <p className="text-gray-300 font-medium">Identity &amp; progression</p>
         <ul className="list-disc list-inside space-y-1">
-          <li>Character name, server, and active job/level</li>
-          <li>All unlocked jobs with their levels</li>
-          <li>Job Points (JP), JP spent, and Capacity Points (CP) per job</li>
+          <li>Character name, server, and race</li>
+          <li>Active job and subjob with levels, master level, item level</li>
+          <li>All unlocked jobs with levels, Job Points (JP), JP spent, and Capacity Points (CP) per job</li>
+          <li>Starting nation, linkshell, current title, and total playtime</li>
+          <li>Merit points (non-zero categories)</li>
+        </ul>
+
+        <p className="text-gray-300 font-medium pt-2">Gear &amp; skills</p>
+        <ul className="list-disc list-inside space-y-1">
           <li>All 16 equipment slots with item names and IDs</li>
           <li>Crafting skill levels and ranks for all 10 crafts (including Synergy)</li>
-          <li>Current HP, MP, TP, and zone</li>
+          <li>Combat, magic, and automaton skill levels with caps (sword, parrying, elemental magic, etc.)</li>
+          <li>Equipment and face model IDs (used by the 3D character viewer)</li>
+        </ul>
+
+        <p className="text-gray-300 font-medium pt-2">Live stats &amp; vitals</p>
+        <ul className="list-disc list-inside space-y-1">
+          <li>Current HP / Max HP and MP / Max MP</li>
+          <li>Base stats (STR, DEX, VIT, AGI, INT, MND, CHR) and gear/buff additions</li>
+          <li>Attack, defense, and elemental resistances (fire, ice, wind, earth, lightning, water, light, dark)</li>
+          <li>Nation rank and rank points</li>
         </ul>
       </InfoBox>
 
@@ -275,9 +300,15 @@ function SyncTab() {
         down to a minimum of 5 minutes with <Code>{'//va interval <minutes>'}</Code>.
       </Paragraph>
       <Paragraph>
-        Each timer tick queues several sync tasks — character data, inventory diffs, bazaar
-        presence scans, and macro change detection. These tasks are spread across multiple
+        Each timer tick queues several tasks — character data, inventory diffs, bazaar presence
+        scans, and a check for pending inventory moves. These tasks are spread across multiple
         game frames using a work queue to minimize any impact on game performance.
+      </Paragraph>
+      <Paragraph>
+        <strong className="text-gray-300">Macros are intentionally excluded</strong> from the
+        auto-sync cycle to avoid overwriting your saved macros with empty defaults when logging
+        in from a fresh FFXI installation. Use <Code>//va macros push</Code> to upload macro
+        changes manually. See the <strong className="text-gray-300">Macros</strong> tab for details.
       </Paragraph>
 
       <SectionHeading>Bazaar Presence</SectionHeading>
@@ -325,8 +356,9 @@ function MacrosTab() {
     <div>
       <Paragraph>
         The macro sync feature lets you view and edit your FFXI macro books on the Vanalytics
-        website and push changes back to your game client. Macros are synced automatically as
-        part of each sync cycle, or you can manage them manually.
+        website and push changes back to your game client — or pull web-side edits back into the
+        game. Unlike character sync, macros are never transferred automatically; every push and
+        pull is explicit.
       </Paragraph>
 
       <SectionHeading>How It Works</SectionHeading>
@@ -337,37 +369,74 @@ function MacrosTab() {
           containing 10 sets of 20 macros each (10 Ctrl macros + 10 Alt macros per set).
         </p>
         <p>
-          The addon reads these files, computes a hash for each book, and only uploads books whose
-          content has actually changed. File modification timestamps are also checked as a fast
-          pre-filter to avoid unnecessary disk reads.
+          The addon reads these files, computes a hash for each book, and tracks the last-known
+          local and remote hash so it can detect changes on either side. File modification
+          timestamps are used as a fast pre-filter to avoid unnecessary disk reads.
         </p>
       </InfoBox>
 
+      <WarnBox title="Why macros aren't auto-synced">
+        <p>
+          A fresh FFXI installation starts with empty macro books. If the addon auto-pushed those
+          empty books at login, it would overwrite your server-side macros with blanks. To prevent
+          this, push and pull are always manual — you decide when to transfer.
+        </p>
+      </WarnBox>
+
       <SectionHeading>Uploading Macros (Push)</SectionHeading>
       <Paragraph>
-        Macros are checked for changes automatically on each sync cycle. If any books have been
-        modified since the last upload, only the changed books are sent to the API. To force a
-        full re-upload of all 20 books:
+        Push uploads any macro books whose content has changed since the last push. Only books
+        with a different hash are sent — unchanged books are skipped entirely:
       </Paragraph>
       <CodeBlock>{`//va macros push`}</CodeBlock>
+      <Paragraph>
+        FFXI caches the currently loaded macro book in memory and only writes it to disk when you
+        zone, switch books, or log out. If you want to push edits you just made to the active book,
+        zone once first so the DAT reflects your changes.
+      </Paragraph>
+      <Paragraph>
+        To force a full re-upload of every tracked book regardless of hash state:
+      </Paragraph>
+      <CodeBlock>{`//va macros push --force`}</CodeBlock>
 
       <SectionHeading>Downloading Macros (Pull)</SectionHeading>
       <Paragraph>
         When you edit macros on the Vanalytics website, those changes are staged as "pending"
-        on the server. Use the pull command to download pending edits to your game client:
+        on the server. Pull downloads them to your game client:
       </Paragraph>
       <CodeBlock>{`//va macros pull`}</CodeBlock>
       <Paragraph>
-        The addon writes the updated DAT files and
-        automatically runs <Code>/reloadmacros</Code> so the changes take effect immediately
-        without restarting the game.
+        The addon writes the updated DAT files and runs <Code>/reloadmacros</Code> automatically.
       </Paragraph>
 
-      <SectionHeading>Checking Status</SectionHeading>
+      <WarnBox title="Zone before switching to a pulled book">
+        <p>
+          FFXI keeps the currently active macro book in memory. If you switch to a book that was
+          just pulled without zoning or relogging first, the game will overwrite the new DAT file
+          with its cached (pre-pull) copy, silently losing your web edits.
+        </p>
+        <p>
+          After a successful pull, <strong className="text-gray-300">zone or relog before selecting
+          any pulled book</strong>. If you pulled the currently active book, just zone once and the
+          new macros will be loaded.
+        </p>
+      </WarnBox>
+
       <Paragraph>
-        To see how many of your 20 macro books are currently tracked:
+        To force re-downloading every tracked book regardless of pending status:
+      </Paragraph>
+      <CodeBlock>{`//va macros pull --force`}</CodeBlock>
+
+      <SectionHeading>Checking Status &amp; Diagnostics</SectionHeading>
+      <Paragraph>
+        To see how many macro books the addon is currently tracking:
       </Paragraph>
       <CodeBlock>{`//va macros status`}</CodeBlock>
+      <Paragraph>
+        For troubleshooting — if a push or pull isn't behaving as expected — run diagnostics to
+        see the per-book change-detection state (local hash, remote hash, modification time):
+      </Paragraph>
+      <CodeBlock>{`//va macros diag`}</CodeBlock>
     </div>
   )
 }
@@ -464,6 +533,83 @@ function InventoryTab() {
   )
 }
 
+function MovesTab() {
+  return (
+    <div>
+      <Paragraph>
+        The inventory moves feature lets you queue item moves on the Vanalytics website and have
+        the addon execute them in-game. This is useful for bulk reorganizing across bags —
+        something the native FFXI UI makes painfully slow.
+      </Paragraph>
+
+      <SectionHeading>How It Works</SectionHeading>
+      <InfoBox>
+        <p>
+          When you queue moves on the website, the addon picks them up during its next sync cycle
+          and notifies you in chat — for example:
+          <br />
+          <Code>[Vanalytics] 3 pending inventory move(s). Type //va moves execute to run them.</Code>
+        </p>
+        <p>
+          Moves are never executed automatically. You run them with{' '}
+          <Code>//va moves execute</Code> when you're ready and in the right place (e.g., Mog
+          House for Locker/Storage access).
+        </p>
+        <p>
+          Each move is sent as an injected game packet, with verification after every step. A
+          detailed log is written to <Code>addons/vanalytics/moves.log</Code> for troubleshooting.
+        </p>
+      </InfoBox>
+
+      <SectionHeading>Viewing Pending Moves</SectionHeading>
+      <Paragraph>
+        To see what's queued before running:
+      </Paragraph>
+      <CodeBlock>{`//va moves status`}</CodeBlock>
+      <Paragraph>
+        This polls the server and lists each pending move (quantity, item name, source bag,
+        destination bag).
+      </Paragraph>
+
+      <SectionHeading>Executing Moves</SectionHeading>
+      <CodeBlock>{`//va moves execute`}</CodeBlock>
+      <Paragraph>
+        The addon processes moves one at a time. Each successful move is reported in chat.
+        Moves that touch partial stacks are split intelligently so existing stacks fill first
+        before new slots are used.
+      </Paragraph>
+
+      <SectionHeading>The Inventory Relay</SectionHeading>
+      <Paragraph>
+        FFXI only allows direct moves <em>to or from</em> Inventory. A move between two non-
+        Inventory bags (e.g., Satchel → Locker) is handled automatically as a two-step relay:
+        Satchel → Inventory → Locker. Both steps are verified before the move is reported
+        successful.
+      </Paragraph>
+
+      <WarnBox title="Bag accessibility">
+        <p>
+          Some bags are only available in specific locations. Locker, Storage, and all Mog
+          Wardrobes 2–8 require being inside your Mog House. If a queued move references a bag
+          that isn't currently accessible, that move is skipped and the addon reports which bags
+          are needed.
+        </p>
+        <p>
+          Head to your Mog House (or the appropriate zone) and run{' '}
+          <Code>//va moves execute</Code> again to complete skipped moves.
+        </p>
+      </WarnBox>
+
+      <SectionHeading>After Execution</SectionHeading>
+      <Paragraph>
+        When all executable moves finish, the addon acknowledges them to the server (so they're
+        removed from the queue) and triggers an inventory re-sync to bring the website up to date
+        with the new bag contents.
+      </Paragraph>
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
@@ -509,6 +655,7 @@ export default function SetupGuidePage() {
         {activeTab === 'macros' && <MacrosTab />}
         {activeTab === 'sessions' && <SessionsTab />}
         {activeTab === 'inventory' && <InventoryTab />}
+        {activeTab === 'moves' && <MovesTab />}
       </div>
     </div>
   )
