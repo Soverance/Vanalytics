@@ -9,6 +9,7 @@ public class DatMappingsResponse
     public List<FaceDatEntry> Faces { get; set; } = [];
     public List<SkeletonDatEntry> Skeletons { get; set; } = [];
     public List<AnimationDatEntry> Animations { get; set; } = [];
+    public Dictionary<string, string> DatNames { get; set; } = new();
 }
 
 public class EquipmentDatEntry

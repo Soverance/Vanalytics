@@ -74,6 +74,7 @@ public class DatMappingService
             Faces = await BuildFacesAsync(),
             Skeletons = BuildSkeletons(),
             Animations = await BuildAnimationsAsync(),
+            DatNames = await BuildDatNamesAsync(),
         };
 
         _cache.Set(CacheKey, response, CacheDuration);
@@ -208,6 +209,14 @@ public class DatMappingService
             }
         }
         return result;
+    }
+
+    private async Task<Dictionary<string, string>> BuildDatNamesAsync()
+    {
+        // AltanaViewer-sourced naming overlay for DATs that have no ItemModelMapping
+        // binding (LSB is silent). LSB/GameItem names win for DATs that are bound to
+        // items; this overlay is consulted only when the canonical lookup misses.
+        return await LoadJsonAsync<Dictionary<string, string>>("dat-name-overrides.json");
     }
 
     private async Task<T> LoadJsonAsync<T>(string filename)
