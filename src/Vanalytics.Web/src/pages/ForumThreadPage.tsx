@@ -308,8 +308,6 @@ export default function ForumThreadPage() {
           <p className="text-center text-red-400 text-sm py-4">This thread has been deleted.</p>
         ) : thread.isLocked ? (
           <p className="text-center text-amber-400 text-sm py-4">This thread is locked.</p>
-        ) : thread.categoryIsSystem && !isAdmin(user) ? (
-          <p className="text-center text-gray-500 text-sm py-4">Only administrators can post in this category.</p>
         ) : user ? (
           <div data-reply-box>
             <ForumReplyBox

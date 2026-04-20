@@ -13705,6 +13705,2867 @@
       ]
     }
   ],
+  "6": [
+    {
+      "name": "Battle",
+      "category": "Battle",
+      "paths": [
+        "ROM/51/19.dat",
+        "ROM/51/20.dat",
+        "ROM/51/21.dat",
+        "ROM/51/22.dat",
+        "ROM/51/23.dat",
+        "ROM/51/24.dat",
+        "ROM/99/55.dat"
+      ]
+    },
+    {
+      "name": "Dual Wield (Sub)",
+      "category": "Battle",
+      "paths": [
+        "ROM/114/20.dat",
+        "ROM/114/21.dat",
+        "ROM/114/22.dat"
+      ]
+    },
+    {
+      "name": "Dual Wield (Main)",
+      "category": "Battle",
+      "paths": [
+        "ROM/114/29.dat",
+        "ROM/114/30.dat",
+        "ROM/114/31.dat"
+      ]
+    },
+    {
+      "name": "Emote (Male)",
+      "category": "Emote",
+      "paths": [
+        "ROM/51/37.dat",
+        "ROM/51/38.dat",
+        "ROM/51/39.dat",
+        "ROM/51/40.dat",
+        "ROM/51/41.dat",
+        "ROM/123/51.dat",
+        "ROM/138/52.dat",
+        "ROM/138/53.dat",
+        "ROM/138/54.dat"
+      ]
+    },
+    {
+      "name": "Emote (Female)",
+      "category": "Emote",
+      "paths": [
+        "ROM/51/71.dat",
+        "ROM/51/72.dat",
+        "ROM/51/73.dat",
+        "ROM/51/74.dat",
+        "ROM/51/75.dat",
+        "ROM/123/60.dat",
+        "ROM/138/61.dat",
+        "ROM/138/62.dat",
+        "ROM/138/63.dat"
+      ]
+    },
+    {
+      "name": "Job Emotes (Male)",
+      "category": "Emote",
+      "paths": [
+        "ROM/259/94.dat",
+        "ROM/260/75.dat",
+        "ROM/260/76.dat",
+        "ROM/260/77.dat",
+        "ROM/260/78.dat",
+        "ROM/260/79.dat",
+        "ROM/260/80.dat",
+        "ROM/260/81.dat",
+        "ROM/260/82.dat",
+        "ROM/260/83.dat"
+      ]
+    },
+    {
+      "name": "Job Emotes (Female)",
+      "category": "Emote",
+      "paths": [
+        "ROM/259/97.dat",
+        "ROM/260/98.dat",
+        "ROM/260/99.dat",
+        "ROM/260/100.dat",
+        "ROM/260/101.dat",
+        "ROM/260/102.dat",
+        "ROM/260/103.dat",
+        "ROM/260/104.dat",
+        "ROM/260/105.dat",
+        "ROM/260/106.dat"
+      ]
+    },
+    {
+      "name": "Logging (Male)",
+      "category": "General",
+      "paths": [
+        "ROM/51/42.dat"
+      ]
+    },
+    {
+      "name": "Logging (Female)",
+      "category": "General",
+      "paths": [
+        "ROM/51/76.dat"
+      ]
+    },
+    {
+      "name": "Chocobo",
+      "category": "General",
+      "paths": [
+        "ROM/90/38.dat"
+      ]
+    },
+    {
+      "name": "Fishing",
+      "category": "General",
+      "paths": [
+        "ROM/90/39.dat"
+      ]
+    },
+    {
+      "name": "Mining (Male)",
+      "category": "General",
+      "paths": [
+        "ROM/123/49.dat"
+      ]
+    },
+    {
+      "name": "Mining (Female)",
+      "category": "General",
+      "paths": [
+        "ROM/123/58.dat"
+      ]
+    },
+    {
+      "name": "Harvesting (Male)",
+      "category": "General",
+      "paths": [
+        "ROM/123/50.dat"
+      ]
+    },
+    {
+      "name": "Harvesting (Female)",
+      "category": "General",
+      "paths": [
+        "ROM/123/59.dat"
+      ]
+    },
+    {
+      "name": "Goldfish Scooping",
+      "category": "General",
+      "paths": [
+        "ROM/143/59.dat",
+        "ROM/143/72.dat"
+      ]
+    },
+    {
+      "name": "Dancing (Male)",
+      "category": "General",
+      "paths": [
+        "ROM/198/12.dat"
+      ]
+    },
+    {
+      "name": "Dancing (Female)",
+      "category": "General",
+      "paths": [
+        "ROM/198/32.dat"
+      ]
+    },
+    {
+      "name": "Bell Ringing (Male)",
+      "category": "General",
+      "paths": [
+        "ROM/223/96.dat",
+        "ROM/223/97.dat",
+        "ROM/223/98.dat"
+      ]
+    },
+    {
+      "name": "Bell Ringing (Female)",
+      "category": "General",
+      "paths": [
+        "ROM/223/99.dat",
+        "ROM/223/100.dat",
+        "ROM/223/101.dat"
+      ]
+    },
+    {
+      "name": "Steal",
+      "category": "Ability",
+      "paths": [
+        "ROM/84/101.dat",
+        "ROM/84/102.dat"
+      ]
+    },
+    {
+      "name": "Mug",
+      "category": "Ability",
+      "paths": [
+        "ROM/84/103.dat",
+        "ROM/84/104.dat"
+      ]
+    },
+    {
+      "name": "Bash",
+      "category": "Ability",
+      "paths": [
+        "ROM/84/105.dat",
+        "ROM/95/41.dat",
+        "ROM/95/42.dat",
+        "ROM/95/43.dat"
+      ]
+    },
+    {
+      "name": "Jump",
+      "category": "Ability",
+      "paths": [
+        "ROM/105/44.dat",
+        "ROM/105/45.dat",
+        "ROM/105/46.dat",
+        "ROM/105/47.dat",
+        "ROM/105/48.dat",
+        "ROM/105/49.dat",
+        "ROM/105/50.dat",
+        "ROM/105/51.dat",
+        "ROM/105/52.dat",
+        "ROM/105/53.dat",
+        "ROM/105/54.dat",
+        "ROM/105/55.dat",
+        "ROM/105/56.dat",
+        "ROM/105/57.dat",
+        "ROM/105/58.dat"
+      ]
+    },
+    {
+      "name": "Tomahawk",
+      "category": "Ability",
+      "paths": [
+        "ROM/168/44.dat"
+      ]
+    },
+    {
+      "name": "Angon",
+      "category": "Ability",
+      "paths": [
+        "ROM/168/45.dat"
+      ]
+    },
+    {
+      "name": "Combo",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/84/36.dat"
+      ]
+    },
+    {
+      "name": "Shoulder Tackle",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/84/37.dat"
+      ]
+    },
+    {
+      "name": "One Inch Punch",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/84/38.dat"
+      ]
+    },
+    {
+      "name": "Backhand Blow",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/84/39.dat"
+      ]
+    },
+    {
+      "name": "Raging Fists",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/84/40.dat"
+      ]
+    },
+    {
+      "name": "Spinning Attack",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/84/41.dat"
+      ]
+    },
+    {
+      "name": "Howling Fist",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/84/42.dat"
+      ]
+    },
+    {
+      "name": "Dragon Kick",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/105/8.dat"
+      ]
+    },
+    {
+      "name": "Asuran Fists",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/105/9.dat"
+      ]
+    },
+    {
+      "name": "Final Heaven",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/141/10.dat"
+      ]
+    },
+    {
+      "name": "Ascetic's Fury",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/206/91.dat"
+      ]
+    },
+    {
+      "name": "Stinging Pummel",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/208/109.dat"
+      ]
+    },
+    {
+      "name": "Tornado Kick",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/243/35.dat"
+      ]
+    },
+    {
+      "name": "Victory Smite",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/255/107.dat"
+      ]
+    },
+    {
+      "name": "Shijin Spiral",
+      "category": "Hand-to-Hand",
+      "paths": [
+        "ROM/272/56.dat"
+      ]
+    },
+    {
+      "name": "Wasp Sting",
+      "category": "Dagger",
+      "paths": [
+        "ROM/84/43.dat"
+      ]
+    },
+    {
+      "name": "Viper Bite",
+      "category": "Dagger",
+      "paths": [
+        "ROM/84/44.dat"
+      ]
+    },
+    {
+      "name": "Shadowstitch",
+      "category": "Dagger",
+      "paths": [
+        "ROM/84/45.dat"
+      ]
+    },
+    {
+      "name": "Gust Slash",
+      "category": "Dagger",
+      "paths": [
+        "ROM/84/46.dat"
+      ]
+    },
+    {
+      "name": "Cyclone",
+      "category": "Dagger",
+      "paths": [
+        "ROM/84/47.dat"
+      ]
+    },
+    {
+      "name": "Energy Steal",
+      "category": "Dagger",
+      "paths": [
+        "ROM/84/48.dat"
+      ]
+    },
+    {
+      "name": "Energy Drain",
+      "category": "Dagger",
+      "paths": [
+        "ROM/84/49.dat"
+      ]
+    },
+    {
+      "name": "Dancing Edge",
+      "category": "Dagger",
+      "paths": [
+        "ROM/84/50.dat"
+      ]
+    },
+    {
+      "name": "Shark Bite",
+      "category": "Dagger",
+      "paths": [
+        "ROM/105/10.dat"
+      ]
+    },
+    {
+      "name": "Evisceration",
+      "category": "Dagger",
+      "paths": [
+        "ROM/105/11.dat"
+      ]
+    },
+    {
+      "name": "Mercy Stroke",
+      "category": "Dagger",
+      "paths": [
+        "ROM/141/11.dat"
+      ]
+    },
+    {
+      "name": "Mandalic Stab",
+      "category": "Dagger",
+      "paths": [
+        "ROM/208/110.dat"
+      ]
+    },
+    {
+      "name": "Mordant Rime",
+      "category": "Dagger",
+      "paths": [
+        "ROM/206/92.dat"
+      ]
+    },
+    {
+      "name": "Pyrrhic Kleos",
+      "category": "Dagger",
+      "paths": [
+        "ROM/208/111.dat"
+      ]
+    },
+    {
+      "name": "Aeolian Edge",
+      "category": "Dagger",
+      "paths": [
+        "ROM/243/36.dat"
+      ]
+    },
+    {
+      "name": "Rudra's Storm",
+      "category": "Dagger",
+      "paths": [
+        "ROM/257/126.dat"
+      ]
+    },
+    {
+      "name": "Exenterator",
+      "category": "Dagger",
+      "paths": [
+        "ROM/268/123.dat"
+      ]
+    },
+    {
+      "name": "Fast Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/84/27.dat"
+      ]
+    },
+    {
+      "name": "Burning Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/84/28.dat"
+      ]
+    },
+    {
+      "name": "Red Lotus Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/84/29.dat"
+      ]
+    },
+    {
+      "name": "Flat Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/84/32.dat"
+      ]
+    },
+    {
+      "name": "Shining Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/84/30.dat"
+      ]
+    },
+    {
+      "name": "Seraph Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/84/31.dat"
+      ]
+    },
+    {
+      "name": "Circle Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/84/33.dat"
+      ]
+    },
+    {
+      "name": "Spirits Within",
+      "category": "Sword",
+      "paths": [
+        "ROM/84/34.dat"
+      ]
+    },
+    {
+      "name": "Vorpal Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/84/35.dat"
+      ]
+    },
+    {
+      "name": "Swift Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/105/6.dat"
+      ]
+    },
+    {
+      "name": "Savage Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/105/7.dat"
+      ]
+    },
+    {
+      "name": "Knights of Round",
+      "category": "Sword",
+      "paths": [
+        "ROM/141/9.dat"
+      ]
+    },
+    {
+      "name": "Death Blossom",
+      "category": "Sword",
+      "paths": [
+        "ROM/208/107.dat"
+      ]
+    },
+    {
+      "name": "Atonement",
+      "category": "Sword",
+      "paths": [
+        "ROM/208/108.dat"
+      ]
+    },
+    {
+      "name": "Expiacion",
+      "category": "Sword",
+      "paths": [
+        "ROM/206/90.dat"
+      ]
+    },
+    {
+      "name": "Glory Slash",
+      "category": "Sword",
+      "paths": [
+        "ROM/240/31.dat"
+      ]
+    },
+    {
+      "name": "Uriel Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/240/32.dat"
+      ]
+    },
+    {
+      "name": "Sanguine Blade",
+      "category": "Sword",
+      "paths": [
+        "ROM/244/121.dat"
+      ]
+    },
+    {
+      "name": "Chant du Cygne",
+      "category": "Sword",
+      "paths": [
+        "ROM/255/111.dat"
+      ]
+    },
+    {
+      "name": "Requiescat",
+      "category": "Sword",
+      "paths": [
+        "ROM/268/122.dat"
+      ]
+    },
+    {
+      "name": "Shining Strike",
+      "category": "Club",
+      "paths": [
+        "ROM/84/65.dat"
+      ]
+    },
+    {
+      "name": "Seraph Strike",
+      "category": "Club",
+      "paths": [
+        "ROM/84/66.dat"
+      ]
+    },
+    {
+      "name": "Brainshaker",
+      "category": "Club",
+      "paths": [
+        "ROM/84/67.dat"
+      ]
+    },
+    {
+      "name": "Starlight",
+      "category": "Club",
+      "paths": [
+        "ROM/84/68.dat"
+      ]
+    },
+    {
+      "name": "Moonlight",
+      "category": "Club",
+      "paths": [
+        "ROM/84/69.dat"
+      ]
+    },
+    {
+      "name": "Skullbreaker",
+      "category": "Club",
+      "paths": [
+        "ROM/84/70.dat"
+      ]
+    },
+    {
+      "name": "True Strike",
+      "category": "Club",
+      "paths": [
+        "ROM/84/71.dat"
+      ]
+    },
+    {
+      "name": "Judgment",
+      "category": "Club",
+      "paths": [
+        "ROM/84/72.dat"
+      ]
+    },
+    {
+      "name": "Hexa Strike",
+      "category": "Club",
+      "paths": [
+        "ROM/105/16.dat"
+      ]
+    },
+    {
+      "name": "Black Halo",
+      "category": "Club",
+      "paths": [
+        "ROM/105/17.dat"
+      ]
+    },
+    {
+      "name": "Randgrith",
+      "category": "Club",
+      "paths": [
+        "ROM/141/14.dat"
+      ]
+    },
+    {
+      "name": "Mystic Boon",
+      "category": "Club",
+      "paths": [
+        "ROM/206/94.dat"
+      ]
+    },
+    {
+      "name": "Flash Nova",
+      "category": "Club",
+      "paths": [
+        "ROM/243/38.dat"
+      ]
+    },
+    {
+      "name": "Dagan",
+      "category": "Club",
+      "paths": [
+        "ROM/257/123.dat"
+      ]
+    },
+    {
+      "name": "Realmrazer",
+      "category": "Club",
+      "paths": [
+        "ROM/269/83.dat"
+      ]
+    },
+    {
+      "name": "Raging Axe",
+      "category": "Axe",
+      "paths": [
+        "ROM/84/51.dat"
+      ]
+    },
+    {
+      "name": "Smash Axe",
+      "category": "Axe",
+      "paths": [
+        "ROM/84/52.dat"
+      ]
+    },
+    {
+      "name": "Gale Axe",
+      "category": "Axe",
+      "paths": [
+        "ROM/84/53.dat"
+      ]
+    },
+    {
+      "name": "Avalanche Axe",
+      "category": "Axe",
+      "paths": [
+        "ROM/84/54.dat"
+      ]
+    },
+    {
+      "name": "Spinning Axe",
+      "category": "Axe",
+      "paths": [
+        "ROM/84/55.dat"
+      ]
+    },
+    {
+      "name": "Rampage",
+      "category": "Axe",
+      "paths": [
+        "ROM/84/56.dat"
+      ]
+    },
+    {
+      "name": "Calamity",
+      "category": "Axe",
+      "paths": [
+        "ROM/84/57.dat"
+      ]
+    },
+    {
+      "name": "Mistral Axe",
+      "category": "Axe",
+      "paths": [
+        "ROM/105/12.dat"
+      ]
+    },
+    {
+      "name": "Decimation",
+      "category": "Axe",
+      "paths": [
+        "ROM/105/13.dat"
+      ]
+    },
+    {
+      "name": "Onslaught",
+      "category": "Axe",
+      "paths": [
+        "ROM/141/12.dat"
+      ]
+    },
+    {
+      "name": "Primal Rend",
+      "category": "Axe",
+      "paths": [
+        "ROM/206/93.dat"
+      ]
+    },
+    {
+      "name": "Bora Axe",
+      "category": "Axe",
+      "paths": [
+        "ROM/244/118.dat"
+      ]
+    },
+    {
+      "name": "Cloudsplitter",
+      "category": "Axe",
+      "paths": [
+        "ROM/255/108.dat"
+      ]
+    },
+    {
+      "name": "Ruinator",
+      "category": "Axe",
+      "paths": [
+        "ROM/269/117.dat"
+      ]
+    },
+    {
+      "name": "Blade: Rin",
+      "category": "Katana",
+      "paths": [
+        "ROM/105/26.dat"
+      ]
+    },
+    {
+      "name": "Blade: Retsu",
+      "category": "Katana",
+      "paths": [
+        "ROM/105/27.dat"
+      ]
+    },
+    {
+      "name": "Blade: Teki",
+      "category": "Katana",
+      "paths": [
+        "ROM/105/28.dat"
+      ]
+    },
+    {
+      "name": "Blade: To",
+      "category": "Katana",
+      "paths": [
+        "ROM/105/29.dat"
+      ]
+    },
+    {
+      "name": "Blade: Chi",
+      "category": "Katana",
+      "paths": [
+        "ROM/105/30.dat"
+      ]
+    },
+    {
+      "name": "Blade: Ei",
+      "category": "Katana",
+      "paths": [
+        "ROM/105/31.dat"
+      ]
+    },
+    {
+      "name": "Blade: Jin",
+      "category": "Katana",
+      "paths": [
+        "ROM/105/32.dat"
+      ]
+    },
+    {
+      "name": "Blade: Ten",
+      "category": "Katana",
+      "paths": [
+        "ROM/105/33.dat"
+      ]
+    },
+    {
+      "name": "Blade: Ku",
+      "category": "Katana",
+      "paths": [
+        "ROM/105/34.dat"
+      ]
+    },
+    {
+      "name": "Blade: Metsu",
+      "category": "Katana",
+      "paths": [
+        "ROM/141/19.dat"
+      ]
+    },
+    {
+      "name": "Blade: Kamu",
+      "category": "Katana",
+      "paths": [
+        "ROM/208/118.dat"
+      ]
+    },
+    {
+      "name": "Blade: Yu",
+      "category": "Katana",
+      "paths": [
+        "ROM/243/41.dat"
+      ]
+    },
+    {
+      "name": "Blade: Hi",
+      "category": "Katana",
+      "paths": [
+        "ROM/257/23.dat"
+      ]
+    },
+    {
+      "name": "Blade: Shun",
+      "category": "Katana",
+      "paths": [
+        "ROM/271/9.dat"
+      ]
+    },
+    {
+      "name": "Hard Slash",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/84/80.dat"
+      ]
+    },
+    {
+      "name": "Power Slash",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/84/81.dat"
+      ]
+    },
+    {
+      "name": "Frostbite",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/84/82.dat"
+      ]
+    },
+    {
+      "name": "Freezebite",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/84/83.dat"
+      ]
+    },
+    {
+      "name": "Shockwave",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/84/84.dat"
+      ]
+    },
+    {
+      "name": "Crescent Moon",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/84/85.dat"
+      ]
+    },
+    {
+      "name": "Sickle Moon",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/84/86.dat"
+      ]
+    },
+    {
+      "name": "Spinning Slash",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/105/20.dat"
+      ]
+    },
+    {
+      "name": "Ground Strike",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/105/21.dat"
+      ]
+    },
+    {
+      "name": "Scourge",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/141/16.dat"
+      ]
+    },
+    {
+      "name": "Herculean Slash",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/243/40.dat"
+      ]
+    },
+    {
+      "name": "Torcleaver",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/255/109.dat"
+      ]
+    },
+    {
+      "name": "Resolution",
+      "category": "G. Sword",
+      "paths": [
+        "ROM/270/31.dat"
+      ]
+    },
+    {
+      "name": "Heavy Swing",
+      "category": "Staff",
+      "paths": [
+        "ROM/84/94.dat"
+      ]
+    },
+    {
+      "name": "Rock Crusher",
+      "category": "Staff",
+      "paths": [
+        "ROM/84/95.dat"
+      ]
+    },
+    {
+      "name": "Earth Crusher",
+      "category": "Staff",
+      "paths": [
+        "ROM/84/96.dat"
+      ]
+    },
+    {
+      "name": "Starburst",
+      "category": "Staff",
+      "paths": [
+        "ROM/84/97.dat"
+      ]
+    },
+    {
+      "name": "Sunburst",
+      "category": "Staff",
+      "paths": [
+        "ROM/84/98.dat"
+      ]
+    },
+    {
+      "name": "Shell Crusher",
+      "category": "Staff",
+      "paths": [
+        "ROM/84/99.dat"
+      ]
+    },
+    {
+      "name": "Full Swing",
+      "category": "Staff",
+      "paths": [
+        "ROM/84/100.dat"
+      ]
+    },
+    {
+      "name": "Spirit Taker",
+      "category": "Staff",
+      "paths": [
+        "ROM/105/24.dat"
+      ]
+    },
+    {
+      "name": "Retribution",
+      "category": "Staff",
+      "paths": [
+        "ROM/105/25.dat"
+      ]
+    },
+    {
+      "name": "Gate of Tartarus",
+      "category": "Staff",
+      "paths": [
+        "ROM/141/18.dat"
+      ]
+    },
+    {
+      "name": "Vidohunir",
+      "category": "Staff",
+      "paths": [
+        "ROM/208/115.dat"
+      ]
+    },
+    {
+      "name": "Garland of Bliss",
+      "category": "Staff",
+      "paths": [
+        "ROM/208/116.dat"
+      ]
+    },
+    {
+      "name": "Omniscience",
+      "category": "Staff",
+      "paths": [
+        "ROM/208/117.dat"
+      ]
+    },
+    {
+      "name": "Tartarus Torpor",
+      "category": "Staff",
+      "paths": [
+        "ROM/240/63.dat"
+      ]
+    },
+    {
+      "name": "Cataclysm",
+      "category": "Staff",
+      "paths": [
+        "ROM/244/122.dat"
+      ]
+    },
+    {
+      "name": "Myrkr",
+      "category": "Staff",
+      "paths": [
+        "ROM/257/125.dat"
+      ]
+    },
+    {
+      "name": "Shattersoul",
+      "category": "Staff",
+      "paths": [
+        "ROM/270/32.dat"
+      ]
+    },
+    {
+      "name": "Shield Break",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/84/73.dat"
+      ]
+    },
+    {
+      "name": "Iron Tempest",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/84/74.dat"
+      ]
+    },
+    {
+      "name": "Sturmwind",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/84/75.dat"
+      ]
+    },
+    {
+      "name": "Armor Break",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/84/76.dat"
+      ]
+    },
+    {
+      "name": "Keen Edge",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/84/77.dat"
+      ]
+    },
+    {
+      "name": "Weapon Break",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/84/78.dat"
+      ]
+    },
+    {
+      "name": "Raging Rush",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/84/79.dat"
+      ]
+    },
+    {
+      "name": "Full Break",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/105/18.dat"
+      ]
+    },
+    {
+      "name": "Steel Cyclone",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/105/19.dat"
+      ]
+    },
+    {
+      "name": "Metatron Torment",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/141/15.dat"
+      ]
+    },
+    {
+      "name": "King's Justice",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/208/113.dat"
+      ]
+    },
+    {
+      "name": "Fell Cleave",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/243/39.dat"
+      ]
+    },
+    {
+      "name": "Ukko's Fury",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/257/124.dat"
+      ]
+    },
+    {
+      "name": "Upheaval",
+      "category": "G. Axe",
+      "paths": [
+        "ROM/272/57.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Enpi",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/105/35.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Hobaku",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/105/36.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Goten",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/105/37.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Kagero",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/105/38.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Jinpu",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/105/39.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Koki",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/105/40.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Yukikaze",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/105/41.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Gekko",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/105/42.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Kasha",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/105/43.dat"
+      ]
+    },
+    {
+      "name": "Tachi Kaiten",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/141/20.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Rana",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/208/119.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Ageha",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/244/120.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Fudo",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/255/110.dat"
+      ]
+    },
+    {
+      "name": "Tachi: Shoha",
+      "category": "G. Katana",
+      "paths": [
+        "ROM/268/121.dat"
+      ]
+    },
+    {
+      "name": "Slice",
+      "category": "Scythe",
+      "paths": [
+        "ROM/84/58.dat"
+      ]
+    },
+    {
+      "name": "Dark Harvest",
+      "category": "Scythe",
+      "paths": [
+        "ROM/84/59.dat"
+      ]
+    },
+    {
+      "name": "Shadow of Death",
+      "category": "Scythe",
+      "paths": [
+        "ROM/84/60.dat"
+      ]
+    },
+    {
+      "name": "Nightmare Scythe",
+      "category": "Scythe",
+      "paths": [
+        "ROM/84/61.dat"
+      ]
+    },
+    {
+      "name": "Spinning Scythe",
+      "category": "Scythe",
+      "paths": [
+        "ROM/84/62.dat"
+      ]
+    },
+    {
+      "name": "Vorpal Scythe",
+      "category": "Scythe",
+      "paths": [
+        "ROM/84/63.dat"
+      ]
+    },
+    {
+      "name": "Guillotine",
+      "category": "Scythe",
+      "paths": [
+        "ROM/84/64.dat"
+      ]
+    },
+    {
+      "name": "Cross Reaper",
+      "category": "Scythe",
+      "paths": [
+        "ROM/105/14.dat"
+      ]
+    },
+    {
+      "name": "Spiral Hell",
+      "category": "Scythe",
+      "paths": [
+        "ROM/105/15.dat"
+      ]
+    },
+    {
+      "name": "Catastrophe",
+      "category": "Scythe",
+      "paths": [
+        "ROM/141/13.dat"
+      ]
+    },
+    {
+      "name": "Insurgency",
+      "category": "Scythe",
+      "paths": [
+        "ROM/208/112.dat"
+      ]
+    },
+    {
+      "name": "Infernal Scythe",
+      "category": "Scythe",
+      "paths": [
+        "ROM/243/37.dat"
+      ]
+    },
+    {
+      "name": "Quietus",
+      "category": "Scythe",
+      "paths": [
+        "ROM/257/21.dat"
+      ]
+    },
+    {
+      "name": "Entropy",
+      "category": "Scythe",
+      "paths": [
+        "ROM/268/119.dat"
+      ]
+    },
+    {
+      "name": "Double Thrust",
+      "category": "Polearm",
+      "paths": [
+        "ROM/84/87.dat"
+      ]
+    },
+    {
+      "name": "Thunder Thrust",
+      "category": "Polearm",
+      "paths": [
+        "ROM/84/88.dat"
+      ]
+    },
+    {
+      "name": "Raiden Thrust",
+      "category": "Polearm",
+      "paths": [
+        "ROM/84/89.dat"
+      ]
+    },
+    {
+      "name": "Leg Sweep",
+      "category": "Polearm",
+      "paths": [
+        "ROM/84/90.dat"
+      ]
+    },
+    {
+      "name": "Penta Thrust",
+      "category": "Polearm",
+      "paths": [
+        "ROM/84/91.dat"
+      ]
+    },
+    {
+      "name": "Vorpal Thrust",
+      "category": "Polearm",
+      "paths": [
+        "ROM/84/92.dat"
+      ]
+    },
+    {
+      "name": "Skewer",
+      "category": "Polearm",
+      "paths": [
+        "ROM/84/93.dat"
+      ]
+    },
+    {
+      "name": "Wheeling Thrust",
+      "category": "Polearm",
+      "paths": [
+        "ROM/105/22.dat"
+      ]
+    },
+    {
+      "name": "Impulse Drive",
+      "category": "Polearm",
+      "paths": [
+        "ROM/105/23.dat"
+      ]
+    },
+    {
+      "name": "Geirskogul",
+      "category": "Polearm",
+      "paths": [
+        "ROM/141/17.dat"
+      ]
+    },
+    {
+      "name": "Drakesbane",
+      "category": "Polearm",
+      "paths": [
+        "ROM/208/114.dat"
+      ]
+    },
+    {
+      "name": "Sonic Thrust",
+      "category": "Polearm",
+      "paths": [
+        "ROM/244/119.dat"
+      ]
+    },
+    {
+      "name": "Camlann's Torment",
+      "category": "Polearm",
+      "paths": [
+        "ROM/257/22.dat"
+      ]
+    },
+    {
+      "name": "Stardiver",
+      "category": "Polearm",
+      "paths": [
+        "ROM/268/120.dat"
+      ]
+    },
+    {
+      "name": "Eagle Eye Shot",
+      "category": "Archery",
+      "paths": [
+        "ROM/84/106.dat"
+      ]
+    },
+    {
+      "name": "Shadowbind",
+      "category": "Archery",
+      "paths": [
+        "ROM/84/108.dat"
+      ]
+    },
+    {
+      "name": "Flaming Arrow",
+      "category": "Archery",
+      "paths": [
+        "ROM/76/113.dat"
+      ]
+    },
+    {
+      "name": "Piercing Arrow",
+      "category": "Archery",
+      "paths": [
+        "ROM/76/114.dat"
+      ]
+    },
+    {
+      "name": "Dulling Arrow",
+      "category": "Archery",
+      "paths": [
+        "ROM/76/115.dat"
+      ]
+    },
+    {
+      "name": "Unknown WS",
+      "category": "Archery",
+      "paths": [
+        "ROM/76/116.dat"
+      ]
+    },
+    {
+      "name": "Sidewinder",
+      "category": "Archery",
+      "paths": [
+        "ROM/76/117.dat"
+      ]
+    },
+    {
+      "name": "Blast Arrow",
+      "category": "Archery",
+      "paths": [
+        "ROM/105/59.dat"
+      ]
+    },
+    {
+      "name": "Arching Arrow",
+      "category": "Archery",
+      "paths": [
+        "ROM/105/60.dat"
+      ]
+    },
+    {
+      "name": "Empyreal Arrow",
+      "category": "Archery",
+      "paths": [
+        "ROM/105/61.dat"
+      ]
+    },
+    {
+      "name": "Namas Arrow",
+      "category": "Archery",
+      "paths": [
+        "ROM/141/21.dat"
+      ]
+    },
+    {
+      "name": "Refulgent Arrow",
+      "category": "Archery",
+      "paths": [
+        "ROM/245/37.dat"
+      ]
+    },
+    {
+      "name": "Jishnu's Radiance",
+      "category": "Archery",
+      "paths": [
+        "ROM/257/24.dat"
+      ]
+    },
+    {
+      "name": "Apex Arrow",
+      "category": "Archery",
+      "paths": [
+        "ROM/269/118.dat"
+      ]
+    },
+    {
+      "name": "Eagle Eye Shot",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/84/107.dat"
+      ]
+    },
+    {
+      "name": "Shadowbind",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/84/109.dat"
+      ]
+    },
+    {
+      "name": "Hot Shot",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/76/118.dat"
+      ]
+    },
+    {
+      "name": "Split Shot",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/76/119.dat"
+      ]
+    },
+    {
+      "name": "Sniper Shot",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/76/120.dat"
+      ]
+    },
+    {
+      "name": "Unknown WS",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/76/121.dat"
+      ]
+    },
+    {
+      "name": "Slug Shot",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/76/122.dat"
+      ]
+    },
+    {
+      "name": "Blast Shot",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/105/62.dat"
+      ]
+    },
+    {
+      "name": "Heavy Shot",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/105/63.dat"
+      ]
+    },
+    {
+      "name": "Detonator",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/105/64.dat"
+      ]
+    },
+    {
+      "name": "Coronach",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/141/22.dat"
+      ]
+    },
+    {
+      "name": "Trueflight",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/208/120.dat"
+      ]
+    },
+    {
+      "name": "Leaden Salute",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/208/121.dat"
+      ]
+    },
+    {
+      "name": "Numbing Shot",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/243/42.dat"
+      ]
+    },
+    {
+      "name": "Wildfire",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/257/25.dat"
+      ]
+    },
+    {
+      "name": "Last Stand",
+      "category": "Marksmanship",
+      "paths": [
+        "ROM/271/10.dat"
+      ]
+    },
+    {
+      "name": "Mannequin (Male)",
+      "category": "Mannequin",
+      "paths": [
+        "ROM/143/30.dat"
+      ]
+    },
+    {
+      "name": "Mannequin (Female)",
+      "category": "Mannequin",
+      "paths": [
+        "ROM/143/34.dat"
+      ]
+    },
+    {
+      "name": "Mannequin (Male)",
+      "category": "Mannequin",
+      "paths": [
+        "ROM/154/7.dat",
+        "ROM/154/8.dat"
+      ]
+    },
+    {
+      "name": "Mannequin (Female)",
+      "category": "Mannequin",
+      "paths": [
+        "ROM/154/13.dat",
+        "ROM/154/14.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/69/113.dat",
+        "ROM/69/114.dat",
+        "ROM/69/115.dat",
+        "ROM/69/116.dat",
+        "ROM/69/117.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/71/25.dat",
+        "ROM/71/26.dat",
+        "ROM/71/27.dat",
+        "ROM/71/28.dat",
+        "ROM/71/29.dat",
+        "ROM/71/30.dat"
+      ]
+    },
+    {
+      "name": "def_",
+      "category": "Others",
+      "paths": [
+        "ROM/71/103.dat",
+        "ROM/71/104.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/72/107.dat",
+        "ROM/72/108.dat",
+        "ROM/72/109.dat",
+        "ROM/72/110.dat",
+        "ROM/72/111.dat",
+        "ROM/72/112.dat",
+        "ROM/72/113.dat",
+        "ROM/72/114.dat"
+      ]
+    },
+    {
+      "name": "dumm",
+      "category": "Others",
+      "paths": [
+        "ROM/84/26.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/100/16.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/122/34.dat",
+        "ROM/122/35.dat",
+        "ROM/122/36.dat",
+        "ROM/122/37.dat"
+      ]
+    },
+    {
+      "name": "dtr_",
+      "category": "Others",
+      "paths": [
+        "ROM/147/20.dat",
+        "ROM/147/21.dat",
+        "ROM/147/22.dat",
+        "ROM/147/23.dat"
+      ]
+    },
+    {
+      "name": "t_ku",
+      "category": "Others",
+      "paths": [
+        "ROM/150/15.dat"
+      ]
+    },
+    {
+      "name": "t_ch",
+      "category": "Others",
+      "paths": [
+        "ROM/150/16.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/151/91.dat"
+      ]
+    },
+    {
+      "name": "btl_",
+      "category": "Others",
+      "paths": [
+        "ROM/168/94.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/189/10.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/2/20.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/3/4.dat",
+        "ROM/3/5.dat",
+        "ROM/3/6.dat",
+        "ROM/3/7.dat",
+        "ROM/3/8.dat",
+        "ROM/3/9.dat",
+        "ROM/3/10.dat",
+        "ROM/3/11.dat",
+        "ROM/3/12.dat",
+        "ROM/3/13.dat",
+        "ROM/3/14.dat",
+        "ROM/3/15.dat",
+        "ROM/3/16.dat",
+        "ROM/3/17.dat",
+        "ROM/3/18.dat",
+        "ROM/3/19.dat",
+        "ROM/3/20.dat",
+        "ROM/3/21.dat",
+        "ROM/3/22.dat",
+        "ROM/3/23.dat",
+        "ROM/3/24.dat",
+        "ROM/3/25.dat",
+        "ROM/3/26.dat",
+        "ROM/3/27.dat",
+        "ROM/3/28.dat",
+        "ROM/3/29.dat",
+        "ROM/3/30.dat",
+        "ROM/3/31.dat",
+        "ROM/3/32.dat",
+        "ROM/3/33.dat",
+        "ROM/3/34.dat",
+        "ROM/3/35.dat",
+        "ROM/3/36.dat",
+        "ROM/3/37.dat",
+        "ROM/3/38.dat",
+        "ROM/3/39.dat",
+        "ROM/3/40.dat",
+        "ROM/3/41.dat",
+        "ROM/3/42.dat",
+        "ROM/3/43.dat",
+        "ROM/3/44.dat",
+        "ROM/3/45.dat",
+        "ROM/3/46.dat",
+        "ROM/3/47.dat",
+        "ROM/3/48.dat",
+        "ROM/3/49.dat",
+        "ROM/3/50.dat",
+        "ROM/3/51.dat",
+        "ROM/3/52.dat",
+        "ROM/3/53.dat",
+        "ROM/3/54.dat",
+        "ROM/3/55.dat",
+        "ROM/3/56.dat",
+        "ROM/3/57.dat",
+        "ROM/3/58.dat",
+        "ROM/3/59.dat",
+        "ROM/3/60.dat",
+        "ROM/3/61.dat",
+        "ROM/3/62.dat",
+        "ROM/3/63.dat",
+        "ROM/3/64.dat",
+        "ROM/3/65.dat",
+        "ROM/3/66.dat",
+        "ROM/3/67.dat",
+        "ROM/3/68.dat"
+      ]
+    },
+    {
+      "name": "aht_",
+      "category": "Others",
+      "paths": [
+        "ROM/4/10.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/6/0.dat"
+      ]
+    },
+    {
+      "name": "mot_",
+      "category": "Others",
+      "paths": [
+        "ROM/8/0.dat",
+        "ROM/8/1.dat",
+        "ROM/8/2.dat",
+        "ROM/8/3.dat"
+      ]
+    },
+    {
+      "name": "Tartarus Torpor",
+      "category": "NPC WS",
+      "paths": [
+        "ROM/199/88.dat"
+      ]
+    },
+    {
+      "name": "Death Knell",
+      "category": "NPC WS",
+      "paths": [
+        "ROM/199/89.dat"
+      ]
+    },
+    {
+      "name": "Divine Malison",
+      "category": "NPC WS",
+      "paths": [
+        "ROM/226/19.dat"
+      ]
+    },
+    {
+      "name": "Salvation Scythe",
+      "category": "NPC WS",
+      "paths": [
+        "ROM/226/20.dat"
+      ]
+    },
+    {
+      "name": "Quietus Sphere",
+      "category": "NPC WS",
+      "paths": [
+        "ROM/247/23.dat"
+      ]
+    },
+    {
+      "name": "Drain Samba",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/102.dat"
+      ]
+    },
+    {
+      "name": "Drain Samba II",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/103.dat"
+      ]
+    },
+    {
+      "name": "Drain Samba III",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/104.dat"
+      ]
+    },
+    {
+      "name": "Aspir Samba",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/105.dat"
+      ]
+    },
+    {
+      "name": "Aspir Samba II",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/106.dat"
+      ]
+    },
+    {
+      "name": "Haste Samba",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/107.dat"
+      ]
+    },
+    {
+      "name": "Curing Waltz",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/108.dat"
+      ]
+    },
+    {
+      "name": "Curing Waltz II",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/109.dat"
+      ]
+    },
+    {
+      "name": "Curing Waltz III",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/110.dat"
+      ]
+    },
+    {
+      "name": "Curing Waltz IV",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/111.dat"
+      ]
+    },
+    {
+      "name": "Curing Waltz V",
+      "category": "Dancer",
+      "paths": [
+        "ROM/261/126.dat"
+      ]
+    },
+    {
+      "name": "Healing Waltz",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/112.dat"
+      ]
+    },
+    {
+      "name": "Divine Waltz",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/113.dat"
+      ]
+    },
+    {
+      "name": "Divine Waltz II",
+      "category": "Dancer",
+      "paths": [
+        "ROM/246/119.dat"
+      ]
+    },
+    {
+      "name": "Spectral Jig",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/114.dat"
+      ]
+    },
+    {
+      "name": "Chocobo Jig",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/115.dat"
+      ]
+    },
+    {
+      "name": "Steps",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/116.dat",
+        "ROM/193/117.dat",
+        "ROM/193/118.dat",
+        "ROM/193/119.dat",
+        "ROM/193/120.dat",
+        "ROM/193/121.dat",
+        "ROM/193/122.dat",
+        "ROM/193/123.dat",
+        "ROM/193/124.dat"
+      ]
+    },
+    {
+      "name": "Flourishes",
+      "category": "Dancer",
+      "paths": [
+        "ROM/193/125.dat",
+        "ROM/193/126.dat",
+        "ROM/193/127.dat",
+        "ROM/194/0.dat",
+        "ROM/194/1.dat",
+        "ROM/194/2.dat",
+        "ROM/194/3.dat",
+        "ROM/194/4.dat",
+        "ROM/194/5.dat"
+      ]
+    },
+    {
+      "name": "New samba?",
+      "category": "Dancer",
+      "paths": [
+        "ROM/268/41.dat"
+      ]
+    },
+    {
+      "name": "Wards?",
+      "category": "unknown",
+      "paths": [
+        "ROM/298/53.dat",
+        "ROM/298/54.dat",
+        "ROM/298/55.dat",
+        "ROM/298/56.dat",
+        "ROM/298/57.dat"
+      ]
+    },
+    {
+      "name": "Runefencer animation type 1",
+      "category": "unknown",
+      "paths": [
+        "ROM/298/58.dat",
+        "ROM/298/59.dat",
+        "ROM/298/60.dat",
+        "ROM/298/61.dat",
+        "ROM/298/62.dat",
+        "ROM/298/63.dat",
+        "ROM/298/64.dat",
+        "ROM/298/65.dat",
+        "ROM/298/66.dat"
+      ]
+    },
+    {
+      "name": "Runefencer animation type 2",
+      "category": "unknown",
+      "paths": [
+        "ROM/298/67.dat",
+        "ROM/298/68.dat",
+        "ROM/298/69.dat",
+        "ROM/298/70.dat",
+        "ROM/298/71.dat",
+        "ROM/298/72.dat",
+        "ROM/298/73.dat",
+        "ROM/298/74.dat",
+        "ROM/298/75.dat"
+      ]
+    },
+    {
+      "name": "Runefencer animation type 3",
+      "category": "unknown",
+      "paths": [
+        "ROM/298/76.dat",
+        "ROM/298/77.dat",
+        "ROM/298/78.dat",
+        "ROM/298/79.dat",
+        "ROM/298/80.dat",
+        "ROM/298/81.dat",
+        "ROM/298/82.dat",
+        "ROM/298/83.dat",
+        "ROM/298/84.dat"
+      ]
+    },
+    {
+      "name": "Battle Stance",
+      "category": "Motion",
+      "paths": [
+        "ROM/51/19.dat",
+        "ROM/51/20.dat",
+        "ROM/51/21.dat",
+        "ROM/51/22.dat",
+        "ROM/51/23.dat",
+        "ROM/51/24.dat",
+        "ROM/51/25.dat",
+        "ROM/51/26.dat",
+        "ROM/51/27.dat",
+        "ROM/51/28.dat",
+        "ROM/51/29.dat",
+        "ROM/51/30.dat",
+        "ROM/51/31.dat",
+        "ROM/51/32.dat",
+        "ROM/51/33.dat",
+        "ROM/51/34.dat",
+        "ROM/51/35.dat",
+        "ROM/51/36.dat"
+      ]
+    },
+    {
+      "name": "Emote Set",
+      "category": "Motion",
+      "paths": [
+        "ROM/51/37.dat",
+        "ROM/51/38.dat",
+        "ROM/51/39.dat",
+        "ROM/51/40.dat",
+        "ROM/51/41.dat",
+        "ROM/51/42.dat",
+        "ROM/51/43.dat",
+        "ROM/51/44.dat",
+        "ROM/51/45.dat",
+        "ROM/51/46.dat",
+        "ROM/51/47.dat",
+        "ROM/51/48.dat",
+        "ROM/51/49.dat",
+        "ROM/51/50.dat",
+        "ROM/51/51.dat",
+        "ROM/51/52.dat",
+        "ROM/51/53.dat",
+        "ROM/51/54.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 3",
+      "category": "Motion",
+      "paths": [
+        "ROM/51/71.dat",
+        "ROM/51/72.dat",
+        "ROM/51/73.dat",
+        "ROM/51/74.dat",
+        "ROM/51/75.dat",
+        "ROM/51/76.dat",
+        "ROM/51/77.dat",
+        "ROM/51/78.dat",
+        "ROM/51/79.dat",
+        "ROM/51/80.dat",
+        "ROM/51/81.dat",
+        "ROM/51/82.dat",
+        "ROM/51/83.dat",
+        "ROM/51/84.dat",
+        "ROM/51/85.dat",
+        "ROM/51/86.dat",
+        "ROM/51/87.dat",
+        "ROM/51/88.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 4",
+      "category": "Motion",
+      "paths": [
+        "ROM/71/103.dat",
+        "ROM/71/104.dat",
+        "ROM/72/7.dat",
+        "ROM/72/8.dat",
+        "ROM/72/39.dat",
+        "ROM/72/40.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 5",
+      "category": "Motion",
+      "paths": [
+        "ROM/72/107.dat",
+        "ROM/72/108.dat",
+        "ROM/72/109.dat",
+        "ROM/72/110.dat",
+        "ROM/72/111.dat",
+        "ROM/72/112.dat",
+        "ROM/72/113.dat",
+        "ROM/72/114.dat",
+        "ROM/73/49.dat",
+        "ROM/73/50.dat",
+        "ROM/73/51.dat",
+        "ROM/73/52.dat",
+        "ROM/73/53.dat",
+        "ROM/73/54.dat",
+        "ROM/73/55.dat",
+        "ROM/73/56.dat",
+        "ROM/73/119.dat",
+        "ROM/73/120.dat",
+        "ROM/73/121.dat",
+        "ROM/73/122.dat",
+        "ROM/73/123.dat",
+        "ROM/73/124.dat",
+        "ROM/73/125.dat",
+        "ROM/73/126.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 6",
+      "category": "Motion",
+      "paths": [
+        "ROM/72/116.dat",
+        "ROM/73/58.dat",
+        "ROM/74/0.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 7",
+      "category": "Motion",
+      "paths": [
+        "ROM/84/27.dat",
+        "ROM/84/28.dat",
+        "ROM/84/29.dat",
+        "ROM/84/30.dat",
+        "ROM/84/31.dat",
+        "ROM/84/32.dat",
+        "ROM/84/33.dat",
+        "ROM/84/34.dat",
+        "ROM/84/35.dat",
+        "ROM/84/36.dat",
+        "ROM/84/37.dat",
+        "ROM/84/38.dat",
+        "ROM/84/39.dat",
+        "ROM/84/40.dat",
+        "ROM/84/41.dat",
+        "ROM/84/42.dat",
+        "ROM/84/43.dat",
+        "ROM/84/44.dat",
+        "ROM/84/45.dat",
+        "ROM/84/46.dat",
+        "ROM/84/47.dat",
+        "ROM/84/48.dat",
+        "ROM/84/49.dat",
+        "ROM/84/50.dat",
+        "ROM/84/51.dat",
+        "ROM/84/52.dat",
+        "ROM/84/53.dat",
+        "ROM/84/54.dat",
+        "ROM/84/55.dat",
+        "ROM/84/56.dat",
+        "ROM/84/57.dat",
+        "ROM/84/58.dat",
+        "ROM/84/59.dat",
+        "ROM/84/60.dat",
+        "ROM/84/61.dat",
+        "ROM/84/62.dat",
+        "ROM/84/63.dat",
+        "ROM/84/64.dat",
+        "ROM/84/65.dat",
+        "ROM/84/66.dat",
+        "ROM/84/67.dat",
+        "ROM/84/68.dat",
+        "ROM/84/69.dat",
+        "ROM/84/70.dat",
+        "ROM/84/71.dat",
+        "ROM/84/72.dat",
+        "ROM/84/73.dat",
+        "ROM/84/74.dat",
+        "ROM/84/75.dat",
+        "ROM/84/76.dat",
+        "ROM/84/77.dat",
+        "ROM/84/78.dat",
+        "ROM/84/79.dat",
+        "ROM/84/80.dat",
+        "ROM/84/81.dat",
+        "ROM/84/82.dat",
+        "ROM/84/83.dat",
+        "ROM/84/84.dat",
+        "ROM/84/85.dat",
+        "ROM/84/86.dat",
+        "ROM/84/87.dat",
+        "ROM/84/88.dat",
+        "ROM/84/89.dat",
+        "ROM/84/90.dat",
+        "ROM/84/91.dat",
+        "ROM/84/92.dat",
+        "ROM/84/93.dat",
+        "ROM/84/94.dat",
+        "ROM/84/95.dat",
+        "ROM/84/96.dat",
+        "ROM/84/97.dat",
+        "ROM/84/98.dat",
+        "ROM/84/99.dat",
+        "ROM/84/100.dat",
+        "ROM/84/101.dat",
+        "ROM/84/102.dat",
+        "ROM/84/103.dat",
+        "ROM/84/104.dat",
+        "ROM/84/105.dat",
+        "ROM/85/67.dat",
+        "ROM/85/68.dat",
+        "ROM/85/69.dat",
+        "ROM/85/70.dat",
+        "ROM/85/71.dat",
+        "ROM/85/72.dat",
+        "ROM/85/73.dat",
+        "ROM/85/74.dat",
+        "ROM/85/75.dat",
+        "ROM/85/76.dat",
+        "ROM/85/77.dat",
+        "ROM/85/78.dat",
+        "ROM/85/79.dat",
+        "ROM/85/80.dat",
+        "ROM/85/81.dat",
+        "ROM/85/82.dat",
+        "ROM/85/83.dat",
+        "ROM/85/84.dat",
+        "ROM/85/85.dat",
+        "ROM/85/86.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 8",
+      "category": "Motion",
+      "paths": [
+        "ROM/90/38.dat",
+        "ROM/90/39.dat",
+        "ROM/90/40.dat",
+        "ROM/90/41.dat",
+        "ROM/90/42.dat",
+        "ROM/90/43.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 9",
+      "category": "Motion",
+      "paths": [
+        "ROM/95/41.dat",
+        "ROM/95/42.dat",
+        "ROM/95/43.dat",
+        "ROM/95/44.dat",
+        "ROM/95/45.dat",
+        "ROM/95/46.dat",
+        "ROM/95/47.dat",
+        "ROM/95/48.dat",
+        "ROM/95/49.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 10",
+      "category": "Motion",
+      "paths": [
+        "ROM/99/55.dat",
+        "ROM/99/56.dat",
+        "ROM/99/57.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 11",
+      "category": "Motion",
+      "paths": [
+        "ROM/105/6.dat",
+        "ROM/105/7.dat",
+        "ROM/105/8.dat",
+        "ROM/105/9.dat",
+        "ROM/105/10.dat",
+        "ROM/105/11.dat",
+        "ROM/105/12.dat",
+        "ROM/105/13.dat",
+        "ROM/105/14.dat",
+        "ROM/105/15.dat",
+        "ROM/105/16.dat",
+        "ROM/105/17.dat",
+        "ROM/105/18.dat",
+        "ROM/105/19.dat",
+        "ROM/105/20.dat",
+        "ROM/105/21.dat",
+        "ROM/105/22.dat",
+        "ROM/105/23.dat",
+        "ROM/105/24.dat",
+        "ROM/105/25.dat",
+        "ROM/105/26.dat",
+        "ROM/105/27.dat",
+        "ROM/105/28.dat",
+        "ROM/105/29.dat",
+        "ROM/105/30.dat",
+        "ROM/105/31.dat",
+        "ROM/105/32.dat",
+        "ROM/105/33.dat",
+        "ROM/105/34.dat",
+        "ROM/105/35.dat",
+        "ROM/105/36.dat",
+        "ROM/105/37.dat",
+        "ROM/105/38.dat",
+        "ROM/105/39.dat",
+        "ROM/105/40.dat",
+        "ROM/105/41.dat",
+        "ROM/105/42.dat",
+        "ROM/105/43.dat",
+        "ROM/105/44.dat",
+        "ROM/105/45.dat",
+        "ROM/105/46.dat",
+        "ROM/105/47.dat",
+        "ROM/105/48.dat",
+        "ROM/105/49.dat",
+        "ROM/105/50.dat",
+        "ROM/105/51.dat",
+        "ROM/105/52.dat",
+        "ROM/105/53.dat",
+        "ROM/105/54.dat",
+        "ROM/105/55.dat",
+        "ROM/105/56.dat",
+        "ROM/105/57.dat",
+        "ROM/105/58.dat",
+        "ROM/105/59.dat",
+        "ROM/105/60.dat",
+        "ROM/105/61.dat",
+        "ROM/105/62.dat",
+        "ROM/105/63.dat",
+        "ROM/105/64.dat",
+        "ROM/105/65.dat",
+        "ROM/105/66.dat",
+        "ROM/105/67.dat",
+        "ROM/105/68.dat",
+        "ROM/105/69.dat",
+        "ROM/105/70.dat",
+        "ROM/105/71.dat",
+        "ROM/105/72.dat",
+        "ROM/105/73.dat",
+        "ROM/105/74.dat",
+        "ROM/105/75.dat",
+        "ROM/105/76.dat",
+        "ROM/105/77.dat",
+        "ROM/105/78.dat",
+        "ROM/105/79.dat",
+        "ROM/105/80.dat",
+        "ROM/105/81.dat",
+        "ROM/105/82.dat",
+        "ROM/105/83.dat",
+        "ROM/105/84.dat",
+        "ROM/105/85.dat",
+        "ROM/105/86.dat",
+        "ROM/105/87.dat",
+        "ROM/105/88.dat",
+        "ROM/105/89.dat",
+        "ROM/105/90.dat",
+        "ROM/105/91.dat",
+        "ROM/105/92.dat",
+        "ROM/105/93.dat",
+        "ROM/105/94.dat",
+        "ROM/105/95.dat",
+        "ROM/105/96.dat",
+        "ROM/105/97.dat",
+        "ROM/105/98.dat",
+        "ROM/105/99.dat",
+        "ROM/105/100.dat",
+        "ROM/105/101.dat",
+        "ROM/105/102.dat",
+        "ROM/105/103.dat",
+        "ROM/105/104.dat",
+        "ROM/105/105.dat",
+        "ROM/105/106.dat",
+        "ROM/105/107.dat",
+        "ROM/103-106/28.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 12",
+      "category": "Motion",
+      "paths": [
+        "ROM/114/20.dat",
+        "ROM/114/21.dat",
+        "ROM/114/22.dat",
+        "ROM/114/23.dat",
+        "ROM/114/24.dat",
+        "ROM/114/25.dat",
+        "ROM/114/26.dat",
+        "ROM/114/27.dat",
+        "ROM/114/28.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 13",
+      "category": "Motion",
+      "paths": [
+        "ROM/114/29.dat",
+        "ROM/114/30.dat",
+        "ROM/114/31.dat",
+        "ROM/114/32.dat",
+        "ROM/114/33.dat",
+        "ROM/114/34.dat",
+        "ROM/114/35.dat",
+        "ROM/114/36.dat",
+        "ROM/114/37.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 14",
+      "category": "Motion",
+      "paths": [
+        "ROM/122/45.dat",
+        "ROM/122/52.dat",
+        "ROM/122/59.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 15",
+      "category": "Motion",
+      "paths": [
+        "ROM/122/47.dat",
+        "ROM/122/48.dat",
+        "ROM/122/49.dat",
+        "ROM/122/54.dat",
+        "ROM/122/55.dat",
+        "ROM/122/56.dat",
+        "ROM/122/61.dat",
+        "ROM/122/62.dat",
+        "ROM/122/63.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 16",
+      "category": "Motion",
+      "paths": [
+        "ROM/123/49.dat",
+        "ROM/123/50.dat",
+        "ROM/123/51.dat",
+        "ROM/123/52.dat",
+        "ROM/123/53.dat",
+        "ROM/123/54.dat",
+        "ROM/123/55.dat",
+        "ROM/123/56.dat",
+        "ROM/123/57.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 17",
+      "category": "Motion",
+      "paths": [
+        "ROM/123/58.dat",
+        "ROM/123/59.dat",
+        "ROM/123/60.dat",
+        "ROM/123/61.dat",
+        "ROM/123/62.dat",
+        "ROM/123/63.dat",
+        "ROM/123/64.dat",
+        "ROM/123/65.dat",
+        "ROM/123/66.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 18",
+      "category": "Motion",
+      "paths": [
+        "ROM/138/52.dat",
+        "ROM/138/53.dat",
+        "ROM/138/54.dat",
+        "ROM/138/55.dat",
+        "ROM/138/56.dat",
+        "ROM/138/57.dat",
+        "ROM/138/58.dat",
+        "ROM/138/59.dat",
+        "ROM/138/60.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 19",
+      "category": "Motion",
+      "paths": [
+        "ROM/138/61.dat",
+        "ROM/138/62.dat",
+        "ROM/138/63.dat",
+        "ROM/138/64.dat",
+        "ROM/138/65.dat",
+        "ROM/138/66.dat",
+        "ROM/138/67.dat",
+        "ROM/138/68.dat",
+        "ROM/138/69.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 20",
+      "category": "Motion",
+      "paths": [
+        "ROM/141/9.dat",
+        "ROM/141/10.dat",
+        "ROM/141/11.dat",
+        "ROM/141/12.dat",
+        "ROM/141/13.dat",
+        "ROM/141/14.dat",
+        "ROM/141/15.dat",
+        "ROM/141/16.dat",
+        "ROM/141/17.dat",
+        "ROM/141/18.dat",
+        "ROM/141/19.dat",
+        "ROM/141/20.dat",
+        "ROM/141/21.dat",
+        "ROM/141/22.dat",
+        "ROM/141/23.dat",
+        "ROM/141/24.dat",
+        "ROM/141/25.dat",
+        "ROM/141/26.dat",
+        "ROM/141/27.dat",
+        "ROM/141/28.dat",
+        "ROM/141/29.dat",
+        "ROM/141/30.dat",
+        "ROM/141/31.dat",
+        "ROM/141/32.dat",
+        "ROM/141/33.dat",
+        "ROM/141/34.dat",
+        "ROM/141/35.dat",
+        "ROM/141/36.dat",
+        "ROM/141/37.dat",
+        "ROM/141/38.dat",
+        "ROM/141/39.dat",
+        "ROM/141/40.dat",
+        "ROM/141/41.dat",
+        "ROM/141/42.dat",
+        "ROM/141/43.dat",
+        "ROM/141/44.dat",
+        "ROM/141/45.dat",
+        "ROM/141/46.dat",
+        "ROM/141/47.dat",
+        "ROM/141/48.dat",
+        "ROM/141/49.dat",
+        "ROM/141/50.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 21",
+      "category": "Motion",
+      "paths": [
+        "ROM/143/30.dat",
+        "ROM/143/31.dat",
+        "ROM/143/32.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 22",
+      "category": "Motion",
+      "paths": [
+        "ROM/143/34.dat",
+        "ROM/143/35.dat",
+        "ROM/143/36.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 23",
+      "category": "Motion",
+      "paths": [
+        "ROM/143/59.dat",
+        "ROM/143/60.dat",
+        "ROM/143/61.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 24",
+      "category": "Motion",
+      "paths": [
+        "ROM/143/72.dat",
+        "ROM/143/60.dat",
+        "ROM/143/61.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 25",
+      "category": "Motion",
+      "paths": [
+        "ROM/147/20.dat",
+        "ROM/147/21.dat",
+        "ROM/147/22.dat",
+        "ROM/147/23.dat",
+        "ROM/147/24.dat",
+        "ROM/147/25.dat",
+        "ROM/147/26.dat",
+        "ROM/147/27.dat",
+        "ROM/147/28.dat",
+        "ROM/147/29.dat",
+        "ROM/147/30.dat",
+        "ROM/147/31.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 26",
+      "category": "Motion",
+      "paths": [
+        "ROM/147/71.dat",
+        "ROM/147/72.dat",
+        "ROM/147/73.dat",
+        "ROM/147/74.dat",
+        "ROM/147/75.dat",
+        "ROM/147/76.dat",
+        "ROM/147/77.dat",
+        "ROM/147/78.dat",
+        "ROM/147/79.dat",
+        "ROM/147/80.dat",
+        "ROM/147/81.dat",
+        "ROM/147/82.dat",
+        "ROM/147/83.dat",
+        "ROM/147/84.dat",
+        "ROM/147/85.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 27",
+      "category": "Motion",
+      "paths": [
+        "ROM/154/7.dat",
+        "ROM/154/8.dat",
+        "ROM/154/9.dat",
+        "ROM/154/10.dat",
+        "ROM/154/11.dat",
+        "ROM/154/12.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 28",
+      "category": "Motion",
+      "paths": [
+        "ROM/154/13.dat",
+        "ROM/154/14.dat",
+        "ROM/154/15.dat",
+        "ROM/154/16.dat",
+        "ROM/154/17.dat",
+        "ROM/154/18.dat"
+      ]
+    },
+    {
+      "name": "Motion Set 29",
+      "category": "Motion",
+      "paths": [
+        "ROM/168/44.dat",
+        "ROM/168/45.dat",
+        "ROM/168/46.dat",
+        "ROM/168/47.dat",
+        "ROM/168/48.dat",
+        "ROM/168/49.dat"
+      ]
+    }
+  ],
   "7": [
     {
       "name": "Battle",

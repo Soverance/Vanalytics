@@ -102,10 +102,19 @@ The model viewer renders FFXI character and NPC models directly from your local 
 
 1. Navigate to **Profile > FFXI Installation**
 2. Click **Browse for FFXI Installation**
-3. Select your FFXI root directory (e.g., `C:\Program Files (x86)\PlayOnline\SquareEnix\FINAL FANTASY XI`)
+3. Select your FFXI root directory (the one containing `ROM`, `ROM2`–`ROM9`, and `VTABLE.DAT`)
 4. Grant read permission when prompted
 
 The directory handle is stored locally in your browser's IndexedDB. The model viewer will then be able to load character models, equipment meshes, textures, skeletons, and animations directly from your locally installed DAT files.
+
+> ⚠️ **Chrome and Edge block folders inside `C:\Program Files` or `C:\Program Files (x86)`.**
+> Windows shows *"can't open this folder because it contains system files"* because the File System Access API refuses these locations for security. Since the default FFXI install lives there, create a directory junction to a non-restricted path and pick the junction instead. From an elevated Command Prompt:
+>
+> ```
+> mklink /J C:\FFXI-Link "C:\Program Files (x86)\PlayOnline\SquareEnix\FINAL FANTASY XI"
+> ```
+>
+> Then browse to `C:\FFXI-Link` in step 3. Alternatively, copy the `ROM`, `ROM2`–`ROM9`, and `VTABLE.DAT` files to a folder outside Program Files.
 
 ## FFXI Community Attribution
 

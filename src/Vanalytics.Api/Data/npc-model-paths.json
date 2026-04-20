@@ -20,746 +20,6 @@
     "path": "ROM/250/80.dat"
   },
   {
-    "name": "Aern 1",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/66.dat"
-  },
-  {
-    "name": "Aern 10",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/75.dat"
-  },
-  {
-    "name": "Aern 11",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/76.dat"
-  },
-  {
-    "name": "Aern 12",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/77.dat"
-  },
-  {
-    "name": "Aern 2",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/67.dat"
-  },
-  {
-    "name": "Aern 3",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/68.dat"
-  },
-  {
-    "name": "Aern 4",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/69.dat"
-  },
-  {
-    "name": "Aern 5",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/70.dat"
-  },
-  {
-    "name": "Aern 6",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/71.dat"
-  },
-  {
-    "name": "Aern 7",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/72.dat"
-  },
-  {
-    "name": "Aern 8",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/73.dat"
-  },
-  {
-    "name": "Aern 9",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/74.dat"
-  },
-  {
-    "name": "Euvhi",
-    "category": "Al'Taieu",
-    "path": "ROM/258/57.dat"
-  },
-  {
-    "name": "Ghrah",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/45.dat"
-  },
-  {
-    "name": "Hpemde 1",
-    "category": "Al'Taieu",
-    "path": "ROM/258/59.dat"
-  },
-  {
-    "name": "Hpemde 2",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/36.dat"
-  },
-  {
-    "name": "Omega 1",
-    "category": "Al'Taieu",
-    "path": "ROM/259/13.dat"
-  },
-  {
-    "name": "Omega 2",
-    "category": "Al'Taieu",
-    "path": "ROM3/9/83.dat"
-  },
-  {
-    "name": "Phuabo 1",
-    "category": "Al'Taieu",
-    "path": "ROM/258/60.dat"
-  },
-  {
-    "name": "Phuabo 2",
-    "category": "Al'Taieu",
-    "path": "ROM3/10/39.dat"
-  },
-  {
-    "name": "Ultima 1",
-    "category": "Al'Taieu",
-    "path": "ROM3/9/81.dat"
-  },
-  {
-    "name": "Ultima 2",
-    "category": "Al'Taieu",
-    "path": "ROM3/9/82.dat"
-  },
-  {
-    "name": "Xzomit 1",
-    "category": "Al'Taieu",
-    "path": "ROM/249/53.dat"
-  },
-  {
-    "name": "Xzomit 2",
-    "category": "Al'Taieu",
-    "path": "ROM/258/44.dat"
-  },
-  {
-    "name": "Yovra",
-    "category": "Al'Taieu",
-    "path": "ROM/301/99.dat"
-  },
-  {
-    "name": "Zdei 1",
-    "category": "Al'Taieu",
-    "path": "ROM/258/61.dat"
-  },
-  {
-    "name": "Zdei 2",
-    "category": "Al'Taieu",
-    "path": "ROM/258/62.dat"
-  },
-  {
-    "name": "Abenzio",
-    "category": "Alter Egos",
-    "path": "ROM/309/88.dat"
-  },
-  {
-    "name": "Abquhbah",
-    "category": "Alter Egos",
-    "path": "ROM/309/118.dat"
-  },
-  {
-    "name": "Adelheid",
-    "category": "Alter Egos",
-    "path": "ROM/309/97.dat"
-  },
-  {
-    "name": "Ajido-Marujido",
-    "category": "Alter Egos",
-    "path": "ROM/309/28.dat"
-  },
-  {
-    "name": "Aldo",
-    "category": "Alter Egos",
-    "path": "ROM/309/54.dat"
-  },
-  {
-    "name": "Aldo (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/85.dat"
-  },
-  {
-    "name": "Amchuchu",
-    "category": "Alter Egos",
-    "path": "ROM/309/98.dat"
-  },
-  {
-    "name": "Apururu (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/81.dat"
-  },
-  {
-    "name": "Arciela",
-    "category": "Alter Egos",
-    "path": "ROM/309/94.dat"
-  },
-  {
-    "name": "Arciela II",
-    "category": "Alter Egos",
-    "path": "ROM/309/105.dat"
-  },
-  {
-    "name": "Areuhat",
-    "category": "Alter Egos",
-    "path": "ROM/309/63.dat"
-  },
-  {
-    "name": "Ark Angel EV",
-    "category": "Alter Egos",
-    "path": "ROM/310/6.dat"
-  },
-  {
-    "name": "Ark Angel GK",
-    "category": "Alter Egos",
-    "path": "ROM/310/9.dat"
-  },
-  {
-    "name": "Ark Angel HM",
-    "category": "Alter Egos",
-    "path": "ROM/310/5.dat"
-  },
-  {
-    "name": "Ark Angel MR",
-    "category": "Alter Egos",
-    "path": "ROM/310/7.dat"
-  },
-  {
-    "name": "Ark Angel TT",
-    "category": "Alter Egos",
-    "path": "ROM/310/8.dat"
-  },
-  {
-    "name": "August",
-    "category": "Alter Egos",
-    "path": "ROM/309/120.dat"
-  },
-  {
-    "name": "Ayame",
-    "category": "Alter Egos",
-    "path": "ROM/309/24.dat"
-  },
-  {
-    "name": "Ayame (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/83.dat"
-  },
-  {
-    "name": "Babban Mheillea",
-    "category": "Alter Egos",
-    "path": "ROM/309/87.dat"
-  },
-  {
-    "name": "Balamor",
-    "category": "Alter Egos",
-    "path": "ROM/309/119.dat"
-  },
-  {
-    "name": "Brygid",
-    "category": "Alter Egos",
-    "path": "ROM/309/99.dat"
-  },
-  {
-    "name": "Chacharoon",
-    "category": "Alter Egos",
-    "path": "ROM/309/92.dat"
-  },
-  {
-    "name": "Cherukiki",
-    "category": "Alter Egos",
-    "path": "ROM/309/40.dat"
-  },
-  {
-    "name": "Cid",
-    "category": "Alter Egos",
-    "path": "ROM/309/61.dat"
-  },
-  {
-    "name": "Cornelia",
-    "category": "Alter Egos",
-    "path": "ROM/310/11.dat"
-  },
-  {
-    "name": "Curilla",
-    "category": "Alter Egos",
-    "path": "ROM/309/26.dat"
-  },
-  {
-    "name": "Darrculin",
-    "category": "Alter Egos",
-    "path": "ROM/310/1.dat"
-  },
-  {
-    "name": "Domina Shantotto",
-    "category": "Alter Egos",
-    "path": "ROM/309/58.dat"
-  },
-  {
-    "name": "Elivira",
-    "category": "Alter Egos",
-    "path": "ROM/309/65.dat"
-  },
-  {
-    "name": "Excenmille",
-    "category": "Alter Egos",
-    "path": "ROM/309/23.dat"
-  },
-  {
-    "name": "Excenmille (S)",
-    "category": "Alter Egos",
-    "path": "ROM/309/72.dat"
-  },
-  {
-    "name": "Fablinix",
-    "category": "Alter Egos",
-    "path": "ROM/309/56.dat"
-  },
-  {
-    "name": "Ferreous Coffin",
-    "category": "Alter Egos",
-    "path": "ROM/309/68.dat"
-  },
-  {
-    "name": "Flaviria (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/79.dat"
-  },
-  {
-    "name": "Gadalar",
-    "category": "Alter Egos",
-    "path": "ROM/309/43.dat"
-  },
-  {
-    "name": "Gessho",
-    "category": "Alter Egos",
-    "path": "ROM/309/42.dat"
-  },
-  {
-    "name": "Gilgamesh",
-    "category": "Alter Egos",
-    "path": "ROM/309/62.dat"
-  },
-  {
-    "name": "Halver",
-    "category": "Alter Egos",
-    "path": "ROM/309/107.dat"
-  },
-  {
-    "name": "Ingrid",
-    "category": "Alter Egos",
-    "path": "ROM/309/45.dat"
-  },
-  {
-    "name": "Ingrid II",
-    "category": "Alter Egos",
-    "path": "ROM/309/122.dat"
-  },
-  {
-    "name": "Invincible Shield (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/80.dat"
-  },
-  {
-    "name": "Iroha",
-    "category": "Alter Egos",
-    "path": "ROM/310/3.dat"
-  },
-  {
-    "name": "Iroha II",
-    "category": "Alter Egos",
-    "path": "ROM/310/4.dat"
-  },
-  {
-    "name": "Iron Eater",
-    "category": "Alter Egos",
-    "path": "ROM/309/41.dat"
-  },
-  {
-    "name": "Jakoh Wahcondalo (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/82.dat"
-  },
-  {
-    "name": "Joachim",
-    "category": "Alter Egos",
-    "path": "ROM/309/35.dat"
-  },
-  {
-    "name": "Karaha-Baruha",
-    "category": "Alter Egos",
-    "path": "ROM/309/60.dat"
-  },
-  {
-    "name": "Kayeel-Payeel",
-    "category": "Alter Egos",
-    "path": "ROM/309/111.dat"
-  },
-  {
-    "name": "King of Hearts",
-    "category": "Alter Egos",
-    "path": "ROM/309/127.dat"
-  },
-  {
-    "name": "Klara",
-    "category": "Alter Egos",
-    "path": "ROM/309/73.dat"
-  },
-  {
-    "name": "Koru-Moru",
-    "category": "Alter Egos",
-    "path": "ROM/309/77.dat"
-  },
-  {
-    "name": "Kukki-Chebukki",
-    "category": "Alter Egos",
-    "path": "ROM/309/90.dat"
-  },
-  {
-    "name": "Kupipi",
-    "category": "Alter Egos",
-    "path": "ROM/309/22.dat"
-  },
-  {
-    "name": "Kupofried",
-    "category": "Alter Egos",
-    "path": "ROM/309/113.dat"
-  },
-  {
-    "name": "Kuyin Hathdenna",
-    "category": "Alter Egos",
-    "path": "ROM/309/75.dat"
-  },
-  {
-    "name": "Lehko Habhoka",
-    "category": "Alter Egos",
-    "path": "ROM/309/46.dat"
-  },
-  {
-    "name": "Leonoyne",
-    "category": "Alter Egos",
-    "path": "ROM/309/109.dat"
-  },
-  {
-    "name": "Lhe Lhangavo",
-    "category": "Alter Egos",
-    "path": "ROM/309/93.dat"
-  },
-  {
-    "name": "Lhu Mhakaracca",
-    "category": "Alter Egos",
-    "path": "ROM/309/67.dat"
-  },
-  {
-    "name": "Lilisette",
-    "category": "Alter Egos",
-    "path": "ROM/309/69.dat"
-  },
-  {
-    "name": "Lilisette II",
-    "category": "Alter Egos",
-    "path": "ROM/309/104.dat"
-  },
-  {
-    "name": "Lion",
-    "category": "Alter Egos",
-    "path": "ROM/309/31.dat"
-  },
-  {
-    "name": "Lion II",
-    "category": "Alter Egos",
-    "path": "ROM/309/101.dat"
-  },
-  {
-    "name": "Luzaf",
-    "category": "Alter Egos",
-    "path": "ROM/309/52.dat"
-  },
-  {
-    "name": "Maat",
-    "category": "Alter Egos",
-    "path": "ROM/309/57.dat"
-  },
-  {
-    "name": "Maat (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/84.dat"
-  },
-  {
-    "name": "Makki-Chebukki",
-    "category": "Alter Egos",
-    "path": "ROM/309/126.dat"
-  },
-  {
-    "name": "Margret",
-    "category": "Alter Egos",
-    "path": "ROM/309/91.dat"
-  },
-  {
-    "name": "Maximilian",
-    "category": "Alter Egos",
-    "path": "ROM/309/110.dat"
-  },
-  {
-    "name": "Mayakov",
-    "category": "Alter Egos",
-    "path": "ROM/309/95.dat"
-  },
-  {
-    "name": "Mihli Aliapoh",
-    "category": "Alter Egos",
-    "path": "ROM/309/33.dat"
-  },
-  {
-    "name": "Mildaurion",
-    "category": "Alter Egos",
-    "path": "ROM/309/100.dat"
-  },
-  {
-    "name": "Mnejing",
-    "category": "Alter Egos",
-    "path": "ROM/309/50.dat"
-  },
-  {
-    "name": "Monberaux",
-    "category": "Alter Egos",
-    "path": "ROM/310/12.dat"
-  },
-  {
-    "name": "Moogle",
-    "category": "Alter Egos",
-    "path": "ROM/309/55.dat"
-  },
-  {
-    "name": "Morimar",
-    "category": "Alter Egos",
-    "path": "ROM/310/0.dat"
-  },
-  {
-    "name": "Mumor",
-    "category": "Alter Egos",
-    "path": "ROM/309/70.dat"
-  },
-  {
-    "name": "Mumor II",
-    "category": "Alter Egos",
-    "path": "ROM/309/124.dat"
-  },
-  {
-    "name": "Naja Salaheem",
-    "category": "Alter Egos",
-    "path": "ROM/309/36.dat"
-  },
-  {
-    "name": "Naja Salaheem (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/86.dat"
-  },
-  {
-    "name": "Najelith",
-    "category": "Alter Egos",
-    "path": "ROM/309/53.dat"
-  },
-  {
-    "name": "Naji",
-    "category": "Alter Egos",
-    "path": "ROM/309/21.dat"
-  },
-  {
-    "name": "Nanaa Mihgo",
-    "category": "Alter Egos",
-    "path": "ROM/309/25.dat"
-  },
-  {
-    "name": "Nashmeira",
-    "category": "Alter Egos",
-    "path": "ROM/309/47.dat"
-  },
-  {
-    "name": "Nashmeira II",
-    "category": "Alter Egos",
-    "path": "ROM/309/103.dat"
-  },
-  {
-    "name": "Noillurie",
-    "category": "Alter Egos",
-    "path": "ROM/309/66.dat"
-  },
-  {
-    "name": "Ovjang",
-    "category": "Alter Egos",
-    "path": "ROM/309/49.dat"
-  },
-  {
-    "name": "Pieuje (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/78.dat"
-  },
-  {
-    "name": "Prishe",
-    "category": "Alter Egos",
-    "path": "ROM/309/37.dat"
-  },
-  {
-    "name": "Prishe II",
-    "category": "Alter Egos",
-    "path": "ROM/309/102.dat"
-  },
-  {
-    "name": "Qultada",
-    "category": "Alter Egos",
-    "path": "ROM/309/96.dat"
-  },
-  {
-    "name": "Rahal",
-    "category": "Alter Egos",
-    "path": "ROM/309/76.dat"
-  },
-  {
-    "name": "Rainemard",
-    "category": "Alter Egos",
-    "path": "ROM/309/44.dat"
-  },
-  {
-    "name": "Robel-Akbel",
-    "category": "Alter Egos",
-    "path": "ROM/309/112.dat"
-  },
-  {
-    "name": "Romaa Mihgo",
-    "category": "Alter Egos",
-    "path": "ROM/309/74.dat"
-  },
-  {
-    "name": "Rongelouts",
-    "category": "Alter Egos",
-    "path": "ROM/309/108.dat"
-  },
-  {
-    "name": "Rosulatia",
-    "category": "Alter Egos",
-    "path": "ROM/309/121.dat"
-  },
-  {
-    "name": "Rughadjeen",
-    "category": "Alter Egos",
-    "path": "ROM/309/89.dat"
-  },
-  {
-    "name": "Sakura",
-    "category": "Alter Egos",
-    "path": "ROM/309/51.dat"
-  },
-  {
-    "name": "Selh'teus",
-    "category": "Alter Egos",
-    "path": "ROM/309/114.dat"
-  },
-  {
-    "name": "Semih Lafihna",
-    "category": "Alter Egos",
-    "path": "ROM/309/64.dat"
-  },
-  {
-    "name": "Shantotto",
-    "category": "Alter Egos",
-    "path": "ROM/309/20.dat"
-  },
-  {
-    "name": "Shantotto II",
-    "category": "Alter Egos",
-    "path": "ROM/310/2.dat"
-  },
-  {
-    "name": "Shikaree Z",
-    "category": "Alter Egos",
-    "path": "ROM/309/39.dat"
-  },
-  {
-    "name": "Star Sybil",
-    "category": "Alter Egos",
-    "path": "ROM/309/59.dat"
-  },
-  {
-    "name": "Sylvie (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/116.dat"
-  },
-  {
-    "name": "Tenzen",
-    "category": "Alter Egos",
-    "path": "ROM/309/32.dat"
-  },
-  {
-    "name": "Tenzen II",
-    "category": "Alter Egos",
-    "path": "ROM/309/117.dat"
-  },
-  {
-    "name": "Teodor",
-    "category": "Alter Egos",
-    "path": "ROM/309/123.dat"
-  },
-  {
-    "name": "Trion",
-    "category": "Alter Egos",
-    "path": "ROM/309/29.dat"
-  },
-  {
-    "name": "Uka Totlihn",
-    "category": "Alter Egos",
-    "path": "ROM/309/71.dat"
-  },
-  {
-    "name": "Ullegore",
-    "category": "Alter Egos",
-    "path": "ROM/309/125.dat"
-  },
-  {
-    "name": "Ulmia",
-    "category": "Alter Egos",
-    "path": "ROM/309/38.dat"
-  },
-  {
-    "name": "Valaineral",
-    "category": "Alter Egos",
-    "path": "ROM/309/34.dat"
-  },
-  {
-    "name": "Volker",
-    "category": "Alter Egos",
-    "path": "ROM/309/27.dat"
-  },
-  {
-    "name": "Ygnas",
-    "category": "Alter Egos",
-    "path": "ROM/310/10.dat"
-  },
-  {
-    "name": "Yoran-Oran (UC)",
-    "category": "Alter Egos",
-    "path": "ROM/309/115.dat"
-  },
-  {
-    "name": "Zazarg",
-    "category": "Alter Egos",
-    "path": "ROM/309/48.dat"
-  },
-  {
-    "name": "Zeid",
-    "category": "Alter Egos",
-    "path": "ROM/309/30.dat"
-  },
-  {
-    "name": "Zeid II",
-    "category": "Alter Egos",
-    "path": "ROM/309/106.dat"
-  },
-  {
     "name": "Acuex 1",
     "category": "Amorphs",
     "path": "ROM/326/110.dat"
@@ -773,6 +33,26 @@
     "name": "Acuex 3",
     "category": "Amorphs",
     "path": "ROM9/0/99.dat"
+  },
+  {
+    "name": "Black Slime 1",
+    "category": "Amorphs",
+    "path": "ROM/313/66.dat"
+  },
+  {
+    "name": "Black Slime 2",
+    "category": "Amorphs",
+    "path": "ROM/313/70.dat"
+  },
+  {
+    "name": "Blue Slime 1",
+    "category": "Amorphs",
+    "path": "ROM/309/4.dat"
+  },
+  {
+    "name": "Blue Slime 2",
+    "category": "Amorphs",
+    "path": "ROM/309/7.dat"
   },
   {
     "name": "Botulus",
@@ -863,6 +143,16 @@
     "name": "Plovid 3",
     "category": "Amorphs",
     "path": "ROM9/2/18.dat"
+  },
+  {
+    "name": "Red Slime 1",
+    "category": "Amorphs",
+    "path": "ROM/313/65.dat"
+  },
+  {
+    "name": "Red Slime 2",
+    "category": "Amorphs",
+    "path": "ROM/313/69.dat"
   },
   {
     "name": "Sandworm 1",
@@ -1705,9 +995,54 @@
     "path": "ROM/286/77.dat"
   },
   {
+    "name": "Automaton 1",
+    "category": "Automaton",
+    "path": "ROM/165/88.dat"
+  },
+  {
+    "name": "Automaton 2",
+    "category": "Automaton",
+    "path": "ROM/357/18.dat"
+  },
+  {
+    "name": "Automaton 3",
+    "category": "Automaton",
+    "path": "ROM4/2/10.dat"
+  },
+  {
+    "name": "Automaton 4",
+    "category": "Automaton",
+    "path": "ROM4/2/11.dat"
+  },
+  {
+    "name": "Automaton 5",
+    "category": "Automaton",
+    "path": "ROM4/2/68.dat"
+  },
+  {
+    "name": "Automaton 6",
+    "category": "Automaton",
+    "path": "ROM4/2/69.dat"
+  },
+  {
+    "name": "Automaton 7",
+    "category": "Automaton",
+    "path": "ROM4/2/70.dat"
+  },
+  {
     "name": "Alexander (Summon)",
     "category": "Avatars",
     "path": "ROM/238/47.dat"
+  },
+  {
+    "name": "Alexander Image 1",
+    "category": "Avatars",
+    "path": "ROM4/9/101.dat"
+  },
+  {
+    "name": "Alexander Image 2",
+    "category": "Avatars",
+    "path": "ROM4/12/123.dat"
   },
   {
     "name": "Alexander Prime 1",
@@ -1845,6 +1180,16 @@
     "path": "ROM/238/46.dat"
   },
   {
+    "name": "Odin Image 1",
+    "category": "Avatars",
+    "path": "ROM4/9/97.dat"
+  },
+  {
+    "name": "Odin Image 2",
+    "category": "Avatars",
+    "path": "ROM4/12/119.dat"
+  },
+  {
     "name": "Odin Prime 1",
     "category": "Avatars",
     "path": "ROM/239/127.dat"
@@ -1905,6 +1250,11 @@
     "path": "ROM/363/59.dat"
   },
   {
+    "name": "Sleipnir",
+    "category": "Avatars",
+    "path": "ROM/309/1.dat"
+  },
+  {
     "name": "Titan (Summon)",
     "category": "Avatars",
     "path": "ROM/97/69.dat"
@@ -1913,6 +1263,66 @@
     "name": "Titan Prime",
     "category": "Avatars",
     "path": "ROM/119/59.dat"
+  },
+  {
+    "name": "Monster Rearing 1",
+    "category": "Baby Monsters",
+    "path": "ROM/318/23.dat"
+  },
+  {
+    "name": "Monster Rearing 10",
+    "category": "Baby Monsters",
+    "path": "ROM/334/67.dat"
+  },
+  {
+    "name": "Monster Rearing 11",
+    "category": "Baby Monsters",
+    "path": "ROM/341/44.dat"
+  },
+  {
+    "name": "Monster Rearing 12",
+    "category": "Baby Monsters",
+    "path": "ROM/348/44.dat"
+  },
+  {
+    "name": "Monster Rearing 2",
+    "category": "Baby Monsters",
+    "path": "ROM/353/0.dat"
+  },
+  {
+    "name": "Monster Rearing 3",
+    "category": "Baby Monsters",
+    "path": "ROM/320/103.dat"
+  },
+  {
+    "name": "Monster Rearing 4",
+    "category": "Baby Monsters",
+    "path": "ROM/325/113.dat"
+  },
+  {
+    "name": "Monster Rearing 5",
+    "category": "Baby Monsters",
+    "path": "ROM/326/71.dat"
+  },
+  {
+    "name": "Monster Rearing 6",
+    "category": "Baby Monsters",
+    "path": "ROM/328/83.dat"
+  },
+  {
+    "name": "Monster Rearing 7",
+    "category": "Baby Monsters",
+    "path": "ROM/328/84.dat"
+  },
+  {
+    "name": "Monster Rearing 8",
+    "category": "Baby Monsters",
+    "path": "ROM/334/65.dat"
+  },
+  {
+    "name": "Monster Rearing 9",
+    "category": "Baby Monsters",
+    "path": "ROM/334/66.dat"
   },
   {
     "name": "Antican 1",
@@ -2618,6 +2028,11 @@
     "name": "Goblin 9",
     "category": "Beastmen",
     "path": "ROM/5/123.dat"
+  },
+  {
+    "name": "Goblin on Chocobo",
+    "category": "Beastmen",
+    "path": "ROM/148/106.dat"
   },
   {
     "name": "Lamia 1 1",
@@ -3363,6 +2778,56 @@
     "name": "Orc 4 9",
     "category": "Beastmen",
     "path": "ROM/9/11.dat"
+  },
+  {
+    "name": "Orcish Warmachine 1",
+    "category": "Beastmen",
+    "path": "ROM/5/66.dat"
+  },
+  {
+    "name": "Orcish Warmachine 10",
+    "category": "Beastmen",
+    "path": "ROM5/7/13.dat"
+  },
+  {
+    "name": "Orcish Warmachine 2",
+    "category": "Beastmen",
+    "path": "ROM/5/67.dat"
+  },
+  {
+    "name": "Orcish Warmachine 3",
+    "category": "Beastmen",
+    "path": "ROM/172/73.dat"
+  },
+  {
+    "name": "Orcish Warmachine 4",
+    "category": "Beastmen",
+    "path": "ROM5/7/7.dat"
+  },
+  {
+    "name": "Orcish Warmachine 5",
+    "category": "Beastmen",
+    "path": "ROM5/7/8.dat"
+  },
+  {
+    "name": "Orcish Warmachine 6",
+    "category": "Beastmen",
+    "path": "ROM5/7/9.dat"
+  },
+  {
+    "name": "Orcish Warmachine 7",
+    "category": "Beastmen",
+    "path": "ROM5/7/10.dat"
+  },
+  {
+    "name": "Orcish Warmachine 8",
+    "category": "Beastmen",
+    "path": "ROM5/7/11.dat"
+  },
+  {
+    "name": "Orcish Warmachine 9",
+    "category": "Beastmen",
+    "path": "ROM5/7/12.dat"
   },
   {
     "name": "Qiqirn 1",
@@ -4135,6 +3600,451 @@
     "path": "ROM9/0/118.dat"
   },
   {
+    "name": "Weapon 10",
+    "category": "Beastmen",
+    "path": "ROM4/7/127.dat"
+  },
+  {
+    "name": "Weapon 11",
+    "category": "Beastmen",
+    "path": "ROM4/8/0.dat"
+  },
+  {
+    "name": "Weapon 12",
+    "category": "Beastmen",
+    "path": "ROM4/8/1.dat"
+  },
+  {
+    "name": "Weapon 13",
+    "category": "Beastmen",
+    "path": "ROM4/8/2.dat"
+  },
+  {
+    "name": "Weapon 14",
+    "category": "Beastmen",
+    "path": "ROM4/8/3.dat"
+  },
+  {
+    "name": "Weapon 15",
+    "category": "Beastmen",
+    "path": "ROM4/8/4.dat"
+  },
+  {
+    "name": "Weapon 16",
+    "category": "Beastmen",
+    "path": "ROM4/8/5.dat"
+  },
+  {
+    "name": "Weapon 17",
+    "category": "Beastmen",
+    "path": "ROM4/8/6.dat"
+  },
+  {
+    "name": "Weapon 18",
+    "category": "Beastmen",
+    "path": "ROM4/8/7.dat"
+  },
+  {
+    "name": "Weapon 19",
+    "category": "Beastmen",
+    "path": "ROM4/8/8.dat"
+  },
+  {
+    "name": "Weapon 2",
+    "category": "Beastmen",
+    "path": "ROM/352/116.dat"
+  },
+  {
+    "name": "Weapon 20",
+    "category": "Beastmen",
+    "path": "ROM4/8/9.dat"
+  },
+  {
+    "name": "Weapon 21",
+    "category": "Beastmen",
+    "path": "ROM4/8/10.dat"
+  },
+  {
+    "name": "Weapon 22",
+    "category": "Beastmen",
+    "path": "ROM4/8/11.dat"
+  },
+  {
+    "name": "Weapon 23",
+    "category": "Beastmen",
+    "path": "ROM4/8/12.dat"
+  },
+  {
+    "name": "Weapon 24",
+    "category": "Beastmen",
+    "path": "ROM4/8/13.dat"
+  },
+  {
+    "name": "Weapon 25",
+    "category": "Beastmen",
+    "path": "ROM4/8/14.dat"
+  },
+  {
+    "name": "Weapon 26",
+    "category": "Beastmen",
+    "path": "ROM4/8/22.dat"
+  },
+  {
+    "name": "Weapon 27",
+    "category": "Beastmen",
+    "path": "ROM4/8/23.dat"
+  },
+  {
+    "name": "Weapon 28",
+    "category": "Beastmen",
+    "path": "ROM4/8/24.dat"
+  },
+  {
+    "name": "Weapon 29",
+    "category": "Beastmen",
+    "path": "ROM4/8/25.dat"
+  },
+  {
+    "name": "Weapon 3",
+    "category": "Beastmen",
+    "path": "ROM/352/117.dat"
+  },
+  {
+    "name": "Weapon 30",
+    "category": "Beastmen",
+    "path": "ROM4/8/26.dat"
+  },
+  {
+    "name": "Weapon 31",
+    "category": "Beastmen",
+    "path": "ROM4/8/27.dat"
+  },
+  {
+    "name": "Weapon 32",
+    "category": "Beastmen",
+    "path": "ROM4/8/28.dat"
+  },
+  {
+    "name": "Weapon 33",
+    "category": "Beastmen",
+    "path": "ROM4/8/29.dat"
+  },
+  {
+    "name": "Weapon 34",
+    "category": "Beastmen",
+    "path": "ROM4/8/30.dat"
+  },
+  {
+    "name": "Weapon 35",
+    "category": "Beastmen",
+    "path": "ROM4/8/31.dat"
+  },
+  {
+    "name": "Weapon 36",
+    "category": "Beastmen",
+    "path": "ROM4/8/40.dat"
+  },
+  {
+    "name": "Weapon 37",
+    "category": "Beastmen",
+    "path": "ROM4/8/41.dat"
+  },
+  {
+    "name": "Weapon 38",
+    "category": "Beastmen",
+    "path": "ROM4/8/42.dat"
+  },
+  {
+    "name": "Weapon 39",
+    "category": "Beastmen",
+    "path": "ROM4/8/43.dat"
+  },
+  {
+    "name": "Weapon 40",
+    "category": "Beastmen",
+    "path": "ROM4/8/44.dat"
+  },
+  {
+    "name": "Weapon 41",
+    "category": "Beastmen",
+    "path": "ROM4/8/45.dat"
+  },
+  {
+    "name": "Weapon 42",
+    "category": "Beastmen",
+    "path": "ROM4/8/46.dat"
+  },
+  {
+    "name": "Weapon 43",
+    "category": "Beastmen",
+    "path": "ROM4/8/47.dat"
+  },
+  {
+    "name": "Weapon 44",
+    "category": "Beastmen",
+    "path": "ROM4/8/48.dat"
+  },
+  {
+    "name": "Weapon 45",
+    "category": "Beastmen",
+    "path": "ROM4/8/49.dat"
+  },
+  {
+    "name": "Weapon 46",
+    "category": "Beastmen",
+    "path": "ROM4/8/50.dat"
+  },
+  {
+    "name": "Weapon 47",
+    "category": "Beastmen",
+    "path": "ROM4/8/51.dat"
+  },
+  {
+    "name": "Weapon 48",
+    "category": "Beastmen",
+    "path": "ROM4/8/52.dat"
+  },
+  {
+    "name": "Weapon 49",
+    "category": "Beastmen",
+    "path": "ROM4/8/53.dat"
+  },
+  {
+    "name": "Weapon 50",
+    "category": "Beastmen",
+    "path": "ROM4/8/54.dat"
+  },
+  {
+    "name": "Weapon 51",
+    "category": "Beastmen",
+    "path": "ROM4/8/64.dat"
+  },
+  {
+    "name": "Weapon 52",
+    "category": "Beastmen",
+    "path": "ROM4/8/65.dat"
+  },
+  {
+    "name": "Weapon 53",
+    "category": "Beastmen",
+    "path": "ROM4/8/66.dat"
+  },
+  {
+    "name": "Weapon 54",
+    "category": "Beastmen",
+    "path": "ROM4/8/67.dat"
+  },
+  {
+    "name": "Weapon 55",
+    "category": "Beastmen",
+    "path": "ROM4/8/68.dat"
+  },
+  {
+    "name": "Weapon 56",
+    "category": "Beastmen",
+    "path": "ROM4/8/69.dat"
+  },
+  {
+    "name": "Weapon 57",
+    "category": "Beastmen",
+    "path": "ROM4/8/79.dat"
+  },
+  {
+    "name": "Weapon 58",
+    "category": "Beastmen",
+    "path": "ROM4/8/80.dat"
+  },
+  {
+    "name": "Weapon 59",
+    "category": "Beastmen",
+    "path": "ROM4/8/81.dat"
+  },
+  {
+    "name": "Weapon 60",
+    "category": "Beastmen",
+    "path": "ROM4/8/82.dat"
+  },
+  {
+    "name": "Weapon 61",
+    "category": "Beastmen",
+    "path": "ROM4/8/83.dat"
+  },
+  {
+    "name": "Weapon 62",
+    "category": "Beastmen",
+    "path": "ROM4/8/84.dat"
+  },
+  {
+    "name": "Weapon 63",
+    "category": "Beastmen",
+    "path": "ROM4/8/85.dat"
+  },
+  {
+    "name": "Weapon 64",
+    "category": "Beastmen",
+    "path": "ROM4/8/86.dat"
+  },
+  {
+    "name": "Weapon 65",
+    "category": "Beastmen",
+    "path": "ROM4/8/87.dat"
+  },
+  {
+    "name": "Weapon 66",
+    "category": "Beastmen",
+    "path": "ROM4/8/103.dat"
+  },
+  {
+    "name": "Weapon 67",
+    "category": "Beastmen",
+    "path": "ROM4/8/104.dat"
+  },
+  {
+    "name": "Weapon 68",
+    "category": "Beastmen",
+    "path": "ROM4/8/105.dat"
+  },
+  {
+    "name": "Weapon 69",
+    "category": "Beastmen",
+    "path": "ROM4/8/106.dat"
+  },
+  {
+    "name": "Weapon 70",
+    "category": "Beastmen",
+    "path": "ROM4/8/107.dat"
+  },
+  {
+    "name": "Weapon 72",
+    "category": "Beastmen",
+    "path": "ROM4/11/118.dat"
+  },
+  {
+    "name": "Weapon 73",
+    "category": "Beastmen",
+    "path": "ROM4/11/119.dat"
+  },
+  {
+    "name": "Weapon 74",
+    "category": "Beastmen",
+    "path": "ROM4/11/120.dat"
+  },
+  {
+    "name": "Weapon 75",
+    "category": "Beastmen",
+    "path": "ROM4/11/121.dat"
+  },
+  {
+    "name": "Weapon 76",
+    "category": "Beastmen",
+    "path": "ROM4/11/122.dat"
+  },
+  {
+    "name": "Weapon 77",
+    "category": "Beastmen",
+    "path": "ROM4/11/123.dat"
+  },
+  {
+    "name": "Weapon 78",
+    "category": "Beastmen",
+    "path": "ROM4/12/5.dat"
+  },
+  {
+    "name": "Weapon 79",
+    "category": "Beastmen",
+    "path": "ROM4/12/6.dat"
+  },
+  {
+    "name": "Weapon 80",
+    "category": "Beastmen",
+    "path": "ROM4/12/7.dat"
+  },
+  {
+    "name": "Weapon 81",
+    "category": "Beastmen",
+    "path": "ROM4/12/8.dat"
+  },
+  {
+    "name": "Weapon 82",
+    "category": "Beastmen",
+    "path": "ROM4/12/9.dat"
+  },
+  {
+    "name": "Weapon 83",
+    "category": "Beastmen",
+    "path": "ROM4/12/10.dat"
+  },
+  {
+    "name": "Weapon 84",
+    "category": "Beastmen",
+    "path": "ROM4/12/20.dat"
+  },
+  {
+    "name": "Weapon 85",
+    "category": "Beastmen",
+    "path": "ROM4/12/21.dat"
+  },
+  {
+    "name": "Weapon 86",
+    "category": "Beastmen",
+    "path": "ROM4/12/22.dat"
+  },
+  {
+    "name": "Weapon 87",
+    "category": "Beastmen",
+    "path": "ROM4/12/23.dat"
+  },
+  {
+    "name": "Weapon 88",
+    "category": "Beastmen",
+    "path": "ROM4/12/24.dat"
+  },
+  {
+    "name": "Weapon 89",
+    "category": "Beastmen",
+    "path": "ROM4/12/25.dat"
+  },
+  {
+    "name": "Weapon 90",
+    "category": "Beastmen",
+    "path": "ROM4/12/26.dat"
+  },
+  {
+    "name": "Weapon 91",
+    "category": "Beastmen",
+    "path": "ROM4/12/27.dat"
+  },
+  {
+    "name": "Weapon 92",
+    "category": "Beastmen",
+    "path": "ROM4/12/28.dat"
+  },
+  {
+    "name": "Weapon 93",
+    "category": "Beastmen",
+    "path": "ROM4/12/44.dat"
+  },
+  {
+    "name": "Weapon 94",
+    "category": "Beastmen",
+    "path": "ROM4/12/45.dat"
+  },
+  {
+    "name": "Weapon 95",
+    "category": "Beastmen",
+    "path": "ROM4/12/46.dat"
+  },
+  {
+    "name": "Weapon 96",
+    "category": "Beastmen",
+    "path": "ROM4/12/47.dat"
+  },
+  {
+    "name": "Weapon 97",
+    "category": "Beastmen",
+    "path": "ROM4/12/48.dat"
+  },
+  {
     "name": "Yagudo (S) 1",
     "category": "Beastmen",
     "path": "ROM5/6/87.dat"
@@ -4558,6 +4468,11 @@
     "name": "Dhalmel 2",
     "category": "Beasts",
     "path": "ROM/5/16.dat"
+  },
+  {
+    "name": "Elvaan Bishop 4",
+    "category": "Beasts",
+    "path": "ROM/3/108.dat"
   },
   {
     "name": "Gnole 1",
@@ -5008,6 +4923,41 @@
     "name": "Shadow Throne",
     "category": "Chairs",
     "path": "ROM/339/40.dat"
+  },
+  {
+    "name": "Chocobo Breeding 1",
+    "category": "Chocobos",
+    "path": "ROM/216/42.dat"
+  },
+  {
+    "name": "Chocobo Breeding 2",
+    "category": "Chocobos",
+    "path": "ROM/168/22.dat"
+  },
+  {
+    "name": "Chocobo Breeding 3",
+    "category": "Chocobos",
+    "path": "ROM/168/23.dat"
+  },
+  {
+    "name": "Chocobo Breeding 4",
+    "category": "Chocobos",
+    "path": "ROM/169/42.dat"
+  },
+  {
+    "name": "Chocobo Breeding 5",
+    "category": "Chocobos",
+    "path": "ROM/169/43.dat"
+  },
+  {
+    "name": "Chocobo Breeding 6",
+    "category": "Chocobos",
+    "path": "ROM/169/44.dat"
+  },
+  {
+    "name": "Chocobo Breeding 7",
+    "category": "Chocobos",
+    "path": "ROM/169/45.dat"
   },
   {
     "name": "Ahriman 1",
@@ -5465,6 +5415,46 @@
     "path": "ROM/239/72.dat"
   },
   {
+    "name": "Dynamis Goblin Statue 1",
+    "category": "Dynamis",
+    "path": "ROM/130/125.dat"
+  },
+  {
+    "name": "Dynamis Goblin Statue 2",
+    "category": "Dynamis",
+    "path": "ROM/130/126.dat"
+  },
+  {
+    "name": "Dynamis Orc Statue 1",
+    "category": "Dynamis",
+    "path": "ROM/130/119.dat"
+  },
+  {
+    "name": "Dynamis Orc Statue 2",
+    "category": "Dynamis",
+    "path": "ROM/130/120.dat"
+  },
+  {
+    "name": "Dynamis Quadav Statue 1",
+    "category": "Dynamis",
+    "path": "ROM/130/121.dat"
+  },
+  {
+    "name": "Dynamis Quadav Statue 2",
+    "category": "Dynamis",
+    "path": "ROM/130/122.dat"
+  },
+  {
+    "name": "Dynamis Yagudo Statue 1",
+    "category": "Dynamis",
+    "path": "ROM/130/123.dat"
+  },
+  {
+    "name": "Dynamis Yagudo Statue 2",
+    "category": "Dynamis",
+    "path": "ROM/130/124.dat"
+  },
+  {
     "name": "Earth Elemental",
     "category": "Elementals",
     "path": "ROM/5/74.dat"
@@ -5570,364 +5560,659 @@
     "path": "ROM9/7/78.dat"
   },
   {
-    "name": "Black Slime 1",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/313/66.dat"
+    "name": "Craver 1",
+    "category": "Empty",
+    "path": "ROM/249/60.dat"
   },
   {
-    "name": "Black Slime 2",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/313/70.dat"
+    "name": "Craver 2",
+    "category": "Empty",
+    "path": "ROM3/8/14.dat"
   },
   {
-    "name": "Blue Slime 1",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/309/4.dat"
+    "name": "Craver 3",
+    "category": "Empty",
+    "path": "ROM3/8/15.dat"
   },
   {
-    "name": "Blue Slime 2",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/309/7.dat"
+    "name": "Craver 4",
+    "category": "Empty",
+    "path": "ROM3/8/16.dat"
+  },
+  {
+    "name": "Craver 5",
+    "category": "Empty",
+    "path": "ROM3/8/17.dat"
+  },
+  {
+    "name": "Craver 6",
+    "category": "Empty",
+    "path": "ROM3/9/51.dat"
+  },
+  {
+    "name": "Gorger 1",
+    "category": "Empty",
+    "path": "ROM/249/59.dat"
+  },
+  {
+    "name": "Gorger 2",
+    "category": "Empty",
+    "path": "ROM3/5/53.dat"
+  },
+  {
+    "name": "Gorger 3",
+    "category": "Empty",
+    "path": "ROM3/8/10.dat"
+  },
+  {
+    "name": "Gorger 4",
+    "category": "Empty",
+    "path": "ROM3/8/11.dat"
+  },
+  {
+    "name": "Gorger 5",
+    "category": "Empty",
+    "path": "ROM3/8/12.dat"
+  },
+  {
+    "name": "Gorger 6",
+    "category": "Empty",
+    "path": "ROM3/9/47.dat"
+  },
+  {
+    "name": "Gorger 7",
+    "category": "Empty",
+    "path": "ROM3/9/48.dat"
+  },
+  {
+    "name": "Gorger 8",
+    "category": "Empty",
+    "path": "ROM3/9/50.dat"
+  },
+  {
+    "name": "Seether 1",
+    "category": "Empty",
+    "path": "ROM/249/57.dat"
+  },
+  {
+    "name": "Seether 2",
+    "category": "Empty",
+    "path": "ROM3/9/38.dat"
+  },
+  {
+    "name": "Seether 3",
+    "category": "Empty",
+    "path": "ROM3/9/39.dat"
+  },
+  {
+    "name": "Seether 4",
+    "category": "Empty",
+    "path": "ROM3/9/40.dat"
+  },
+  {
+    "name": "Seether 5",
+    "category": "Empty",
+    "path": "ROM3/9/41.dat"
+  },
+  {
+    "name": "Thinker 1",
+    "category": "Empty",
+    "path": "ROM/249/58.dat"
+  },
+  {
+    "name": "Thinker 2",
+    "category": "Empty",
+    "path": "ROM3/8/9.dat"
+  },
+  {
+    "name": "Thinker 3",
+    "category": "Empty",
+    "path": "ROM3/9/43.dat"
+  },
+  {
+    "name": "Thinker 4",
+    "category": "Empty",
+    "path": "ROM3/9/44.dat"
+  },
+  {
+    "name": "Thinker 5",
+    "category": "Empty",
+    "path": "ROM3/9/45.dat"
+  },
+  {
+    "name": "Thinker 6",
+    "category": "Empty",
+    "path": "ROM3/9/49.dat"
+  },
+  {
+    "name": "Wanderer 1",
+    "category": "Empty",
+    "path": "ROM/249/55.dat"
+  },
+  {
+    "name": "Wanderer 2",
+    "category": "Empty",
+    "path": "ROM3/5/35.dat"
+  },
+  {
+    "name": "Wanderer 3",
+    "category": "Empty",
+    "path": "ROM3/5/36.dat"
+  },
+  {
+    "name": "Wanderer 4",
+    "category": "Empty",
+    "path": "ROM3/5/37.dat"
+  },
+  {
+    "name": "Wanderer 5",
+    "category": "Empty",
+    "path": "ROM3/5/38.dat"
+  },
+  {
+    "name": "Weeper 1",
+    "category": "Empty",
+    "path": "ROM/249/56.dat"
+  },
+  {
+    "name": "Weeper 2",
+    "category": "Empty",
+    "path": "ROM3/5/39.dat"
+  },
+  {
+    "name": "Weeper 3",
+    "category": "Empty",
+    "path": "ROM3/5/40.dat"
+  },
+  {
+    "name": "Weeper 4",
+    "category": "Empty",
+    "path": "ROM3/5/41.dat"
+  },
+  {
+    "name": "Weeper 5",
+    "category": "Empty",
+    "path": "ROM3/5/42.dat"
   },
   {
     "name": "Egg Hunt Festival 1",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/170/57.dat"
   },
   {
     "name": "Egg Hunt Festival 2",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/170/58.dat"
   },
   {
     "name": "Egg Hunt Festival 3",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/170/59.dat"
   },
   {
     "name": "Harvest Festival 1",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/51.dat"
   },
   {
     "name": "Harvest Festival 2",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/52.dat"
   },
   {
     "name": "Harvest Festival 3",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/53.dat"
   },
   {
     "name": "Harvest Festival 4",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/84.dat"
   },
   {
     "name": "Harvest Festival 5",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/85.dat"
   },
   {
     "name": "Harvest Festival 6",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/86.dat"
   },
   {
     "name": "Horro",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/309/3.dat"
   },
   {
     "name": "Mumor 1",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/284/14.dat"
   },
   {
     "name": "Mumor 2",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/286/110.dat"
   },
   {
     "name": "Mumor 3",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/335/85.dat"
   },
   {
     "name": "New Year's Festival 1",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/128/79.dat"
   },
   {
     "name": "New Year's Festival 2",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/103.dat"
   },
   {
     "name": "New Year's Festival 3",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/104.dat"
   },
   {
     "name": "New Year's Festival 4",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/105.dat"
   },
   {
     "name": "New Year's Festival 5",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/170/60.dat"
   },
   {
     "name": "New Year's Festival 6",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/170/61.dat"
   },
   {
     "name": "New Year's Festival 7",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/170/62.dat"
   },
   {
-    "name": "Red Slime 1",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/313/65.dat"
-  },
-  {
-    "name": "Red Slime 2",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/313/69.dat"
-  },
-  {
-    "name": "Spriggan 1",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/309/5.dat"
-  },
-  {
-    "name": "Spriggan 2",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/309/8.dat"
-  },
-  {
-    "name": "Spriggan 3",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/313/67.dat"
-  },
-  {
-    "name": "Spriggan 4",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/313/68.dat"
-  },
-  {
-    "name": "Spriggan 5",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/313/71.dat"
-  },
-  {
-    "name": "Spriggan 6",
-    "category": "Event NPCs/Objects",
-    "path": "ROM/313/72.dat"
-  },
-  {
     "name": "Starlight Celebration 1",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/128/81.dat"
   },
   {
     "name": "Starlight Celebration 10",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/94.dat"
   },
   {
     "name": "Starlight Celebration 11",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/95.dat"
   },
   {
     "name": "Starlight Celebration 12",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/96.dat"
   },
   {
     "name": "Starlight Celebration 13",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/97.dat"
   },
   {
     "name": "Starlight Celebration 14",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/98.dat"
   },
   {
     "name": "Starlight Celebration 15",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/99.dat"
   },
   {
     "name": "Starlight Celebration 16",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/100.dat"
   },
   {
     "name": "Starlight Celebration 2",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/128/82.dat"
   },
   {
     "name": "Starlight Celebration 3",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/128/83.dat"
   },
   {
     "name": "Starlight Celebration 4",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/128/84.dat"
   },
   {
     "name": "Starlight Celebration 5",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/128/85.dat"
   },
   {
     "name": "Starlight Celebration 6",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/128/86.dat"
   },
   {
     "name": "Starlight Celebration 7",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/128/87.dat"
   },
   {
     "name": "Starlight Celebration 8",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/128/88.dat"
   },
   {
     "name": "Starlight Celebration 9",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/148/93.dat"
   },
   {
     "name": "Sunbreeze Festival 1",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/33.dat"
   },
   {
     "name": "Sunbreeze Festival 2",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/34.dat"
   },
   {
     "name": "Sunbreeze Festival 3",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/35.dat"
   },
   {
     "name": "Sunbreeze Festival 4",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/36.dat"
   },
   {
     "name": "Sunbreeze Festival 5",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/37.dat"
   },
   {
     "name": "Sunbreeze Festival 6",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/38.dat"
   },
   {
     "name": "Sunbreeze Festival 7",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/39.dat"
   },
   {
     "name": "Sunbreeze Festival 8",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/40.dat"
   },
   {
     "name": "Tarutaru Dancers 1",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/120.dat"
   },
   {
     "name": "Tarutaru Dancers 2",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/156/121.dat"
   },
   {
     "name": "The Doll Festival 1",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/95.dat"
   },
   {
     "name": "The Doll Festival 10",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/104.dat"
   },
   {
     "name": "The Doll Festival 11",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/105.dat"
   },
   {
     "name": "The Doll Festival 12",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/106.dat"
   },
   {
     "name": "The Doll Festival 13",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/107.dat"
   },
   {
     "name": "The Doll Festival 2",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/96.dat"
   },
   {
     "name": "The Doll Festival 3",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/97.dat"
   },
   {
     "name": "The Doll Festival 4",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/98.dat"
   },
   {
     "name": "The Doll Festival 5",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/99.dat"
   },
   {
     "name": "The Doll Festival 6",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/100.dat"
   },
   {
     "name": "The Doll Festival 7",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/101.dat"
   },
   {
     "name": "The Doll Festival 8",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/102.dat"
   },
   {
     "name": "The Doll Festival 9",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/130/103.dat"
   },
   {
     "name": "Ullegore",
-    "category": "Event NPCs/Objects",
+    "category": "Events",
     "path": "ROM/354/11.dat"
+  },
+  {
+    "name": "Spriggan 1",
+    "category": "FF14 Monsters",
+    "path": "ROM/309/5.dat"
+  },
+  {
+    "name": "Spriggan 2",
+    "category": "FF14 Monsters",
+    "path": "ROM/309/8.dat"
+  },
+  {
+    "name": "Spriggan 3",
+    "category": "FF14 Monsters",
+    "path": "ROM/313/67.dat"
+  },
+  {
+    "name": "Spriggan 4",
+    "category": "FF14 Monsters",
+    "path": "ROM/313/68.dat"
+  },
+  {
+    "name": "Spriggan 5",
+    "category": "FF14 Monsters",
+    "path": "ROM/313/71.dat"
+  },
+  {
+    "name": "Spriggan 6",
+    "category": "FF14 Monsters",
+    "path": "ROM/313/72.dat"
+  },
+  {
+    "name": "Archaic Gears 1",
+    "category": "Gears",
+    "path": "ROM/258/99.dat"
+  },
+  {
+    "name": "Archaic Gears 2",
+    "category": "Gears",
+    "path": "ROM/258/100.dat"
+  },
+  {
+    "name": "Archaic Rampart 1",
+    "category": "Gears",
+    "path": "ROM4/9/84.dat"
+  },
+  {
+    "name": "Archaic Rampart 2",
+    "category": "Gears",
+    "path": "ROM4/12/115.dat"
+  },
+  {
+    "name": "Chariot 1",
+    "category": "Gears",
+    "path": "ROM/258/101.dat"
+  },
+  {
+    "name": "Chariot 2",
+    "category": "Gears",
+    "path": "ROM/258/102.dat"
+  },
+  {
+    "name": "Chariot 3",
+    "category": "Gears",
+    "path": "ROM/258/103.dat"
+  },
+  {
+    "name": "Chariot 4",
+    "category": "Gears",
+    "path": "ROM/258/104.dat"
+  },
+  {
+    "name": "Chariot 5",
+    "category": "Gears",
+    "path": "ROM/258/105.dat"
+  },
+  {
+    "name": "Altana",
+    "category": "Gods",
+    "path": "ROM/343/14.dat"
+  },
+  {
+    "name": "Cloud of Darkness 1",
+    "category": "Gods",
+    "path": "ROM/343/20.dat"
+  },
+  {
+    "name": "Cloud of Darkness 2",
+    "category": "Gods",
+    "path": "ROM/343/7.dat"
+  },
+  {
+    "name": "Cloud of Darkness 3",
+    "category": "Gods",
+    "path": "ROM/343/8.dat"
+  },
+  {
+    "name": "Cloud of Darkness 4",
+    "category": "Gods",
+    "path": "ROM/343/9.dat"
+  },
+  {
+    "name": "Cloud of Darkness 5",
+    "category": "Gods",
+    "path": "ROM/343/10.dat"
+  },
+  {
+    "name": "Cloud of Darkness 6",
+    "category": "Gods",
+    "path": "ROM/343/11.dat"
+  },
+  {
+    "name": "Hades 1",
+    "category": "Gods",
+    "path": "ROM9/2/17.dat"
+  },
+  {
+    "name": "Hades 2",
+    "category": "Gods",
+    "path": "ROM9/1/74.dat"
+  },
+  {
+    "name": "Hades 3",
+    "category": "Gods",
+    "path": "ROM9/1/79.dat"
+  },
+  {
+    "name": "Hades 4",
+    "category": "Gods",
+    "path": "ROM9/1/73.dat"
+  },
+  {
+    "name": "Hades 5",
+    "category": "Gods",
+    "path": "ROM9/1/80.dat"
+  },
+  {
+    "name": "Hades 6",
+    "category": "Gods",
+    "path": "ROM9/2/19.dat"
+  },
+  {
+    "name": "Metus 1",
+    "category": "Gods",
+    "path": "ROM/343/12.dat"
+  },
+  {
+    "name": "Metus 2",
+    "category": "Gods",
+    "path": "ROM/343/17.dat"
+  },
+  {
+    "name": "Promathia 1",
+    "category": "Gods",
+    "path": "ROM3/10/30.dat"
+  },
+  {
+    "name": "Promathia 2",
+    "category": "Gods",
+    "path": "ROM3/10/31.dat"
+  },
+  {
+    "name": "Promathia 3",
+    "category": "Gods",
+    "path": "ROM3/10/32.dat"
+  },
+  {
+    "name": "Promathia 4",
+    "category": "Gods",
+    "path": "ROM3/10/29.dat"
+  },
+  {
+    "name": "Provenance Watcher",
+    "category": "Gods",
+    "path": "ROM/268/11.dat"
+  },
+  {
+    "name": "Shinryu",
+    "category": "Gods",
+    "path": "ROM/258/122.dat"
   },
   {
     "name": "Adamantoise 1",
@@ -6070,329 +6355,9 @@
     "path": "ROM/272/87.dat"
   },
   {
-    "name": "Alexander Image 1",
-    "category": "Misc",
-    "path": "ROM4/9/101.dat"
-  },
-  {
-    "name": "Alexander Image 2",
-    "category": "Misc",
-    "path": "ROM4/12/123.dat"
-  },
-  {
-    "name": "Archaic Gears 1",
-    "category": "Misc",
-    "path": "ROM/258/99.dat"
-  },
-  {
-    "name": "Archaic Gears 2",
-    "category": "Misc",
-    "path": "ROM/258/100.dat"
-  },
-  {
-    "name": "Archaic Rampart 1",
-    "category": "Misc",
-    "path": "ROM4/9/84.dat"
-  },
-  {
-    "name": "Archaic Rampart 2",
-    "category": "Misc",
-    "path": "ROM4/12/115.dat"
-  },
-  {
-    "name": "Automaton 1",
-    "category": "Misc",
-    "path": "ROM/165/88.dat"
-  },
-  {
-    "name": "Automaton 2",
-    "category": "Misc",
-    "path": "ROM/357/18.dat"
-  },
-  {
-    "name": "Automaton 3",
-    "category": "Misc",
-    "path": "ROM4/2/10.dat"
-  },
-  {
-    "name": "Automaton 4",
-    "category": "Misc",
-    "path": "ROM4/2/11.dat"
-  },
-  {
-    "name": "Automaton 5",
-    "category": "Misc",
-    "path": "ROM4/2/68.dat"
-  },
-  {
-    "name": "Automaton 6",
-    "category": "Misc",
-    "path": "ROM4/2/69.dat"
-  },
-  {
-    "name": "Automaton 7",
-    "category": "Misc",
-    "path": "ROM4/2/70.dat"
-  },
-  {
-    "name": "Chariot 1",
-    "category": "Misc",
-    "path": "ROM/258/101.dat"
-  },
-  {
-    "name": "Chariot 2",
-    "category": "Misc",
-    "path": "ROM/258/102.dat"
-  },
-  {
-    "name": "Chariot 3",
-    "category": "Misc",
-    "path": "ROM/258/103.dat"
-  },
-  {
-    "name": "Chariot 4",
-    "category": "Misc",
-    "path": "ROM/258/104.dat"
-  },
-  {
-    "name": "Chariot 5",
-    "category": "Misc",
-    "path": "ROM/258/105.dat"
-  },
-  {
-    "name": "Chocobo Breeding 1",
-    "category": "Misc",
-    "path": "ROM/216/42.dat"
-  },
-  {
-    "name": "Chocobo Breeding 2",
-    "category": "Misc",
-    "path": "ROM/168/22.dat"
-  },
-  {
-    "name": "Chocobo Breeding 3",
-    "category": "Misc",
-    "path": "ROM/168/23.dat"
-  },
-  {
-    "name": "Chocobo Breeding 4",
-    "category": "Misc",
-    "path": "ROM/169/42.dat"
-  },
-  {
-    "name": "Chocobo Breeding 5",
-    "category": "Misc",
-    "path": "ROM/169/43.dat"
-  },
-  {
-    "name": "Chocobo Breeding 6",
-    "category": "Misc",
-    "path": "ROM/169/44.dat"
-  },
-  {
-    "name": "Chocobo Breeding 7",
-    "category": "Misc",
-    "path": "ROM/169/45.dat"
-  },
-  {
-    "name": "Dynamis Goblin Statue 1",
-    "category": "Misc",
-    "path": "ROM/130/125.dat"
-  },
-  {
-    "name": "Dynamis Goblin Statue 2",
-    "category": "Misc",
-    "path": "ROM/130/126.dat"
-  },
-  {
-    "name": "Dynamis Orc Statue 1",
-    "category": "Misc",
-    "path": "ROM/130/119.dat"
-  },
-  {
-    "name": "Dynamis Orc Statue 2",
-    "category": "Misc",
-    "path": "ROM/130/120.dat"
-  },
-  {
-    "name": "Dynamis Quadav Statue 1",
-    "category": "Misc",
-    "path": "ROM/130/121.dat"
-  },
-  {
-    "name": "Dynamis Quadav Statue 2",
-    "category": "Misc",
-    "path": "ROM/130/122.dat"
-  },
-  {
-    "name": "Dynamis Yagudo Statue 1",
-    "category": "Misc",
-    "path": "ROM/130/123.dat"
-  },
-  {
-    "name": "Dynamis Yagudo Statue 2",
-    "category": "Misc",
-    "path": "ROM/130/124.dat"
-  },
-  {
-    "name": "Goblin on Chocobo",
-    "category": "Misc",
-    "path": "ROM/148/106.dat"
-  },
-  {
-    "name": "Monster Rearing 1",
-    "category": "Misc",
-    "path": "ROM/318/23.dat"
-  },
-  {
-    "name": "Monster Rearing 10",
-    "category": "Misc",
-    "path": "ROM/334/67.dat"
-  },
-  {
-    "name": "Monster Rearing 11",
-    "category": "Misc",
-    "path": "ROM/341/44.dat"
-  },
-  {
-    "name": "Monster Rearing 12",
-    "category": "Misc",
-    "path": "ROM/348/44.dat"
-  },
-  {
-    "name": "Monster Rearing 2",
-    "category": "Misc",
-    "path": "ROM/353/0.dat"
-  },
-  {
-    "name": "Monster Rearing 3",
-    "category": "Misc",
-    "path": "ROM/320/103.dat"
-  },
-  {
-    "name": "Monster Rearing 4",
-    "category": "Misc",
-    "path": "ROM/325/113.dat"
-  },
-  {
-    "name": "Monster Rearing 5",
-    "category": "Misc",
-    "path": "ROM/326/71.dat"
-  },
-  {
-    "name": "Monster Rearing 6",
-    "category": "Misc",
-    "path": "ROM/328/83.dat"
-  },
-  {
-    "name": "Monster Rearing 7",
-    "category": "Misc",
-    "path": "ROM/328/84.dat"
-  },
-  {
-    "name": "Monster Rearing 8",
-    "category": "Misc",
-    "path": "ROM/334/65.dat"
-  },
-  {
-    "name": "Monster Rearing 9",
-    "category": "Misc",
-    "path": "ROM/334/66.dat"
-  },
-  {
     "name": "Moogle 1",
     "category": "Misc",
     "path": "ROM/3/56.dat"
-  },
-  {
-    "name": "Moogle 10",
-    "category": "Misc",
-    "path": "ROM/313/36.dat"
-  },
-  {
-    "name": "Moogle 11",
-    "category": "Misc",
-    "path": "ROM7/0/7.dat"
-  },
-  {
-    "name": "Moogle 12",
-    "category": "Misc",
-    "path": "ROM7/0/8.dat"
-  },
-  {
-    "name": "Moogle 13",
-    "category": "Misc",
-    "path": "ROM7/0/9.dat"
-  },
-  {
-    "name": "Moogle 14",
-    "category": "Misc",
-    "path": "ROM7/0/10.dat"
-  },
-  {
-    "name": "Moogle 15",
-    "category": "Misc",
-    "path": "ROM7/0/11.dat"
-  },
-  {
-    "name": "Moogle 16",
-    "category": "Misc",
-    "path": "ROM7/0/12.dat"
-  },
-  {
-    "name": "Moogle 17",
-    "category": "Misc",
-    "path": "ROM7/0/13.dat"
-  },
-  {
-    "name": "Moogle 18",
-    "category": "Misc",
-    "path": "ROM7/0/14.dat"
-  },
-  {
-    "name": "Moogle 19",
-    "category": "Misc",
-    "path": "ROM/316/88.dat"
-  },
-  {
-    "name": "Moogle 2",
-    "category": "Misc",
-    "path": "ROM/142/102.dat"
-  },
-  {
-    "name": "Moogle 20",
-    "category": "Misc",
-    "path": "ROM2/23/71.dat"
-  },
-  {
-    "name": "Moogle 21",
-    "category": "Misc",
-    "path": "ROM/353/3.dat"
-  },
-  {
-    "name": "Moogle 22",
-    "category": "Misc",
-    "path": "ROM/355/55.dat"
-  },
-  {
-    "name": "Moogle 3",
-    "category": "Misc",
-    "path": "ROM/239/65.dat"
-  },
-  {
-    "name": "Moogle 4",
-    "category": "Misc",
-    "path": "ROM/257/71.dat"
-  },
-  {
-    "name": "Moogle 5",
-    "category": "Misc",
-    "path": "ROM/259/0.dat"
-  },
-  {
-    "name": "Moogle 6",
-    "category": "Misc",
-    "path": "ROM/302/65.dat"
   },
   {
     "name": "Moogle 7",
@@ -6405,74 +6370,99 @@
     "path": "ROM/216/6.dat"
   },
   {
+    "name": "Moogle 10",
+    "category": "Moogles",
+    "path": "ROM/313/36.dat"
+  },
+  {
+    "name": "Moogle 11",
+    "category": "Moogles",
+    "path": "ROM7/0/7.dat"
+  },
+  {
+    "name": "Moogle 12",
+    "category": "Moogles",
+    "path": "ROM7/0/8.dat"
+  },
+  {
+    "name": "Moogle 13",
+    "category": "Moogles",
+    "path": "ROM7/0/9.dat"
+  },
+  {
+    "name": "Moogle 14",
+    "category": "Moogles",
+    "path": "ROM7/0/10.dat"
+  },
+  {
+    "name": "Moogle 15",
+    "category": "Moogles",
+    "path": "ROM7/0/11.dat"
+  },
+  {
+    "name": "Moogle 16",
+    "category": "Moogles",
+    "path": "ROM7/0/12.dat"
+  },
+  {
+    "name": "Moogle 17",
+    "category": "Moogles",
+    "path": "ROM7/0/13.dat"
+  },
+  {
+    "name": "Moogle 18",
+    "category": "Moogles",
+    "path": "ROM7/0/14.dat"
+  },
+  {
+    "name": "Moogle 19",
+    "category": "Moogles",
+    "path": "ROM/316/88.dat"
+  },
+  {
+    "name": "Moogle 2",
+    "category": "Moogles",
+    "path": "ROM/142/102.dat"
+  },
+  {
+    "name": "Moogle 20",
+    "category": "Moogles",
+    "path": "ROM2/23/71.dat"
+  },
+  {
+    "name": "Moogle 21",
+    "category": "Moogles",
+    "path": "ROM/353/3.dat"
+  },
+  {
+    "name": "Moogle 22",
+    "category": "Moogles",
+    "path": "ROM/355/55.dat"
+  },
+  {
+    "name": "Moogle 3",
+    "category": "Moogles",
+    "path": "ROM/239/65.dat"
+  },
+  {
+    "name": "Moogle 4",
+    "category": "Moogles",
+    "path": "ROM/257/71.dat"
+  },
+  {
+    "name": "Moogle 5",
+    "category": "Moogles",
+    "path": "ROM/259/0.dat"
+  },
+  {
+    "name": "Moogle 6",
+    "category": "Moogles",
+    "path": "ROM/302/65.dat"
+  },
+  {
     "name": "Moogle 9",
-    "category": "Misc",
+    "category": "Moogles",
     "path": "ROM/355/64.dat"
-  },
-  {
-    "name": "Odin Image 1",
-    "category": "Misc",
-    "path": "ROM4/9/97.dat"
-  },
-  {
-    "name": "Odin Image 2",
-    "category": "Misc",
-    "path": "ROM4/12/119.dat"
-  },
-  {
-    "name": "Orcish Warmachine 1",
-    "category": "Misc",
-    "path": "ROM/5/66.dat"
-  },
-  {
-    "name": "Orcish Warmachine 10",
-    "category": "Misc",
-    "path": "ROM5/7/13.dat"
-  },
-  {
-    "name": "Orcish Warmachine 2",
-    "category": "Misc",
-    "path": "ROM/5/67.dat"
-  },
-  {
-    "name": "Orcish Warmachine 3",
-    "category": "Misc",
-    "path": "ROM/172/73.dat"
-  },
-  {
-    "name": "Orcish Warmachine 4",
-    "category": "Misc",
-    "path": "ROM5/7/7.dat"
-  },
-  {
-    "name": "Orcish Warmachine 5",
-    "category": "Misc",
-    "path": "ROM5/7/8.dat"
-  },
-  {
-    "name": "Orcish Warmachine 6",
-    "category": "Misc",
-    "path": "ROM5/7/9.dat"
-  },
-  {
-    "name": "Orcish Warmachine 7",
-    "category": "Misc",
-    "path": "ROM5/7/10.dat"
-  },
-  {
-    "name": "Orcish Warmachine 8",
-    "category": "Misc",
-    "path": "ROM5/7/11.dat"
-  },
-  {
-    "name": "Orcish Warmachine 9",
-    "category": "Misc",
-    "path": "ROM5/7/12.dat"
-  },
-  {
-    "name": "Sleipnir",
-    "category": "Misc",
-    "path": "ROM/309/1.dat"
   },
   {
     "name": "Adamantoise",
@@ -6675,11 +6665,6 @@
     "path": "ROM/335/60.dat"
   },
   {
-    "name": "Hurkan 2",
-    "category": "Naakuals",
-    "path": "ROM/335/78.dat"
-  },
-  {
     "name": "Kumhau 1",
     "category": "Naakuals",
     "path": "ROM9/0/113.dat"
@@ -6698,11 +6683,6 @@
     "name": "Yumcax 1",
     "category": "Naakuals",
     "path": "ROM9/0/38.dat"
-  },
-  {
-    "name": "Yumcax 2",
-    "category": "Naakuals",
-    "path": "ROM9/0/39.dat"
   },
   {
     "name": "Alexander Projection 1",
@@ -7595,6 +7575,11 @@
     "path": "ROM9/2/60.dat"
   },
   {
+    "name": "Twitherym 3",
+    "category": "Objects",
+    "path": "ROM9/1/107.dat"
+  },
+  {
     "name": "Waypoint 1",
     "category": "Objects",
     "path": "ROM/288/107.dat"
@@ -7613,11 +7598,6 @@
     "name": "Weapon 1",
     "category": "Objects",
     "path": "ROM/249/63.dat"
-  },
-  {
-    "name": "Weapon 10",
-    "category": "Objects",
-    "path": "ROM4/7/127.dat"
   },
   {
     "name": "Weapon 100",
@@ -7645,214 +7625,9 @@
     "path": "ROM9/2/108.dat"
   },
   {
-    "name": "Weapon 11",
-    "category": "Objects",
-    "path": "ROM4/8/0.dat"
-  },
-  {
-    "name": "Weapon 12",
-    "category": "Objects",
-    "path": "ROM4/8/1.dat"
-  },
-  {
-    "name": "Weapon 13",
-    "category": "Objects",
-    "path": "ROM4/8/2.dat"
-  },
-  {
-    "name": "Weapon 14",
-    "category": "Objects",
-    "path": "ROM4/8/3.dat"
-  },
-  {
-    "name": "Weapon 15",
-    "category": "Objects",
-    "path": "ROM4/8/4.dat"
-  },
-  {
-    "name": "Weapon 16",
-    "category": "Objects",
-    "path": "ROM4/8/5.dat"
-  },
-  {
-    "name": "Weapon 17",
-    "category": "Objects",
-    "path": "ROM4/8/6.dat"
-  },
-  {
-    "name": "Weapon 18",
-    "category": "Objects",
-    "path": "ROM4/8/7.dat"
-  },
-  {
-    "name": "Weapon 19",
-    "category": "Objects",
-    "path": "ROM4/8/8.dat"
-  },
-  {
-    "name": "Weapon 2",
-    "category": "Objects",
-    "path": "ROM/352/116.dat"
-  },
-  {
-    "name": "Weapon 20",
-    "category": "Objects",
-    "path": "ROM4/8/9.dat"
-  },
-  {
-    "name": "Weapon 21",
-    "category": "Objects",
-    "path": "ROM4/8/10.dat"
-  },
-  {
-    "name": "Weapon 22",
-    "category": "Objects",
-    "path": "ROM4/8/11.dat"
-  },
-  {
-    "name": "Weapon 23",
-    "category": "Objects",
-    "path": "ROM4/8/12.dat"
-  },
-  {
-    "name": "Weapon 24",
-    "category": "Objects",
-    "path": "ROM4/8/13.dat"
-  },
-  {
-    "name": "Weapon 25",
-    "category": "Objects",
-    "path": "ROM4/8/14.dat"
-  },
-  {
-    "name": "Weapon 26",
-    "category": "Objects",
-    "path": "ROM4/8/22.dat"
-  },
-  {
-    "name": "Weapon 27",
-    "category": "Objects",
-    "path": "ROM4/8/23.dat"
-  },
-  {
-    "name": "Weapon 28",
-    "category": "Objects",
-    "path": "ROM4/8/24.dat"
-  },
-  {
-    "name": "Weapon 29",
-    "category": "Objects",
-    "path": "ROM4/8/25.dat"
-  },
-  {
-    "name": "Weapon 3",
-    "category": "Objects",
-    "path": "ROM/352/117.dat"
-  },
-  {
-    "name": "Weapon 30",
-    "category": "Objects",
-    "path": "ROM4/8/26.dat"
-  },
-  {
-    "name": "Weapon 31",
-    "category": "Objects",
-    "path": "ROM4/8/27.dat"
-  },
-  {
-    "name": "Weapon 32",
-    "category": "Objects",
-    "path": "ROM4/8/28.dat"
-  },
-  {
-    "name": "Weapon 33",
-    "category": "Objects",
-    "path": "ROM4/8/29.dat"
-  },
-  {
-    "name": "Weapon 34",
-    "category": "Objects",
-    "path": "ROM4/8/30.dat"
-  },
-  {
-    "name": "Weapon 35",
-    "category": "Objects",
-    "path": "ROM4/8/31.dat"
-  },
-  {
-    "name": "Weapon 36",
-    "category": "Objects",
-    "path": "ROM4/8/40.dat"
-  },
-  {
-    "name": "Weapon 37",
-    "category": "Objects",
-    "path": "ROM4/8/41.dat"
-  },
-  {
-    "name": "Weapon 38",
-    "category": "Objects",
-    "path": "ROM4/8/42.dat"
-  },
-  {
-    "name": "Weapon 39",
-    "category": "Objects",
-    "path": "ROM4/8/43.dat"
-  },
-  {
     "name": "Weapon 4",
     "category": "Objects",
     "path": "ROM3/5/24.dat"
-  },
-  {
-    "name": "Weapon 40",
-    "category": "Objects",
-    "path": "ROM4/8/44.dat"
-  },
-  {
-    "name": "Weapon 41",
-    "category": "Objects",
-    "path": "ROM4/8/45.dat"
-  },
-  {
-    "name": "Weapon 42",
-    "category": "Objects",
-    "path": "ROM4/8/46.dat"
-  },
-  {
-    "name": "Weapon 43",
-    "category": "Objects",
-    "path": "ROM4/8/47.dat"
-  },
-  {
-    "name": "Weapon 44",
-    "category": "Objects",
-    "path": "ROM4/8/48.dat"
-  },
-  {
-    "name": "Weapon 45",
-    "category": "Objects",
-    "path": "ROM4/8/49.dat"
-  },
-  {
-    "name": "Weapon 46",
-    "category": "Objects",
-    "path": "ROM4/8/50.dat"
-  },
-  {
-    "name": "Weapon 47",
-    "category": "Objects",
-    "path": "ROM4/8/51.dat"
-  },
-  {
-    "name": "Weapon 48",
-    "category": "Objects",
-    "path": "ROM4/8/52.dat"
-  },
-  {
-    "name": "Weapon 49",
-    "category": "Objects",
-    "path": "ROM4/8/53.dat"
   },
   {
     "name": "Weapon 5",
@@ -7860,109 +7635,9 @@
     "path": "ROM3/5/25.dat"
   },
   {
-    "name": "Weapon 50",
-    "category": "Objects",
-    "path": "ROM4/8/54.dat"
-  },
-  {
-    "name": "Weapon 51",
-    "category": "Objects",
-    "path": "ROM4/8/64.dat"
-  },
-  {
-    "name": "Weapon 52",
-    "category": "Objects",
-    "path": "ROM4/8/65.dat"
-  },
-  {
-    "name": "Weapon 53",
-    "category": "Objects",
-    "path": "ROM4/8/66.dat"
-  },
-  {
-    "name": "Weapon 54",
-    "category": "Objects",
-    "path": "ROM4/8/67.dat"
-  },
-  {
-    "name": "Weapon 55",
-    "category": "Objects",
-    "path": "ROM4/8/68.dat"
-  },
-  {
-    "name": "Weapon 56",
-    "category": "Objects",
-    "path": "ROM4/8/69.dat"
-  },
-  {
-    "name": "Weapon 57",
-    "category": "Objects",
-    "path": "ROM4/8/79.dat"
-  },
-  {
-    "name": "Weapon 58",
-    "category": "Objects",
-    "path": "ROM4/8/80.dat"
-  },
-  {
-    "name": "Weapon 59",
-    "category": "Objects",
-    "path": "ROM4/8/81.dat"
-  },
-  {
     "name": "Weapon 6",
     "category": "Objects",
     "path": "ROM3/8/2.dat"
-  },
-  {
-    "name": "Weapon 60",
-    "category": "Objects",
-    "path": "ROM4/8/82.dat"
-  },
-  {
-    "name": "Weapon 61",
-    "category": "Objects",
-    "path": "ROM4/8/83.dat"
-  },
-  {
-    "name": "Weapon 62",
-    "category": "Objects",
-    "path": "ROM4/8/84.dat"
-  },
-  {
-    "name": "Weapon 63",
-    "category": "Objects",
-    "path": "ROM4/8/85.dat"
-  },
-  {
-    "name": "Weapon 64",
-    "category": "Objects",
-    "path": "ROM4/8/86.dat"
-  },
-  {
-    "name": "Weapon 65",
-    "category": "Objects",
-    "path": "ROM4/8/87.dat"
-  },
-  {
-    "name": "Weapon 66",
-    "category": "Objects",
-    "path": "ROM4/8/103.dat"
-  },
-  {
-    "name": "Weapon 67",
-    "category": "Objects",
-    "path": "ROM4/8/104.dat"
-  },
-  {
-    "name": "Weapon 68",
-    "category": "Objects",
-    "path": "ROM4/8/105.dat"
-  },
-  {
-    "name": "Weapon 69",
-    "category": "Objects",
-    "path": "ROM4/8/106.dat"
   },
   {
     "name": "Weapon 7",
@@ -7970,54 +7645,9 @@
     "path": "ROM3/9/34.dat"
   },
   {
-    "name": "Weapon 70",
-    "category": "Objects",
-    "path": "ROM4/8/107.dat"
-  },
-  {
     "name": "Weapon 71",
     "category": "Objects",
     "path": "ROM4/9/2.dat"
-  },
-  {
-    "name": "Weapon 72",
-    "category": "Objects",
-    "path": "ROM4/11/118.dat"
-  },
-  {
-    "name": "Weapon 73",
-    "category": "Objects",
-    "path": "ROM4/11/119.dat"
-  },
-  {
-    "name": "Weapon 74",
-    "category": "Objects",
-    "path": "ROM4/11/120.dat"
-  },
-  {
-    "name": "Weapon 75",
-    "category": "Objects",
-    "path": "ROM4/11/121.dat"
-  },
-  {
-    "name": "Weapon 76",
-    "category": "Objects",
-    "path": "ROM4/11/122.dat"
-  },
-  {
-    "name": "Weapon 77",
-    "category": "Objects",
-    "path": "ROM4/11/123.dat"
-  },
-  {
-    "name": "Weapon 78",
-    "category": "Objects",
-    "path": "ROM4/12/5.dat"
-  },
-  {
-    "name": "Weapon 79",
-    "category": "Objects",
-    "path": "ROM4/12/6.dat"
   },
   {
     "name": "Weapon 8",
@@ -8025,99 +7655,9 @@
     "path": "ROM4/2/59.dat"
   },
   {
-    "name": "Weapon 80",
-    "category": "Objects",
-    "path": "ROM4/12/7.dat"
-  },
-  {
-    "name": "Weapon 81",
-    "category": "Objects",
-    "path": "ROM4/12/8.dat"
-  },
-  {
-    "name": "Weapon 82",
-    "category": "Objects",
-    "path": "ROM4/12/9.dat"
-  },
-  {
-    "name": "Weapon 83",
-    "category": "Objects",
-    "path": "ROM4/12/10.dat"
-  },
-  {
-    "name": "Weapon 84",
-    "category": "Objects",
-    "path": "ROM4/12/20.dat"
-  },
-  {
-    "name": "Weapon 85",
-    "category": "Objects",
-    "path": "ROM4/12/21.dat"
-  },
-  {
-    "name": "Weapon 86",
-    "category": "Objects",
-    "path": "ROM4/12/22.dat"
-  },
-  {
-    "name": "Weapon 87",
-    "category": "Objects",
-    "path": "ROM4/12/23.dat"
-  },
-  {
-    "name": "Weapon 88",
-    "category": "Objects",
-    "path": "ROM4/12/24.dat"
-  },
-  {
-    "name": "Weapon 89",
-    "category": "Objects",
-    "path": "ROM4/12/25.dat"
-  },
-  {
     "name": "Weapon 9",
     "category": "Objects",
     "path": "ROM4/2/65.dat"
-  },
-  {
-    "name": "Weapon 90",
-    "category": "Objects",
-    "path": "ROM4/12/26.dat"
-  },
-  {
-    "name": "Weapon 91",
-    "category": "Objects",
-    "path": "ROM4/12/27.dat"
-  },
-  {
-    "name": "Weapon 92",
-    "category": "Objects",
-    "path": "ROM4/12/28.dat"
-  },
-  {
-    "name": "Weapon 93",
-    "category": "Objects",
-    "path": "ROM4/12/44.dat"
-  },
-  {
-    "name": "Weapon 94",
-    "category": "Objects",
-    "path": "ROM4/12/45.dat"
-  },
-  {
-    "name": "Weapon 95",
-    "category": "Objects",
-    "path": "ROM4/12/46.dat"
-  },
-  {
-    "name": "Weapon 96",
-    "category": "Objects",
-    "path": "ROM4/12/47.dat"
-  },
-  {
-    "name": "Weapon 97",
-    "category": "Objects",
-    "path": "ROM4/12/48.dat"
   },
   {
     "name": "Weapon 98",
@@ -8145,1189 +7685,19 @@
     "path": "ROM3/8/29.dat"
   },
   {
-    "name": "Carrying Couple 1",
-    "category": "Other NPCs",
-    "path": "ROM4/2/22.dat"
+    "name": "Hurkan 2",
+    "category": "Odyssey",
+    "path": "ROM/335/78.dat"
   },
   {
-    "name": "Carrying Couple 2",
-    "category": "Other NPCs",
-    "path": "ROM4/2/23.dat"
+    "name": "Snapweed 4",
+    "category": "Odyssey",
+    "path": "ROM/328/80.dat"
   },
   {
-    "name": "Dawn Maidens 1",
-    "category": "Other NPCs",
-    "path": "ROM2/23/60.dat"
-  },
-  {
-    "name": "Dawn Maidens 2",
-    "category": "Other NPCs",
-    "path": "ROM2/23/61.dat"
-  },
-  {
-    "name": "Dawn Maidens 3",
-    "category": "Other NPCs",
-    "path": "ROM2/23/62.dat"
-  },
-  {
-    "name": "Dawn Maidens 4",
-    "category": "Other NPCs",
-    "path": "ROM2/23/63.dat"
-  },
-  {
-    "name": "Dawn Maidens 5",
-    "category": "Other NPCs",
-    "path": "ROM2/23/64.dat"
-  },
-  {
-    "name": "Dawn Maidens 6",
-    "category": "Other NPCs",
-    "path": "ROM2/23/65.dat"
-  },
-  {
-    "name": "Dawn Maidens 7",
-    "category": "Other NPCs",
-    "path": "ROM2/23/66.dat"
-  },
-  {
-    "name": "Dawn Maidens 8",
-    "category": "Other NPCs",
-    "path": "ROM2/23/67.dat"
-  },
-  {
-    "name": "Elvaan Bishop 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/104.dat"
-  },
-  {
-    "name": "Elvaan Bishop 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/105.dat"
-  },
-  {
-    "name": "Elvaan Bishop 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/106.dat"
-  },
-  {
-    "name": "Elvaan Bishop 4",
-    "category": "Other NPCs",
-    "path": "ROM/3/108.dat"
-  },
-  {
-    "name": "Elvaan Bishop 5",
-    "category": "Other NPCs",
-    "path": "ROM/3/109.dat"
-  },
-  {
-    "name": "Elvaan Bishop 6",
-    "category": "Other NPCs",
-    "path": "ROM/7/122.dat"
-  },
-  {
-    "name": "Elvaan Boy 1",
-    "category": "Other NPCs",
-    "path": "ROM/4/0.dat"
-  },
-  {
-    "name": "Elvaan Boy 2",
-    "category": "Other NPCs",
-    "path": "ROM/4/1.dat"
-  },
-  {
-    "name": "Elvaan Boy 3",
-    "category": "Other NPCs",
-    "path": "ROM/355/11.dat"
-  },
-  {
-    "name": "Elvaan Girl",
-    "category": "Other NPCs",
-    "path": "ROM/4/4.dat"
-  },
-  {
-    "name": "Elvaan M 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/16.dat"
-  },
-  {
-    "name": "Elvaan M 10",
-    "category": "Other NPCs",
-    "path": "ROM5/8/51.dat"
-  },
-  {
-    "name": "Elvaan M 11",
-    "category": "Other NPCs",
-    "path": "ROM5/8/52.dat"
-  },
-  {
-    "name": "Elvaan M 12",
-    "category": "Other NPCs",
-    "path": "ROM5/8/69.dat"
-  },
-  {
-    "name": "Elvaan M 2",
-    "category": "Other NPCs",
-    "path": "ROM/4/46.dat"
-  },
-  {
-    "name": "Elvaan M 3",
-    "category": "Other NPCs",
-    "path": "ROM/4/47.dat"
-  },
-  {
-    "name": "Elvaan M 4",
-    "category": "Other NPCs",
-    "path": "ROM/4/48.dat"
-  },
-  {
-    "name": "Elvaan M 5",
-    "category": "Other NPCs",
-    "path": "ROM/4/49.dat"
-  },
-  {
-    "name": "Elvaan M 6",
-    "category": "Other NPCs",
-    "path": "ROM/7/84.dat"
-  },
-  {
-    "name": "Elvaan M 7",
-    "category": "Other NPCs",
-    "path": "ROM/7/85.dat"
-  },
-  {
-    "name": "Elvaan M 8",
-    "category": "Other NPCs",
-    "path": "ROM/7/86.dat"
-  },
-  {
-    "name": "Elvaan M 9",
-    "category": "Other NPCs",
-    "path": "ROM/7/88.dat"
-  },
-  {
-    "name": "Elvaan Senior F 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/116.dat"
-  },
-  {
-    "name": "Elvaan Senior F 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/117.dat"
-  },
-  {
-    "name": "Elvaan Senior F 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/118.dat"
-  },
-  {
-    "name": "Elvaan Senior F 4",
-    "category": "Other NPCs",
-    "path": "ROM/4/53.dat"
-  },
-  {
-    "name": "Elvaan Senior F 5",
-    "category": "Other NPCs",
-    "path": "ROM/7/92.dat"
-  },
-  {
-    "name": "Elvaan Senior F 6",
-    "category": "Other NPCs",
-    "path": "ROM3/3/98.dat"
-  },
-  {
-    "name": "Elvaan Senior M 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/112.dat"
-  },
-  {
-    "name": "Elvaan Senior M 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/113.dat"
-  },
-  {
-    "name": "Elvaan Senior M 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/114.dat"
-  },
-  {
-    "name": "Elvaan Senior M 4",
-    "category": "Other NPCs",
-    "path": "ROM/3/115.dat"
-  },
-  {
-    "name": "Elvaan Senior M 5",
-    "category": "Other NPCs",
-    "path": "ROM3/3/97.dat"
-  },
-  {
-    "name": "Elvaan Servant",
-    "category": "Other NPCs",
-    "path": "ROM/3/96.dat"
-  },
-  {
-    "name": "Elvan F 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/21.dat"
-  },
-  {
-    "name": "Elvan F 2",
-    "category": "Other NPCs",
-    "path": "ROM/4/50.dat"
-  },
-  {
-    "name": "Elvan F 3",
-    "category": "Other NPCs",
-    "path": "ROM/4/51.dat"
-  },
-  {
-    "name": "Elvan F 4",
-    "category": "Other NPCs",
-    "path": "ROM/4/52.dat"
-  },
-  {
-    "name": "Elvan F 5",
-    "category": "Other NPCs",
-    "path": "ROM/7/89.dat"
-  },
-  {
-    "name": "Elvan F 6",
-    "category": "Other NPCs",
-    "path": "ROM4/2/18.dat"
-  },
-  {
-    "name": "Elvan F 7",
-    "category": "Other NPCs",
-    "path": "ROM5/8/68.dat"
-  },
-  {
-    "name": "Ferry Guard",
-    "category": "Other NPCs",
-    "path": "ROM/162/48.dat"
-  },
-  {
-    "name": "Galka 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/3.dat"
-  },
-  {
-    "name": "Galka 10",
-    "category": "Other NPCs",
-    "path": "ROM/4/62.dat"
-  },
-  {
-    "name": "Galka 11",
-    "category": "Other NPCs",
-    "path": "ROM/4/83.dat"
-  },
-  {
-    "name": "Galka 12",
-    "category": "Other NPCs",
-    "path": "ROM/191/1.dat"
-  },
-  {
-    "name": "Galka 13",
-    "category": "Other NPCs",
-    "path": "ROM5/8/55.dat"
-  },
-  {
-    "name": "Galka 14",
-    "category": "Other NPCs",
-    "path": "ROM5/8/56.dat"
-  },
-  {
-    "name": "Galka 15",
-    "category": "Other NPCs",
-    "path": "ROM5/8/57.dat"
-  },
-  {
-    "name": "Galka 16",
-    "category": "Other NPCs",
-    "path": "ROM9/1/113.dat"
-  },
-  {
-    "name": "Galka 17",
-    "category": "Other NPCs",
-    "path": "ROM9/1/120.dat"
-  },
-  {
-    "name": "Galka 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/4.dat"
-  },
-  {
-    "name": "Galka 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/5.dat"
-  },
-  {
-    "name": "Galka 4",
-    "category": "Other NPCs",
-    "path": "ROM/3/120.dat"
-  },
-  {
-    "name": "Galka 5",
-    "category": "Other NPCs",
-    "path": "ROM/3/121.dat"
-  },
-  {
-    "name": "Galka 6",
-    "category": "Other NPCs",
-    "path": "ROM/3/122.dat"
-  },
-  {
-    "name": "Galka 7",
-    "category": "Other NPCs",
-    "path": "ROM/4/20.dat"
-  },
-  {
-    "name": "Galka 8",
-    "category": "Other NPCs",
-    "path": "ROM/4/60.dat"
-  },
-  {
-    "name": "Galka 9",
-    "category": "Other NPCs",
-    "path": "ROM/4/61.dat"
-  },
-  {
-    "name": "Galka Boy 1",
-    "category": "Other NPCs",
-    "path": "ROM/4/24.dat"
-  },
-  {
-    "name": "Galka Boy 2",
-    "category": "Other NPCs",
-    "path": "ROM/4/25.dat"
-  },
-  {
-    "name": "Galka Boy 3",
-    "category": "Other NPCs",
-    "path": "ROM/4/26.dat"
-  },
-  {
-    "name": "Galka Boy 4",
-    "category": "Other NPCs",
-    "path": "ROM/4/27.dat"
-  },
-  {
-    "name": "Galka Boy 5",
-    "category": "Other NPCs",
-    "path": "ROM/8/107.dat"
-  },
-  {
-    "name": "Galka Boy 6",
-    "category": "Other NPCs",
-    "path": "ROM/8/108.dat"
-  },
-  {
-    "name": "Galka Boy 7",
-    "category": "Other NPCs",
-    "path": "ROM/8/109.dat"
-  },
-  {
-    "name": "Galka Boy 8",
-    "category": "Other NPCs",
-    "path": "ROM/8/110.dat"
-  },
-  {
-    "name": "Hume Boy",
-    "category": "Other NPCs",
-    "path": "ROM/3/88.dat"
-  },
-  {
-    "name": "Hume F 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/11.dat"
-  },
-  {
-    "name": "Hume F 10",
-    "category": "Other NPCs",
-    "path": "ROM3/10/101.dat"
-  },
-  {
-    "name": "Hume F 11",
-    "category": "Other NPCs",
-    "path": "ROM3/10/102.dat"
-  },
-  {
-    "name": "Hume F 12",
-    "category": "Other NPCs",
-    "path": "ROM3/10/103.dat"
-  },
-  {
-    "name": "Hume F 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/101.dat"
-  },
-  {
-    "name": "Hume F 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/125.dat"
-  },
-  {
-    "name": "Hume F 4",
-    "category": "Other NPCs",
-    "path": "ROM/4/73.dat"
-  },
-  {
-    "name": "Hume F 5",
-    "category": "Other NPCs",
-    "path": "ROM/4/74.dat"
-  },
-  {
-    "name": "Hume F 6",
-    "category": "Other NPCs",
-    "path": "ROM/4/75.dat"
-  },
-  {
-    "name": "Hume F 7",
-    "category": "Other NPCs",
-    "path": "ROM2/16/30.dat"
-  },
-  {
-    "name": "Hume F 8",
-    "category": "Other NPCs",
-    "path": "ROM2/16/31.dat"
-  },
-  {
-    "name": "Hume F 9",
-    "category": "Other NPCs",
-    "path": "ROM2/16/32.dat"
-  },
-  {
-    "name": "Hume Girl 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/92.dat"
-  },
-  {
-    "name": "Hume Girl 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/93.dat"
-  },
-  {
-    "name": "Hume M 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/6.dat"
-  },
-  {
-    "name": "Hume M 10",
-    "category": "Other NPCs",
-    "path": "ROM/4/70.dat"
-  },
-  {
-    "name": "Hume M 11",
-    "category": "Other NPCs",
-    "path": "ROM/4/71.dat"
-  },
-  {
-    "name": "Hume M 12",
-    "category": "Other NPCs",
-    "path": "ROM/4/72.dat"
-  },
-  {
-    "name": "Hume M 13",
-    "category": "Other NPCs",
-    "path": "ROM/4/88.dat"
-  },
-  {
-    "name": "Hume M 14",
-    "category": "Other NPCs",
-    "path": "ROM/7/108.dat"
-  },
-  {
-    "name": "Hume M 15",
-    "category": "Other NPCs",
-    "path": "ROM/7/112.dat"
-  },
-  {
-    "name": "Hume M 16",
-    "category": "Other NPCs",
-    "path": "ROM/7/113.dat"
-  },
-  {
-    "name": "Hume M 17",
-    "category": "Other NPCs",
-    "path": "ROM/7/116.dat"
-  },
-  {
-    "name": "Hume M 18",
-    "category": "Other NPCs",
-    "path": "ROM/7/117.dat"
-  },
-  {
-    "name": "Hume M 19",
-    "category": "Other NPCs",
-    "path": "ROM/7/118.dat"
-  },
-  {
-    "name": "Hume M 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/84.dat"
-  },
-  {
-    "name": "Hume M 20",
-    "category": "Other NPCs",
-    "path": "ROM/7/119.dat"
-  },
-  {
-    "name": "Hume M 21",
-    "category": "Other NPCs",
-    "path": "ROM2/16/27.dat"
-  },
-  {
-    "name": "Hume M 22",
-    "category": "Other NPCs",
-    "path": "ROM2/16/28.dat"
-  },
-  {
-    "name": "Hume M 23",
-    "category": "Other NPCs",
-    "path": "ROM2/16/29.dat"
-  },
-  {
-    "name": "Hume M 24",
-    "category": "Other NPCs",
-    "path": "ROM3/10/98.dat"
-  },
-  {
-    "name": "Hume M 25",
-    "category": "Other NPCs",
-    "path": "ROM3/10/99.dat"
-  },
-  {
-    "name": "Hume M 26",
-    "category": "Other NPCs",
-    "path": "ROM3/10/100.dat"
-  },
-  {
-    "name": "Hume M 27",
-    "category": "Other NPCs",
-    "path": "ROM5/7/29.dat"
-  },
-  {
-    "name": "Hume M 28",
-    "category": "Other NPCs",
-    "path": "ROM9/1/111.dat"
-  },
-  {
-    "name": "Hume M 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/85.dat"
-  },
-  {
-    "name": "Hume M 4",
-    "category": "Other NPCs",
-    "path": "ROM/3/86.dat"
-  },
-  {
-    "name": "Hume M 5",
-    "category": "Other NPCs",
-    "path": "ROM/3/87.dat"
-  },
-  {
-    "name": "Hume M 6",
-    "category": "Other NPCs",
-    "path": "ROM/3/124.dat"
-  },
-  {
-    "name": "Hume M 7",
-    "category": "Other NPCs",
-    "path": "ROM/3/126.dat"
-  },
-  {
-    "name": "Hume M 8",
-    "category": "Other NPCs",
-    "path": "ROM/4/68.dat"
-  },
-  {
-    "name": "Hume M 9",
-    "category": "Other NPCs",
-    "path": "ROM/4/69.dat"
-  },
-  {
-    "name": "Hume Merchant F 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/76.dat"
-  },
-  {
-    "name": "Hume Merchant F 10",
-    "category": "Other NPCs",
-    "path": "ROM/8/31.dat"
-  },
-  {
-    "name": "Hume Merchant F 11",
-    "category": "Other NPCs",
-    "path": "ROM3/5/115.dat"
-  },
-  {
-    "name": "Hume Merchant F 12",
-    "category": "Other NPCs",
-    "path": "ROM3/5/116.dat"
-  },
-  {
-    "name": "Hume Merchant F 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/77.dat"
-  },
-  {
-    "name": "Hume Merchant F 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/78.dat"
-  },
-  {
-    "name": "Hume Merchant F 4",
-    "category": "Other NPCs",
-    "path": "ROM/3/79.dat"
-  },
-  {
-    "name": "Hume Merchant F 5",
-    "category": "Other NPCs",
-    "path": "ROM/8/26.dat"
-  },
-  {
-    "name": "Hume Merchant F 6",
-    "category": "Other NPCs",
-    "path": "ROM/8/27.dat"
-  },
-  {
-    "name": "Hume Merchant F 7",
-    "category": "Other NPCs",
-    "path": "ROM/8/28.dat"
-  },
-  {
-    "name": "Hume Merchant F 8",
-    "category": "Other NPCs",
-    "path": "ROM/8/29.dat"
-  },
-  {
-    "name": "Hume Merchant F 9",
-    "category": "Other NPCs",
-    "path": "ROM/8/30.dat"
-  },
-  {
-    "name": "Hume Merchant M 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/72.dat"
-  },
-  {
-    "name": "Hume Merchant M 10",
-    "category": "Other NPCs",
-    "path": "ROM/8/15.dat"
-  },
-  {
-    "name": "Hume Merchant M 11",
-    "category": "Other NPCs",
-    "path": "ROM/8/16.dat"
-  },
-  {
-    "name": "Hume Merchant M 12",
-    "category": "Other NPCs",
-    "path": "ROM/8/17.dat"
-  },
-  {
-    "name": "Hume Merchant M 13",
-    "category": "Other NPCs",
-    "path": "ROM/8/18.dat"
-  },
-  {
-    "name": "Hume Merchant M 14",
-    "category": "Other NPCs",
-    "path": "ROM/8/19.dat"
-  },
-  {
-    "name": "Hume Merchant M 15",
-    "category": "Other NPCs",
-    "path": "ROM/8/20.dat"
-  },
-  {
-    "name": "Hume Merchant M 16",
-    "category": "Other NPCs",
-    "path": "ROM/8/21.dat"
-  },
-  {
-    "name": "Hume Merchant M 17",
-    "category": "Other NPCs",
-    "path": "ROM/8/22.dat"
-  },
-  {
-    "name": "Hume Merchant M 18",
-    "category": "Other NPCs",
-    "path": "ROM9/1/119.dat"
-  },
-  {
-    "name": "Hume Merchant M 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/73.dat"
-  },
-  {
-    "name": "Hume Merchant M 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/74.dat"
-  },
-  {
-    "name": "Hume Merchant M 4",
-    "category": "Other NPCs",
-    "path": "ROM/3/75.dat"
-  },
-  {
-    "name": "Hume Merchant M 5",
-    "category": "Other NPCs",
-    "path": "ROM/7/82.dat"
-  },
-  {
-    "name": "Hume Merchant M 6",
-    "category": "Other NPCs",
-    "path": "ROM/4/100.dat"
-  },
-  {
-    "name": "Hume Merchant M 7",
-    "category": "Other NPCs",
-    "path": "ROM/4/101.dat"
-  },
-  {
-    "name": "Hume Merchant M 8",
-    "category": "Other NPCs",
-    "path": "ROM/8/13.dat"
-  },
-  {
-    "name": "Hume Merchant M 9",
-    "category": "Other NPCs",
-    "path": "ROM/8/14.dat"
-  },
-  {
-    "name": "Hume Noble F 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/80.dat"
-  },
-  {
-    "name": "Hume Noble F 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/81.dat"
-  },
-  {
-    "name": "Hume Noble F 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/82.dat"
-  },
-  {
-    "name": "Hume Noble F 4",
-    "category": "Other NPCs",
-    "path": "ROM/8/32.dat"
-  },
-  {
-    "name": "Hume Noble F 5",
-    "category": "Other NPCs",
-    "path": "ROM/8/33.dat"
-  },
-  {
-    "name": "Hume Noble F 6",
-    "category": "Other NPCs",
-    "path": "ROM/8/34.dat"
-  },
-  {
-    "name": "Hume Senior F 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/68.dat"
-  },
-  {
-    "name": "Hume Senior F 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/69.dat"
-  },
-  {
-    "name": "Hume Senior F 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/70.dat"
-  },
-  {
-    "name": "Hume Senior F 4",
-    "category": "Other NPCs",
-    "path": "ROM/3/71.dat"
-  },
-  {
-    "name": "Hume Senior F 5",
-    "category": "Other NPCs",
-    "path": "ROM/4/77.dat"
-  },
-  {
-    "name": "Hume Senior F 6",
-    "category": "Other NPCs",
-    "path": "ROM/8/7.dat"
-  },
-  {
-    "name": "Hume Senior F 7",
-    "category": "Other NPCs",
-    "path": "ROM/8/8.dat"
-  },
-  {
-    "name": "Hume Senior M 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/64.dat"
-  },
-  {
-    "name": "Hume Senior M 2",
-    "category": "Other NPCs",
-    "path": "ROM/3/65.dat"
-  },
-  {
-    "name": "Hume Senior M 3",
-    "category": "Other NPCs",
-    "path": "ROM/3/66.dat"
-  },
-  {
-    "name": "Hume Senior M 4",
-    "category": "Other NPCs",
-    "path": "ROM/3/67.dat"
-  },
-  {
-    "name": "Hume Senior M 5",
-    "category": "Other NPCs",
-    "path": "ROM/3/127.dat"
-  },
-  {
-    "name": "Hume Senior M 6",
-    "category": "Other NPCs",
-    "path": "ROM/8/1.dat"
-  },
-  {
-    "name": "Hume Senior M 7",
-    "category": "Other NPCs",
-    "path": "ROM/8/2.dat"
-  },
-  {
-    "name": "Hume Senior M 8",
-    "category": "Other NPCs",
-    "path": "ROM3/5/109.dat"
-  },
-  {
-    "name": "Hume Senior M 9",
-    "category": "Other NPCs",
-    "path": "ROM3/5/114.dat"
-  },
-  {
-    "name": "Mithra 1",
-    "category": "Other NPCs",
-    "path": "ROM/4/45.dat"
-  },
-  {
-    "name": "Mithra 10",
-    "category": "Other NPCs",
-    "path": "ROM/4/97.dat"
-  },
-  {
-    "name": "Mithra 11",
-    "category": "Other NPCs",
-    "path": "ROM/7/91.dat"
-  },
-  {
-    "name": "Mithra 12",
-    "category": "Other NPCs",
-    "path": "ROM/7/99.dat"
-  },
-  {
-    "name": "Mithra 13",
-    "category": "Other NPCs",
-    "path": "ROM/7/105.dat"
-  },
-  {
-    "name": "Mithra 14",
-    "category": "Other NPCs",
-    "path": "ROM/7/106.dat"
-  },
-  {
-    "name": "Mithra 15",
-    "category": "Other NPCs",
-    "path": "ROM/7/107.dat"
-  },
-  {
-    "name": "Mithra 16",
-    "category": "Other NPCs",
-    "path": "ROM/191/2.dat"
-  },
-  {
-    "name": "Mithra 17",
-    "category": "Other NPCs",
-    "path": "ROM2/16/22.dat"
-  },
-  {
-    "name": "Mithra 18",
-    "category": "Other NPCs",
-    "path": "ROM2/16/23.dat"
-  },
-  {
-    "name": "Mithra 19",
-    "category": "Other NPCs",
-    "path": "ROM2/16/24.dat"
-  },
-  {
-    "name": "Mithra 2",
-    "category": "Other NPCs",
-    "path": "ROM/4/63.dat"
-  },
-  {
-    "name": "Mithra 20",
-    "category": "Other NPCs",
-    "path": "ROM5/8/38.dat"
-  },
-  {
-    "name": "Mithra 21",
-    "category": "Other NPCs",
-    "path": "ROM5/8/39.dat"
-  },
-  {
-    "name": "Mithra 22",
-    "category": "Other NPCs",
-    "path": "ROM5/8/59.dat"
-  },
-  {
-    "name": "Mithra 23",
-    "category": "Other NPCs",
-    "path": "ROM9/1/121.dat"
-  },
-  {
-    "name": "Mithra 3",
-    "category": "Other NPCs",
-    "path": "ROM/4/64.dat"
-  },
-  {
-    "name": "Mithra 4",
-    "category": "Other NPCs",
-    "path": "ROM/4/65.dat"
-  },
-  {
-    "name": "Mithra 5",
-    "category": "Other NPCs",
-    "path": "ROM/4/66.dat"
-  },
-  {
-    "name": "Mithra 6",
-    "category": "Other NPCs",
-    "path": "ROM/4/67.dat"
-  },
-  {
-    "name": "Mithra 7",
-    "category": "Other NPCs",
-    "path": "ROM/4/79.dat"
-  },
-  {
-    "name": "Mithra 8",
-    "category": "Other NPCs",
-    "path": "ROM/4/80.dat"
-  },
-  {
-    "name": "Mithra 9",
-    "category": "Other NPCs",
-    "path": "ROM/4/94.dat"
-  },
-  {
-    "name": "Mithra Girl 1",
-    "category": "Other NPCs",
-    "path": "ROM/4/28.dat"
-  },
-  {
-    "name": "Mithra Girl 2",
-    "category": "Other NPCs",
-    "path": "ROM/4/29.dat"
-  },
-  {
-    "name": "Tarutaru Boy 1",
-    "category": "Other NPCs",
-    "path": "ROM/4/12.dat"
-  },
-  {
-    "name": "Tarutaru Boy 2",
-    "category": "Other NPCs",
-    "path": "ROM/4/13.dat"
-  },
-  {
-    "name": "Tarutaru Boy 3",
-    "category": "Other NPCs",
-    "path": "ROM/4/14.dat"
-  },
-  {
-    "name": "Tarutaru Boy 4",
-    "category": "Other NPCs",
-    "path": "ROM/4/15.dat"
-  },
-  {
-    "name": "Tarutaru Boy 5",
-    "category": "Other NPCs",
-    "path": "ROM/7/103.dat"
-  },
-  {
-    "name": "Tarutaru F 1",
-    "category": "Other NPCs",
-    "path": "ROM/4/54.dat"
-  },
-  {
-    "name": "Tarutaru F 2",
-    "category": "Other NPCs",
-    "path": "ROM/4/58.dat"
-  },
-  {
-    "name": "Tarutaru F 3",
-    "category": "Other NPCs",
-    "path": "ROM/4/59.dat"
-  },
-  {
-    "name": "Tarutaru F 4",
-    "category": "Other NPCs",
-    "path": "ROM/4/89.dat"
-  },
-  {
-    "name": "Tarutaru F 5",
-    "category": "Other NPCs",
-    "path": "ROM/7/101.dat"
-  },
-  {
-    "name": "Tarutaru Girl 1",
-    "category": "Other NPCs",
-    "path": "ROM/4/16.dat"
-  },
-  {
-    "name": "Tarutaru Girl 2",
-    "category": "Other NPCs",
-    "path": "ROM/4/17.dat"
-  },
-  {
-    "name": "Tarutaru Girl 3",
-    "category": "Other NPCs",
-    "path": "ROM/4/18.dat"
-  },
-  {
-    "name": "Tarutaru Girl 4",
-    "category": "Other NPCs",
-    "path": "ROM/4/19.dat"
-  },
-  {
-    "name": "Tarutaru Girl 5",
-    "category": "Other NPCs",
-    "path": "ROM/7/104.dat"
-  },
-  {
-    "name": "Tarutaru M 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/83.dat"
-  },
-  {
-    "name": "Tarutaru M 10",
-    "category": "Other NPCs",
-    "path": "ROM/4/91.dat"
-  },
-  {
-    "name": "Tarutaru M 11",
-    "category": "Other NPCs",
-    "path": "ROM/4/92.dat"
-  },
-  {
-    "name": "Tarutaru M 12",
-    "category": "Other NPCs",
-    "path": "ROM/4/93.dat"
-  },
-  {
-    "name": "Tarutaru M 13",
-    "category": "Other NPCs",
-    "path": "ROM/7/90.dat"
-  },
-  {
-    "name": "Tarutaru M 14",
-    "category": "Other NPCs",
-    "path": "ROM/7/120.dat"
-  },
-  {
-    "name": "Tarutaru M 15",
-    "category": "Other NPCs",
-    "path": "ROM/8/83.dat"
-  },
-  {
-    "name": "Tarutaru M 2",
-    "category": "Other NPCs",
-    "path": "ROM/4/35.dat"
-  },
-  {
-    "name": "Tarutaru M 3",
-    "category": "Other NPCs",
-    "path": "ROM/4/36.dat"
-  },
-  {
-    "name": "Tarutaru M 4",
-    "category": "Other NPCs",
-    "path": "ROM/4/40.dat"
-  },
-  {
-    "name": "Tarutaru M 5",
-    "category": "Other NPCs",
-    "path": "ROM/4/55.dat"
-  },
-  {
-    "name": "Tarutaru M 6",
-    "category": "Other NPCs",
-    "path": "ROM/4/56.dat"
-  },
-  {
-    "name": "Tarutaru M 7",
-    "category": "Other NPCs",
-    "path": "ROM/4/57.dat"
-  },
-  {
-    "name": "Tarutaru M 8",
-    "category": "Other NPCs",
-    "path": "ROM/4/78.dat"
-  },
-  {
-    "name": "Tarutaru M 9",
-    "category": "Other NPCs",
-    "path": "ROM/4/90.dat"
-  },
-  {
-    "name": "Title Changer Bard 1",
-    "category": "Other NPCs",
-    "path": "ROM/119/80.dat"
-  },
-  {
-    "name": "Title Changer Bard 2",
-    "category": "Other NPCs",
-    "path": "ROM/119/81.dat"
-  },
-  {
-    "name": "Title Changer Bard 3",
-    "category": "Other NPCs",
-    "path": "ROM4/2/17.dat"
-  },
-  {
-    "name": "Zilart 1",
-    "category": "Other NPCs",
-    "path": "ROM/3/57.dat"
-  },
-  {
-    "name": "Zilart 2",
-    "category": "Other NPCs",
-    "path": "ROM2/0/53.dat"
-  },
-  {
-    "name": "Zilart 3",
-    "category": "Other NPCs",
-    "path": "ROM2/23/68.dat"
-  },
-  {
-    "name": "Zilart 4",
-    "category": "Other NPCs",
-    "path": "ROM2/23/69.dat"
-  },
-  {
-    "name": "Zilart 5",
-    "category": "Other NPCs",
-    "path": "ROM2/23/70.dat"
-  },
-  {
-    "name": "Zilart 6",
-    "category": "Other NPCs",
-    "path": "ROM3/5/23.dat"
-  },
-  {
-    "name": "Zilart 7",
-    "category": "Other NPCs",
-    "path": "ROM3/5/108.dat"
+    "name": "Yumcax 2",
+    "category": "Odyssey",
+    "path": "ROM9/0/39.dat"
   },
   {
     "name": "Belladonna 1",
@@ -9585,11 +7955,6 @@
     "path": "ROM9/1/104.dat"
   },
   {
-    "name": "Snapweed 4",
-    "category": "Plantoids",
-    "path": "ROM/328/80.dat"
-  },
-  {
     "name": "Treant 1",
     "category": "Plantoids",
     "path": "ROM/5/46.dat"
@@ -9640,1479 +8005,3119 @@
     "path": "ROM9/1/77.dat"
   },
   {
-    "name": "Craver 1",
-    "category": "Promyvion",
-    "path": "ROM/249/60.dat"
-  },
-  {
-    "name": "Craver 2",
-    "category": "Promyvion",
-    "path": "ROM3/8/14.dat"
-  },
-  {
-    "name": "Craver 3",
-    "category": "Promyvion",
-    "path": "ROM3/8/15.dat"
-  },
-  {
-    "name": "Craver 4",
-    "category": "Promyvion",
-    "path": "ROM3/8/16.dat"
-  },
-  {
-    "name": "Craver 5",
-    "category": "Promyvion",
-    "path": "ROM3/8/17.dat"
-  },
-  {
-    "name": "Craver 6",
-    "category": "Promyvion",
-    "path": "ROM3/9/51.dat"
-  },
-  {
-    "name": "Gorger 1",
-    "category": "Promyvion",
-    "path": "ROM/249/59.dat"
-  },
-  {
-    "name": "Gorger 2",
-    "category": "Promyvion",
-    "path": "ROM3/5/53.dat"
-  },
-  {
-    "name": "Gorger 3",
-    "category": "Promyvion",
-    "path": "ROM3/8/10.dat"
-  },
-  {
-    "name": "Gorger 4",
-    "category": "Promyvion",
-    "path": "ROM3/8/11.dat"
-  },
-  {
-    "name": "Gorger 5",
-    "category": "Promyvion",
-    "path": "ROM3/8/12.dat"
-  },
-  {
-    "name": "Gorger 6",
-    "category": "Promyvion",
-    "path": "ROM3/9/47.dat"
-  },
-  {
-    "name": "Gorger 7",
-    "category": "Promyvion",
-    "path": "ROM3/9/48.dat"
-  },
-  {
-    "name": "Gorger 8",
-    "category": "Promyvion",
-    "path": "ROM3/9/50.dat"
-  },
-  {
-    "name": "Seether 1",
-    "category": "Promyvion",
-    "path": "ROM/249/57.dat"
-  },
-  {
-    "name": "Seether 2",
-    "category": "Promyvion",
-    "path": "ROM3/9/38.dat"
-  },
-  {
-    "name": "Seether 3",
-    "category": "Promyvion",
-    "path": "ROM3/9/39.dat"
-  },
-  {
-    "name": "Seether 4",
-    "category": "Promyvion",
-    "path": "ROM3/9/40.dat"
-  },
-  {
-    "name": "Seether 5",
-    "category": "Promyvion",
-    "path": "ROM3/9/41.dat"
-  },
-  {
-    "name": "Thinker 1",
-    "category": "Promyvion",
-    "path": "ROM/249/58.dat"
-  },
-  {
-    "name": "Thinker 2",
-    "category": "Promyvion",
-    "path": "ROM3/8/9.dat"
-  },
-  {
-    "name": "Thinker 3",
-    "category": "Promyvion",
-    "path": "ROM3/9/43.dat"
-  },
-  {
-    "name": "Thinker 4",
-    "category": "Promyvion",
-    "path": "ROM3/9/44.dat"
-  },
-  {
-    "name": "Thinker 5",
-    "category": "Promyvion",
-    "path": "ROM3/9/45.dat"
-  },
-  {
-    "name": "Thinker 6",
-    "category": "Promyvion",
-    "path": "ROM3/9/49.dat"
-  },
-  {
-    "name": "Wanderer 1",
-    "category": "Promyvion",
-    "path": "ROM/249/55.dat"
-  },
-  {
-    "name": "Wanderer 2",
-    "category": "Promyvion",
-    "path": "ROM3/5/35.dat"
-  },
-  {
-    "name": "Wanderer 3",
-    "category": "Promyvion",
-    "path": "ROM3/5/36.dat"
-  },
-  {
-    "name": "Wanderer 4",
-    "category": "Promyvion",
-    "path": "ROM3/5/37.dat"
-  },
-  {
-    "name": "Wanderer 5",
-    "category": "Promyvion",
-    "path": "ROM3/5/38.dat"
-  },
-  {
-    "name": "Weeper 1",
-    "category": "Promyvion",
-    "path": "ROM/249/56.dat"
-  },
-  {
-    "name": "Weeper 2",
-    "category": "Promyvion",
-    "path": "ROM3/5/39.dat"
-  },
-  {
-    "name": "Weeper 3",
-    "category": "Promyvion",
-    "path": "ROM3/5/40.dat"
-  },
-  {
-    "name": "Weeper 4",
-    "category": "Promyvion",
-    "path": "ROM3/5/41.dat"
-  },
-  {
-    "name": "Weeper 5",
-    "category": "Promyvion",
-    "path": "ROM3/5/42.dat"
-  },
-  {
     "name": "Ajido-Marujido (S)",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/22.dat"
   },
   {
     "name": "Ajido-Marujido 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/48.dat"
   },
   {
     "name": "Ajido-Marujido 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/123.dat"
   },
   {
     "name": "Ajido-Marujido 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/125/76.dat"
   },
   {
     "name": "Ajido-Marujido 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/112.dat"
   },
   {
     "name": "Alaixion",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/0.dat"
   },
   {
     "name": "Aldo 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/52.dat"
   },
   {
     "name": "Aldo 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/105.dat"
   },
   {
     "name": "Altennia 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/33.dat"
   },
   {
     "name": "Altennia 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/73.dat"
   },
   {
     "name": "Altennia 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/74.dat"
   },
   {
     "name": "Apururu",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/4/10.dat"
   },
   {
     "name": "Aquila",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/49.dat"
   },
   {
     "name": "Arciela 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/100.dat"
   },
   {
     "name": "Arciela 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/70.dat"
   },
   {
     "name": "Arciela 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/78.dat"
   },
   {
     "name": "Arciela 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/104.dat"
   },
   {
     "name": "Arciela 5",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/346/55.dat"
   },
   {
     "name": "Ark Agenl GK 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/282/120.dat"
   },
   {
     "name": "Ark Agenl GK 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM2/16/17.dat"
   },
   {
     "name": "Ark Agenl GK 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/8/22.dat"
   },
   {
     "name": "Ark Angel EV 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/282/117.dat"
   },
   {
     "name": "Ark Angel EV 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM2/16/18.dat"
   },
   {
     "name": "Ark Angel EV 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/8/23.dat"
   },
   {
     "name": "Ark Angel HM 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/282/116.dat"
   },
   {
     "name": "Ark Angel HM 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM2/16/19.dat"
   },
   {
     "name": "Ark Angel HM 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/8/24.dat"
   },
   {
     "name": "Ark Angel MR 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/282/118.dat"
   },
   {
     "name": "Ark Angel MR 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM2/16/21.dat"
   },
   {
     "name": "Ark Angel MR 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/8/26.dat"
   },
   {
     "name": "Ark Angel TT 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/282/119.dat"
   },
   {
     "name": "Ark Angel TT 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM2/16/20.dat"
   },
   {
     "name": "Ark Angel TT 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/8/25.dat"
   },
   {
     "name": "August 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/75.dat"
   },
   {
     "name": "August 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/5.dat"
   },
   {
     "name": "Berghent",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/112.dat"
   },
   {
     "name": "Chacharoon 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/318/22.dat"
   },
   {
     "name": "Chacharoon 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/353/2.dat"
   },
   {
     "name": "Cherukiki",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/0/63.dat"
   },
   {
     "name": "Cid",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/37.dat"
   },
   {
     "name": "Cornelia",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/44.dat"
   },
   {
     "name": "Curilla 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/43.dat"
   },
   {
     "name": "Curilla 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/110.dat"
   },
   {
     "name": "Cynthia",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/117.dat"
   },
   {
     "name": "Dark Messenger",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/47.dat"
   },
   {
     "name": "Darrculin 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/62.dat"
   },
   {
     "name": "Darrculin 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/8.dat"
   },
   {
     "name": "Darrculin 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/16.dat"
   },
   {
     "name": "Darrculin 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/22.dat"
   },
   {
     "name": "Darrculin 5",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/24.dat"
   },
   {
     "name": "Degenhard",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/259/81.dat"
   },
   {
     "name": "Despachiaire",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/3/96.dat"
   },
   {
     "name": "Eald'narche 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/35.dat"
   },
   {
     "name": "Eald'narche 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/123/12.dat"
   },
   {
     "name": "Eald'narche 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/123/10.dat"
   },
   {
     "name": "Eald'narche 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/159/82.dat"
   },
   {
     "name": "Excenmille (S) 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/98.dat"
   },
   {
     "name": "Excenmille (S) 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/7/26.dat"
   },
   {
     "name": "Fremilla",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/116.dat"
   },
   {
     "name": "Gessho",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/8.dat"
   },
   {
     "name": "Ghatsad",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/12.dat"
   },
   {
     "name": "Ghyo Molkot",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/36.dat"
   },
   {
     "name": "Gilgamesh 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/107.dat"
   },
   {
     "name": "Gilgamesh 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/115.dat"
   },
   {
     "name": "Gilgamesh 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM2/16/10.dat"
   },
   {
     "name": "Grav'iton 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM2/16/13.dat"
   },
   {
     "name": "Grav'iton 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/8/21.dat"
   },
   {
     "name": "Grennith",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/118.dat"
   },
   {
     "name": "Gumbah",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/46.dat"
   },
   {
     "name": "Gumbah (S)",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/24.dat"
   },
   {
     "name": "Haudrale",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/48.dat"
   },
   {
     "name": "Ikhi Askamot 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/2.dat"
   },
   {
     "name": "Ikhi Askamot 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/3.dat"
   },
   {
     "name": "Illisory 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM2/16/12.dat"
   },
   {
     "name": "Illisory 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/8/20.dat"
   },
   {
     "name": "Ingrid 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/4.dat"
   },
   {
     "name": "Ingrid 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/11.dat"
   },
   {
     "name": "Iroha 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/328/77.dat"
   },
   {
     "name": "Iroha 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/335/84.dat"
   },
   {
     "name": "Iroha 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/343/3.dat"
   },
   {
     "name": "Iroha 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/343/4.dat"
   },
   {
     "name": "Iroha 5",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/343/16.dat"
   },
   {
     "name": "Jakoh Wahcondalo",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM2/0/52.dat"
   },
   {
     "name": "Kam'lanaut 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/36.dat"
   },
   {
     "name": "Kam'lanaut 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/217/60.dat"
   },
   {
     "name": "Kam'lanaut 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/97/75.dat"
   },
   {
     "name": "Kam'lanaut 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/159/83.dat"
   },
   {
     "name": "Karaha-Baruha 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/7/33.dat"
   },
   {
     "name": "Karaha-Baruha 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/8/75.dat"
   },
   {
     "name": "Karaha-Baruha 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/77.dat"
   },
   {
     "name": "King Destin 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/41.dat"
   },
   {
     "name": "King Destin 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/7/114.dat"
   },
   {
     "name": "King Ranperre",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/97/88.dat"
   },
   {
     "name": "Klara",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/99.dat"
   },
   {
     "name": "Kukki-Chebukki",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/0/64.dat"
   },
   {
     "name": "Kuyin Hathdenna 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/311/36.dat"
   },
   {
     "name": "Kuyin Hathdenna 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/311/37.dat"
   },
   {
     "name": "Kuyin Hathdenna 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/311/38.dat"
   },
   {
     "name": "Lady Lilith 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/238/59.dat"
   },
   {
     "name": "Lady Lilith 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/7/34.dat"
   },
   {
     "name": "Lady Lilith 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/60.dat"
   },
   {
     "name": "Laila",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/191/3.dat"
   },
   {
     "name": "Larzos",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/70.dat"
   },
   {
     "name": "Lehko Habhoka 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/100.dat"
   },
   {
     "name": "Lehko Habhoka 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/7/32.dat"
   },
   {
     "name": "Lhe Lhangavo 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/114.dat"
   },
   {
     "name": "Lhe Lhangavo 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/115.dat"
   },
   {
     "name": "Lilisette 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/97.dat"
   },
   {
     "name": "Lilisette 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/320/79.dat"
   },
   {
     "name": "Lilisette 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/103.dat"
   },
   {
     "name": "Lilisette 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/346/54.dat"
   },
   {
     "name": "Lilisette 5",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/7/36.dat"
   },
   {
     "name": "Lilisette 6",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/50.dat"
   },
   {
     "name": "Lilith Ascended",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/7/35.dat"
   },
   {
     "name": "Lion 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/34.dat"
   },
   {
     "name": "Lion 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/112.dat"
   },
   {
     "name": "Lion 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/100.dat"
   },
   {
     "name": "Lion 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/346/51.dat"
   },
   {
     "name": "Luzaf 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/108.dat"
   },
   {
     "name": "Luzaf 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/118.dat"
   },
   {
     "name": "Luzaf 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/20.dat"
   },
   {
     "name": "Maat 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/100.dat"
   },
   {
     "name": "Maat 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/128/80.dat"
   },
   {
     "name": "Maat 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/106.dat"
   },
   {
     "name": "Makki-Chebukki 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/150/14.dat"
   },
   {
     "name": "Makki-Chebukki 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/0/65.dat"
   },
   {
     "name": "Melvien",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/103.dat"
   },
   {
     "name": "Mildaurion 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/5/106.dat"
   },
   {
     "name": "Mildaurion 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/261/56.dat"
   },
   {
     "name": "Mnejing 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/105.dat"
   },
   {
     "name": "Mnejing 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/117.dat"
   },
   {
     "name": "Mnejing 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/21.dat"
   },
   {
     "name": "Mnejing 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/63.dat"
   },
   {
     "name": "Monberaux",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/7/87.dat"
   },
   {
     "name": "Morimar 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/71.dat"
   },
   {
     "name": "Morimar 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/13.dat"
   },
   {
     "name": "Nag'molada 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/151/28.dat"
   },
   {
     "name": "Nag'molada 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/5/107.dat"
   },
   {
     "name": "Naja Salaheem 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/6.dat"
   },
   {
     "name": "Naja Salaheem 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/24.dat"
   },
   {
     "name": "Naja Salaheem 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/58.dat"
   },
   {
     "name": "Nanaa Mihgo",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/4/96.dat"
   },
   {
     "name": "Nashmeira 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/111.dat"
   },
   {
     "name": "Nashmeira 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/102.dat"
   },
   {
     "name": "Nashmeira 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/346/53.dat"
   },
   {
     "name": "Nashmeira 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/14.dat"
   },
   {
     "name": "Nashmeira 5",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/16.dat"
   },
   {
     "name": "Nashmeira 6",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/64.dat"
   },
   {
     "name": "Nhev Befrathi",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/75.dat"
   },
   {
     "name": "Noillurie",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/67.dat"
   },
   {
     "name": "Ovjang 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/104.dat"
   },
   {
     "name": "Ovjang 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/116.dat"
   },
   {
     "name": "Ovjang 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/15.dat"
   },
   {
     "name": "Ovjang 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/60.dat"
   },
   {
     "name": "Perih Vashai (S)",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/21.dat"
   },
   {
     "name": "Perih Vashai 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/50.dat"
   },
   {
     "name": "Perih Vashai 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/95/69.dat"
   },
   {
     "name": "Portia",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/259/36.dat"
   },
   {
     "name": "President Karst",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/45.dat"
   },
   {
     "name": "Prince Pieuje",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/39.dat"
   },
   {
     "name": "Prince Trion 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/125/75.dat"
   },
   {
     "name": "Prince Trion 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/38.dat"
   },
   {
     "name": "Prince Trion 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/109.dat"
   },
   {
     "name": "Prince Trion 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/5.dat"
   },
   {
     "name": "Princess Claidie",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/40.dat"
   },
   {
     "name": "Prishe 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/5/112.dat"
   },
   {
     "name": "Prishe 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/156/25.dat"
   },
   {
     "name": "Prishe 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/261/57.dat"
   },
   {
     "name": "Prishe 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/101.dat"
   },
   {
     "name": "Prishe 5",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/346/52.dat"
   },
   {
     "name": "Prishe 6",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/3/94.dat"
   },
   {
     "name": "Prishe 7",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/5/117.dat"
   },
   {
     "name": "Prishe 8",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/8/28.dat"
   },
   {
     "name": "Qultada",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/13.dat"
   },
   {
     "name": "Rahal",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/30.dat"
   },
   {
     "name": "Razfahd 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/7.dat"
   },
   {
     "name": "Razfahd 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/61.dat"
   },
   {
     "name": "Rholont",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/31.dat"
   },
   {
     "name": "Riautte",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/58.dat"
   },
   {
     "name": "Romaa Mihgo",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/35.dat"
   },
   {
     "name": "Rosulatia 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/15.dat"
   },
   {
     "name": "Rosulatia 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/1.dat"
   },
   {
     "name": "Rukususu",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/4/11.dat"
   },
   {
     "name": "Sajj'aka 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/35.dat"
   },
   {
     "name": "Sajj'aka 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/12.dat"
   },
   {
     "name": "Selt'heus 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/3/95.dat"
   },
   {
     "name": "Selt'heus 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/152/61.dat"
   },
   {
     "name": "Selt'heus 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/156/50.dat"
   },
   {
     "name": "Selt'heus 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/342/3.dat"
   },
   {
     "name": "Semih Lafihna 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/4/95.dat"
   },
   {
     "name": "Semih Lafihna 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/114.dat"
   },
   {
     "name": "Semih Lafihna 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM2/16/15.dat"
   },
   {
     "name": "Shamonde",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/42.dat"
   },
   {
     "name": "Shantotto 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/111.dat"
   },
   {
     "name": "Shantotto 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM8/0/1.dat"
   },
   {
     "name": "Shantotto 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM8/0/0.dat"
   },
   {
     "name": "Shantotto 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM8/0/63.dat"
   },
   {
     "name": "Susuroon 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/311/34.dat"
   },
   {
     "name": "Susuroon 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/311/35.dat"
   },
   {
     "name": "Svenja 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/108.dat"
   },
   {
     "name": "Svenja 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/109.dat"
   },
   {
     "name": "Tenzen 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/151/126.dat"
   },
   {
     "name": "Tenzen 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/96.dat"
   },
   {
     "name": "Teodor 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/72.dat"
   },
   {
     "name": "Teodor 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/110.dat"
   },
   {
     "name": "Teodor 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/21.dat"
   },
   {
     "name": "The Shadow Lord (S) 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/7/16.dat"
   },
   {
     "name": "The Shadow Lord (S) 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/7/17.dat"
   },
   {
     "name": "The Shadow Lord 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/7/80.dat"
   },
   {
     "name": "The Shadow Lord 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/7/81.dat"
   },
   {
     "name": "The Star Sybil 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/49.dat"
   },
   {
     "name": "The Star Sybil 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/113.dat"
   },
   {
     "name": "Tiana",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/101.dat"
   },
   {
     "name": "Tosuka-Porika",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/4/8.dat"
   },
   {
     "name": "Ulmia 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/109.dat"
   },
   {
     "name": "Ulmia 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/119.dat"
   },
   {
     "name": "Ulmia 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/3/93.dat"
   },
   {
     "name": "Verena",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/53.dat"
   },
   {
     "name": "Volker (S) 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/241/94.dat"
   },
   {
     "name": "Volker (S) 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/7/25.dat"
   },
   {
     "name": "Volker (S) 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/23.dat"
   },
   {
     "name": "Volker 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/3/55.dat"
   },
   {
     "name": "Volker 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/125/74.dat"
   },
   {
     "name": "Volker 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/108.dat"
   },
   {
     "name": "Volker 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/72.dat"
   },
   {
     "name": "Vortimere",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/105.dat"
   },
   {
     "name": "Wasuhd",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM4/2/9.dat"
   },
   {
     "name": "Ygnas 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/1/106.dat"
   },
   {
     "name": "Ygnas 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM9/2/6.dat"
   },
   {
     "name": "Young Aldo",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM6/0/11.dat"
   },
   {
     "name": "Yve'noile 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/286/95.dat"
   },
   {
     "name": "Yve'noile 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM3/8/19.dat"
   },
   {
     "name": "Zeid 1",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/7/111.dat"
   },
   {
     "name": "Zeid 2",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/7/115.dat"
   },
   {
     "name": "Zeid 3",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/125/72.dat"
   },
   {
     "name": "Zeid 4",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/125/73.dat"
   },
   {
     "name": "Zeid 5",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/341/107.dat"
   },
   {
     "name": "Zeid 6",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM5/8/78.dat"
   },
   {
     "name": "Zonpa-Zippa",
-    "category": "Story NPCs",
+    "category": "Primary NPC",
     "path": "ROM/4/9.dat"
   },
   {
-    "name": "Altana",
-    "category": "Supreme Beings",
-    "path": "ROM/343/14.dat"
+    "name": "Aern 1",
+    "category": "Sea",
+    "path": "ROM3/10/66.dat"
   },
   {
-    "name": "Cloud of Darkness 1",
-    "category": "Supreme Beings",
-    "path": "ROM/343/20.dat"
+    "name": "Aern 10",
+    "category": "Sea",
+    "path": "ROM3/10/75.dat"
   },
   {
-    "name": "Cloud of Darkness 2",
-    "category": "Supreme Beings",
-    "path": "ROM/343/7.dat"
+    "name": "Aern 11",
+    "category": "Sea",
+    "path": "ROM3/10/76.dat"
   },
   {
-    "name": "Cloud of Darkness 3",
-    "category": "Supreme Beings",
-    "path": "ROM/343/8.dat"
+    "name": "Aern 12",
+    "category": "Sea",
+    "path": "ROM3/10/77.dat"
   },
   {
-    "name": "Cloud of Darkness 4",
-    "category": "Supreme Beings",
-    "path": "ROM/343/9.dat"
+    "name": "Aern 2",
+    "category": "Sea",
+    "path": "ROM3/10/67.dat"
   },
   {
-    "name": "Cloud of Darkness 5",
-    "category": "Supreme Beings",
-    "path": "ROM/343/10.dat"
+    "name": "Aern 3",
+    "category": "Sea",
+    "path": "ROM3/10/68.dat"
   },
   {
-    "name": "Cloud of Darkness 6",
-    "category": "Supreme Beings",
-    "path": "ROM/343/11.dat"
+    "name": "Aern 4",
+    "category": "Sea",
+    "path": "ROM3/10/69.dat"
   },
   {
-    "name": "Hades 1",
-    "category": "Supreme Beings",
-    "path": "ROM9/2/17.dat"
+    "name": "Aern 5",
+    "category": "Sea",
+    "path": "ROM3/10/70.dat"
   },
   {
-    "name": "Hades 2",
-    "category": "Supreme Beings",
-    "path": "ROM9/1/74.dat"
+    "name": "Aern 6",
+    "category": "Sea",
+    "path": "ROM3/10/71.dat"
   },
   {
-    "name": "Hades 3",
-    "category": "Supreme Beings",
-    "path": "ROM9/1/79.dat"
+    "name": "Aern 7",
+    "category": "Sea",
+    "path": "ROM3/10/72.dat"
   },
   {
-    "name": "Hades 4",
-    "category": "Supreme Beings",
-    "path": "ROM9/1/73.dat"
+    "name": "Aern 8",
+    "category": "Sea",
+    "path": "ROM3/10/73.dat"
   },
   {
-    "name": "Hades 5",
-    "category": "Supreme Beings",
-    "path": "ROM9/1/80.dat"
+    "name": "Aern 9",
+    "category": "Sea",
+    "path": "ROM3/10/74.dat"
   },
   {
-    "name": "Hades 6",
-    "category": "Supreme Beings",
-    "path": "ROM9/2/19.dat"
+    "name": "Euvhi",
+    "category": "Sea",
+    "path": "ROM/258/57.dat"
   },
   {
-    "name": "Metus 1",
-    "category": "Supreme Beings",
-    "path": "ROM/343/12.dat"
+    "name": "Ghrah",
+    "category": "Sea",
+    "path": "ROM3/10/45.dat"
   },
   {
-    "name": "Metus 2",
-    "category": "Supreme Beings",
-    "path": "ROM/343/17.dat"
+    "name": "Hpemde 1",
+    "category": "Sea",
+    "path": "ROM/258/59.dat"
   },
   {
-    "name": "Promathia 1",
-    "category": "Supreme Beings",
-    "path": "ROM3/10/30.dat"
+    "name": "Hpemde 2",
+    "category": "Sea",
+    "path": "ROM3/10/36.dat"
   },
   {
-    "name": "Promathia 2",
-    "category": "Supreme Beings",
-    "path": "ROM3/10/31.dat"
+    "name": "Omega 1",
+    "category": "Sea",
+    "path": "ROM/259/13.dat"
   },
   {
-    "name": "Promathia 3",
-    "category": "Supreme Beings",
-    "path": "ROM3/10/32.dat"
+    "name": "Omega 2",
+    "category": "Sea",
+    "path": "ROM3/9/83.dat"
   },
   {
-    "name": "Promathia 4",
-    "category": "Supreme Beings",
-    "path": "ROM3/10/29.dat"
+    "name": "Phuabo 1",
+    "category": "Sea",
+    "path": "ROM/258/60.dat"
   },
   {
-    "name": "Provenance Watcher",
-    "category": "Supreme Beings",
-    "path": "ROM/268/11.dat"
+    "name": "Phuabo 2",
+    "category": "Sea",
+    "path": "ROM3/10/39.dat"
   },
   {
-    "name": "Shinryu",
-    "category": "Supreme Beings",
-    "path": "ROM/258/122.dat"
+    "name": "Ultima 1",
+    "category": "Sea",
+    "path": "ROM3/9/81.dat"
+  },
+  {
+    "name": "Ultima 2",
+    "category": "Sea",
+    "path": "ROM3/9/82.dat"
+  },
+  {
+    "name": "Xzomit 1",
+    "category": "Sea",
+    "path": "ROM/249/53.dat"
+  },
+  {
+    "name": "Xzomit 2",
+    "category": "Sea",
+    "path": "ROM/258/44.dat"
+  },
+  {
+    "name": "Yovra",
+    "category": "Sea",
+    "path": "ROM/301/99.dat"
+  },
+  {
+    "name": "Zdei 1",
+    "category": "Sea",
+    "path": "ROM/258/61.dat"
+  },
+  {
+    "name": "Zdei 2",
+    "category": "Sea",
+    "path": "ROM/258/62.dat"
+  },
+  {
+    "name": "Carrying Couple 1",
+    "category": "Secondary NPC",
+    "path": "ROM4/2/22.dat"
+  },
+  {
+    "name": "Carrying Couple 2",
+    "category": "Secondary NPC",
+    "path": "ROM4/2/23.dat"
+  },
+  {
+    "name": "Dawn Maidens 1",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/60.dat"
+  },
+  {
+    "name": "Dawn Maidens 2",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/61.dat"
+  },
+  {
+    "name": "Dawn Maidens 3",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/62.dat"
+  },
+  {
+    "name": "Dawn Maidens 4",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/63.dat"
+  },
+  {
+    "name": "Dawn Maidens 5",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/64.dat"
+  },
+  {
+    "name": "Dawn Maidens 6",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/65.dat"
+  },
+  {
+    "name": "Dawn Maidens 7",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/66.dat"
+  },
+  {
+    "name": "Dawn Maidens 8",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/67.dat"
+  },
+  {
+    "name": "Elvaan Bishop 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/104.dat"
+  },
+  {
+    "name": "Elvaan Bishop 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/105.dat"
+  },
+  {
+    "name": "Elvaan Bishop 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/106.dat"
+  },
+  {
+    "name": "Elvaan Bishop 5",
+    "category": "Secondary NPC",
+    "path": "ROM/3/109.dat"
+  },
+  {
+    "name": "Elvaan Bishop 6",
+    "category": "Secondary NPC",
+    "path": "ROM/7/122.dat"
+  },
+  {
+    "name": "Elvaan Boy 1",
+    "category": "Secondary NPC",
+    "path": "ROM/4/0.dat"
+  },
+  {
+    "name": "Elvaan Boy 2",
+    "category": "Secondary NPC",
+    "path": "ROM/4/1.dat"
+  },
+  {
+    "name": "Elvaan Boy 3",
+    "category": "Secondary NPC",
+    "path": "ROM/355/11.dat"
+  },
+  {
+    "name": "Elvaan Girl",
+    "category": "Secondary NPC",
+    "path": "ROM/4/4.dat"
+  },
+  {
+    "name": "Elvaan M 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/16.dat"
+  },
+  {
+    "name": "Elvaan M 10",
+    "category": "Secondary NPC",
+    "path": "ROM5/8/51.dat"
+  },
+  {
+    "name": "Elvaan M 11",
+    "category": "Secondary NPC",
+    "path": "ROM5/8/52.dat"
+  },
+  {
+    "name": "Elvaan M 12",
+    "category": "Secondary NPC",
+    "path": "ROM5/8/69.dat"
+  },
+  {
+    "name": "Elvaan M 2",
+    "category": "Secondary NPC",
+    "path": "ROM/4/46.dat"
+  },
+  {
+    "name": "Elvaan M 3",
+    "category": "Secondary NPC",
+    "path": "ROM/4/47.dat"
+  },
+  {
+    "name": "Elvaan M 4",
+    "category": "Secondary NPC",
+    "path": "ROM/4/48.dat"
+  },
+  {
+    "name": "Elvaan M 5",
+    "category": "Secondary NPC",
+    "path": "ROM/4/49.dat"
+  },
+  {
+    "name": "Elvaan M 6",
+    "category": "Secondary NPC",
+    "path": "ROM/7/84.dat"
+  },
+  {
+    "name": "Elvaan M 7",
+    "category": "Secondary NPC",
+    "path": "ROM/7/85.dat"
+  },
+  {
+    "name": "Elvaan M 8",
+    "category": "Secondary NPC",
+    "path": "ROM/7/86.dat"
+  },
+  {
+    "name": "Elvaan M 9",
+    "category": "Secondary NPC",
+    "path": "ROM/7/88.dat"
+  },
+  {
+    "name": "Elvaan Senior F 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/116.dat"
+  },
+  {
+    "name": "Elvaan Senior F 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/117.dat"
+  },
+  {
+    "name": "Elvaan Senior F 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/118.dat"
+  },
+  {
+    "name": "Elvaan Senior F 4",
+    "category": "Secondary NPC",
+    "path": "ROM/4/53.dat"
+  },
+  {
+    "name": "Elvaan Senior F 5",
+    "category": "Secondary NPC",
+    "path": "ROM/7/92.dat"
+  },
+  {
+    "name": "Elvaan Senior F 6",
+    "category": "Secondary NPC",
+    "path": "ROM3/3/98.dat"
+  },
+  {
+    "name": "Elvaan Senior M 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/112.dat"
+  },
+  {
+    "name": "Elvaan Senior M 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/113.dat"
+  },
+  {
+    "name": "Elvaan Senior M 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/114.dat"
+  },
+  {
+    "name": "Elvaan Senior M 4",
+    "category": "Secondary NPC",
+    "path": "ROM/3/115.dat"
+  },
+  {
+    "name": "Elvaan Senior M 5",
+    "category": "Secondary NPC",
+    "path": "ROM3/3/97.dat"
+  },
+  {
+    "name": "Elvaan Servant",
+    "category": "Secondary NPC",
+    "path": "ROM/3/96.dat"
+  },
+  {
+    "name": "Elvan F 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/21.dat"
+  },
+  {
+    "name": "Elvan F 2",
+    "category": "Secondary NPC",
+    "path": "ROM/4/50.dat"
+  },
+  {
+    "name": "Elvan F 3",
+    "category": "Secondary NPC",
+    "path": "ROM/4/51.dat"
+  },
+  {
+    "name": "Elvan F 4",
+    "category": "Secondary NPC",
+    "path": "ROM/4/52.dat"
+  },
+  {
+    "name": "Elvan F 5",
+    "category": "Secondary NPC",
+    "path": "ROM/7/89.dat"
+  },
+  {
+    "name": "Elvan F 6",
+    "category": "Secondary NPC",
+    "path": "ROM4/2/18.dat"
+  },
+  {
+    "name": "Elvan F 7",
+    "category": "Secondary NPC",
+    "path": "ROM5/8/68.dat"
+  },
+  {
+    "name": "Ferry Guard",
+    "category": "Secondary NPC",
+    "path": "ROM/162/48.dat"
+  },
+  {
+    "name": "Galka 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/3.dat"
+  },
+  {
+    "name": "Galka 10",
+    "category": "Secondary NPC",
+    "path": "ROM/4/62.dat"
+  },
+  {
+    "name": "Galka 11",
+    "category": "Secondary NPC",
+    "path": "ROM/4/83.dat"
+  },
+  {
+    "name": "Galka 12",
+    "category": "Secondary NPC",
+    "path": "ROM/191/1.dat"
+  },
+  {
+    "name": "Galka 13",
+    "category": "Secondary NPC",
+    "path": "ROM5/8/55.dat"
+  },
+  {
+    "name": "Galka 14",
+    "category": "Secondary NPC",
+    "path": "ROM5/8/56.dat"
+  },
+  {
+    "name": "Galka 15",
+    "category": "Secondary NPC",
+    "path": "ROM5/8/57.dat"
+  },
+  {
+    "name": "Galka 16",
+    "category": "Secondary NPC",
+    "path": "ROM9/1/113.dat"
+  },
+  {
+    "name": "Galka 17",
+    "category": "Secondary NPC",
+    "path": "ROM9/1/120.dat"
+  },
+  {
+    "name": "Galka 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/4.dat"
+  },
+  {
+    "name": "Galka 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/5.dat"
+  },
+  {
+    "name": "Galka 4",
+    "category": "Secondary NPC",
+    "path": "ROM/3/120.dat"
+  },
+  {
+    "name": "Galka 5",
+    "category": "Secondary NPC",
+    "path": "ROM/3/121.dat"
+  },
+  {
+    "name": "Galka 6",
+    "category": "Secondary NPC",
+    "path": "ROM/3/122.dat"
+  },
+  {
+    "name": "Galka 7",
+    "category": "Secondary NPC",
+    "path": "ROM/4/20.dat"
+  },
+  {
+    "name": "Galka 8",
+    "category": "Secondary NPC",
+    "path": "ROM/4/60.dat"
+  },
+  {
+    "name": "Galka 9",
+    "category": "Secondary NPC",
+    "path": "ROM/4/61.dat"
+  },
+  {
+    "name": "Galka Boy 1",
+    "category": "Secondary NPC",
+    "path": "ROM/4/24.dat"
+  },
+  {
+    "name": "Galka Boy 2",
+    "category": "Secondary NPC",
+    "path": "ROM/4/25.dat"
+  },
+  {
+    "name": "Galka Boy 3",
+    "category": "Secondary NPC",
+    "path": "ROM/4/26.dat"
+  },
+  {
+    "name": "Galka Boy 4",
+    "category": "Secondary NPC",
+    "path": "ROM/4/27.dat"
+  },
+  {
+    "name": "Galka Boy 5",
+    "category": "Secondary NPC",
+    "path": "ROM/8/107.dat"
+  },
+  {
+    "name": "Galka Boy 6",
+    "category": "Secondary NPC",
+    "path": "ROM/8/108.dat"
+  },
+  {
+    "name": "Galka Boy 7",
+    "category": "Secondary NPC",
+    "path": "ROM/8/109.dat"
+  },
+  {
+    "name": "Galka Boy 8",
+    "category": "Secondary NPC",
+    "path": "ROM/8/110.dat"
+  },
+  {
+    "name": "Hume Boy",
+    "category": "Secondary NPC",
+    "path": "ROM/3/88.dat"
+  },
+  {
+    "name": "Hume F 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/11.dat"
+  },
+  {
+    "name": "Hume F 10",
+    "category": "Secondary NPC",
+    "path": "ROM3/10/101.dat"
+  },
+  {
+    "name": "Hume F 11",
+    "category": "Secondary NPC",
+    "path": "ROM3/10/102.dat"
+  },
+  {
+    "name": "Hume F 12",
+    "category": "Secondary NPC",
+    "path": "ROM3/10/103.dat"
+  },
+  {
+    "name": "Hume F 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/101.dat"
+  },
+  {
+    "name": "Hume F 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/125.dat"
+  },
+  {
+    "name": "Hume F 4",
+    "category": "Secondary NPC",
+    "path": "ROM/4/73.dat"
+  },
+  {
+    "name": "Hume F 5",
+    "category": "Secondary NPC",
+    "path": "ROM/4/74.dat"
+  },
+  {
+    "name": "Hume F 6",
+    "category": "Secondary NPC",
+    "path": "ROM/4/75.dat"
+  },
+  {
+    "name": "Hume F 7",
+    "category": "Secondary NPC",
+    "path": "ROM2/16/30.dat"
+  },
+  {
+    "name": "Hume F 8",
+    "category": "Secondary NPC",
+    "path": "ROM2/16/31.dat"
+  },
+  {
+    "name": "Hume F 9",
+    "category": "Secondary NPC",
+    "path": "ROM2/16/32.dat"
+  },
+  {
+    "name": "Hume Girl 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/92.dat"
+  },
+  {
+    "name": "Hume Girl 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/93.dat"
+  },
+  {
+    "name": "Hume M 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/6.dat"
+  },
+  {
+    "name": "Hume M 10",
+    "category": "Secondary NPC",
+    "path": "ROM/4/70.dat"
+  },
+  {
+    "name": "Hume M 11",
+    "category": "Secondary NPC",
+    "path": "ROM/4/71.dat"
+  },
+  {
+    "name": "Hume M 12",
+    "category": "Secondary NPC",
+    "path": "ROM/4/72.dat"
+  },
+  {
+    "name": "Hume M 13",
+    "category": "Secondary NPC",
+    "path": "ROM/4/88.dat"
+  },
+  {
+    "name": "Hume M 14",
+    "category": "Secondary NPC",
+    "path": "ROM/7/108.dat"
+  },
+  {
+    "name": "Hume M 15",
+    "category": "Secondary NPC",
+    "path": "ROM/7/112.dat"
+  },
+  {
+    "name": "Hume M 16",
+    "category": "Secondary NPC",
+    "path": "ROM/7/113.dat"
+  },
+  {
+    "name": "Hume M 17",
+    "category": "Secondary NPC",
+    "path": "ROM/7/116.dat"
+  },
+  {
+    "name": "Hume M 18",
+    "category": "Secondary NPC",
+    "path": "ROM/7/117.dat"
+  },
+  {
+    "name": "Hume M 19",
+    "category": "Secondary NPC",
+    "path": "ROM/7/118.dat"
+  },
+  {
+    "name": "Hume M 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/84.dat"
+  },
+  {
+    "name": "Hume M 20",
+    "category": "Secondary NPC",
+    "path": "ROM/7/119.dat"
+  },
+  {
+    "name": "Hume M 21",
+    "category": "Secondary NPC",
+    "path": "ROM2/16/27.dat"
+  },
+  {
+    "name": "Hume M 22",
+    "category": "Secondary NPC",
+    "path": "ROM2/16/28.dat"
+  },
+  {
+    "name": "Hume M 23",
+    "category": "Secondary NPC",
+    "path": "ROM2/16/29.dat"
+  },
+  {
+    "name": "Hume M 24",
+    "category": "Secondary NPC",
+    "path": "ROM3/10/98.dat"
+  },
+  {
+    "name": "Hume M 25",
+    "category": "Secondary NPC",
+    "path": "ROM3/10/99.dat"
+  },
+  {
+    "name": "Hume M 26",
+    "category": "Secondary NPC",
+    "path": "ROM3/10/100.dat"
+  },
+  {
+    "name": "Hume M 27",
+    "category": "Secondary NPC",
+    "path": "ROM5/7/29.dat"
+  },
+  {
+    "name": "Hume M 28",
+    "category": "Secondary NPC",
+    "path": "ROM9/1/111.dat"
+  },
+  {
+    "name": "Hume M 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/85.dat"
+  },
+  {
+    "name": "Hume M 4",
+    "category": "Secondary NPC",
+    "path": "ROM/3/86.dat"
+  },
+  {
+    "name": "Hume M 5",
+    "category": "Secondary NPC",
+    "path": "ROM/3/87.dat"
+  },
+  {
+    "name": "Hume M 6",
+    "category": "Secondary NPC",
+    "path": "ROM/3/124.dat"
+  },
+  {
+    "name": "Hume M 7",
+    "category": "Secondary NPC",
+    "path": "ROM/3/126.dat"
+  },
+  {
+    "name": "Hume M 8",
+    "category": "Secondary NPC",
+    "path": "ROM/4/68.dat"
+  },
+  {
+    "name": "Hume M 9",
+    "category": "Secondary NPC",
+    "path": "ROM/4/69.dat"
+  },
+  {
+    "name": "Hume Merchant F 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/76.dat"
+  },
+  {
+    "name": "Hume Merchant F 10",
+    "category": "Secondary NPC",
+    "path": "ROM/8/31.dat"
+  },
+  {
+    "name": "Hume Merchant F 11",
+    "category": "Secondary NPC",
+    "path": "ROM3/5/115.dat"
+  },
+  {
+    "name": "Hume Merchant F 12",
+    "category": "Secondary NPC",
+    "path": "ROM3/5/116.dat"
+  },
+  {
+    "name": "Hume Merchant F 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/77.dat"
+  },
+  {
+    "name": "Hume Merchant F 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/78.dat"
+  },
+  {
+    "name": "Hume Merchant F 4",
+    "category": "Secondary NPC",
+    "path": "ROM/3/79.dat"
+  },
+  {
+    "name": "Hume Merchant F 5",
+    "category": "Secondary NPC",
+    "path": "ROM/8/26.dat"
+  },
+  {
+    "name": "Hume Merchant F 6",
+    "category": "Secondary NPC",
+    "path": "ROM/8/27.dat"
+  },
+  {
+    "name": "Hume Merchant F 7",
+    "category": "Secondary NPC",
+    "path": "ROM/8/28.dat"
+  },
+  {
+    "name": "Hume Merchant F 8",
+    "category": "Secondary NPC",
+    "path": "ROM/8/29.dat"
+  },
+  {
+    "name": "Hume Merchant F 9",
+    "category": "Secondary NPC",
+    "path": "ROM/8/30.dat"
+  },
+  {
+    "name": "Hume Merchant M 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/72.dat"
+  },
+  {
+    "name": "Hume Merchant M 10",
+    "category": "Secondary NPC",
+    "path": "ROM/8/15.dat"
+  },
+  {
+    "name": "Hume Merchant M 11",
+    "category": "Secondary NPC",
+    "path": "ROM/8/16.dat"
+  },
+  {
+    "name": "Hume Merchant M 12",
+    "category": "Secondary NPC",
+    "path": "ROM/8/17.dat"
+  },
+  {
+    "name": "Hume Merchant M 13",
+    "category": "Secondary NPC",
+    "path": "ROM/8/18.dat"
+  },
+  {
+    "name": "Hume Merchant M 14",
+    "category": "Secondary NPC",
+    "path": "ROM/8/19.dat"
+  },
+  {
+    "name": "Hume Merchant M 15",
+    "category": "Secondary NPC",
+    "path": "ROM/8/20.dat"
+  },
+  {
+    "name": "Hume Merchant M 16",
+    "category": "Secondary NPC",
+    "path": "ROM/8/21.dat"
+  },
+  {
+    "name": "Hume Merchant M 17",
+    "category": "Secondary NPC",
+    "path": "ROM/8/22.dat"
+  },
+  {
+    "name": "Hume Merchant M 18",
+    "category": "Secondary NPC",
+    "path": "ROM9/1/119.dat"
+  },
+  {
+    "name": "Hume Merchant M 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/73.dat"
+  },
+  {
+    "name": "Hume Merchant M 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/74.dat"
+  },
+  {
+    "name": "Hume Merchant M 4",
+    "category": "Secondary NPC",
+    "path": "ROM/3/75.dat"
+  },
+  {
+    "name": "Hume Merchant M 5",
+    "category": "Secondary NPC",
+    "path": "ROM/7/82.dat"
+  },
+  {
+    "name": "Hume Merchant M 6",
+    "category": "Secondary NPC",
+    "path": "ROM/4/100.dat"
+  },
+  {
+    "name": "Hume Merchant M 7",
+    "category": "Secondary NPC",
+    "path": "ROM/4/101.dat"
+  },
+  {
+    "name": "Hume Merchant M 8",
+    "category": "Secondary NPC",
+    "path": "ROM/8/13.dat"
+  },
+  {
+    "name": "Hume Merchant M 9",
+    "category": "Secondary NPC",
+    "path": "ROM/8/14.dat"
+  },
+  {
+    "name": "Hume Noble F 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/80.dat"
+  },
+  {
+    "name": "Hume Noble F 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/81.dat"
+  },
+  {
+    "name": "Hume Noble F 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/82.dat"
+  },
+  {
+    "name": "Hume Noble F 4",
+    "category": "Secondary NPC",
+    "path": "ROM/8/32.dat"
+  },
+  {
+    "name": "Hume Noble F 5",
+    "category": "Secondary NPC",
+    "path": "ROM/8/33.dat"
+  },
+  {
+    "name": "Hume Noble F 6",
+    "category": "Secondary NPC",
+    "path": "ROM/8/34.dat"
+  },
+  {
+    "name": "Hume Senior F 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/68.dat"
+  },
+  {
+    "name": "Hume Senior F 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/69.dat"
+  },
+  {
+    "name": "Hume Senior F 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/70.dat"
+  },
+  {
+    "name": "Hume Senior F 4",
+    "category": "Secondary NPC",
+    "path": "ROM/3/71.dat"
+  },
+  {
+    "name": "Hume Senior F 5",
+    "category": "Secondary NPC",
+    "path": "ROM/4/77.dat"
+  },
+  {
+    "name": "Hume Senior F 6",
+    "category": "Secondary NPC",
+    "path": "ROM/8/7.dat"
+  },
+  {
+    "name": "Hume Senior F 7",
+    "category": "Secondary NPC",
+    "path": "ROM/8/8.dat"
+  },
+  {
+    "name": "Hume Senior M 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/64.dat"
+  },
+  {
+    "name": "Hume Senior M 2",
+    "category": "Secondary NPC",
+    "path": "ROM/3/65.dat"
+  },
+  {
+    "name": "Hume Senior M 3",
+    "category": "Secondary NPC",
+    "path": "ROM/3/66.dat"
+  },
+  {
+    "name": "Hume Senior M 4",
+    "category": "Secondary NPC",
+    "path": "ROM/3/67.dat"
+  },
+  {
+    "name": "Hume Senior M 5",
+    "category": "Secondary NPC",
+    "path": "ROM/3/127.dat"
+  },
+  {
+    "name": "Hume Senior M 6",
+    "category": "Secondary NPC",
+    "path": "ROM/8/1.dat"
+  },
+  {
+    "name": "Hume Senior M 7",
+    "category": "Secondary NPC",
+    "path": "ROM/8/2.dat"
+  },
+  {
+    "name": "Hume Senior M 8",
+    "category": "Secondary NPC",
+    "path": "ROM3/5/109.dat"
+  },
+  {
+    "name": "Hume Senior M 9",
+    "category": "Secondary NPC",
+    "path": "ROM3/5/114.dat"
+  },
+  {
+    "name": "Mithra 1",
+    "category": "Secondary NPC",
+    "path": "ROM/4/45.dat"
+  },
+  {
+    "name": "Mithra 10",
+    "category": "Secondary NPC",
+    "path": "ROM/4/97.dat"
+  },
+  {
+    "name": "Mithra 11",
+    "category": "Secondary NPC",
+    "path": "ROM/7/91.dat"
+  },
+  {
+    "name": "Mithra 12",
+    "category": "Secondary NPC",
+    "path": "ROM/7/99.dat"
+  },
+  {
+    "name": "Mithra 13",
+    "category": "Secondary NPC",
+    "path": "ROM/7/105.dat"
+  },
+  {
+    "name": "Mithra 14",
+    "category": "Secondary NPC",
+    "path": "ROM/7/106.dat"
+  },
+  {
+    "name": "Mithra 15",
+    "category": "Secondary NPC",
+    "path": "ROM/7/107.dat"
+  },
+  {
+    "name": "Mithra 16",
+    "category": "Secondary NPC",
+    "path": "ROM/191/2.dat"
+  },
+  {
+    "name": "Mithra 17",
+    "category": "Secondary NPC",
+    "path": "ROM2/16/22.dat"
+  },
+  {
+    "name": "Mithra 18",
+    "category": "Secondary NPC",
+    "path": "ROM2/16/23.dat"
+  },
+  {
+    "name": "Mithra 19",
+    "category": "Secondary NPC",
+    "path": "ROM2/16/24.dat"
+  },
+  {
+    "name": "Mithra 2",
+    "category": "Secondary NPC",
+    "path": "ROM/4/63.dat"
+  },
+  {
+    "name": "Mithra 20",
+    "category": "Secondary NPC",
+    "path": "ROM5/8/38.dat"
+  },
+  {
+    "name": "Mithra 21",
+    "category": "Secondary NPC",
+    "path": "ROM5/8/39.dat"
+  },
+  {
+    "name": "Mithra 22",
+    "category": "Secondary NPC",
+    "path": "ROM5/8/59.dat"
+  },
+  {
+    "name": "Mithra 23",
+    "category": "Secondary NPC",
+    "path": "ROM9/1/121.dat"
+  },
+  {
+    "name": "Mithra 3",
+    "category": "Secondary NPC",
+    "path": "ROM/4/64.dat"
+  },
+  {
+    "name": "Mithra 4",
+    "category": "Secondary NPC",
+    "path": "ROM/4/65.dat"
+  },
+  {
+    "name": "Mithra 5",
+    "category": "Secondary NPC",
+    "path": "ROM/4/66.dat"
+  },
+  {
+    "name": "Mithra 6",
+    "category": "Secondary NPC",
+    "path": "ROM/4/67.dat"
+  },
+  {
+    "name": "Mithra 7",
+    "category": "Secondary NPC",
+    "path": "ROM/4/79.dat"
+  },
+  {
+    "name": "Mithra 8",
+    "category": "Secondary NPC",
+    "path": "ROM/4/80.dat"
+  },
+  {
+    "name": "Mithra 9",
+    "category": "Secondary NPC",
+    "path": "ROM/4/94.dat"
+  },
+  {
+    "name": "Mithra Girl 1",
+    "category": "Secondary NPC",
+    "path": "ROM/4/28.dat"
+  },
+  {
+    "name": "Mithra Girl 2",
+    "category": "Secondary NPC",
+    "path": "ROM/4/29.dat"
+  },
+  {
+    "name": "Tarutaru Boy 1",
+    "category": "Secondary NPC",
+    "path": "ROM/4/12.dat"
+  },
+  {
+    "name": "Tarutaru Boy 2",
+    "category": "Secondary NPC",
+    "path": "ROM/4/13.dat"
+  },
+  {
+    "name": "Tarutaru Boy 3",
+    "category": "Secondary NPC",
+    "path": "ROM/4/14.dat"
+  },
+  {
+    "name": "Tarutaru Boy 4",
+    "category": "Secondary NPC",
+    "path": "ROM/4/15.dat"
+  },
+  {
+    "name": "Tarutaru Boy 5",
+    "category": "Secondary NPC",
+    "path": "ROM/7/103.dat"
+  },
+  {
+    "name": "Tarutaru F 1",
+    "category": "Secondary NPC",
+    "path": "ROM/4/54.dat"
+  },
+  {
+    "name": "Tarutaru F 2",
+    "category": "Secondary NPC",
+    "path": "ROM/4/58.dat"
+  },
+  {
+    "name": "Tarutaru F 3",
+    "category": "Secondary NPC",
+    "path": "ROM/4/59.dat"
+  },
+  {
+    "name": "Tarutaru F 4",
+    "category": "Secondary NPC",
+    "path": "ROM/4/89.dat"
+  },
+  {
+    "name": "Tarutaru F 5",
+    "category": "Secondary NPC",
+    "path": "ROM/7/101.dat"
+  },
+  {
+    "name": "Tarutaru Girl 1",
+    "category": "Secondary NPC",
+    "path": "ROM/4/16.dat"
+  },
+  {
+    "name": "Tarutaru Girl 2",
+    "category": "Secondary NPC",
+    "path": "ROM/4/17.dat"
+  },
+  {
+    "name": "Tarutaru Girl 3",
+    "category": "Secondary NPC",
+    "path": "ROM/4/18.dat"
+  },
+  {
+    "name": "Tarutaru Girl 4",
+    "category": "Secondary NPC",
+    "path": "ROM/4/19.dat"
+  },
+  {
+    "name": "Tarutaru Girl 5",
+    "category": "Secondary NPC",
+    "path": "ROM/7/104.dat"
+  },
+  {
+    "name": "Tarutaru M 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/83.dat"
+  },
+  {
+    "name": "Tarutaru M 10",
+    "category": "Secondary NPC",
+    "path": "ROM/4/91.dat"
+  },
+  {
+    "name": "Tarutaru M 11",
+    "category": "Secondary NPC",
+    "path": "ROM/4/92.dat"
+  },
+  {
+    "name": "Tarutaru M 12",
+    "category": "Secondary NPC",
+    "path": "ROM/4/93.dat"
+  },
+  {
+    "name": "Tarutaru M 13",
+    "category": "Secondary NPC",
+    "path": "ROM/7/90.dat"
+  },
+  {
+    "name": "Tarutaru M 14",
+    "category": "Secondary NPC",
+    "path": "ROM/7/120.dat"
+  },
+  {
+    "name": "Tarutaru M 15",
+    "category": "Secondary NPC",
+    "path": "ROM/8/83.dat"
+  },
+  {
+    "name": "Tarutaru M 2",
+    "category": "Secondary NPC",
+    "path": "ROM/4/35.dat"
+  },
+  {
+    "name": "Tarutaru M 3",
+    "category": "Secondary NPC",
+    "path": "ROM/4/36.dat"
+  },
+  {
+    "name": "Tarutaru M 4",
+    "category": "Secondary NPC",
+    "path": "ROM/4/40.dat"
+  },
+  {
+    "name": "Tarutaru M 5",
+    "category": "Secondary NPC",
+    "path": "ROM/4/55.dat"
+  },
+  {
+    "name": "Tarutaru M 6",
+    "category": "Secondary NPC",
+    "path": "ROM/4/56.dat"
+  },
+  {
+    "name": "Tarutaru M 7",
+    "category": "Secondary NPC",
+    "path": "ROM/4/57.dat"
+  },
+  {
+    "name": "Tarutaru M 8",
+    "category": "Secondary NPC",
+    "path": "ROM/4/78.dat"
+  },
+  {
+    "name": "Tarutaru M 9",
+    "category": "Secondary NPC",
+    "path": "ROM/4/90.dat"
+  },
+  {
+    "name": "Title Changer Bard 1",
+    "category": "Secondary NPC",
+    "path": "ROM/119/80.dat"
+  },
+  {
+    "name": "Title Changer Bard 2",
+    "category": "Secondary NPC",
+    "path": "ROM/119/81.dat"
+  },
+  {
+    "name": "Title Changer Bard 3",
+    "category": "Secondary NPC",
+    "path": "ROM4/2/17.dat"
+  },
+  {
+    "name": "Zilart 1",
+    "category": "Secondary NPC",
+    "path": "ROM/3/57.dat"
+  },
+  {
+    "name": "Zilart 2",
+    "category": "Secondary NPC",
+    "path": "ROM2/0/53.dat"
+  },
+  {
+    "name": "Zilart 3",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/68.dat"
+  },
+  {
+    "name": "Zilart 4",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/69.dat"
+  },
+  {
+    "name": "Zilart 5",
+    "category": "Secondary NPC",
+    "path": "ROM2/23/70.dat"
+  },
+  {
+    "name": "Zilart 6",
+    "category": "Secondary NPC",
+    "path": "ROM3/5/23.dat"
+  },
+  {
+    "name": "Zilart 7",
+    "category": "Secondary NPC",
+    "path": "ROM3/5/108.dat"
+  },
+  {
+    "name": "Abenzio",
+    "category": "Trusts",
+    "path": "ROM/309/88.dat"
+  },
+  {
+    "name": "Abquhbah",
+    "category": "Trusts",
+    "path": "ROM/309/118.dat"
+  },
+  {
+    "name": "Adelheid",
+    "category": "Trusts",
+    "path": "ROM/309/97.dat"
+  },
+  {
+    "name": "Ajido-Marujido",
+    "category": "Trusts",
+    "path": "ROM/309/28.dat"
+  },
+  {
+    "name": "Aldo",
+    "category": "Trusts",
+    "path": "ROM/309/54.dat"
+  },
+  {
+    "name": "Aldo (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/85.dat"
+  },
+  {
+    "name": "Amchuchu",
+    "category": "Trusts",
+    "path": "ROM/309/98.dat"
+  },
+  {
+    "name": "Apururu (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/81.dat"
+  },
+  {
+    "name": "Arciela",
+    "category": "Trusts",
+    "path": "ROM/309/94.dat"
+  },
+  {
+    "name": "Arciela II",
+    "category": "Trusts",
+    "path": "ROM/309/105.dat"
+  },
+  {
+    "name": "Areuhat",
+    "category": "Trusts",
+    "path": "ROM/309/63.dat"
+  },
+  {
+    "name": "Ark Angel EV",
+    "category": "Trusts",
+    "path": "ROM/310/6.dat"
+  },
+  {
+    "name": "Ark Angel GK",
+    "category": "Trusts",
+    "path": "ROM/310/9.dat"
+  },
+  {
+    "name": "Ark Angel HM",
+    "category": "Trusts",
+    "path": "ROM/310/5.dat"
+  },
+  {
+    "name": "Ark Angel MR",
+    "category": "Trusts",
+    "path": "ROM/310/7.dat"
+  },
+  {
+    "name": "Ark Angel TT",
+    "category": "Trusts",
+    "path": "ROM/310/8.dat"
+  },
+  {
+    "name": "August",
+    "category": "Trusts",
+    "path": "ROM/309/120.dat"
+  },
+  {
+    "name": "Ayame",
+    "category": "Trusts",
+    "path": "ROM/309/24.dat"
+  },
+  {
+    "name": "Ayame (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/83.dat"
+  },
+  {
+    "name": "Babban Mheillea",
+    "category": "Trusts",
+    "path": "ROM/309/87.dat"
+  },
+  {
+    "name": "Balamor",
+    "category": "Trusts",
+    "path": "ROM/309/119.dat"
+  },
+  {
+    "name": "Brygid",
+    "category": "Trusts",
+    "path": "ROM/309/99.dat"
+  },
+  {
+    "name": "Chacharoon",
+    "category": "Trusts",
+    "path": "ROM/309/92.dat"
+  },
+  {
+    "name": "Cherukiki",
+    "category": "Trusts",
+    "path": "ROM/309/40.dat"
+  },
+  {
+    "name": "Cid",
+    "category": "Trusts",
+    "path": "ROM/309/61.dat"
+  },
+  {
+    "name": "Cornelia",
+    "category": "Trusts",
+    "path": "ROM/310/11.dat"
+  },
+  {
+    "name": "Curilla",
+    "category": "Trusts",
+    "path": "ROM/309/26.dat"
+  },
+  {
+    "name": "Darrculin",
+    "category": "Trusts",
+    "path": "ROM/310/1.dat"
+  },
+  {
+    "name": "Domina Shantotto",
+    "category": "Trusts",
+    "path": "ROM/309/58.dat"
+  },
+  {
+    "name": "Elivira",
+    "category": "Trusts",
+    "path": "ROM/309/65.dat"
+  },
+  {
+    "name": "Excenmille",
+    "category": "Trusts",
+    "path": "ROM/309/23.dat"
+  },
+  {
+    "name": "Excenmille (S)",
+    "category": "Trusts",
+    "path": "ROM/309/72.dat"
+  },
+  {
+    "name": "Fablinix",
+    "category": "Trusts",
+    "path": "ROM/309/56.dat"
+  },
+  {
+    "name": "Ferreous Coffin",
+    "category": "Trusts",
+    "path": "ROM/309/68.dat"
+  },
+  {
+    "name": "Flaviria (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/79.dat"
+  },
+  {
+    "name": "Gadalar",
+    "category": "Trusts",
+    "path": "ROM/309/43.dat"
+  },
+  {
+    "name": "Gessho",
+    "category": "Trusts",
+    "path": "ROM/309/42.dat"
+  },
+  {
+    "name": "Gilgamesh",
+    "category": "Trusts",
+    "path": "ROM/309/62.dat"
+  },
+  {
+    "name": "Halver",
+    "category": "Trusts",
+    "path": "ROM/309/107.dat"
+  },
+  {
+    "name": "Ingrid",
+    "category": "Trusts",
+    "path": "ROM/309/45.dat"
+  },
+  {
+    "name": "Ingrid II",
+    "category": "Trusts",
+    "path": "ROM/309/122.dat"
+  },
+  {
+    "name": "Invincible Shield (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/80.dat"
+  },
+  {
+    "name": "Iroha",
+    "category": "Trusts",
+    "path": "ROM/310/3.dat"
+  },
+  {
+    "name": "Iroha II",
+    "category": "Trusts",
+    "path": "ROM/310/4.dat"
+  },
+  {
+    "name": "Iron Eater",
+    "category": "Trusts",
+    "path": "ROM/309/41.dat"
+  },
+  {
+    "name": "Jakoh Wahcondalo (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/82.dat"
+  },
+  {
+    "name": "Joachim",
+    "category": "Trusts",
+    "path": "ROM/309/35.dat"
+  },
+  {
+    "name": "Karaha-Baruha",
+    "category": "Trusts",
+    "path": "ROM/309/60.dat"
+  },
+  {
+    "name": "Kayeel-Payeel",
+    "category": "Trusts",
+    "path": "ROM/309/111.dat"
+  },
+  {
+    "name": "King of Hearts",
+    "category": "Trusts",
+    "path": "ROM/309/127.dat"
+  },
+  {
+    "name": "Klara",
+    "category": "Trusts",
+    "path": "ROM/309/73.dat"
+  },
+  {
+    "name": "Koru-Moru",
+    "category": "Trusts",
+    "path": "ROM/309/77.dat"
+  },
+  {
+    "name": "Kukki-Chebukki",
+    "category": "Trusts",
+    "path": "ROM/309/90.dat"
+  },
+  {
+    "name": "Kupipi",
+    "category": "Trusts",
+    "path": "ROM/309/22.dat"
+  },
+  {
+    "name": "Kupofried",
+    "category": "Trusts",
+    "path": "ROM/309/113.dat"
+  },
+  {
+    "name": "Kuyin Hathdenna",
+    "category": "Trusts",
+    "path": "ROM/309/75.dat"
+  },
+  {
+    "name": "Lehko Habhoka",
+    "category": "Trusts",
+    "path": "ROM/309/46.dat"
+  },
+  {
+    "name": "Leonoyne",
+    "category": "Trusts",
+    "path": "ROM/309/109.dat"
+  },
+  {
+    "name": "Lhe Lhangavo",
+    "category": "Trusts",
+    "path": "ROM/309/93.dat"
+  },
+  {
+    "name": "Lhu Mhakaracca",
+    "category": "Trusts",
+    "path": "ROM/309/67.dat"
+  },
+  {
+    "name": "Lilisette",
+    "category": "Trusts",
+    "path": "ROM/309/69.dat"
+  },
+  {
+    "name": "Lilisette II",
+    "category": "Trusts",
+    "path": "ROM/309/104.dat"
+  },
+  {
+    "name": "Lion",
+    "category": "Trusts",
+    "path": "ROM/309/31.dat"
+  },
+  {
+    "name": "Lion II",
+    "category": "Trusts",
+    "path": "ROM/309/101.dat"
+  },
+  {
+    "name": "Luzaf",
+    "category": "Trusts",
+    "path": "ROM/309/52.dat"
+  },
+  {
+    "name": "Maat",
+    "category": "Trusts",
+    "path": "ROM/309/57.dat"
+  },
+  {
+    "name": "Maat (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/84.dat"
+  },
+  {
+    "name": "Makki-Chebukki",
+    "category": "Trusts",
+    "path": "ROM/309/126.dat"
+  },
+  {
+    "name": "Margret",
+    "category": "Trusts",
+    "path": "ROM/309/91.dat"
+  },
+  {
+    "name": "Maximilian",
+    "category": "Trusts",
+    "path": "ROM/309/110.dat"
+  },
+  {
+    "name": "Mayakov",
+    "category": "Trusts",
+    "path": "ROM/309/95.dat"
+  },
+  {
+    "name": "Mihli Aliapoh",
+    "category": "Trusts",
+    "path": "ROM/309/33.dat"
+  },
+  {
+    "name": "Mildaurion",
+    "category": "Trusts",
+    "path": "ROM/309/100.dat"
+  },
+  {
+    "name": "Mnejing",
+    "category": "Trusts",
+    "path": "ROM/309/50.dat"
+  },
+  {
+    "name": "Monberaux",
+    "category": "Trusts",
+    "path": "ROM/310/12.dat"
+  },
+  {
+    "name": "Moogle",
+    "category": "Trusts",
+    "path": "ROM/309/55.dat"
+  },
+  {
+    "name": "Morimar",
+    "category": "Trusts",
+    "path": "ROM/310/0.dat"
+  },
+  {
+    "name": "Mumor",
+    "category": "Trusts",
+    "path": "ROM/309/70.dat"
+  },
+  {
+    "name": "Mumor II",
+    "category": "Trusts",
+    "path": "ROM/309/124.dat"
+  },
+  {
+    "name": "Naja Salaheem",
+    "category": "Trusts",
+    "path": "ROM/309/36.dat"
+  },
+  {
+    "name": "Naja Salaheem (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/86.dat"
+  },
+  {
+    "name": "Najelith",
+    "category": "Trusts",
+    "path": "ROM/309/53.dat"
+  },
+  {
+    "name": "Naji",
+    "category": "Trusts",
+    "path": "ROM/309/21.dat"
+  },
+  {
+    "name": "Nanaa Mihgo",
+    "category": "Trusts",
+    "path": "ROM/309/25.dat"
+  },
+  {
+    "name": "Nashmeira",
+    "category": "Trusts",
+    "path": "ROM/309/47.dat"
+  },
+  {
+    "name": "Nashmeira II",
+    "category": "Trusts",
+    "path": "ROM/309/103.dat"
+  },
+  {
+    "name": "Noillurie",
+    "category": "Trusts",
+    "path": "ROM/309/66.dat"
+  },
+  {
+    "name": "Ovjang",
+    "category": "Trusts",
+    "path": "ROM/309/49.dat"
+  },
+  {
+    "name": "Pieuje (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/78.dat"
+  },
+  {
+    "name": "Prishe",
+    "category": "Trusts",
+    "path": "ROM/309/37.dat"
+  },
+  {
+    "name": "Prishe II",
+    "category": "Trusts",
+    "path": "ROM/309/102.dat"
+  },
+  {
+    "name": "Qultada",
+    "category": "Trusts",
+    "path": "ROM/309/96.dat"
+  },
+  {
+    "name": "Rahal",
+    "category": "Trusts",
+    "path": "ROM/309/76.dat"
+  },
+  {
+    "name": "Rainemard",
+    "category": "Trusts",
+    "path": "ROM/309/44.dat"
+  },
+  {
+    "name": "Robel-Akbel",
+    "category": "Trusts",
+    "path": "ROM/309/112.dat"
+  },
+  {
+    "name": "Romaa Mihgo",
+    "category": "Trusts",
+    "path": "ROM/309/74.dat"
+  },
+  {
+    "name": "Rongelouts",
+    "category": "Trusts",
+    "path": "ROM/309/108.dat"
+  },
+  {
+    "name": "Rosulatia",
+    "category": "Trusts",
+    "path": "ROM/309/121.dat"
+  },
+  {
+    "name": "Rughadjeen",
+    "category": "Trusts",
+    "path": "ROM/309/89.dat"
+  },
+  {
+    "name": "Sakura",
+    "category": "Trusts",
+    "path": "ROM/309/51.dat"
+  },
+  {
+    "name": "Selh'teus",
+    "category": "Trusts",
+    "path": "ROM/309/114.dat"
+  },
+  {
+    "name": "Semih Lafihna",
+    "category": "Trusts",
+    "path": "ROM/309/64.dat"
+  },
+  {
+    "name": "Shantotto",
+    "category": "Trusts",
+    "path": "ROM/309/20.dat"
+  },
+  {
+    "name": "Shantotto II",
+    "category": "Trusts",
+    "path": "ROM/310/2.dat"
+  },
+  {
+    "name": "Shikaree Z",
+    "category": "Trusts",
+    "path": "ROM/309/39.dat"
+  },
+  {
+    "name": "Star Sybil",
+    "category": "Trusts",
+    "path": "ROM/309/59.dat"
+  },
+  {
+    "name": "Sylvie (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/116.dat"
+  },
+  {
+    "name": "Tenzen",
+    "category": "Trusts",
+    "path": "ROM/309/32.dat"
+  },
+  {
+    "name": "Tenzen II",
+    "category": "Trusts",
+    "path": "ROM/309/117.dat"
+  },
+  {
+    "name": "Teodor",
+    "category": "Trusts",
+    "path": "ROM/309/123.dat"
+  },
+  {
+    "name": "Trion",
+    "category": "Trusts",
+    "path": "ROM/309/29.dat"
+  },
+  {
+    "name": "Uka Totlihn",
+    "category": "Trusts",
+    "path": "ROM/309/71.dat"
+  },
+  {
+    "name": "Ullegore",
+    "category": "Trusts",
+    "path": "ROM/309/125.dat"
+  },
+  {
+    "name": "Ulmia",
+    "category": "Trusts",
+    "path": "ROM/309/38.dat"
+  },
+  {
+    "name": "Valaineral",
+    "category": "Trusts",
+    "path": "ROM/309/34.dat"
+  },
+  {
+    "name": "Volker",
+    "category": "Trusts",
+    "path": "ROM/309/27.dat"
+  },
+  {
+    "name": "Ygnas",
+    "category": "Trusts",
+    "path": "ROM/310/10.dat"
+  },
+  {
+    "name": "Yoran-Oran (UC)",
+    "category": "Trusts",
+    "path": "ROM/309/115.dat"
+  },
+  {
+    "name": "Zazarg",
+    "category": "Trusts",
+    "path": "ROM/309/48.dat"
+  },
+  {
+    "name": "Zeid",
+    "category": "Trusts",
+    "path": "ROM/309/30.dat"
+  },
+  {
+    "name": "Zeid II",
+    "category": "Trusts",
+    "path": "ROM/309/106.dat"
   },
   {
     "name": "Corpselight 1",
@@ -12333,11 +12338,6 @@
     "name": "Twitherym 2",
     "category": "Vermin",
     "path": "ROM9/0/68.dat"
-  },
-  {
-    "name": "Twitherym 3",
-    "category": "Vermin",
-    "path": "ROM9/1/107.dat"
   },
   {
     "name": "Wamoura 1",

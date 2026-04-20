@@ -209,6 +209,7 @@ export interface CategoryResponse {
   description: string
   displayOrder: number
   isSystem: boolean
+  requiresAdminForNewThreads: boolean
   threadCount: number
   lastActivityAt: string | null
 }
