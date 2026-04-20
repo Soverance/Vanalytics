@@ -191,10 +191,11 @@ public class ForumController : ControllerBase
         if (CountForumImages(request.Body) > MaxImagesPerPost)
             return BadRequest(new { error = $"Posts cannot contain more than {MaxImagesPerPost} images." });
 
-        // System categories (e.g. News) are admin-only for thread creation
+        // Some categories (e.g. News) only allow admins to start new threads;
+        // replies in the same category remain open to all authenticated users.
         var category = await _forum.GetCategoryBySlugAsync(slug);
         if (category == null) return NotFound();
-        if (category.IsSystem && !User.IsInRole("Admin"))
+        if (category.RequiresAdminForNewThreads && !User.IsInRole("Admin"))
             return Forbid();
 
         var sanitizedBody = SanitizeImageSources(request.Body);
@@ -221,15 +222,7 @@ public class ForumController : ControllerBase
     [HttpPost("threads/{threadId}/posts")]
     public async Task<IActionResult> CreatePost(int threadId, [FromBody] CreatePostRequest request)
     {
-        // System categories (e.g. News) are admin-only for posting
         var db = HttpContext.RequestServices.GetRequiredService<VanalyticsDbContext>();
-        var threadCategory = await db.Set<ForumThread>()
-            .Where(t => t.Id == threadId)
-            .Select(t => new { t.Category.IsSystem })
-            .FirstOrDefaultAsync();
-        if (threadCategory == null) return NotFound();
-        if (threadCategory.IsSystem && !User.IsInRole("Admin"))
-            return Forbid();
 
         if (string.IsNullOrWhiteSpace(request.Body))
             return BadRequest(new { error = "Body is required." });

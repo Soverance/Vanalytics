@@ -18,7 +18,14 @@ export function clearTokens() {
   localStorage.removeItem(REFRESH_KEY)
 }
 
-async function refreshAccessToken(): Promise<string | null> {
+// The server rotates refresh tokens, so concurrent /api/auth/refresh calls
+// with the same token cause the loser to be logged out. Serialize refresh
+// attempts across tabs via the Web Locks API, falling back to a same-tab
+// mutex for browsers without it.
+const REFRESH_LOCK_NAME = 'vanalytics-token-refresh'
+let inFlightRefresh: Promise<string | null> | null = null
+
+async function performRefresh(): Promise<string | null> {
   const { refreshToken } = getStoredTokens()
   if (!refreshToken) return null
 
@@ -43,6 +50,38 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
+async function refreshAccessToken(): Promise<string | null> {
+  // Snapshot the token we saw before any serialization — once we're through
+  // the lock, a different current token means another holder already did the
+  // work and we should reuse their result.
+  const initial = getStoredTokens().accessToken
+
+  const attempt = async (): Promise<string | null> => {
+    const current = getStoredTokens().accessToken
+    if (current && current !== initial) return current
+    return performRefresh()
+  }
+
+  if ('locks' in navigator) {
+    return navigator.locks.request(REFRESH_LOCK_NAME, attempt)
+  }
+
+  if (inFlightRefresh) return inFlightRefresh
+  inFlightRefresh = attempt().finally(() => {
+    inFlightRefresh = null
+  })
+  return inFlightRefresh
+}
+
+// If another request already refreshed while we were waiting on our initial
+// response, the new token is sitting in localStorage — use it instead of
+// kicking off a fresh refresh (which would present the now-revoked token).
+async function resolveRefreshedToken(usedToken: string): Promise<string | null> {
+  const current = getStoredTokens().accessToken
+  if (current && current !== usedToken) return current
+  return refreshAccessToken()
+}
+
 export async function api<T>(
   path: string,
   options: RequestInit = {}
@@ -60,9 +99,8 @@ export async function api<T>(
 
   let res = await fetch(path, { ...options, headers })
 
-  // If 401, try refreshing the token once
   if (res.status === 401 && accessToken) {
-    const newToken = await refreshAccessToken()
+    const newToken = await resolveRefreshedToken(accessToken)
     if (newToken) {
       headers['Authorization'] = `Bearer ${newToken}`
       res = await fetch(path, { ...options, headers })
@@ -99,7 +137,7 @@ export async function uploadFile<T>(
   let res = await fetch(path, { method: 'POST', headers, body: formData })
 
   if (res.status === 401 && accessToken) {
-    const newToken = await refreshAccessToken()
+    const newToken = await resolveRefreshedToken(accessToken)
     if (newToken) {
       headers['Authorization'] = `Bearer ${newToken}`
       res = await fetch(path, { method: 'POST', headers, body: formData })

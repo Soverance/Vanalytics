@@ -119,7 +119,7 @@ export default function ForumThreadListPage() {
           </div>
         </div>
         {user ? (
-          (!category?.isSystem || user.role === 'Admin') && (
+          (!category?.requiresAdminForNewThreads || user.role === 'Admin') && (
             <button
               onClick={() => navigate(`/forum/${categorySlug}/new`)}
               className="shrink-0 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
@@ -128,7 +128,7 @@ export default function ForumThreadListPage() {
             </button>
           )
         ) : (
-          !category?.isSystem && (
+          !category?.requiresAdminForNewThreads && (
             <button
               onClick={() => navigate('/login')}
               className="shrink-0 rounded border border-gray-700 px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors"

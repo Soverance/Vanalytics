@@ -44,18 +44,29 @@ export async function checkPermission(
   }
 }
 
-export async function pickFfxiDirectory(): Promise<{
-  handle: FileSystemDirectoryHandle
-  path: string
-} | null> {
+export type PickResult =
+  | { status: 'ok'; handle: FileSystemDirectoryHandle; path: string }
+  | { status: 'cancelled' }
+  | { status: 'blocked' }
+  | { status: 'invalid' }
+  | { status: 'error'; message: string }
+
+export async function pickFfxiDirectory(): Promise<PickResult> {
+  let handle: FileSystemDirectoryHandle
   try {
-    const handle = await window.showDirectoryPicker({ mode: 'read' })
-    const valid = await validateFfxiDirectory(handle)
-    if (!valid) return null
-    return { handle, path: handle.name }
-  } catch {
-    return null
+    handle = await window.showDirectoryPicker({ mode: 'read' })
+  } catch (err) {
+    if (err instanceof DOMException) {
+      if (err.name === 'AbortError') return { status: 'cancelled' }
+      if (err.name === 'SecurityError' || err.name === 'NotAllowedError') {
+        return { status: 'blocked' }
+      }
+    }
+    return { status: 'error', message: err instanceof Error ? err.message : String(err) }
   }
+  const valid = await validateFfxiDirectory(handle)
+  if (!valid) return { status: 'invalid' }
+  return { status: 'ok', handle, path: handle.name }
 }
 
 async function validateFfxiDirectory(

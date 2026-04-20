@@ -8,6 +8,7 @@ import {
   requestPermission,
   pickFfxiDirectory,
   readDatFile,
+  type PickResult,
 } from '../lib/ffxi-filesystem'
 
 interface FfxiFileSystemContextValue {
@@ -16,7 +17,7 @@ interface FfxiFileSystemContextValue {
   isAuthorized: boolean
   path: string | null
   loading: boolean
-  configure: () => Promise<boolean>
+  configure: () => Promise<PickResult>
   authorize: () => Promise<boolean>
   disconnect: () => Promise<void>
   readFile: (relativePath: string) => Promise<ArrayBuffer>
@@ -58,13 +59,14 @@ export function FfxiFileSystemProvider({ children }: { children: ReactNode }) {
 
   const configure = useCallback(async () => {
     const result = await pickFfxiDirectory()
-    if (!result) return false
-    await saveDirectoryHandle(result.handle)
-    setHandle(result.handle)
-    setIsConfigured(true)
-    setIsAuthorized(true)
-    setPath(result.path)
-    return true
+    if (result.status === 'ok') {
+      await saveDirectoryHandle(result.handle)
+      setHandle(result.handle)
+      setIsConfigured(true)
+      setIsAuthorized(true)
+      setPath(result.path)
+    }
+    return result
   }, [])
 
   const authorize = useCallback(async () => {

@@ -52,6 +52,19 @@ export default function ProfilePage() {
   const [serverSaving, setServerSaving] = useState(false)
   const [serverSaved, setServerSaved] = useState(false)
 
+  // FFXI setup state
+  const [ffxiSetupError, setFfxiSetupError] = useState<'blocked' | 'invalid' | 'error' | null>(null)
+  const [ffxiErrorDetail, setFfxiErrorDetail] = useState<string | null>(null)
+
+  const handleConfigureFfxi = async () => {
+    setFfxiSetupError(null)
+    setFfxiErrorDetail(null)
+    const result = await ffxi.configure()
+    if (result.status === 'ok' || result.status === 'cancelled') return
+    setFfxiSetupError(result.status)
+    if (result.status === 'error') setFfxiErrorDetail(result.message)
+  }
+
   useEffect(() => {
     fetch('/api/servers')
       .then(r => r.ok ? r.json() : [])
@@ -322,8 +335,36 @@ export default function ProfilePage() {
                   Connect your local FFXI installation to enable the 3D character model viewer.
                   Files are read locally and never uploaded.
                 </p>
+
+                <div className="rounded bg-amber-900/30 border border-amber-700/50 p-3 text-xs text-amber-200 space-y-2">
+                  <p className="font-medium text-amber-100">
+                    Heads up: Chrome and Edge will block folders inside <code className="px-1 rounded bg-amber-950/60">C:\Program Files</code> or <code className="px-1 rounded bg-amber-950/60">C:\Program Files (x86)</code>.
+                  </p>
+                  <p>
+                    If your FFXI install is there (default), Windows will show <em>"can't open this folder because it contains system files"</em>. To work around this, create a directory junction to a non-restricted location and pick that instead. Run from an elevated Command Prompt:
+                  </p>
+                  <pre className="mt-1 p-2 bg-black/40 rounded text-[11px] text-amber-100 overflow-x-auto"><code>mklink /J C:\FFXI-Link "C:\Program Files (x86)\PlayOnline\SquareEnix\FINAL FANTASY XI"</code></pre>
+                  <p>Then browse to <code className="px-1 rounded bg-amber-950/60">C:\FFXI-Link</code> below. Alternatively, copy the <code className="px-1 rounded bg-amber-950/60">ROM</code>, <code className="px-1 rounded bg-amber-950/60">ROM2</code>–<code className="px-1 rounded bg-amber-950/60">ROM9</code>, and <code className="px-1 rounded bg-amber-950/60">VTABLE.DAT</code> files to a folder outside Program Files.</p>
+                </div>
+
+                {ffxiSetupError === 'blocked' && (
+                  <div className="rounded bg-red-900/40 border border-red-700/60 p-3 text-sm text-red-200">
+                    Windows blocked access to that folder. See the workaround above — FFXI must be accessed from a location outside <code className="px-1 rounded bg-red-950/60">C:\Program Files</code>.
+                  </div>
+                )}
+                {ffxiSetupError === 'invalid' && (
+                  <div className="rounded bg-red-900/40 border border-red-700/60 p-3 text-sm text-red-200">
+                    That folder doesn't look like an FFXI installation. Expected to find <code className="px-1 rounded bg-red-950/60">ROM</code>, <code className="px-1 rounded bg-red-950/60">ROM2</code>, and <code className="px-1 rounded bg-red-950/60">VTABLE.DAT</code> inside. Pick the FFXI root folder (the one directly containing those).
+                  </div>
+                )}
+                {ffxiSetupError === 'error' && (
+                  <div className="rounded bg-red-900/40 border border-red-700/60 p-3 text-sm text-red-200">
+                    Something went wrong connecting to that folder.{ffxiErrorDetail ? ` Details: ${ffxiErrorDetail}` : ''}
+                  </div>
+                )}
+
                 <button
-                  onClick={() => ffxi.configure()}
+                  onClick={handleConfigureFfxi}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg"
                 >
                   Browse for FFXI Installation
