@@ -19,7 +19,8 @@ local moves_lib = require('moves')
 local defaults = {
     ApiUrl = 'https://vanalytics.soverance.com',
     ApiKey = '',
-    SyncInterval = 15,
+    SyncInterval = 60,
+    NotifyOnSync = true,
     macro_hashes = {},
 }
 
@@ -796,7 +797,9 @@ local function do_sync()
         if status_code == 200 then
             last_sync_time = os.time()
             last_sync_status = 'Success'
-            log_success('Sync successful (' .. state.characterName .. ' @ ' .. state.server .. ')')
+            if settings.NotifyOnSync then
+                log_success('Sync successful (' .. state.characterName .. ' @ ' .. state.server .. ')')
+            end
         elseif status_code == 403 then
             last_sync_status = 'Forbidden (no license)'
             log_error('Character does not have an active license. Visit the Vanalytics web app to activate.')
@@ -1037,7 +1040,7 @@ windower.register_event('addon command', function(command, ...)
     local args = {...}
 
     if command == 'sync' then
-        log('Syncing...')
+        if settings.NotifyOnSync then log('Syncing...') end
         do_sync()
         moves_lib.check_pending()
 
@@ -1047,6 +1050,7 @@ windower.register_event('addon command', function(command, ...)
         log('API URL: ' .. settings.ApiUrl)
         log('API Key: ' .. (settings.ApiKey ~= '' and '****' .. settings.ApiKey:sub(-4) or 'Not set'))
         log('Sync Interval: ' .. interval .. ' minutes')
+        log('Notify On Sync: ' .. (settings.NotifyOnSync and 'on' or 'off'))
         if last_sync_time then
             local ago = os.difftime(os.time(), last_sync_time)
             local mins = math.floor(ago / 60)
@@ -1081,6 +1085,19 @@ windower.register_event('addon command', function(command, ...)
         -- Restart timer with new interval
         stop_timer()
         start_timer()
+
+    elseif command == 'notify' then
+        local arg = args[1] and args[1]:lower() or ''
+        if arg == 'on' then
+            settings.NotifyOnSync = true
+        elseif arg == 'off' then
+            settings.NotifyOnSync = false
+        else
+            log_error('Usage: //vanalytics notify on|off')
+            return
+        end
+        config.save(settings)
+        log('Sync chat notifications: ' .. (settings.NotifyOnSync and 'on' or 'off'))
 
     elseif command == 'session' then
         local subcommand = args[1] and args[1]:lower() or 'help'
@@ -1268,7 +1285,8 @@ windower.register_event('addon command', function(command, ...)
         log('//va url <url>    - Set API URL (or: local / prod)')
         log('//va sync         - Sync now')
         log('//va status       - Show status')
-        log('//va interval N   - Set sync interval (min: ' .. MIN_INTERVAL .. ')')
+        log('//va interval N   - Set sync interval in minutes (min: ' .. MIN_INTERVAL .. ')')
+        log('//va notify on|off - Toggle in-game chat notifications on successful sync')
         log('//va dump         - Dump player data to file')
         log('//va session start   - Start a performance tracking session')
         log('//va session stop    - Stop the active session and upload data')

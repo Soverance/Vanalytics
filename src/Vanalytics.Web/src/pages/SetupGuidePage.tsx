@@ -215,7 +215,8 @@ function CommandsTab() {
         <CommandRow command="//va sync" description="Sync character data, inventory, macros, and bazaar presence immediately" />
         <CommandRow command="//va status" description="Show API URL, key status, sync interval, and last sync result" />
         <CommandRow command="//va apikey <key>" description="Set your API key (saved across sessions)" />
-        <CommandRow command="//va interval <minutes>" description="Change the auto-sync interval (minimum 5 minutes, default 15)" />
+        <CommandRow command="//va interval <minutes>" description="Change the auto-sync interval (minimum 5 minutes, default 60)" />
+        <CommandRow command="//va notify on|off" description="Toggle in-game chat notifications on successful sync (default on). Errors are always shown regardless." />
         <CommandRow command="//va url <url>" description="Set the API URL directly, or use the shortcuts local or prod" />
         <CommandRow command="//va dump" description="Dump all player/equipment/item data to a text file for debugging" />
         <CommandRow command="//va help" description="Show the in-game command reference" />
@@ -296,13 +297,28 @@ function SyncTab() {
       <SectionHeading>Auto-Sync Timer</SectionHeading>
       <Paragraph>
         When your API key is configured and you're logged in, the addon starts an auto-sync timer.
-        The default interval is <strong className="text-gray-300">15 minutes</strong>, configurable
+        The default interval is <strong className="text-gray-300">60 minutes</strong>, configurable
         down to a minimum of 5 minutes with <Code>{'//va interval <minutes>'}</Code>.
       </Paragraph>
       <Paragraph>
         Each timer tick queues several tasks — character data, inventory diffs, bazaar presence
         scans, and a check for pending inventory moves. These tasks are spread across multiple
         game frames using a work queue to minimize any impact on game performance.
+      </Paragraph>
+
+      <SectionHeading>Chat Notifications</SectionHeading>
+      <Paragraph>
+        On each successful auto-sync, the addon prints a confirmation line to your game chat. If
+        that's too chatty for your taste, silence it with <Code>//va notify off</Code>, or turn it
+        back on with <Code>//va notify on</Code>. The setting is stored in your addon
+        configuration and persists across game sessions. The equivalent XML key
+        is <Code>NotifyOnSync</Code> in <Code>addon/vanalytics/settings.xml</Code>.
+      </Paragraph>
+      <Paragraph>
+        Errors (connection failures, invalid API key, rate limiting) are always shown regardless
+        of this setting so you're never left guessing when a sync fails. Manual commands
+        like <Code>//va sync</Code>, <Code>//va macros push</Code>, or <Code>//va session start</Code> also
+        continue to print their own feedback because you explicitly asked for them.
       </Paragraph>
       <Paragraph>
         <strong className="text-gray-300">Macros are intentionally excluded</strong> from the

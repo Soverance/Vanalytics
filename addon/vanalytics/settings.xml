@@ -3,6 +3,7 @@
     <global>
         <ApiUrl>https://vanalytics.soverance.com</ApiUrl>
         <ApiKey></ApiKey>
-        <SyncInterval>15</SyncInterval>
+        <SyncInterval>60</SyncInterval>
+        <NotifyOnSync>true</NotifyOnSync>
     </global>
 </settings>
