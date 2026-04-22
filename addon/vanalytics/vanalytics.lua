@@ -1040,7 +1040,7 @@ windower.register_event('addon command', function(command, ...)
     local args = {...}
 
     if command == 'sync' then
-        log('Syncing...')
+        if settings.NotifyOnSync then log('Syncing...') end
         do_sync()
         moves_lib.check_pending()
 
