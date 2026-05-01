@@ -38,7 +38,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DataProtectionKeys");
+                    b.ToTable("DataProtectionKeys", (string)null);
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.RefreshToken", b =>
@@ -71,7 +71,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.SamlConfig", b =>
@@ -113,7 +113,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasKey("SamlConfigId");
 
-                    b.ToTable("SamlConfigs");
+                    b.ToTable("SamlConfigs", (string)null);
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.SamlRoleMapping", b =>
@@ -141,7 +141,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("SamlConfigId");
 
-                    b.ToTable("SamlRoleMappings");
+                    b.ToTable("SamlRoleMappings", (string)null);
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.User", b =>
@@ -213,7 +213,6 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ApiKey")
                         .IsUnique()
-                        .HasDatabaseName("IX_Users_ApiKey")
                         .HasFilter("[ApiKey] IS NOT NULL");
 
                     b.HasIndex("Email")
@@ -224,18 +223,9 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("OAuthProvider", "OAuthId")
                         .IsUnique()
-                        .HasDatabaseName("IX_Users_OAuthProvider_OAuthId")
                         .HasFilter("[OAuthProvider] IS NOT NULL AND [OAuthId] IS NOT NULL");
 
-                    b.HasIndex(new[] { "ApiKey" }, "IX_Users_ApiKey")
-                        .HasDatabaseName("IX_Users_ApiKey1")
-                        .HasFilter("[ApiKey] IS NOT NULL");
-
-                    b.HasIndex(new[] { "OAuthProvider", "OAuthId" }, "IX_Users_OAuthProvider_OAuthId")
-                        .HasDatabaseName("IX_Users_OAuthProvider_OAuthId1")
-                        .HasFilter("[OAuthProvider] IS NOT NULL AND [OAuthId] IS NOT NULL");
-
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Soverance.Forum.Models.ForumAttachment", b =>
@@ -279,7 +269,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("UploadedBy");
 
-                    b.ToTable("ForumAttachment");
+                    b.ToTable("ForumAttachment", (string)null);
                 });
 
             modelBuilder.Entity("Soverance.Forum.Models.ForumCategory", b =>
@@ -328,7 +318,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("ForumCategory");
+                    b.ToTable("ForumCategory", (string)null);
                 });
 
             modelBuilder.Entity("Soverance.Forum.Models.ForumPost", b =>
@@ -377,7 +367,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ThreadId", "CreatedAt");
 
-                    b.ToTable("ForumPost");
+                    b.ToTable("ForumPost", (string)null);
                 });
 
             modelBuilder.Entity("Soverance.Forum.Models.ForumReaction", b =>
@@ -405,7 +395,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("PostId", "UserId", "ReactionType")
                         .IsUnique();
 
-                    b.ToTable("ForumReaction");
+                    b.ToTable("ForumReaction", (string)null);
                 });
 
             modelBuilder.Entity("Soverance.Forum.Models.ForumThread", b =>
@@ -463,7 +453,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CategoryId", "Slug")
                         .IsUnique();
 
-                    b.ToTable("ForumThread");
+                    b.ToTable("ForumThread", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.AuctionSale", b =>
@@ -516,7 +506,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("ItemId", "ServerId", "Price", "SoldAt", "BuyerName", "SellerName", "StackSize")
                         .IsUnique();
 
-                    b.ToTable("AuctionSales");
+                    b.ToTable("AuctionSales", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.BazaarListing", b =>
@@ -571,7 +561,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("SellerName", "ServerId", "IsActive");
 
-                    b.ToTable("BazaarListings");
+                    b.ToTable("BazaarListings", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.BazaarPresence", b =>
@@ -615,7 +605,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ServerId", "IsActive", "Zone");
 
-                    b.ToTable("BazaarPresences");
+                    b.ToTable("BazaarPresences", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.Character", b =>
@@ -790,7 +780,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("Name", "Server")
                         .IsUnique();
 
-                    b.ToTable("Characters");
+                    b.ToTable("Characters", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterInventory", b =>
@@ -824,7 +814,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "ItemId", "Bag", "SlotIndex")
                         .IsUnique();
 
-                    b.ToTable("CharacterInventories");
+                    b.ToTable("CharacterInventories", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterJob", b =>
@@ -861,7 +851,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "JobId")
                         .IsUnique();
 
-                    b.ToTable("CharacterJobs");
+                    b.ToTable("CharacterJobs", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterSkill", b =>
@@ -886,7 +876,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("CharacterId");
 
-                    b.ToTable("CharacterSkills");
+                    b.ToTable("CharacterSkills", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CraftingSkill", b =>
@@ -916,7 +906,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "Craft")
                         .IsUnique();
 
-                    b.ToTable("CraftingSkills");
+                    b.ToTable("CraftingSkills", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.DismissedAnomaly", b =>
@@ -943,7 +933,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "AnomalyKey")
                         .IsUnique();
 
-                    b.ToTable("DismissedAnomalies");
+                    b.ToTable("DismissedAnomalies", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.EquippedGear", b =>
@@ -975,7 +965,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "Slot")
                         .IsUnique();
 
-                    b.ToTable("EquippedGear");
+                    b.ToTable("EquippedGear", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.GameItem", b =>
@@ -1145,7 +1135,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("SubCategory");
 
-                    b.ToTable("GameItems");
+                    b.ToTable("GameItems", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.GameServer", b =>
@@ -1179,7 +1169,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("GameServers");
+                    b.ToTable("GameServers", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.InventoryChange", b =>
@@ -1218,7 +1208,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("CharacterId", "ChangedAt");
 
-                    b.ToTable("InventoryChanges");
+                    b.ToTable("InventoryChanges", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.InventoryMoveOrder", b =>
@@ -1260,7 +1250,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("CharacterId", "Status");
 
-                    b.ToTable("InventoryMoveOrders");
+                    b.ToTable("InventoryMoveOrders", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.ItemModelMapping", b =>
@@ -1296,7 +1286,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("ItemId", "SlotId")
                         .IsUnique();
 
-                    b.ToTable("ItemModelMappings");
+                    b.ToTable("ItemModelMappings", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.Macro", b =>
@@ -1359,7 +1349,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("MacroPageId", "Set", "Position")
                         .IsUnique();
 
-                    b.ToTable("Macros");
+                    b.ToTable("Macros", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.MacroBook", b =>
@@ -1399,7 +1389,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "BookNumber")
                         .IsUnique();
 
-                    b.ToTable("MacroBooks");
+                    b.ToTable("MacroBooks", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.MacroBookSnapshot", b =>
@@ -1442,7 +1432,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("MacroBookId", "CreatedAt");
 
-                    b.ToTable("MacroBookSnapshots");
+                    b.ToTable("MacroBookSnapshots", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.MacroPage", b =>
@@ -1462,7 +1452,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("MacroBookId", "PageNumber")
                         .IsUnique();
 
-                    b.ToTable("MacroPages");
+                    b.ToTable("MacroPages", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.NpcPool", b =>
@@ -1514,7 +1504,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("PoolId")
                         .IsUnique();
 
-                    b.ToTable("NpcPools");
+                    b.ToTable("NpcPools", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.RecipeIngredient", b =>
@@ -1539,7 +1529,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("RecipeId", "ItemId")
                         .IsUnique();
 
-                    b.ToTable("RecipeIngredients");
+                    b.ToTable("RecipeIngredients", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.ServerStatusChange", b =>
@@ -1568,7 +1558,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("GameServerId", "EndedAt");
 
-                    b.ToTable("ServerStatusChanges");
+                    b.ToTable("ServerStatusChanges", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.Session", b =>
@@ -1600,7 +1590,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("CharacterId", "Status");
 
-                    b.ToTable("Sessions");
+                    b.ToTable("Sessions", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.SessionEvent", b =>
@@ -1651,7 +1641,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("SessionId", "Timestamp");
 
-                    b.ToTable("SessionEvents");
+                    b.ToTable("SessionEvents", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.SyncHistory", b =>
@@ -1701,7 +1691,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ProviderId", "StartedAt");
 
-                    b.ToTable("SyncHistory");
+                    b.ToTable("SyncHistory", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.SynthRecipe", b =>
@@ -1778,7 +1768,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ResultItemId");
 
-                    b.ToTable("SynthRecipes");
+                    b.ToTable("SynthRecipes", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.Zone", b =>
@@ -1836,7 +1826,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("Name");
 
-                    b.ToTable("Zones");
+                    b.ToTable("Zones", (string)null);
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.ZoneSpawn", b =>
@@ -1891,7 +1881,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ZoneId");
 
-                    b.ToTable("ZoneSpawns");
+                    b.ToTable("ZoneSpawns", (string)null);
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.RefreshToken", b =>
