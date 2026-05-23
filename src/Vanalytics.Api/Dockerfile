@@ -4,9 +4,8 @@ ARG VITE_MICROSOFT_CLIENT_ID=""
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 ENV VITE_MICROSOFT_CLIENT_ID=$VITE_MICROSOFT_CLIENT_ID
 WORKDIR /app
-COPY src/Vanalytics.Web/package.json src/Vanalytics.Web/package-lock.json src/Vanalytics.Web/.npmrc ./
-RUN --mount=type=secret,id=github_token \
-    GITHUB_TOKEN=$(cat /run/secrets/github_token) npm ci
+COPY src/Vanalytics.Web/package.json src/Vanalytics.Web/package-lock.json ./
+RUN npm ci
 COPY src/Vanalytics.Web/ ./
 RUN npm run build
 

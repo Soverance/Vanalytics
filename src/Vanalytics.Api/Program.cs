@@ -10,6 +10,7 @@ using Soverance.Auth.Services;
 using Soverance.Forum.Extensions;
 using Soverance.Forum.Services;
 using Soverance.Data.Extensions;
+using Soverance.Data.SqlServer.Extensions;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Net.Http.Headers;
 using Vanalytics.Api.Middleware;
