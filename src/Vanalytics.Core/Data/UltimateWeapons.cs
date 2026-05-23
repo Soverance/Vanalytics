@@ -3,11 +3,12 @@ namespace Vanalytics.Core.Data;
 /// <summary>
 /// Static catalog of FFXI Ultimate weapons (Relic, Mythic, Empyrean, Aeonic, Ergon).
 /// Each entry defines the base weapon name (used to match all upgrade stages in GameItems),
-/// the weapon category and the weapon skill it unlocks.
+/// the weapon category and the weapon skill it unlocks. WeaponSkill is null for shields
+/// and instruments, which have no associated weapon skill.
 /// </summary>
 public static class UltimateWeapons
 {
-    public record WeaponDef(string BaseName, string Category, string WeaponSkill);
+    public record WeaponDef(string BaseName, string Category, string? WeaponSkill);
 
     public static readonly WeaponDef[] All =
     [
@@ -23,11 +24,11 @@ public static class UltimateWeapons
         new("Kikoku",           "Relic", "Blade: Metsu"),
         new("Amanomurakumo",    "Relic", "Tachi: Kaiten"),
         new("Mjollnir",         "Relic", "Randgrith"),
-        new("Claustrum",        "Relic", "Gate of Tartarus"),
+        new("Claustrum",        "Relic", "Gates of Tartarus"),
         new("Annihilator",      "Relic", "Coronach"),
         new("Yoichinoyumi",     "Relic", "Namas Arrow"),
-        new("Gjallarhorn",      "Relic", "Soul Voice"),
-        new("Aegis",            "Relic", "—"),
+        new("Gjallarhorn",      "Relic", null),
+        new("Aegis",            "Relic", null),
 
         // ── Mythic Weapons (Assault / Nyzul Isle) ────────────────────────
         new("Conqueror",        "Mythic", "King's Justice"),
@@ -50,44 +51,45 @@ public static class UltimateWeapons
         new("Kenkonken",        "Mythic", "Stringing Pummel"),
         new("Terpsichore",      "Mythic", "Pyrrhic Kleos"),
         new("Tupsimati",        "Mythic", "Omniscience"),
-        new("Idris",            "Mythic", "Exudation"),
-        new("Epeolatry",        "Mythic", "Dimidiation"),
 
         // ── Empyrean Weapons (Abyssea) ───────────────────────────────────
-        new("Ukonvasara",       "Empyrean", "Ukko's Fury"),
         new("Verethragna",      "Empyrean", "Victory Smite"),
-        new("Gambanteinn",      "Empyrean", "Dagan"),
-        new("Hvergelmir",       "Empyrean", "Myrkr"),
+        new("Twashtar",         "Empyrean", "Rudra's Storm"),
         new("Almace",           "Empyrean", "Chant du Cygne"),
         new("Caladbolg",        "Empyrean", "Torcleaver"),
         new("Farsha",           "Empyrean", "Cloudsplitter"),
-        new("Twashtar",         "Empyrean", "Rudra's Storm"),
-        new("Kannagi",          "Empyrean", "Blade: Hi"),
-        new("Rhongomiant",      "Empyrean", "Camlann's Torment"),
+        new("Ukonvasara",       "Empyrean", "Ukko's Fury"),
         new("Redemption",       "Empyrean", "Quietus"),
+        new("Rhongomiant",      "Empyrean", "Camlann's Torment"),
+        new("Kannagi",          "Empyrean", "Blade: Hi"),
         new("Masamune",         "Empyrean", "Tachi: Fudo"),
-        new("Armageddon",       "Empyrean", "Wildfire"),
+        new("Gambanteinn",      "Empyrean", "Dagan"),
+        new("Hvergelmir",       "Empyrean", "Myrkr"),
         new("Gandiva",          "Empyrean", "Jishnu's Radiance"),
-        new("Daurdabla",        "Empyrean", "Tenuto"),
-        new("Sequence",         "Empyrean", "Requiescat"),
+        new("Armageddon",       "Empyrean", "Wildfire"),
+        new("Ochain",           "Empyrean", null),
+        new("Daurdabla",        "Empyrean", null),
 
-        // ── Aeonic Weapons (Escha / Domain Invasion) ─────────────────────
-        new("Chango",           "Aeonic", "Upheaval"),
-        new("Godhands",         "Aeonic", "Howling Fist"),
+        // ── Aeonic Weapons (Escha / Reisenjima) ──────────────────────────
+        new("Godhands",         "Aeonic", "Shijin Spiral"),
         new("Aeneas",           "Aeonic", "Exenterator"),
+        new("Sequence",         "Aeonic", "Requiescat"),
         new("Lionheart",        "Aeonic", "Resolution"),
         new("Tri-edge",         "Aeonic", "Ruinator"),
-        new("Dolichenus",       "Aeonic", "Mordant Rime"),
+        new("Chango",           "Aeonic", "Upheaval"),
+        new("Anguta",           "Aeonic", "Entropy"),
         new("Trishula",         "Aeonic", "Stardiver"),
         new("Heishi Shorinken", "Aeonic", "Blade: Shun"),
         new("Dojikiri Yasutsuna","Aeonic", "Tachi: Shoha"),
-        new("Tishtrya",         "Aeonic", "Apex Arrow"),
+        new("Tishtrya",         "Aeonic", "Realmrazer"),
         new("Khatvanga",        "Aeonic", "Shattersoul"),
-        new("Fail-Not",         "Aeonic", "Empyreal Arrow"),
+        new("Fail-Not",         "Aeonic", "Apex Arrow"),
         new("Fomalhaut",        "Aeonic", "Last Stand"),
-        new("Srivatsa",         "Aeonic", "Retribution"),
+        new("Srivatsa",         "Aeonic", null),
+        new("Marsyas",          "Aeonic", null),
 
-        // ── Ergon Weapons (Ambuscade) ────────────────────────────────────
-        new("Anguta",           "Ergon", "Entropy"),
+        // ── Ergon Weapons (Adoulin Mythic-tier for RUN / GEO) ────────────
+        new("Idris",            "Ergon", "Exudation"),
+        new("Epeolatry",        "Ergon", "Dimidiation"),
     ];
 }

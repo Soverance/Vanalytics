@@ -182,7 +182,7 @@ export default function RelicsTab({ characterId }: Props) {
                           </span>
                         </td>
                         <td className="px-4 py-1.5 text-gray-300" rowSpan={weapon.versions.length}>
-                          {weapon.weaponSkill}
+                          {weapon.weaponSkill ?? '—'}
                         </td>
                       </>
                     ) : null}

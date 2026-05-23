@@ -22,7 +22,7 @@ import SessionsTab from '../components/session/SessionsTab'
 import { ApiError } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
 
-const STAT_TABS = ['Jobs', 'Crafting', 'Relics'] as const
+const STAT_TABS = ['Jobs', 'Crafting', 'Ultimate Weapons'] as const
 type StatTab = typeof STAT_TABS[number]
 
 const GEAR_TABS = ['Equipment', 'Inventory', 'Macros', 'Sessions'] as const
@@ -191,7 +191,7 @@ export default function CharacterDetailPage() {
             <div className="h-[400px] overflow-y-auto styled-scrollbar">
               {activeTab === 'Jobs' && <JobsGrid jobs={character.jobs} />}
               {activeTab === 'Crafting' && <CraftingTable skills={character.craftingSkills} />}
-              {activeTab === 'Relics' && <RelicsTab characterId={character.id} />}
+              {activeTab === 'Ultimate Weapons' && <RelicsTab characterId={character.id} />}
             </div>
           </div>
 
