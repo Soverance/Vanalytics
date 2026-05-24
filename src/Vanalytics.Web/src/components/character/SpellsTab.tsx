@@ -13,10 +13,14 @@ const TYPE_ORDER: SpellType[] = [
     'BardSong', 'BlueMagic', 'Geomancy', 'Trust',
 ]
 
+type StatusFilter = 'all' | 'known' | 'unknown'
+
 export default function SpellsTab({ characterId }: Props) {
     const [data, setData] = useState<CollectionResponse | null>(null)
     const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState<SpellType | 'All'>('All')
+    const [typeFilter, setTypeFilter] = useState<SpellType | 'All'>('All')
+    const [search, setSearch] = useState('')
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
 
     useEffect(() => {
         setLoading(true)
@@ -28,31 +32,34 @@ export default function SpellsTab({ characterId }: Props) {
 
     const knownSet = useMemo(() => new Set(data?.spellIds ?? []), [data])
 
-    // Group spells by type; filter pills hide types with zero matches.
-    const grouped = useMemo(() => {
-        const byType = new Map<SpellType, typeof SPELLS>()
+    const byType = useMemo(() => {
+        const map = new Map<SpellType, typeof SPELLS>()
         for (const s of SPELLS) {
-            if (!byType.has(s.type)) byType.set(s.type, [])
-            byType.get(s.type)!.push(s)
+            if (!map.has(s.type)) map.set(s.type, [])
+            map.get(s.type)!.push(s)
         }
-        return byType
+        return map
     }, [])
 
     const filteredSpells = useMemo(() => {
-        const source = filter === 'All' ? SPELLS : grouped.get(filter) ?? []
-        // Sort by minLevel asc, then name asc within a level — closer to
-        // how the in-game menu groups them.
-        return [...source].sort((a, b) =>
+        let pool = typeFilter === 'All' ? SPELLS : byType.get(typeFilter) ?? []
+        if (statusFilter === 'known') pool = pool.filter(s => knownSet.has(s.id))
+        else if (statusFilter === 'unknown') pool = pool.filter(s => !knownSet.has(s.id))
+        const q = search.trim().toLowerCase()
+        if (q) pool = pool.filter(s => s.name.toLowerCase().includes(q))
+        return [...pool].sort((a, b) =>
             (a.minLevel - b.minLevel) || a.name.localeCompare(b.name)
         )
-    }, [filter, grouped])
+    }, [typeFilter, statusFilter, search, byType, knownSet])
 
     if (loading) return <LoadingSpinner />
 
     if (!data || data.spellIds == null) {
         return (
-            <p className="text-gray-400 text-xs py-2">
-                No spell data captured yet — run a sync to populate.
+            <p className="text-gray-400 text-sm">
+                No spell data captured yet. Run a sync to populate — Vanalytics reads your
+                known spells (including trusts) directly from Windower on each sync, no
+                zoning required.
             </p>
         )
     }
@@ -60,60 +67,107 @@ export default function SpellsTab({ characterId }: Props) {
     const totalKnown = data.spellIds.length
 
     return (
-        <div className="space-y-2 text-xs">
-            <div className="text-gray-400">
-                <span className="text-gray-100 font-semibold tabular-nums">{totalKnown}</span>
-                <span className="ml-1">/ {SPELLS.length} known</span>
-            </div>
-
-            <div className="flex flex-wrap gap-1">
-                {(['All', ...TYPE_ORDER] as const).map(t => {
-                    const count = t === 'All'
-                        ? SPELLS.filter(s => knownSet.has(s.id)).length
-                        : (grouped.get(t) ?? []).filter(s => knownSet.has(s.id)).length
-                    const total = t === 'All' ? SPELLS.length : (grouped.get(t) ?? []).length
-                    const label = t === 'All' ? 'All' : SPELL_TYPE_LABELS[t]
-                    return (
+        <div className="space-y-3 pr-2">
+            {/* Header row: counts + search */}
+            <div className="flex items-center gap-4 flex-wrap">
+                <div>
+                    <span className="text-2xl font-semibold text-gray-100 tabular-nums">{totalKnown}</span>
+                    <span className="text-sm text-gray-500 ml-1">/ {SPELLS.length} known</span>
+                </div>
+                <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search spells..."
+                    className="flex-1 min-w-[180px] rounded bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                />
+                <div className="flex gap-1">
+                    {(['all', 'known', 'unknown'] as const).map(s => (
                         <button
-                            key={t}
-                            onClick={() => setFilter(t)}
-                            className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
-                                filter === t
+                            key={s}
+                            onClick={() => setStatusFilter(s)}
+                            className={`px-2 py-1 rounded text-xs capitalize transition-colors ${
+                                statusFilter === s
                                     ? 'bg-blue-500/30 text-blue-200 border border-blue-500/50'
                                     : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
                             }`}
                         >
-                            {label} {count}/{total}
+                            {s}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Type filter pills */}
+            <div className="flex flex-wrap gap-1.5">
+                {(['All', ...TYPE_ORDER] as const).map(t => {
+                    const pool = t === 'All' ? SPELLS : byType.get(t) ?? []
+                    const known = pool.filter(s => knownSet.has(s.id)).length
+                    const label = t === 'All' ? 'All' : SPELL_TYPE_LABELS[t]
+                    return (
+                        <button
+                            key={t}
+                            onClick={() => setTypeFilter(t)}
+                            className={`px-2 py-0.5 rounded text-xs transition-colors ${
+                                typeFilter === t
+                                    ? 'bg-blue-500/30 text-blue-200 border border-blue-500/50'
+                                    : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
+                            }`}
+                        >
+                            {label} {known}/{pool.length}
                         </button>
                     )
                 })}
             </div>
 
-            <ul className="divide-y divide-gray-800/60">
-                {filteredSpells.map(s => {
-                    const known = knownSet.has(s.id)
-                    return (
-                        <li key={s.id} className="px-1 py-1 flex items-baseline gap-2">
-                            <span className={`w-3 text-center ${known ? 'text-emerald-400' : 'text-gray-700'}`}>
-                                {known ? '✓' : '·'}
-                            </span>
-                            <span className={`flex-1 truncate ${known ? 'text-gray-200' : 'text-gray-500'}`}>
-                                {s.name}
-                            </span>
-                            {s.type !== 'Trust' && (
-                                <span className="text-gray-500 tabular-nums w-12 text-right">
-                                    Lv {s.minLevel}
-                                </span>
-                            )}
-                            {s.mpCost > 0 && (
-                                <span className="text-gray-500 tabular-nums w-10 text-right">
-                                    {s.mpCost} MP
-                                </span>
-                            )}
-                        </li>
-                    )
-                })}
-            </ul>
+            {/* Spell table */}
+            <div className="rounded border border-gray-700/60 bg-gray-900/30">
+                {filteredSpells.length === 0 ? (
+                    <p className="px-3 py-3 text-sm text-gray-500">No spells match the current filter.</p>
+                ) : (
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="bg-gray-800/60 text-gray-400 text-xs uppercase">
+                                <th className="px-3 py-2 text-left w-8"></th>
+                                <th className="px-3 py-2 text-left">Spell</th>
+                                {typeFilter === 'All' && (
+                                    <th className="px-3 py-2 text-left w-32">Type</th>
+                                )}
+                                <th className="px-3 py-2 text-right w-16">Level</th>
+                                <th className="px-3 py-2 text-right w-16">MP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredSpells.map(s => {
+                                const known = knownSet.has(s.id)
+                                return (
+                                    <tr key={s.id} className="border-t border-gray-800/60">
+                                        <td className="px-3 py-1.5 text-center">
+                                            <span className={known ? 'text-emerald-400' : 'text-gray-700'}>
+                                                {known ? '✓' : '·'}
+                                            </span>
+                                        </td>
+                                        <td className={`px-3 py-1.5 ${known ? 'text-gray-100' : 'text-gray-500'}`}>
+                                            {s.name}
+                                        </td>
+                                        {typeFilter === 'All' && (
+                                            <td className="px-3 py-1.5 text-gray-500 text-xs">
+                                                {SPELL_TYPE_LABELS[s.type]}
+                                            </td>
+                                        )}
+                                        <td className="px-3 py-1.5 text-right text-gray-500 tabular-nums">
+                                            {s.type === 'Trust' ? '—' : s.minLevel}
+                                        </td>
+                                        <td className="px-3 py-1.5 text-right text-gray-500 tabular-nums">
+                                            {s.mpCost > 0 ? s.mpCost : '—'}
+                                        </td>
+                                    </tr>
+                                )
+                            })}
+                        </tbody>
+                    </table>
+                )}
+            </div>
         </div>
     )
 }

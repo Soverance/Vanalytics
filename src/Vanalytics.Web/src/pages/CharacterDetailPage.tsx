@@ -20,7 +20,7 @@ import ProgressionTab from '../components/character/ProgressionTab'
 import MissionsTab from '../components/character/MissionsTab'
 import TitlesTab from '../components/character/TitlesTab'
 import KeyItemsTab from '../components/character/KeyItemsTab'
-import TrustsTab from '../components/character/TrustsTab'
+import SpellsTab from '../components/character/SpellsTab'
 import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
 import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
@@ -31,7 +31,7 @@ import CharacterProfileHeader from '../components/character/CharacterProfileHead
 const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items'] as const
 type StatTab = typeof STAT_TABS[number]
 
-const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Macros', 'Sessions', 'Trusts'] as const
+const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Spells', 'Macros', 'Sessions'] as const
 type GearTab = typeof GEAR_TABS[number]
 
 export default function CharacterDetailPage() {
@@ -268,6 +268,10 @@ export default function CharacterDetailPage() {
           <PorterTab characterId={character.id} />
         )}
 
+        {gearTab === 'Spells' && (
+          <SpellsTab characterId={character.id} />
+        )}
+
         {gearTab === 'Macros' && (
           <div>
             {macroError && <div className="text-red-400 text-sm mb-2">{macroError}</div>}
@@ -398,10 +402,6 @@ export default function CharacterDetailPage() {
 
         {gearTab === 'Sessions' && (
           <SessionsTab characterId={character.id} />
-        )}
-
-        {gearTab === 'Trusts' && (
-          <TrustsTab characterId={character.id} />
         )}
       </section>
 

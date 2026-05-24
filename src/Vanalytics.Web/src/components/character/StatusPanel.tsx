@@ -2,7 +2,6 @@ import { useState, useMemo, useRef } from 'react'
 import type { CharacterDetail, GearEntry, GameItemDetail, SkillEntry } from '../../types/api'
 import { calculateBaseStats, STAT_KEYS, getBaseStatBreakdown, getJPGiftBonuses } from '../../lib/ffxi-stats'
 import type { BaseStats } from '../../lib/ffxi-stats'
-import SpellsTab from './SpellsTab'
 
 interface StatusPanelProps {
   character: CharacterDetail
@@ -10,7 +9,7 @@ interface StatusPanelProps {
   itemCache: Map<number, GameItemDetail>
 }
 
-const TABS = ['Base', 'Combat', 'Skills', 'Spells'] as const
+const TABS = ['Base', 'Combat', 'Skills'] as const
 type Tab = typeof TABS[number]
 
 /** Mapping from Windower merit key to BaseStats key */
@@ -233,7 +232,6 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
         />
       )}
       {activeTab === 'Skills' && <SkillsTab skills={character.skills ?? []} />}
-      {activeTab === 'Spells' && <SpellsTab characterId={character.id} />}
       </div>
     </div>
   )

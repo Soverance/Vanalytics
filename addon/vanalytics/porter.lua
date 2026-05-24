@@ -106,7 +106,7 @@ function porter.sync(character_name, server)
 
     if status_code == 200 then
         if settings.NotifyOnSync then
-            log_fn('Porter synced: ' .. #slips_payload .. ' slip(s)')
+            -- log_fn('Porter synced: ' .. #slips_payload .. ' slip(s)')
         end
     else
         log_error_fn('Porter sync failed with status ' .. tostring(status_code))

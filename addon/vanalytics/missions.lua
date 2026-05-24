@@ -276,7 +276,7 @@ function missions.sync(character_name, server)
         last_payload_hash = payload
         save_to_disk(character_name, server)
         if settings.NotifyOnSync then
-            log_fn('Missions synced')
+            -- log_fn('Missions synced')
         end
     else
         log_error_fn('Missions sync failed with status ' .. tostring(status_code))
