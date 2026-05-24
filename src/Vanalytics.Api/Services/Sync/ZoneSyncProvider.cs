@@ -338,15 +338,19 @@ public class ZoneSyncProvider : ISyncProvider
             return;
         }
 
-        // Parse mob_groups: (groupid, poolid, zoneid, name, ...)
-        var groupPoolMap = new Dictionary<(int zoneId, int groupId), int>();
-        var groupRegex = new Regex(@"\((\d+),(\d+),(\d+),'([^']*)'");
+        // Parse mob_groups: (groupid, poolid, zoneid, name, respawntime, spawntype, ...)
+        // spawntype is a bitmask — 0 = normal respawn; non-zero (timed, scripted,
+        // lights-day, moon phase, fog, etc.) is characteristic of NM / event
+        // spawns, which we use downstream for NM classification.
+        var groupInfoMap = new Dictionary<(int zoneId, int groupId), (int poolId, int spawnType)>();
+        var groupRegex = new Regex(@"\((\d+),(\d+),(\d+),'([^']*)',(\d+),(\d+),");
         foreach (Match m in groupRegex.Matches(groupsSql))
         {
             var groupId = int.Parse(m.Groups[1].Value);
             var poolId = int.Parse(m.Groups[2].Value);
             var zoneId = int.Parse(m.Groups[3].Value);
-            groupPoolMap[(zoneId, groupId)] = poolId;
+            var spawnType = int.Parse(m.Groups[6].Value);
+            groupInfoMap[(zoneId, groupId)] = (poolId, spawnType);
         }
 
         // Parse mob_spawn_points: (mobid, spawnslotid, mobname, polutils_name, groupid, minLevel, maxLevel, pos_x, pos_y, pos_z, pos_rot)
@@ -368,13 +372,13 @@ public class ZoneSyncProvider : ISyncProvider
             // Skip placeholder positions (all 1.000 means "not yet placed")
             if (posX == 1.0f && posY == 1.0f && posZ == 1.0f) continue;
 
-            groupPoolMap.TryGetValue((zoneId, groupId), out var poolId);
+            groupInfoMap.TryGetValue((zoneId, groupId), out var info);
 
             parsed.Add(new ZoneSpawn
             {
                 ZoneId = zoneId,
                 GroupId = groupId,
-                PoolId = poolId > 0 ? poolId : null,
+                PoolId = info.poolId > 0 ? info.poolId : null,
                 MobName = mobName.Replace('_', ' '),
                 X = posX,
                 Y = posY,
@@ -382,6 +386,7 @@ public class ZoneSyncProvider : ISyncProvider
                 Rotation = posRot * (MathF.PI / 128f),
                 MinLevel = minLevel,
                 MaxLevel = maxLevel,
+                SpawnType = info.spawnType,
             });
         }
 
@@ -415,7 +420,7 @@ public class ZoneSyncProvider : ISyncProvider
         }
 
         _logger.LogInformation("Spawn sync: {Count} spawns across {Zones} zones (from {Groups} group mappings)",
-            parsed.Count, parsed.Select(s => s.ZoneId).Distinct().Count(), groupPoolMap.Count);
+            parsed.Count, parsed.Select(s => s.ZoneId).Distinct().Count(), groupInfoMap.Count);
 
         progress.Report(new SyncProgressEvent
         {

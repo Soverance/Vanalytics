@@ -14,6 +14,7 @@ import StatusPanel from '../components/character/StatusPanel'
 import EquipmentSwapModal from '../components/character/EquipmentSwapModal'
 import FullscreenViewer from '../components/character/FullscreenViewer'
 import InventoryTab from '../components/character/InventoryTab'
+import PorterTab from '../components/character/PorterTab'
 import RelicsTab from '../components/character/RelicsTab'
 import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
@@ -25,7 +26,7 @@ import CharacterProfileHeader from '../components/character/CharacterProfileHead
 const STAT_TABS = ['Jobs', 'Crafting', 'Ultimate Weapons'] as const
 type StatTab = typeof STAT_TABS[number]
 
-const GEAR_TABS = ['Equipment', 'Inventory', 'Macros', 'Sessions'] as const
+const GEAR_TABS = ['Equipment', 'Inventory', 'Porter', 'Macros', 'Sessions'] as const
 type GearTab = typeof GEAR_TABS[number]
 
 export default function CharacterDetailPage() {
@@ -249,6 +250,10 @@ export default function CharacterDetailPage() {
 
         {gearTab === 'Inventory' && (
           <InventoryTab characterId={character.id} craftingSkills={character.craftingSkills} />
+        )}
+
+        {gearTab === 'Porter' && (
+          <PorterTab characterId={character.id} />
         )}
 
         {gearTab === 'Macros' && (

@@ -699,6 +699,27 @@ export interface InventoryItem {
 
 export type InventoryByBag = Record<string, InventoryItem[]>
 
+export interface PorterItem {
+  itemId: number
+  itemName: string
+  iconPath: string | null
+  category: string | null
+  baseSell: number | null
+  stackSize: number
+  isRare: boolean
+  isExclusive: boolean
+}
+
+export interface PorterSlip {
+  slipItemId: number
+  slipNumber: number
+  slipName: string
+  slipIconPath: string | null
+  syncedAt: string
+  userHidden: boolean
+  items: PorterItem[]
+}
+
 export interface SlotInfo {
   bag: string
   slotIndex: number

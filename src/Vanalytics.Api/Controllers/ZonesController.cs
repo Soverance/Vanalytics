@@ -65,6 +65,30 @@ public class ZonesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:int}/nm")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetNotoriousMonsters(int id)
+    {
+        // A spawn point is treated as belonging to an NM (or other special
+        // mob) if either:
+        //   (a) its mob_groups.spawntype is non-zero — lottery/timed/script/
+        //       lights/darks/moon/fog, all of which are characteristic of
+        //       NM spawn rules, OR
+        //   (b) the mob name appears in fewer than three spawn entries in
+        //       this zone — regular PHs spawn many times across a zone,
+        //       NMs typically have one or two designated spawn points.
+        // Returns DISTINCT names so the addon can build a quick lookup set.
+        var nmNames = await _db.ZoneSpawns
+            .Where(s => s.ZoneId == id)
+            .GroupBy(s => s.MobName)
+            .Where(g => g.Any(s => s.SpawnType != 0) || g.Count() <= 2)
+            .Select(g => g.Key)
+            .OrderBy(name => name)
+            .ToListAsync();
+
+        return Ok(nmNames);
+    }
+
     [HttpPost("/api/admin/zones/discovered")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddDiscovered([FromBody] DiscoveredZonesRequest request)

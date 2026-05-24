@@ -28,6 +28,8 @@ local defaults = {
     HuntEnabled = false,
     HuntTargetPos = { x = 10, y = 400 },
     HuntWidescanPos = { x = 180, y = 10 },
+    HuntWatchPos = { x = 900, y = 350 },
+    HuntSoundEnabled = true,
 }
 
 local settings = config.load(defaults)
@@ -642,6 +644,268 @@ local function update_hunt_widescan_text()
 end
 
 -----------------------------------------------------------------------
+-- Hunt: Watch list
+-- Persistent per-zone list of mob indices we want to be alerted about.
+-- Auto-populated when the user activates in-game Track on a mob (via
+-- scan_target transition detection). Stays in place across kills — when
+-- the watched slot respawns, fires an audio alert + chat log. Cleared
+-- on zone change, //va hunt off, or //va hunt watch clear.
+--
+-- Sound classification uses an authoritative per-zone NM list fetched
+-- from GET /api/zones/{id}/nm on zone change: names returned by that
+-- endpoint play notify_NM.wav, all others play notify_Standard.wav.
+-- If the API fetch fails (offline / down), all alerts default to the
+-- standard sound and a warning is logged once.
+-----------------------------------------------------------------------
+local watch_list = {}                  -- ordered array of watch entries (see add_to_watch for shape)
+local watch_index_map = {}             -- mob.index -> position in watch_list[]
+local nm_set = {}                      -- name (string) -> true for current zone's known NMs
+local nm_set_zone = nil                -- the zone_id nm_set was loaded for (nil = not loaded)
+local last_scan_target_idx = nil       -- for nil->mob and A->B transition detection on auto-add
+
+local function parse_mob_idx(s)
+    -- Accepts decimal "343", hex "0x157" / "157h". Returns number or nil.
+    if not s or s == '' then return nil end
+    s = tostring(s):lower():gsub('h$', '')
+    if s:sub(1, 2) == '0x' then return tonumber(s:sub(3), 16) end
+    -- Treat any 3-char string with hex letters as hex (e.g. "1ab"); else decimal.
+    if s:match('[a-f]') then return tonumber(s, 16) end
+    return tonumber(s)
+end
+
+local function is_status_alive(status, hpp)
+    if status == nil or hpp == nil then return false end
+    return (status == 0 or status == 1 or status == 2) and hpp > 0
+end
+
+local function classify_as_nm(name)
+    return name ~= nil and nm_set[name] == true
+end
+
+local function play_alert(is_nm)
+    if not settings.HuntSoundEnabled then return end
+    local wav = is_nm and 'notify_NM.wav' or 'notify_Standard.wav'
+    windower.play_sound(windower.addon_path .. wav)
+end
+
+local function clear_watch_list()
+    watch_list = {}
+    watch_index_map = {}
+end
+
+local function rebuild_watch_index_map()
+    watch_index_map = {}
+    for i, e in ipairs(watch_list) do
+        watch_index_map[e.idx] = i
+    end
+end
+
+local function add_to_watch(mob)
+    if not mob or not mob.index then return false end
+    if watch_index_map[mob.index] then return false end  -- already watched
+    local entry = {
+        idx       = mob.index,
+        added_at  = os.time(),
+        added_name = mob.name or '?',     -- baseline name for "differs from add" indicator
+        last_name = mob.name,
+        last_status = mob.status,
+        last_hpp  = mob.hpp,
+    }
+    watch_list[#watch_list + 1] = entry
+    watch_index_map[mob.index] = #watch_list
+    log_success(string.format('Added to watch: %s (idx %d / 0x%03X)',
+        mob.name or '?', mob.index, mob.index))
+    return true
+end
+
+local function remove_from_watch(idx)
+    local pos = watch_index_map[idx]
+    if not pos then return false end
+    table.remove(watch_list, pos)
+    rebuild_watch_index_map()
+    return true
+end
+
+-- Fetch the authoritative NM name set for a zone. HTTP is synchronous via
+-- the existing http_request helper — brief stutter on zone-in is acceptable
+-- given the data is small and fetches are infrequent (one per zone-change).
+local function fetch_zone_nms(zone_id)
+    if not zone_id or zone_id == 0 then return end
+    local url = settings.ApiUrl .. '/api/zones/' .. tostring(zone_id) .. '/nm'
+    local ltn12 = require('ltn12')
+    local response_body = {}
+    local result, status_code = http_request({
+        url = url,
+        method = 'GET',
+        sink = ltn12.sink.table(response_body),
+    })
+    if not result or status_code ~= 200 then
+        log_error(string.format('NM fetch failed for zone %d (status %s) — alerts default to standard sound.',
+            zone_id, tostring(status_code)))
+        nm_set = {}
+        nm_set_zone = zone_id
+        return
+    end
+    local body = table.concat(response_body)
+    local nms = json_decode(body)
+    if type(nms) ~= 'table' then
+        log_error('NM fetch: invalid response for zone ' .. zone_id)
+        nm_set = {}
+        nm_set_zone = zone_id
+        return
+    end
+    nm_set = {}
+    local count = 0
+    for _, name in ipairs(nms) do
+        if type(name) == 'string' then
+            nm_set[name] = true
+            count = count + 1
+        end
+    end
+    nm_set_zone = zone_id
+    log(string.format('Loaded %d known NM names for zone %d.', count, zone_id))
+end
+
+-- Watch auto-add: detect in-game Track transitions and append the targeted
+-- mob to the watch list. Track is the only signal we have for "user just
+-- declared interest in this mob," so we treat it as the primary entry point.
+local function check_scan_target_transition()
+    local scan_target = windower.ffxi.get_mob_by_target('scan')
+    local current_idx = scan_target and scan_target.index or nil
+    if current_idx ~= last_scan_target_idx then
+        if scan_target and current_idx then
+            add_to_watch(scan_target)
+        end
+        last_scan_target_idx = current_idx
+    end
+end
+
+-- Per-watch poll: compares each watched mob's current state to its last
+-- observed state. Fires an alert on either:
+--   * name change (was X, now Y — covers PH → NM pop and back)
+--   * dead/absent → alive transition (covers vanilla respawn)
+-- Sound is chosen via nm_set classification. Dedup is implicit: we only
+-- alert when state TRANSITIONS, and after firing we update last_* fields
+-- so the next identical-state poll won't re-fire.
+local function poll_watch_entry(entry)
+    local mob = windower.ffxi.get_mob_by_index(entry.idx)
+    if not mob or not mob.name or mob.name == '' or mob.status == nil then
+        -- Out of client memory: don't update state, don't alert.
+        return
+    end
+
+    local current_name = mob.name
+    local current_status = mob.status
+    local current_hpp = mob.hpp or 0
+    local was_alive = is_status_alive(entry.last_status, entry.last_hpp)
+    local now_alive = is_status_alive(current_status, current_hpp)
+    local name_changed = entry.last_name ~= nil and current_name ~= entry.last_name
+
+    local should_alert = false
+    if now_alive then
+        if name_changed then
+            should_alert = true
+        elseif (not was_alive) and entry.last_status ~= nil then
+            -- Real dead → alive transition (we had a prior observation, and it was not-alive).
+            should_alert = true
+        end
+    end
+
+    if should_alert then
+        local is_nm = classify_as_nm(current_name)
+        play_alert(is_nm)
+        local label = is_nm and 'NM POP' or 'Respawn'
+        log_success(string.format('[%s] %s (idx %d / 0x%03X) alive — %d%% HP',
+            label, current_name, entry.idx, entry.idx, current_hpp))
+    end
+
+    entry.last_name = current_name
+    entry.last_status = current_status
+    entry.last_hpp = current_hpp
+end
+
+local function check_all_watches()
+    for _, entry in ipairs(watch_list) do
+        poll_watch_entry(entry)
+    end
+end
+
+local hunt_watch_text = texts.new(
+    '${content|Hunt Watch (empty)}',
+    {
+        pos = { x = settings.HuntWatchPos.x or 900, y = settings.HuntWatchPos.y or 350 },
+        bg = { alpha = 180, red = 0, green = 0, blue = 0, visible = true },
+        padding = 4,
+        text = {
+            font = 'Consolas',
+            size = 10,
+            alpha = 255,
+            red = 255, green = 255, blue = 255,
+            stroke = { width = 2, alpha = 255, red = 0, green = 0, blue = 0 },
+        },
+        flags = { draggable = true, bold = false, italic = false },
+    }
+)
+hunt_watch_text:hide()
+
+local function build_watch_panel()
+    if #watch_list == 0 then return '' end
+    local scan_target = windower.ffxi.get_mob_by_target('scan')
+    local scan_idx = scan_target and scan_target.index or nil
+    local player = windower.ffxi.get_player()
+    local self_mob = player and windower.ffxi.get_mob_by_id(player.id)
+
+    local lines = { string.format('Hunt Watch (%d)', #watch_list) }
+    for _, e in ipairs(watch_list) do
+        -- Prefer live mob data, fall back to last-observed state cached on the
+        -- watch entry. FFXI clients drop mob entities from memory ~20s after
+        -- death (corpse phase + despawn), at which point get_mob_by_index
+        -- returns nil — but we still want to show the last known state
+        -- (typically 'DEAD') rather than '???'.
+        local mob = windower.ffxi.get_mob_by_index(e.idx)
+        local name = (mob and mob.name and mob.name ~= '' and mob.name)
+            or e.last_name or e.added_name or '?'
+        local eff_status = (mob and mob.status) or e.last_status
+        local eff_hpp = (mob and mob.hpp) or e.last_hpp or 0
+        local status_label, dist_str = '???', ''
+        if eff_status ~= nil then
+            if is_status_alive(eff_status, eff_hpp) then
+                status_label = string.format('alive %3d%%', eff_hpp)
+                -- Live distance only when the mob is currently in memory.
+                if mob and self_mob and mob.x and self_mob.x then
+                    local dx = mob.x - self_mob.x
+                    local dy = mob.y - self_mob.y
+                    dist_str = string.format('  %4dy %s',
+                        math.floor(math.sqrt(dx * dx + dy * dy) + 0.5),
+                        direction_8(dx, dy))
+                end
+            elseif eff_hpp == 0 then
+                -- HPP 0 covers both the corpse phase (status 2, ~20s after kill)
+                -- and the fully-despawned phase (status 3). Either way: dead.
+                status_label = 'DEAD'
+            else
+                status_label = 'st=' .. tostring(eff_status)
+            end
+        end
+        -- Two-column prefix: column 1 = tracked-by-game-scan (>), column 2 = popped (* = name differs from baseline)
+        local m1 = (scan_idx == e.idx) and '>' or ' '
+        local m2 = (name ~= e.added_name) and '*' or ' '
+        lines[#lines + 1] = string.format('%s%s %-18s 0x%03X %-10s%s',
+            m1, m2, name, e.idx, status_label, dist_str)
+    end
+    return table.concat(lines, '\n')
+end
+
+local function update_hunt_watch_text()
+    if not settings.HuntEnabled or #watch_list == 0 then
+        hunt_watch_text:hide()
+        return
+    end
+    hunt_watch_text:update({ content = build_watch_panel() })
+    hunt_watch_text:show()
+end
+
+-----------------------------------------------------------------------
 -- Initialize session and inventory modules
 -----------------------------------------------------------------------
 session.init({
@@ -1167,9 +1431,18 @@ end
 
 -- Single prerender handler registered once at load time
 windower.register_event('prerender', function()
-    -- Refresh overlays every frame (both gated on settings.HuntEnabled)
+    -- Refresh overlays every frame (all gated on settings.HuntEnabled)
     update_hunt_target_text()
     update_hunt_widescan_text()
+
+    -- Watch list: detect in-game Track to auto-add, then poll watched
+    -- mobs for name/status transitions and fire alerts. Cheap (small list,
+    -- direct API calls), so we run it every frame when hunt is on.
+    if settings.HuntEnabled then
+        check_scan_target_transition()
+        check_all_watches()
+    end
+    update_hunt_watch_text()
 
     -- Process one queued work item per frame
     if #work_queue > 0 then
@@ -1485,10 +1758,20 @@ windower.register_event('addon command', function(command, ...)
             else
                 log('Tracking: (none — use in-game Track on a widescan entry)')
             end
+            log(string.format('Watch list: %d entries  |  Sound: %s',
+                #watch_list, settings.HuntSoundEnabled and 'ON' or 'OFF'))
+            local nm_count = 0
+            for _ in pairs(nm_set) do nm_count = nm_count + 1 end
+            if nm_set_zone then
+                log(string.format('NM cache: %d names loaded for zone %d', nm_count, nm_set_zone))
+            else
+                log('NM cache: (not loaded — fetched on zone-in)')
+            end
         elseif arg == 'pos' then
             -- //va hunt pos                              -> show positions
             -- //va hunt pos target <x> <y>               -> set target overlay pos
             -- //va hunt pos widescan <x> <y>             -> set wide scan panel pos
+            -- //va hunt pos watch <x> <y>                -> set watch list panel pos
             -- //va hunt pos save                         -> capture current dragged positions
             local which = args[2] and args[2]:lower() or nil
             if which == nil then
@@ -1496,15 +1779,19 @@ windower.register_event('addon command', function(command, ...)
                     settings.HuntTargetPos.x or 0, settings.HuntTargetPos.y or 0))
                 log(string.format('Wide scan tracker: (%d, %d)',
                     settings.HuntWidescanPos.x or 0, settings.HuntWidescanPos.y or 0))
-                log('Set: //va hunt pos <target|widescan> <x> <y>  |  Save dragged: //va hunt pos save')
+                log(string.format('Watch list: (%d, %d)',
+                    settings.HuntWatchPos.x or 0, settings.HuntWatchPos.y or 0))
+                log('Set: //va hunt pos <target|widescan|watch> <x> <y>  |  Save dragged: //va hunt pos save')
             elseif which == 'save' then
                 settings.HuntTargetPos = { x = hunt_target_text:pos_x(), y = hunt_target_text:pos_y() }
                 settings.HuntWidescanPos = { x = hunt_widescan_text:pos_x(), y = hunt_widescan_text:pos_y() }
+                settings.HuntWatchPos = { x = hunt_watch_text:pos_x(), y = hunt_watch_text:pos_y() }
                 config.save(settings)
-                log(string.format('Saved positions: target (%d, %d), widescan (%d, %d)',
+                log(string.format('Saved: target (%d,%d), widescan (%d,%d), watch (%d,%d)',
                     settings.HuntTargetPos.x, settings.HuntTargetPos.y,
-                    settings.HuntWidescanPos.x, settings.HuntWidescanPos.y))
-            elseif which == 'target' or which == 'widescan' then
+                    settings.HuntWidescanPos.x, settings.HuntWidescanPos.y,
+                    settings.HuntWatchPos.x, settings.HuntWatchPos.y))
+            elseif which == 'target' or which == 'widescan' or which == 'watch' then
                 local x = tonumber(args[3])
                 local y = tonumber(args[4])
                 if not x or not y then
@@ -1514,14 +1801,17 @@ windower.register_event('addon command', function(command, ...)
                 if which == 'target' then
                     settings.HuntTargetPos = { x = x, y = y }
                     hunt_target_text:pos(x, y)
-                else
+                elseif which == 'widescan' then
                     settings.HuntWidescanPos = { x = x, y = y }
                     hunt_widescan_text:pos(x, y)
+                else
+                    settings.HuntWatchPos = { x = x, y = y }
+                    hunt_watch_text:pos(x, y)
                 end
                 config.save(settings)
                 log(string.format('%s position set to (%d, %d)', which, x, y))
             else
-                log_error('Usage: //va hunt pos [target|widescan <x> <y> | save]')
+                log_error('Usage: //va hunt pos [target|widescan|watch <x> <y> | save]')
             end
         elseif arg == 'probe' then
             -- //va hunt probe [label]
@@ -1662,22 +1952,100 @@ windower.register_event('addon command', function(command, ...)
             settings.HuntEnabled = true
             config.save(settings)
             log('Hunt overlays: ON')
+            -- Fetch NM list for the current zone (otherwise classifier would
+            -- silently default everything to standard until next zone-in).
+            local info = windower.ffxi.get_info()
+            if info and info.zone and info.zone ~= 0 then
+                table.insert(work_queue, function() fetch_zone_nms(info.zone) end)
+            end
         elseif arg == 'off' then
             settings.HuntEnabled = false
             hunt_target_text:hide()
             hunt_widescan_text:hide()
+            hunt_watch_text:hide()
+            clear_watch_list()
             config.save(settings)
-            log('Hunt overlays: OFF')
+            log('Hunt overlays: OFF (watch list cleared)')
         elseif arg == 'toggle' then
             settings.HuntEnabled = not settings.HuntEnabled
             if not settings.HuntEnabled then
                 hunt_target_text:hide()
                 hunt_widescan_text:hide()
+                hunt_watch_text:hide()
+                clear_watch_list()
             end
             config.save(settings)
             log('Hunt overlays: ' .. (settings.HuntEnabled and 'ON' or 'OFF'))
+        elseif arg == 'watch' then
+            -- //va hunt watch                         -> list watched entries
+            -- //va hunt watch list                    -> same as above
+            -- //va hunt watch remove <idx|hex>        -> remove one watched mob
+            -- //va hunt watch clear                   -> drop all watched mobs
+            local sub = args[2] and args[2]:lower() or 'list'
+            if sub == 'list' then
+                if #watch_list == 0 then
+                    log('Watch list is empty. Use in-game Track on a Wide Scan entry to add.')
+                    return
+                end
+                log('--- Watch list (' .. #watch_list .. ') ---')
+                for _, e in ipairs(watch_list) do
+                    local current = windower.ffxi.get_mob_by_index(e.idx)
+                    local cur_name = (current and current.name) or e.last_name or e.added_name or '?'
+                    local eff_status = (current and current.status) or e.last_status
+                    local eff_hpp = (current and current.hpp) or e.last_hpp or 0
+                    local state
+                    if eff_status ~= nil then
+                        if is_status_alive(eff_status, eff_hpp) then
+                            state = string.format('alive %d%%', eff_hpp)
+                        elseif eff_hpp == 0 then
+                            state = 'dead'
+                        else
+                            state = 'st=' .. tostring(eff_status)
+                        end
+                    else
+                        state = 'out of range'
+                    end
+                    local nm_marker = classify_as_nm(cur_name) and ' [NM]' or ''
+                    log(string.format('  %s (idx %d / 0x%03X) — %s%s',
+                        cur_name, e.idx, e.idx, state, nm_marker))
+                end
+            elseif sub == 'remove' then
+                local idx = parse_mob_idx(args[3])
+                if not idx then
+                    log_error('Usage: //va hunt watch remove <idx|hex>  (e.g. 343 or 0x157)')
+                    return
+                end
+                if remove_from_watch(idx) then
+                    log(string.format('Removed idx %d (0x%03X) from watch list.', idx, idx))
+                else
+                    log('Index ' .. idx .. ' is not on the watch list.')
+                end
+            elseif sub == 'clear' then
+                local n = #watch_list
+                clear_watch_list()
+                log('Watch list cleared (' .. n .. ' entries removed).')
+            else
+                log_error('Usage: //va hunt watch [list|remove <idx|hex>|clear]')
+            end
+        elseif arg == 'sound' then
+            local s = args[2] and args[2]:lower() or nil
+            if s == 'on' then
+                settings.HuntSoundEnabled = true
+            elseif s == 'off' then
+                settings.HuntSoundEnabled = false
+            elseif s == 'test' then
+                -- Quick way to verify the wav files load and audio is routed properly.
+                play_alert(true)
+                log('Played NM test sound (notify_NM.wav).')
+                return
+            else
+                log_error('Usage: //va hunt sound on|off|test')
+                return
+            end
+            config.save(settings)
+            log('Hunt sound: ' .. (settings.HuntSoundEnabled and 'ON' or 'OFF'))
         else
-            log_error('Usage: //va hunt [on|off|toggle|pos|status]  (no args shows status)')
+            log_error('Usage: //va hunt [on|off|toggle|pos|watch|sound|probe]  (no args shows status)')
         end
 
     elseif command == 'widescan' then
@@ -1891,7 +2259,12 @@ windower.register_event('addon command', function(command, ...)
         log('//va hunt pos                   - Show current overlay positions')
         log('//va hunt pos target <x> <y>    - Move target overlay (no mouse needed)')
         log('//va hunt pos widescan <x> <y>  - Move wide scan tracker panel')
+        log('//va hunt pos watch <x> <y>     - Move watch list panel')
         log('//va hunt pos save              - Persist current dragged positions')
+        log('//va hunt watch                 - List watched mobs (auto-populated by in-game Track)')
+        log('//va hunt watch remove <idx>    - Stop watching a mob (decimal or 0x-hex)')
+        log('//va hunt watch clear           - Clear all watched mobs')
+        log('//va hunt sound on|off|test     - Toggle pop alert sounds (or test playback)')
         log('//va hunt probe [label]         - Recon: dump cursor-candidate state to hunt-probe-N.txt')
         log('//va session start   - Start a performance tracking session')
         log('//va session stop    - Stop the active session and upload data')
@@ -1952,13 +2325,27 @@ windower.register_event('incoming text', function(original, modified, original_m
 end)
 
 windower.register_event('zone change', function()
-    -- Wide Scan results are zone-scoped; flush stale state on every transition.
+    -- Wide Scan results and watch list are both zone-scoped; flush on every transition.
     widescan_entries = {}
     widescan_index_map = {}
     last_widescan_packet = 0
     widescan_dirty = true
     widescan_active = false
     hunt_widescan_text:hide()
+
+    clear_watch_list()
+    hunt_watch_text:hide()
+    last_scan_target_idx = nil
+
+    -- Refresh the authoritative NM name set for the new zone. Deferred onto the
+    -- work queue so the synchronous HTTP call doesn't stutter the zone-in frame.
+    if settings.HuntEnabled then
+        local info = windower.ffxi.get_info()
+        local new_zone = info and info.zone
+        if new_zone and new_zone ~= 0 then
+            table.insert(work_queue, function() fetch_zone_nms(new_zone) end)
+        end
+    end
 end)
 
 windower.register_event('unload', function()

@@ -292,6 +292,13 @@ function SyncTab() {
           <li>Attack, defense, and elemental resistances (fire, ice, wind, earth, lightning, water, light, dark)</li>
           <li>Nation rank and rank points</li>
         </ul>
+
+        <p className="text-gray-300 font-medium pt-2">Porter Moogle storage</p>
+        <ul className="list-disc list-inside space-y-1">
+          <li>Contents of every storage slip in your bags, decoded from each slip's extdata</li>
+          <li>Items stored at the Porter Moogle are surfaced in the <strong className="text-gray-300">Porter</strong> tab on the character detail page</li>
+          <li>Slips not currently in your bags keep their last known contents — server data is never wiped on absence</li>
+        </ul>
       </InfoBox>
 
       <SectionHeading>Auto-Sync Timer</SectionHeading>
@@ -301,9 +308,10 @@ function SyncTab() {
         down to a minimum of 5 minutes with <Code>{'//va interval <minutes>'}</Code>.
       </Paragraph>
       <Paragraph>
-        Each timer tick queues several tasks — character data, inventory diffs, bazaar presence
-        scans, and a check for pending inventory moves. These tasks are spread across multiple
-        game frames using a work queue to minimize any impact on game performance.
+        Each timer tick queues several tasks — character data, inventory diffs, Porter storage
+        contents, bazaar presence scans, and a check for pending inventory moves. These tasks
+        are spread across multiple game frames using a work queue to minimize any impact on
+        game performance.
       </Paragraph>
 
       <SectionHeading>Chat Notifications</SectionHeading>
