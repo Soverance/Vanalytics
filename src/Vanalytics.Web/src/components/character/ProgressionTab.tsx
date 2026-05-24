@@ -28,6 +28,11 @@ function StatCard({ label, value, sublabel }: { label: string; value: string | n
     )
 }
 
+// Capacity Points cap at 29,999 in-game (the next tick converts directly to
+// a job point, so the gauge never actually displays 30,000 — same off-by-one
+// convention as XP and Limit Points). At this value the job is "maxed".
+const CAPACITY_POINTS_CAP = 29999
+
 function JobPointsTable({ entries, unlocked }: { entries: JobPointEntry[]; unlocked: boolean | null }) {
     const named = entries
         .filter(e => JOB_NAMES[e.jobId])
@@ -55,14 +60,29 @@ function JobPointsTable({ entries, unlocked }: { entries: JobPointEntry[]; unloc
                     </tr>
                 </thead>
                 <tbody>
-                    {named.map(j => (
-                        <tr key={j.jobId} className="border-t border-gray-700/50">
-                            <td className="px-3 py-1.5 text-gray-100 font-medium">{j.name}</td>
-                            <td className="px-3 py-1.5 text-right text-gray-300 tabular-nums">{j.capacityPoints.toLocaleString()}</td>
-                            <td className="px-3 py-1.5 text-right text-gray-300 tabular-nums">{j.points.toLocaleString()}</td>
-                            <td className="px-3 py-1.5 text-right text-gray-300 tabular-nums">{j.pointsSpent.toLocaleString()}</td>
-                        </tr>
-                    ))}
+                    {named.map(j => {
+                        const atCap = j.capacityPoints >= CAPACITY_POINTS_CAP
+                        return (
+                            <tr key={j.jobId} className="border-t border-gray-700/50">
+                                <td className="px-3 py-1.5 text-gray-100 font-medium">{j.name}</td>
+                                <td className="px-3 py-1.5 text-right tabular-nums">
+                                    <span className={atCap ? 'text-amber-300' : 'text-gray-300'}>
+                                        {j.capacityPoints.toLocaleString()}
+                                    </span>
+                                    {atCap && (
+                                        <span
+                                            className="ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-300 align-middle"
+                                            title="Capacity points at cap — ready to convert to a job point"
+                                        >
+                                            MAX
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="px-3 py-1.5 text-right text-gray-300 tabular-nums">{j.points.toLocaleString()}</td>
+                                <td className="px-3 py-1.5 text-right text-gray-300 tabular-nums">{j.pointsSpent.toLocaleString()}</td>
+                            </tr>
+                        )
+                    })}
                 </tbody>
             </table>
         </div>
@@ -73,6 +93,7 @@ function WarpSection({ category, ids }: { category: WarpCategory; ids: number[] 
     const [expanded, setExpanded] = useState(false)
     const label = WARP_CATEGORY_LABELS[category]
     const capacity = WARP_CATEGORY_CAPACITY[category]
+    const complete = capacity > 0 && ids.length >= capacity
 
     return (
         <div className="rounded border border-gray-700/60 bg-gray-900/30">
@@ -80,8 +101,18 @@ function WarpSection({ category, ids }: { category: WarpCategory; ids: number[] 
                 onClick={() => setExpanded(e => !e)}
                 className="w-full px-3 py-2 flex justify-between items-center text-left hover:bg-gray-800/50 transition-colors"
             >
-                <span className="text-sm font-medium text-gray-200">{label}</span>
-                <span className="text-xs text-gray-500 tabular-nums">
+                <span className="text-sm font-medium text-gray-200 flex items-center gap-2">
+                    {label}
+                    {complete && (
+                        <span
+                            className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/20 text-emerald-300"
+                            title="All known destinations in this category unlocked"
+                        >
+                            COMPLETE
+                        </span>
+                    )}
+                </span>
+                <span className={`text-xs tabular-nums ${complete ? 'text-emerald-300' : 'text-gray-500'}`}>
                     {ids.length} / {capacity} {expanded ? '▾' : '▸'}
                 </span>
             </button>
@@ -146,9 +177,15 @@ export default function ProgressionTab({ characterId }: Props) {
                     sublabel="Gauge to next merit point"
                 />
                 <StatCard
-                    label="Merit Slots"
-                    value={data!.meritPointsMax?.toLocaleString() ?? '—'}
-                    sublabel="Cap on unspent merits held"
+                    label="Merit Points"
+                    value={
+                        data!.meritPoints !== null && data!.meritPointsMax !== null
+                            ? `${data!.meritPoints.toLocaleString()} / ${data!.meritPointsMax.toLocaleString()}`
+                            : data!.meritPointsMax !== null
+                                ? `— / ${data!.meritPointsMax.toLocaleString()}`
+                                : '—'
+                    }
+                    sublabel="Currently held / cap"
                 />
             </div>
 

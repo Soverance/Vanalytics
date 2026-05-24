@@ -36,8 +36,11 @@ public class ZonesController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetSpawns(int id)
     {
+        // Filter out LSB "not yet placed" rows (sentinel coords 1,1,1) — those
+        // rows are kept in the table so /nm can use their MobIndex, but they
+        // would render at world origin as garbage map pins.
         var spawns = await _db.ZoneSpawns
-            .Where(s => s.ZoneId == id)
+            .Where(s => s.ZoneId == id && !(s.X == 1.0f && s.Y == 1.0f && s.Z == 1.0f))
             .ToListAsync();
 
         if (spawns.Count == 0)
@@ -91,12 +94,10 @@ public class ZonesController : ControllerBase
         const int NmSpawntypeMask = 0x6;
         const int NmRespawnThreshold = 600;
 
-        var spawns = await _db.ZoneSpawns
+        // Materialize int indices in the SQL projection (FormatMobIndex is a
+        // C# method EF can't translate), then format hex client-side below.
+        var rawGroups = await _db.ZoneSpawns
             .Where(s => s.ZoneId == id)
-            .Select(s => new { s.MobName, s.RespawnTime, s.SpawnType, s.MobIndex })
-            .ToListAsync();
-
-        var groups = spawns
             .GroupBy(s => s.MobName)
             .Select(g => new
             {
@@ -104,14 +105,22 @@ public class ZonesController : ControllerBase
                 Count = g.Count(),
                 MaxRespawn = g.Max(s => s.RespawnTime),
                 AnyNmSpawntype = g.Any(s => (s.SpawnType & NmSpawntypeMask) != 0),
-                MobIndices = g.Select(s => s.MobIndex)
-                              .Where(i => i > 0)
-                              .Distinct()
-                              .OrderBy(i => i)
-                              .Select(FormatMobIndex)
-                              .ToArray(),
+                MobIndicesRaw = g.Select(s => s.MobIndex)
+                                 .Where(i => i > 0)
+                                 .Distinct()
+                                 .OrderBy(i => i)
+                                 .ToList(),
             })
-            .ToList();
+            .ToListAsync();
+
+        var groups = rawGroups.Select(g => new
+        {
+            g.Name,
+            g.Count,
+            g.MaxRespawn,
+            g.AnyNmSpawntype,
+            MobIndices = g.MobIndicesRaw.Select(FormatMobIndex).ToArray(),
+        }).ToList();
 
         var curated = await _db.ZoneNamedMonsters
             .Where(n => n.ZoneId == id)

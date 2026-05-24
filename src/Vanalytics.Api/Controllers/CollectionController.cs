@@ -11,9 +11,9 @@ using Vanalytics.Data;
 namespace Vanalytics.Api.Controllers;
 
 [ApiController]
-[Route("api/sync/progression")]
+[Route("api/sync/collection")]
 [Authorize(AuthenticationSchemes = "ApiKey")]
-public class ProgressionController : ControllerBase
+public class CollectionController : ControllerBase
 {
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -23,14 +23,14 @@ public class ProgressionController : ControllerBase
     private readonly VanalyticsDbContext _db;
     private readonly RateLimiter _rateLimiter;
 
-    public ProgressionController(VanalyticsDbContext db, RateLimiter rateLimiter)
+    public CollectionController(VanalyticsDbContext db, RateLimiter rateLimiter)
     {
         _db = db;
         _rateLimiter = rateLimiter;
     }
 
     [HttpPost]
-    public async Task<IActionResult> SyncProgression([FromBody] ProgressionSyncRequest request)
+    public async Task<IActionResult> SyncCollection([FromBody] CollectionSyncRequest request)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
@@ -47,33 +47,25 @@ public class ProgressionController : ControllerBase
         if (character.UserId != userId)
             return StatusCode(403, new { message = "Character is not owned by this account" });
 
-        var row = await _db.CharacterProgression
-            .FirstOrDefaultAsync(p => p.CharacterId == character.Id);
+        var row = await _db.CharacterCollection
+            .FirstOrDefaultAsync(c => c.CharacterId == character.Id);
 
         if (row is null)
         {
-            row = new CharacterProgression { CharacterId = character.Id };
-            _db.CharacterProgression.Add(row);
+            row = new CharacterCollection { CharacterId = character.Id };
+            _db.CharacterCollection.Add(row);
         }
 
-        // Patch semantics: only overwrite fields the addon actually sent this
-        // sync. The addon caches packet payloads as they arrive, so the first
-        // sync after install may carry only some Orders.
-        if (request.LimitPoints.HasValue) row.LimitPoints = request.LimitPoints;
-        if (request.MeritPoints.HasValue) row.MeritPoints = request.MeritPoints;
-        if (request.MeritPointsMax.HasValue) row.MeritPointsMax = request.MeritPointsMax;
-        if (request.JobPointsUnlocked.HasValue) row.JobPointsUnlocked = request.JobPointsUnlocked;
+        // Patch semantics: only overwrite a list if the addon actually sent it.
+        if (request.SpellIds is not null)
+            row.SpellIdsJson = JsonSerializer.Serialize(request.SpellIds, JsonOpts);
 
-        if (request.JobPoints is { Count: > 0 })
-            row.JobPointsJson = JsonSerializer.Serialize(request.JobPoints, JsonOpts);
-
-        if (request.Warps is not null)
-            row.WarpsJson = JsonSerializer.Serialize(request.Warps, JsonOpts);
+        if (request.KeyItemIds is not null)
+            row.KeyItemIdsJson = JsonSerializer.Serialize(request.KeyItemIds, JsonOpts);
 
         row.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync();
-
-        return Ok(new { message = "Progression sync successful" });
+        return Ok(new { message = "Collection sync successful" });
     }
 }

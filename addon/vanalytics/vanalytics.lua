@@ -17,6 +17,8 @@ local session = require('session')
 local inventory = require('inventory')
 local porter = require('porter')
 local progression = require('progression')
+local missions_lib = require('missions')
+local collection_lib = require('collection')
 local macro_lib = require('macros')
 local moves_lib = require('moves')
 
@@ -33,7 +35,7 @@ local defaults = {
     HuntWatchPos = { x = 900, y = 350 },
     HuntSoundEnabled = true,
     HuntNmPos = { x = 1200, y = 50 },
-    HuntNmVisible = false,
+    HuntNmPinned = false,
 }
 
 local settings = config.load(defaults)
@@ -823,6 +825,12 @@ local function get_respawn_seconds(name)
     return info and info.respawn or nil
 end
 
+local function get_spawn_type(name)
+    if not name then return nil end
+    local info = mob_info[name]
+    return info and info.spawnType or nil
+end
+
 local function play_alert(is_nm)
     if not settings.HuntSoundEnabled then return end
     local wav = is_nm and 'notify_NM.wav' or 'notify_Standard.wav'
@@ -841,30 +849,38 @@ local function rebuild_watch_index_map()
     end
 end
 
-local function add_to_watch(mob)
-    if not mob or not mob.index then return false end
-    if watch_index_map[mob.index] then return false end  -- already watched
-
-    -- IMPORTANT: scan_target (and any mob struct read while the mob is
-    -- outside client render range) carries zeroed/garbage values for
-    -- status/hpp/x/y/z. Baselining with those would make us display "DEAD"
-    -- for a perfectly alive mob and fire a false "respawn" alert the
-    -- moment we walk into range. Instead we leave last_status / last_hpp
-    -- nil here; the poll loop will populate them on the first frame the
-    -- mob is genuinely in client memory.
+-- Adds a single mob index to the watch list. Returns true on insert, false if
+-- already watched. name_hint is the baseline name used for the "* differs from
+-- add" indicator and the log message — for live-mob adds it's the current name,
+-- for curated-NM pre-watch it's the NM name we're hoping will pop in that slot.
+--
+-- IMPORTANT: last_name / last_status / last_hpp are all left nil. The poll
+-- loop populates them on the first frame the mob is genuinely in client memory
+-- and uses `last_* ~= nil` as the guard for transition detection — so a
+-- pre-watch entry doesn't false-alert when the slot currently holds the PH
+-- under a different name than `name_hint`, and a Track-added entry doesn't
+-- false-fire on first frame from garbage status/hpp read out of range.
+local function add_index_to_watch(idx, name_hint)
+    if not idx then return false end
+    if watch_index_map[idx] then return false end
     local entry = {
-        idx       = mob.index,
-        added_at  = os.time(),
-        added_name = mob.name or '?',     -- baseline name for "differs from add" indicator
-        last_name = mob.name,
+        idx        = idx,
+        added_at   = os.time(),
+        added_name = name_hint or '?',
+        last_name  = nil,
         last_status = nil,
-        last_hpp  = nil,
+        last_hpp   = nil,
     }
     watch_list[#watch_list + 1] = entry
-    watch_index_map[mob.index] = #watch_list
+    watch_index_map[idx] = #watch_list
     log_success(string.format('Added to watch: %s (idx %d / 0x%03X)',
-        mob.name or '?', mob.index, mob.index))
+        name_hint or '?', idx, idx))
     return true
+end
+
+local function add_to_watch(mob)
+    if not mob or not mob.index then return false end
+    return add_index_to_watch(mob.index, mob.name)
 end
 
 local function remove_from_watch(idx)
@@ -979,6 +995,16 @@ local function poll_watch_entry(entry)
             should_alert = true
         elseif (not was_alive) and entry.last_status ~= nil then
             -- Real dead → alive transition (we had a prior observation, and it was not-alive).
+            should_alert = true
+        elseif entry.last_status == nil
+           and entry.added_name
+           and current_name == entry.added_name
+           and classify_as_nm(current_name) then
+            -- First in-render observation of a pre-watched slot, and the slot
+            -- contains exactly the NM we were hoping for. Without this branch,
+            -- watch-nm silently establishes baseline against an already-popped
+            -- NM (e.g. player walks into range after Valkurm Emperor has
+            -- already spawned) — the pop is missed entirely.
             should_alert = true
         end
     end
@@ -1129,13 +1155,24 @@ local function format_countdown(seconds)
     return string.format('%dh %dm %02ds', h, math.floor(rem / 60), rem % 60)
 end
 
-local function format_countdown_signed(remaining)
+-- Lottery NMs respawn-time is the *window-open delay* after PH ToD, not a
+-- countdown to a guaranteed pop. Once the window opens, the NM can pop on
+-- any subsequent PH kill (or, on some, any time interval). Render the copy
+-- to reflect that — "WINDOW OPEN" vs "DUE" prevents a false-confidence read
+-- that the NM is overdue when really the window has just started.
+local function format_countdown_signed(remaining, spawn_type)
     remaining = math.floor(remaining)
+    local is_lottery = spawn_type == 'lottery'
     if remaining <= 0 then
         local overdue = -remaining
+        if is_lottery then
+            if overdue < 5 then return 'WINDOW OPEN' end
+            return 'WINDOW OPEN +' .. format_countdown(overdue)
+        end
         if overdue < 5 then return 'DUE' end
         return 'DUE +' .. format_countdown(overdue)
     end
+    if is_lottery then return 'WINDOW in ' .. format_countdown(remaining) end
     return 'in ' .. format_countdown(remaining)
 end
 
@@ -1162,17 +1199,37 @@ local function build_watch_panel()
         local eff_hpp = (mob and mob.hpp) or e.last_hpp
         local status_label, dist_str = 'out of range', ''
         local is_alive = false
+        -- Widescan-derived position fallback. Pulls the most recent 0x0F4
+        -- offset for this index, prefixes '~' to signal approximation, and
+        -- adopts the widescan-reported name (helps when a pre-watched slot
+        -- currently holds a different name than the hint — e.g. a Damselfly
+        -- in a slot we're watching for Valkurm Emperor).
+        local function apply_widescan_dist()
+            local ws_pos = widescan_index_map[e.idx]
+            local ws = ws_pos and widescan_entries[ws_pos]
+            if not (ws and ws.x_off and ws.y_off) then return false end
+            dist_str = string.format(' ~%4dy %s',
+                distance_yards(ws.x_off, ws.y_off),
+                direction_8(ws.x_off, ws.y_off))
+            if ws.name and ws.name ~= '' then name = ws.name end
+            return true
+        end
         if eff_status ~= nil and eff_hpp ~= nil then
             if is_status_alive(eff_status, eff_hpp) then
                 is_alive = true
                 status_label = string.format('alive %3d%%', eff_hpp)
-                -- Live distance only when the mob is currently in memory.
-                if mob and self_mob and mob.x and self_mob.x then
+                -- Prefer live coords (in-render only), else fall back to
+                -- widescan. For wide-scan-only mobs, mob.x is scan-time
+                -- position in a different frame-of-reference than self_mob —
+                -- using it directly produces confidently-wrong compass.
+                local in_render = mob and mob.valid_target
+                if in_render and self_mob and mob.x and self_mob.x then
                     local dx = mob.x - self_mob.x
                     local dy = mob.y - self_mob.y
                     dist_str = string.format('  %4dy %s',
-                        math.floor(math.sqrt(dx * dx + dy * dy) + 0.5),
-                        direction_8(dx, dy))
+                        distance_yards(dx, dy), direction_8(dx, dy))
+                else
+                    apply_widescan_dist()
                 end
             elseif eff_hpp == 0 then
                 -- HPP 0 (with a non-nil status from a real observation) covers
@@ -1186,13 +1243,21 @@ local function build_watch_panel()
                     local respawn = get_respawn_seconds(name)
                         or get_respawn_seconds(e.added_name)
                     if respawn and respawn > 0 then
+                        local spawn_type = get_spawn_type(name) or get_spawn_type(e.added_name)
                         local remaining = respawn - (os.time() - e.died_at)
-                        status_label = 'DEAD  ' .. format_countdown_signed(remaining)
+                        status_label = 'DEAD  ' .. format_countdown_signed(remaining, spawn_type)
                     end
                 end
             else
                 status_label = 'st=' .. tostring(eff_status)
             end
+        elseif apply_widescan_dist() then
+            -- No in-memory mob data, but the most recent /widescan picked
+            -- this slot up. Typical state for a freshly-watched distant PH —
+            -- watch-nm's auto /widescan gives us the first position fix
+            -- before the player walks into render range.
+            is_alive = true
+            status_label = 'alive (scan)'
         end
         -- Two-column prefix: column 1 = tracked-by-game-scan (>), column 2 = popped (* = name differs from baseline)
         local m1 = (scan_idx == e.idx) and '>' or ' '
@@ -1347,6 +1412,19 @@ local function hide_hunt_nm_panel()
     hunt_nm_body_text:hide()
 end
 
+-- NM Cache visibility is workflow-driven, not a manual toggle:
+--   * Browse — just zoned in or just cleared the watch list. Panel auto-shows
+--     for NM_BROWSE_SECONDS so the player can see what's curated, then fades.
+--   * Commit — watch_list non-empty. Panel hides; the player has picked their
+--     hunt and Watch + Target take over screen real estate.
+--   * Pinned — //va hunt nm pin overrides everything; panel stays visible.
+-- Re-trigger Browse by typing //va hunt nm with no args.
+local NM_BROWSE_SECONDS = 20
+local nm_cache_browse_until = 0
+local function start_nm_cache_browse()
+    nm_cache_browse_until = os.time() + NM_BROWSE_SECONDS
+end
+
 local function format_respawn(seconds)
     if not seconds or seconds <= 0 then return '?' end
     if seconds < 60 then return seconds .. 's' end
@@ -1410,7 +1488,22 @@ local function build_nm_panel()
 end
 
 local function update_hunt_nm_text()
-    if not settings.HuntEnabled or not settings.HuntNmVisible then
+    if not settings.HuntEnabled then
+        hide_hunt_nm_panel()
+        return
+    end
+    -- Workflow visibility: pinned > committed (hide) > browse window > hidden.
+    local should_show
+    if settings.HuntNmPinned then
+        should_show = true
+    elseif #watch_list > 0 then
+        should_show = false
+    elseif os.time() < nm_cache_browse_until then
+        should_show = true
+    else
+        should_show = false
+    end
+    if not should_show then
         hide_hunt_nm_panel()
         return
     end
@@ -1457,6 +1550,22 @@ porter.init({
 })
 
 progression.init({
+    settings = settings,
+    http_request = http_request,
+    json_encode = json_encode,
+    log = log,
+    log_error = log_error,
+})
+
+missions_lib.init({
+    settings = settings,
+    http_request = http_request,
+    json_encode = json_encode,
+    log = log,
+    log_error = log_error,
+})
+
+collection_lib.init({
     settings = settings,
     http_request = http_request,
     json_encode = json_encode,
@@ -1842,6 +1951,8 @@ local function do_sync()
         inventory.sync(player.name, server_name)
         porter.sync(player.name, server_name)
         progression.sync(player.name, server_name)
+        missions_lib.sync(player.name, server_name)
+        collection_lib.sync(player.name, server_name)
     end
 end
 
@@ -2057,6 +2168,10 @@ windower.register_event('incoming chunk', function(id, data)
         -- Multiplexed status packet: progression module handles Orders
         -- 0x02 (limit/merit points), 0x05 (job points), 0x06 (warps).
         progression.handle_packet(data)
+    elseif id == 0x056 then
+        -- Quest/mission update packet: missions module handles Types
+        -- 0x00D0/0x00D8/0x00C0 (bitfields) and 0xFFFE/0xFFFF (pointers).
+        missions_lib.handle_packet(data)
     elseif id == 0x0F4 then
         -- Wide Scan tracker: server sends one of these per mob detected
         -- by the player's most recent wide scan. Parsed via Windower's
@@ -2307,6 +2422,17 @@ windower.register_event('addon command', function(command, ...)
             else
                 log('Mob info cache: (not loaded — fetched on zone-in)')
             end
+            local nm_state
+            if settings.HuntNmPinned then
+                nm_state = 'pinned (always visible)'
+            elseif #watch_list > 0 then
+                nm_state = 'hidden (committed to hunt)'
+            elseif os.time() < nm_cache_browse_until then
+                nm_state = string.format('browse (%ds left)', nm_cache_browse_until - os.time())
+            else
+                nm_state = 'hidden (browse window expired)'
+            end
+            log('NM cache panel: ' .. nm_state)
         elseif arg == 'pos' then
             -- //va hunt pos                              -> show positions
             -- //va hunt pos target <x> <y>               -> set target overlay pos
@@ -2504,17 +2630,13 @@ windower.register_event('addon command', function(command, ...)
             settings.HuntEnabled = true
             config.save(settings)
             log('Hunt overlays: ON')
-            -- One-time prim diagnostic — confirms PNG paths resolve and that
-            -- the watch_pill image objects were constructed.
-            log(string.format('PRIM debug: pill_alive = %s', tostring(PILL_ALIVE_PATH)))
-            log(string.format('PRIM debug: pill_dead  = %s', tostring(PILL_DEAD_PATH)))
-            log(string.format('PRIM debug: watch_pills[1] = %s', tostring(watch_pills[1])))
             -- Fetch NM list for the current zone (otherwise classifier would
             -- silently default everything to standard until next zone-in).
             local info = windower.ffxi.get_info()
             if info and info.zone and info.zone ~= 0 then
                 table.insert(work_queue, function() fetch_zone_nms(info.zone) end)
             end
+            start_nm_cache_browse()
         elseif arg == 'off' then
             settings.HuntEnabled = false
             hide_hunt_target_panel()
@@ -2532,6 +2654,8 @@ windower.register_event('addon command', function(command, ...)
                 hide_hunt_watch_panel()  -- also hides nested tracking
                 hide_hunt_nm_panel()
                 clear_watch_list()
+            else
+                start_nm_cache_browse()
             end
             config.save(settings)
             log('Hunt overlays: ' .. (settings.HuntEnabled and 'ON' or 'OFF'))
@@ -2583,28 +2707,91 @@ windower.register_event('addon command', function(command, ...)
                 local n = #watch_list
                 clear_watch_list()
                 log('Watch list cleared (' .. n .. ' entries removed).')
+                -- Back to Browse — player just dropped their hunt, re-show
+                -- NM Cache so they can pick the next one without typing.
+                start_nm_cache_browse()
+            elseif sub == 'nm' then
+                -- //va hunt watch nm <name>  -> pre-emptively watch every slot
+                -- this NM could occupy. Pulls indices from the curated NM cache:
+                -- mob_info[name].mobIndices[] (NM's own spawn-point indices) and
+                -- placeholder.mobIndex (the PH it shares a slot with). Solves
+                -- the classic PH-vs-NM drift (Cactuar Cantautor PH at 0x157,
+                -- NM pops at 0x158 — watching either alone misses pops).
+                local name = table.concat(args, ' ', 3)
+                name = name:gsub('^%s*"?(.-)"?%s*$', '%1')
+                if name == '' then
+                    log_error('Usage: //va hunt watch nm <name>  (e.g. //va hunt watch nm Valkurm Emperor)')
+                    return
+                end
+                -- Case-insensitive lookup against mob_info keys.
+                local info, canonical_name
+                local lower = name:lower()
+                for k, v in pairs(mob_info) do
+                    if k:lower() == lower then
+                        info = v
+                        canonical_name = k
+                        break
+                    end
+                end
+                if not info then
+                    log_error(string.format("No NM named '%s' in cache for current zone. Use //va hunt nm list to see what's loaded.", name))
+                    return
+                end
+                -- Track (idx, name_hint) per slot so the watch list shows the
+                -- right baseline name for each row — NM name for NM-slot
+                -- indices (where we're hoping the NM pops) and PH name for
+                -- the PH slot (where the actual current occupant is the PH).
+                local entries = {}
+                local seen = {}
+                local function add_hex(s, hint)
+                    if type(s) ~= 'string' or s == '' then return end
+                    local n = tonumber(s, 16) or tonumber(s:gsub('^0[xX]', ''), 16)
+                    if n and not seen[n] then
+                        seen[n] = true
+                        entries[#entries + 1] = { idx = n, hint = hint }
+                    end
+                end
+                for _, ix in ipairs(info.mobIndices or {}) do
+                    add_hex(ix, canonical_name)
+                end
+                if info.placeholder then
+                    add_hex(info.placeholder.mobIndex,
+                        info.placeholder.name or canonical_name)
+                end
+                if #entries == 0 then
+                    log_error(string.format("'%s' has no curated indices and no placeholder. Re-sync zones to backfill MobIndex, or add a placeholder.mobIndex to the curated NM file.", canonical_name))
+                    return
+                end
+                local added, dup = 0, 0
+                for _, ent in ipairs(entries) do
+                    if add_index_to_watch(ent.idx, ent.hint) then
+                        added = added + 1
+                    else
+                        dup = dup + 1
+                    end
+                end
+                log(string.format("Watching %d slot(s) for '%s' (%d new, %d already-watched).",
+                    #entries, canonical_name, added, dup))
+                -- Trigger a fresh wide scan so the panel has up-to-date offsets
+                -- for compass direction. Safe to issue even if no widescan job
+                -- is sub'd — game just prints an error and the existing data
+                -- (if any) is preserved.
+                windower.send_command('input /widescan')
             else
-                log_error('Usage: //va hunt watch [list|remove <idx|hex>|clear]')
+                log_error('Usage: //va hunt watch [list|remove <idx|hex>|clear|nm <name>]')
             end
         elseif arg == 'nm' then
-            -- //va hunt nm                  -> toggle the NM cache debug overlay
-            -- //va hunt nm show|hide        -> explicit visibility
-            -- //va hunt nm list             -> dump the cache to chat
-            local sub = args[2] and args[2]:lower() or 'toggle'
-            if sub == 'show' then
-                settings.HuntNmVisible = true
+            -- //va hunt nm           -> re-trigger the Browse preview window
+            -- //va hunt nm pin       -> toggle persistent pin (overrides workflow)
+            -- //va hunt nm list      -> dump the cache to chat
+            local sub = args[2] and args[2]:lower() or ''
+            if sub == '' then
+                start_nm_cache_browse()
+                log(string.format('NM cache: shown for %ds.', NM_BROWSE_SECONDS))
+            elseif sub == 'pin' then
+                settings.HuntNmPinned = not settings.HuntNmPinned
                 config.save(settings)
-                log('NM cache overlay: ON')
-            elseif sub == 'hide' then
-                settings.HuntNmVisible = false
-                hide_hunt_nm_panel()
-                config.save(settings)
-                log('NM cache overlay: OFF')
-            elseif sub == 'toggle' then
-                settings.HuntNmVisible = not settings.HuntNmVisible
-                if not settings.HuntNmVisible then hide_hunt_nm_panel() end
-                config.save(settings)
-                log('NM cache overlay: ' .. (settings.HuntNmVisible and 'ON' or 'OFF'))
+                log('NM cache pin: ' .. (settings.HuntNmPinned and 'ON (always visible)' or 'OFF'))
             elseif sub == 'list' then
                 local names = {}
                 for name, info in pairs(mob_info) do
@@ -2621,7 +2808,7 @@ windower.register_event('addon command', function(command, ...)
                     log(string.format('  %s  [respawn %s]', n, format_respawn(mob_info[n].respawn)))
                 end
             else
-                log_error('Usage: //va hunt nm [show|hide|toggle|list]')
+                log_error(string.format('Usage: //va hunt nm [pin|list]  (no args = show for %ds)', NM_BROWSE_SECONDS))
             end
         elseif arg == 'sound' then
             local s = args[2] and args[2]:lower() or nil
@@ -2858,10 +3045,12 @@ windower.register_event('addon command', function(command, ...)
         log('//va hunt pos watch <x> <y>     - Move watch list panel')
         log('//va hunt pos save              - Persist current dragged positions')
         log('//va hunt watch                 - List watched mobs (auto-populated by in-game Track)')
+        log('//va hunt watch nm <name>       - Pre-watch all curated slots (NM + PH) for an NM by name')
         log('//va hunt watch remove <idx>    - Stop watching a mob (decimal or 0x-hex)')
         log('//va hunt watch clear           - Clear all watched mobs')
         log('//va hunt sound on|off|test     - Toggle pop alert sounds (or test playback)')
-        log('//va hunt nm show|hide|toggle   - Show/hide the NM cache debug overlay')
+        log('//va hunt nm                    - Show NM cache for ' .. NM_BROWSE_SECONDS .. 's (auto-hides on commit)')
+        log('//va hunt nm pin                - Toggle persistent pin (always visible)')
         log('//va hunt nm list               - Dump the cached NM name list to chat')
         log('//va hunt probe [label]         - Recon: dump cursor-candidate state to hunt-probe-N.txt')
         log('//va session start   - Start a performance tracking session')
@@ -2943,6 +3132,10 @@ windower.register_event('zone change', function()
         if new_zone and new_zone ~= 0 then
             table.insert(work_queue, function() fetch_zone_nms(new_zone) end)
         end
+        -- Start the Browse preview window so the player can see what's curated
+        -- for this zone without typing anything. Auto-hides on commit (watch
+        -- entry added) or after NM_BROWSE_SECONDS, whichever comes first.
+        start_nm_cache_browse()
     end
 end)
 

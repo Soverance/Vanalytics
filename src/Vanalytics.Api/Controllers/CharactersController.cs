@@ -152,6 +152,7 @@ public class CharactersController : ControllerBase
         return Ok(new ProgressionResponse
         {
             LimitPoints = row.LimitPoints,
+            MeritPoints = row.MeritPoints,
             MeritPointsMax = row.MeritPointsMax,
             JobPointsUnlocked = row.JobPointsUnlocked,
             JobPoints = row.JobPointsJson is null
@@ -160,6 +161,103 @@ public class CharactersController : ControllerBase
             Warps = row.WarpsJson is null
                 ? null
                 : JsonSerializer.Deserialize<WarpUnlocks>(row.WarpsJson, jsonOpts),
+            UpdatedAt = row.UpdatedAt,
+        });
+    }
+
+    [HttpGet("{id:guid}/collection")]
+    public async Task<IActionResult> GetCollection(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var row = await _db.CharacterCollection
+            .FirstOrDefaultAsync(c => c.CharacterId == id);
+
+        if (row is null) return Ok(new CollectionResponse());
+
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+        return Ok(new CollectionResponse
+        {
+            SpellIds = row.SpellIdsJson is null
+                ? null
+                : JsonSerializer.Deserialize<List<int>>(row.SpellIdsJson, jsonOpts),
+            KeyItemIds = row.KeyItemIdsJson is null
+                ? null
+                : JsonSerializer.Deserialize<List<int>>(row.KeyItemIdsJson, jsonOpts),
+            UpdatedAt = row.UpdatedAt,
+        });
+    }
+
+    [HttpGet("{id:guid}/titles")]
+    public async Task<IActionResult> GetTitles(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var titles = await _db.CharacterTitles
+            .Where(t => t.CharacterId == id)
+            .OrderByDescending(t => t.FirstSeenAt)
+            .Select(t => new TitleEntry
+            {
+                TitleId = t.TitleId,
+                FirstSeenAt = t.FirstSeenAt,
+                LastEquippedAt = t.LastEquippedAt,
+            })
+            .ToListAsync();
+
+        return Ok(new TitlesResponse
+        {
+            CurrentTitleId = character.TitleId,
+            Titles = titles,
+        });
+    }
+
+    [HttpGet("{id:guid}/missions")]
+    public async Task<IActionResult> GetMissions(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var row = await _db.CharacterMissions
+            .FirstOrDefaultAsync(m => m.CharacterId == id);
+
+        if (row is null) return Ok(new MissionsResponse());
+
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+        // Stored as Dictionary<string, MissionLineState> with camelCase keys.
+        var dict = row.MissionsJson is null
+            ? new Dictionary<string, MissionLineState>()
+            : JsonSerializer.Deserialize<Dictionary<string, MissionLineState>>(row.MissionsJson, jsonOpts)
+              ?? new Dictionary<string, MissionLineState>();
+
+        return Ok(new MissionsResponse
+        {
+            SandoriaMissions = dict.GetValueOrDefault("sandoriaMissions"),
+            BastokMissions = dict.GetValueOrDefault("bastokMissions"),
+            WindurstMissions = dict.GetValueOrDefault("windurstMissions"),
+            ZilartMissions = dict.GetValueOrDefault("zilartMissions"),
+            AhturhganMissions = dict.GetValueOrDefault("ahturhganMissions"),
+            WotgMissions = dict.GetValueOrDefault("wotgMissions"),
+            Assaults = dict.GetValueOrDefault("assaults"),
+            CopMissions = dict.GetValueOrDefault("copMissions"),
+            AcpMissions = dict.GetValueOrDefault("acpMissions"),
+            MkdMissions = dict.GetValueOrDefault("mkdMissions"),
+            AsaMissions = dict.GetValueOrDefault("asaMissions"),
+            SoaMissions = dict.GetValueOrDefault("soaMissions"),
+            RovMissions = dict.GetValueOrDefault("rovMissions"),
+            TvrMissions = dict.GetValueOrDefault("tvrMissions"),
             UpdatedAt = row.UpdatedAt,
         });
     }

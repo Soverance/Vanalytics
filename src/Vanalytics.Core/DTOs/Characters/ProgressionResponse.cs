@@ -5,6 +5,7 @@ namespace Vanalytics.Core.DTOs.Characters;
 public class ProgressionResponse
 {
     public int? LimitPoints { get; set; }
+    public int? MeritPoints { get; set; }
     public int? MeritPointsMax { get; set; }
 
     public bool? JobPointsUnlocked { get; set; }

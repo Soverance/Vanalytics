@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from 'react'
 import type { CharacterDetail, GearEntry, GameItemDetail, SkillEntry } from '../../types/api'
 import { calculateBaseStats, STAT_KEYS, getBaseStatBreakdown, getJPGiftBonuses } from '../../lib/ffxi-stats'
 import type { BaseStats } from '../../lib/ffxi-stats'
+import SpellsTab from './SpellsTab'
 
 interface StatusPanelProps {
   character: CharacterDetail
@@ -9,7 +10,7 @@ interface StatusPanelProps {
   itemCache: Map<number, GameItemDetail>
 }
 
-const TABS = ['Base', 'Combat', 'Skills'] as const
+const TABS = ['Base', 'Combat', 'Skills', 'Spells'] as const
 type Tab = typeof TABS[number]
 
 /** Mapping from Windower merit key to BaseStats key */
@@ -205,7 +206,10 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
         ))}
       </div>
 
-      <div className="min-h-[320px]">
+      {/* Fixed height + internal scroll matches the left STAT panel
+          (h-[400px] in CharacterDetailPage), so a long sub-tab like Skills
+          doesn't push the bottom GEAR section down. */}
+      <div className="h-[400px] overflow-y-auto styled-scrollbar">
       {activeTab === 'Base' && (
         <BaseTab
           baseStats={baseStats}
@@ -229,6 +233,7 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
         />
       )}
       {activeTab === 'Skills' && <SkillsTab skills={character.skills ?? []} />}
+      {activeTab === 'Spells' && <SpellsTab characterId={character.id} />}
       </div>
     </div>
   )

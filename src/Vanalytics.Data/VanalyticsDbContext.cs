@@ -32,6 +32,9 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<CharacterPorterSlip> CharacterPorterSlips => Set<CharacterPorterSlip>();
     public DbSet<CharacterPorterItem> CharacterPorterItems => Set<CharacterPorterItem>();
     public DbSet<CharacterProgression> CharacterProgression => Set<CharacterProgression>();
+    public DbSet<CharacterMissions> CharacterMissions => Set<CharacterMissions>();
+    public DbSet<CharacterTitle> CharacterTitles => Set<CharacterTitle>();
+    public DbSet<CharacterCollection> CharacterCollection => Set<CharacterCollection>();
     public DbSet<MacroBook> MacroBooks => Set<MacroBook>();
     public DbSet<MacroBookSnapshot> MacroBookSnapshots => Set<MacroBookSnapshot>();
     public DbSet<MacroPage> MacroPages => Set<MacroPage>();

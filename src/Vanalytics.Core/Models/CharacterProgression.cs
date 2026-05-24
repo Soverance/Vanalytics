@@ -10,6 +10,7 @@ public class CharacterProgression
     public Guid CharacterId { get; set; }
 
     public int? LimitPoints { get; set; }
+    public int? MeritPoints { get; set; }
     public int? MeritPointsMax { get; set; }
 
     public bool? JobPointsUnlocked { get; set; }

@@ -4,12 +4,13 @@ import { useAuth } from '../context/AuthContext'
 import { Download } from 'lucide-react'
 import AuthLink from '../components/AuthLink'
 
-type Tab = 'install' | 'commands' | 'sync' | 'macros' | 'sessions' | 'inventory' | 'moves'
+type Tab = 'install' | 'commands' | 'sync' | 'hunt' | 'macros' | 'sessions' | 'inventory' | 'moves'
 
 const tabs: { id: Tab; label: string }[] = [
   { id: 'install', label: 'Install' },
   { id: 'commands', label: 'Commands' },
   { id: 'sync', label: 'Sync' },
+  { id: 'hunt', label: 'Hunt' },
   { id: 'macros', label: 'Macros' },
   { id: 'sessions', label: 'Sessions' },
   { id: 'inventory', label: 'Inventory' },
@@ -241,6 +242,21 @@ function CommandsTab() {
         <CommandRow command="//va macros dump" description="Dump the raw contents of macro DAT files to text for debugging" />
       </CommandTable>
 
+      <SectionHeading>Hunt Overlays</SectionHeading>
+      <CommandTable>
+        <CommandRow command="//va hunt on|off|toggle" description="Master switch for the hunt overlay set (Target, Watch, Wide Scan, NM Cache)" />
+        <CommandRow command="//va hunt" description="Show hunt status: panel state, current target, watch list summary, NM cache state" />
+        <CommandRow command="//va hunt watch" description="List watched mob slots with current alive/dead state and HP" />
+        <CommandRow command="//va hunt watch nm <name>" description="Pre-watch every curated slot for an NM by name (NM + placeholder, auto-triggers /widescan)" />
+        <CommandRow command="//va hunt watch remove <idx>" description="Stop watching a mob (decimal index or 0x-hex)" />
+        <CommandRow command="//va hunt watch clear" description="Drop all watched slots and reopen the NM Cache browse window" />
+        <CommandRow command="//va hunt nm" description="Re-show the NM Cache panel for 20 seconds" />
+        <CommandRow command="//va hunt nm pin" description="Toggle persistent NM Cache visibility (overrides the workflow)" />
+        <CommandRow command="//va hunt nm list" description="Dump the curated NM names for the current zone to chat" />
+        <CommandRow command="//va hunt sound on|off|test" description="Toggle pop-alert sounds or test playback" />
+        <CommandRow command="//va hunt pos" description="Show or set overlay panel positions" />
+      </CommandTable>
+
       <SectionHeading>Inventory Moves</SectionHeading>
       <CommandTable>
         <CommandRow command="//va moves status" description="Show pending inventory move orders queued on the web" />
@@ -370,6 +386,229 @@ function SyncTab() {
             </dd>
           </div>
         </dl>
+      </WarnBox>
+    </div>
+  )
+}
+
+function HuntTab() {
+  return (
+    <div>
+      <Paragraph>
+        The hunt feature turns Vanalytics into a live HUD for camping Notorious Monsters. Four
+        on-screen panels track your current target, watched mob slots, the latest Wide Scan
+        results, and a curated NM reference card for the zone you're standing in. Everything is
+        gated behind a single switch — <Code>//va hunt on</Code> — and the panels appear and
+        disappear automatically based on what you're doing.
+      </Paragraph>
+
+      <SectionHeading>The Four Panels</SectionHeading>
+      <InfoBox>
+        <p className="text-gray-300 font-medium">Target</p>
+        <p>
+          Shows the name, level, HP%, and a text HP bar for whatever you currently have
+          targeted. Visible whenever you have a game target.
+        </p>
+
+        <p className="text-gray-300 font-medium pt-2">Watch</p>
+        <p>
+          A live list of mob slots you're monitoring for pops or respawns. Each row shows the
+          mob's current name, slot index, alive/dead status, HP%, and distance + compass
+          direction. Alive entries render green; dead entries render red with a respawn
+          countdown when known. Slots are added automatically when you use the in-game Track
+          on a Wide Scan entry, or explicitly via <Code>//va hunt watch nm</Code>.
+        </p>
+
+        <p className="text-gray-300 font-medium pt-2">Wide Scan</p>
+        <p>
+          A list of every mob your most recent <Code>/widescan</Code> picked up, sorted in
+          arrival order with distance and direction. Flashes on each scan burst and
+          auto-dismisses when you close the next in-game menu — treat it as a HUD popup, not a
+          persistent panel.
+        </p>
+
+        <p className="text-gray-300 font-medium pt-2">NM Cache</p>
+        <p>
+          A reference card listing every curated Notorious Monster known for the current zone.
+          Each NM shows its name, respawn timer (or window), placeholder name and slot index,
+          and a one-line note about its spawn mechanic. Visibility is workflow-driven (see
+          below).
+        </p>
+      </InfoBox>
+
+      <SectionHeading>The Workflow</SectionHeading>
+      <Paragraph>
+        The hunt panels are designed to stay out of your way except when they're useful. You
+        don't have to toggle individual panels on and off — the addon infers what you're doing
+        and shows the right thing.
+      </Paragraph>
+      <InfoBox>
+        <p>
+          <strong className="text-gray-300">Browse</strong> — You just zoned in (or just
+          cleared your watch list). NM Cache appears for 20 seconds so you can see what's
+          huntable in the zone without typing anything.
+        </p>
+        <p>
+          <strong className="text-gray-300">Commit</strong> — You ran <Code>//va hunt watch nm</Code> on
+          a specific NM, or the in-game Track auto-added something. The watch list now has
+          entries, so NM Cache hides — it served its purpose. Watch + Target take over.
+        </p>
+        <p>
+          <strong className="text-gray-300">Hunt</strong> — You're actively camping. Watch
+          shows alive/dead state with respawn countdowns. Wide Scan flashes whenever you
+          trigger <Code>/widescan</Code>.
+        </p>
+        <p>
+          <strong className="text-gray-300">Reset</strong> — <Code>//va hunt watch clear</Code> empties
+          the watch list and re-opens the Browse window so you can pick your next target.
+        </p>
+      </InfoBox>
+      <Paragraph>
+        Need NM Cache visible during a hunt for reference? Run <Code>//va hunt nm pin</Code> to
+        override the workflow and keep it on screen permanently. Run it again to unpin. Or use
+        bare <Code>//va hunt nm</Code> to re-trigger the 20-second Browse window without pinning.
+      </Paragraph>
+
+      <SectionHeading>Pre-Watching an NM by Name</SectionHeading>
+      <Paragraph>
+        <Code>{'//va hunt watch nm <name>'}</Code> is the marquee command. Given a curated NM
+        name, it looks up every slot that NM could occupy plus its placeholder slot, adds them
+        all to the watch list, and automatically issues <Code>/widescan</Code> so the panel
+        has fresh position data. You don't need to find the placeholder yourself.
+      </Paragraph>
+      <Paragraph>
+        Example: <Code>//va hunt watch nm valkurm emperor</Code> adds the NM's spawn slot
+        (<Code>0x14E</Code>) and the curated Damselfly placeholder slot (<Code>0x14A</Code>).
+        When the placeholder dies and the NM pops in its slot — or when you walk into render
+        range to find the NM already spawned — you'll get an audible alert and a chat line.
+      </Paragraph>
+      <Paragraph>
+        The watch panel displays distance and compass direction relative to your current
+        position. A <Code>~</Code> prefix on the distance (e.g. <Code>~120y NE</Code>) means
+        the position is approximate — derived from the last <Code>/widescan</Code> rather than
+        live render data. Run <Code>/widescan</Code> again to refresh, or just walk closer
+        until the mob enters render range (no prefix) for accurate live tracking.
+      </Paragraph>
+
+      <SectionHeading>Alerts &amp; Sounds</SectionHeading>
+      <Paragraph>
+        When a watched slot transitions to alive — either via a name change (placeholder
+        died, NM popped) or a fresh dead-to-alive observation — the addon plays a sound and
+        prints a chat confirmation. Curated NMs trigger <Code>notify_NM.wav</Code>; everything
+        else (regular respawns, placeholder churn) plays <Code>notify_Standard.wav</Code>.
+        Both files live in <Code>addon/vanalytics/</Code> and can be swapped if you prefer
+        different chimes.
+      </Paragraph>
+      <Paragraph>
+        Toggle sounds with <Code>//va hunt sound on|off</Code>, or test playback
+        with <Code>//va hunt sound test</Code>. The chat lines fire regardless — sound is the
+        louder secondary cue.
+      </Paragraph>
+
+      <SectionHeading>Respawn Countdowns</SectionHeading>
+      <Paragraph>
+        When a watched mob dies, the addon timestamps the death and renders a live countdown
+        next to its DEAD label. The wording is spawn-type aware:
+      </Paragraph>
+      <InfoBox>
+        <p>
+          <strong className="text-gray-300">Timed NMs</strong> — Shows <Code>in 5m 32s</Code> while
+          counting down, <Code>DUE</Code> at zero, <Code>DUE +2m 14s</Code> past expected pop.
+        </p>
+        <p>
+          <strong className="text-gray-300">Lottery NMs</strong> — Shows <Code>WINDOW in 5m 32s</Code> while
+          waiting for the spawn window to open, <Code>WINDOW OPEN</Code> the moment it does,
+          and <Code>WINDOW OPEN +2m 14s</Code> after. Lottery NMs can pop on any subsequent
+          placeholder kill once the window is open; the countdown does not predict the pop
+          itself.
+        </p>
+        <p>
+          <strong className="text-gray-300">Popped / quest NMs</strong> — No countdown
+          (no respawn timer applies). Shown as <Code>[?]</Code> in the NM Cache.
+        </p>
+      </InfoBox>
+
+      <SectionHeading>Curated NM Data</SectionHeading>
+      <Paragraph>
+        Vanalytics ships with curated data for 155+ FFXI zones, covering roughly 2000 named
+        monsters. Each NM entry includes its placeholder, respawn behavior, and a one-line note
+        sourced from BG-Wiki. When you zone into a curated zone, this data is fetched
+        automatically and used to:
+      </Paragraph>
+      <InfoBox>
+        <ul className="list-disc list-inside space-y-1">
+          <li>Render the NM Cache panel with placeholder names, slot indices, and notes</li>
+          <li>Resolve <Code>{'//va hunt watch nm <name>'}</Code> to the right slot(s) to monitor</li>
+          <li>Decide whether a pop plays the NM sound vs. the standard respawn sound</li>
+          <li>Pick the right countdown wording (timed vs. lottery vs. popped)</li>
+        </ul>
+      </InfoBox>
+      <Paragraph>
+        For zones that aren't curated yet, the addon falls back to a server-side heuristic
+        that classifies mobs as NMs based on respawn time and spawn flags. The heuristic is
+        less accurate (it may miss some NMs and tag some non-NMs) but keeps the watch panel
+        and sound alerts functional anywhere in Vana'diel.
+      </Paragraph>
+
+      <SectionHeading>Commands</SectionHeading>
+      <CommandTable>
+        <CommandRow command="//va hunt on|off|toggle" description="Master switch for the hunt overlay set" />
+        <CommandRow command="//va hunt" description="Show hunt status: panel state, current target, watch list summary, NM cache state" />
+        <CommandRow command="//va hunt watch" description="List watched mob slots with current alive/dead state and HP" />
+        <CommandRow command="//va hunt watch nm <name>" description="Pre-watch every curated slot for an NM by name (NM + placeholder, auto-triggers /widescan)" />
+        <CommandRow command="//va hunt watch remove <idx>" description="Stop watching a mob (decimal index or 0x-hex)" />
+        <CommandRow command="//va hunt watch clear" description="Drop all watched slots and reopen the NM Cache browse window" />
+        <CommandRow command="//va hunt nm" description="Re-show the NM Cache panel for 20 seconds" />
+        <CommandRow command="//va hunt nm pin" description="Toggle persistent NM Cache visibility (overrides the workflow)" />
+        <CommandRow command="//va hunt nm list" description="Dump the curated NM names for the current zone to chat" />
+        <CommandRow command="//va hunt sound on|off|test" description="Toggle pop-alert sounds or test playback" />
+        <CommandRow command="//va hunt pos" description="Show or set overlay panel positions (target / widescan / watch / nm)" />
+      </CommandTable>
+
+      <SectionHeading>Tips</SectionHeading>
+      <InfoBox>
+        <p>
+          <strong className="text-gray-300">Auto-add via Track</strong> — Whenever you use the
+          in-game Track action on a Wide Scan entry, that mob is automatically added to your
+          watch list. No command needed — just track what you're hunting.
+        </p>
+        <p>
+          <strong className="text-gray-300">Widescan staleness</strong> — A <Code>~</Code>{' '}
+          prefix on distance means the position is from your last <Code>/widescan</Code>, not
+          live. Walking changes the actual distance but not the cached scan. Rescan periodically
+          while navigating to a distant placeholder.
+        </p>
+        <p>
+          <strong className="text-gray-300">Subjob requirement</strong> — <Code>/widescan</Code> only
+          works on Ranger, Beastmaster, or Puppetmaster subjobs. The auto-scan
+          on <Code>//va hunt watch nm</Code> silently no-ops if your subjob can't use it; you'll
+          have to navigate by other means until you can scan.
+        </p>
+        <p>
+          <strong className="text-gray-300">Multi-NM camping</strong> — You can pre-watch
+          several NMs at once. The watch panel lists all slots together; alerts identify which
+          slot popped by name.
+        </p>
+        <p>
+          <strong className="text-gray-300">Dragging panels</strong> — Each panel's header is
+          draggable; the body follows automatically. Use <Code>//va hunt pos save</Code> to
+          persist the current positions.
+        </p>
+      </InfoBox>
+
+      <WarnBox title="Limitations">
+        <p>
+          The hunt feature is intended for FFXI's Notorious Monster ecosystem — timed and
+          lottery spawns with placeholders, popped event NMs, and quest-specific mobs. It does
+          not model BCNM / Limbus / Salvage instances, Voidwatch triggers, or Dynamis-era
+          mechanics beyond what BG-Wiki documents for the relevant zones.
+        </p>
+        <p>
+          Curated NM coverage is currently 155 of 299 zones — primarily older content zones
+          (cities, vanilla outdoor, expansion content through Wings of the Goddess). Newer
+          zones (Adoulin, RoV, TVR) have partial coverage and fall back to the server-side
+          heuristic.
+        </p>
       </WarnBox>
     </div>
   )
@@ -676,6 +915,7 @@ export default function SetupGuidePage() {
         {activeTab === 'install' && <InstallTab />}
         {activeTab === 'commands' && <CommandsTab />}
         {activeTab === 'sync' && <SyncTab />}
+        {activeTab === 'hunt' && <HuntTab />}
         {activeTab === 'macros' && <MacrosTab />}
         {activeTab === 'sessions' && <SessionsTab />}
         {activeTab === 'inventory' && <InventoryTab />}

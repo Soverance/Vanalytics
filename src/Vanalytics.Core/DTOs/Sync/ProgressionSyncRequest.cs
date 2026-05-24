@@ -15,6 +15,7 @@ public class ProgressionSyncRequest
     public string Server { get; set; } = string.Empty;
 
     public int? LimitPoints { get; set; }
+    public int? MeritPoints { get; set; }
     public int? MeritPointsMax { get; set; }
 
     public bool? JobPointsUnlocked { get; set; }

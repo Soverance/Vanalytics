@@ -29,10 +29,11 @@ local log_error_fn = nil
 -- Module state — populated by handle_packet, persisted to disk per character.
 local state = {
     limitPoints = nil,
+    meritPoints = nil,         -- currently held unspent merits (0..meritPointsMax)
     meritPointsMax = nil,
     jobPointsUnlocked = nil,
     jobPoints = nil,   -- array of 24 { jobId, capacityPoints, points, pointsSpent }
-    warps = nil,       -- { homePoints, survivalGuides, waypoints, telepoints, atmas, eschanPortals }
+    warps = nil,       -- { homePoints, survivalGuides, waypoints, telepoints, cavernousMaws, lycopodium, eschanPortals }
 }
 
 local dirty = false           -- has anything changed since the last successful sync?
@@ -129,6 +130,7 @@ local function load_from_disk(character_name, server)
 
     -- Merge: only fill fields not already populated by packets this session.
     if state.limitPoints == nil then state.limitPoints = decoded.limitPoints end
+    if state.meritPoints == nil then state.meritPoints = decoded.meritPoints end
     if state.meritPointsMax == nil then state.meritPointsMax = decoded.meritPointsMax end
     if state.jobPointsUnlocked == nil then state.jobPointsUnlocked = decoded.jobPointsUnlocked end
     if state.jobPoints == nil then state.jobPoints = decoded.jobPoints end
@@ -188,14 +190,15 @@ function progression.handle_packet(data)
     if order == 0x02 then
         -- Order 0x02: Merit/Limit Points (packet len=16 confirmed in-game)
         --   0x08 uint16 LimitPoints           (gauge, 0–9999)
-        --   0x0A uint16 ???                   (unknown — saw 0x6012=24594)
+        --   0x0A uint8  MeritPoints           (currently held unspent merits)
+        --   0x0B uint8  ???                   (still unknown — varies, ~96)
         --   0x0C uint8  MeritPointsMax        (merit cap)
-        --   0x0D uint8  ???                   (unknown — possibly "merits held")
-        --   0x0E-0F                           (unknown)
+        --   0x0D-0F                           (unknown — varies between packets)
         -- XiPackets claims LP and MeritPointsMax are both uint32; in practice
-        -- they're 16-bit and 8-bit. Reading them as uint32 mixes in adjacent
-        -- bytes and produces wildly out-of-range numbers.
+        -- they're packed 16-bit/8-bit fields. Reading them as uint32 mixes in
+        -- adjacent bytes and produces wildly out-of-range numbers.
         state.limitPoints = u16le(data, 0x08 + 1)
+        state.meritPoints = data:byte(0x0A + 1)
         state.meritPointsMax = data:byte(0x0C + 1)
         dirty = true
 
@@ -273,6 +276,7 @@ function progression.sync(character_name, server)
         characterName = character_name,
         server = server,
         limitPoints = state.limitPoints,
+        meritPoints = state.meritPoints,
         meritPointsMax = state.meritPointsMax,
         jobPointsUnlocked = state.jobPointsUnlocked,
         jobPoints = state.jobPoints,

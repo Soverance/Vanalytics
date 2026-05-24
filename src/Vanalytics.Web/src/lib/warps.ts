@@ -37,9 +37,12 @@ export const WARP_CATEGORY_LABELS: Record<WarpCategory, string> = {
 // Number of distinct destinations in each category (used for "X / Y" progress
 // display). Matches XIchecklist's catalog counts — the packet bitfields have
 // more bits than this in some categories, but the extra bits are unmapped.
+// Catalog totals (matching the actual length of each catalog array below).
+// Used for "X / Y" progress display. If new destinations are added to FFXI
+// and the catalog grows, bump these.
 export const WARP_CATEGORY_CAPACITY: Record<WarpCategory, number> = {
-    homePoints: 122,
-    survivalGuides: 98,
+    homePoints: 121,
+    survivalGuides: 97,
     waypoints: 51,
     telepoints: 9,
     cavernousMaws: 9,

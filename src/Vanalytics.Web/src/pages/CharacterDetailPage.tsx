@@ -17,6 +17,10 @@ import InventoryTab from '../components/character/InventoryTab'
 import PorterTab from '../components/character/PorterTab'
 import RelicsTab from '../components/character/RelicsTab'
 import ProgressionTab from '../components/character/ProgressionTab'
+import MissionsTab from '../components/character/MissionsTab'
+import TitlesTab from '../components/character/TitlesTab'
+import KeyItemsTab from '../components/character/KeyItemsTab'
+import TrustsTab from '../components/character/TrustsTab'
 import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
 import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
@@ -24,10 +28,10 @@ import SessionsTab from '../components/session/SessionsTab'
 import { ApiError } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
 
-const STAT_TABS = ['Jobs', 'Crafting', 'Ultimate Weapons', 'Progression'] as const
+const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items'] as const
 type StatTab = typeof STAT_TABS[number]
 
-const GEAR_TABS = ['Equipment', 'Inventory', 'Porter', 'Macros', 'Sessions'] as const
+const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Macros', 'Sessions', 'Trusts'] as const
 type GearTab = typeof GEAR_TABS[number]
 
 export default function CharacterDetailPage() {
@@ -193,8 +197,10 @@ export default function CharacterDetailPage() {
             <div className="h-[400px] overflow-y-auto styled-scrollbar">
               {activeTab === 'Jobs' && <JobsGrid jobs={character.jobs} />}
               {activeTab === 'Crafting' && <CraftingTable skills={character.craftingSkills} />}
-              {activeTab === 'Ultimate Weapons' && <RelicsTab characterId={character.id} />}
               {activeTab === 'Progression' && <ProgressionTab characterId={character.id} />}
+              {activeTab === 'Missions' && <MissionsTab characterId={character.id} />}
+              {activeTab === 'Titles' && <TitlesTab characterId={character.id} />}
+              {activeTab === 'Key Items' && <KeyItemsTab characterId={character.id} />}
             </div>
           </div>
 
@@ -249,6 +255,10 @@ export default function CharacterDetailPage() {
             </div>
           </div>
         </div>
+
+        {gearTab === 'Ultimate Weapons' && (
+          <RelicsTab characterId={character.id} />
+        )}
 
         {gearTab === 'Inventory' && (
           <InventoryTab characterId={character.id} craftingSkills={character.craftingSkills} />
@@ -388,6 +398,10 @@ export default function CharacterDetailPage() {
 
         {gearTab === 'Sessions' && (
           <SessionsTab characterId={character.id} />
+        )}
+
+        {gearTab === 'Trusts' && (
+          <TrustsTab characterId={character.id} />
         )}
       </section>
 

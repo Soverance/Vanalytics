@@ -373,8 +373,10 @@ public class ZoneSyncProvider : ISyncProvider
             var posZ = float.Parse(m.Groups[10].Value, System.Globalization.CultureInfo.InvariantCulture);
             var posRot = float.Parse(m.Groups[11].Value, System.Globalization.CultureInfo.InvariantCulture);
 
-            // Skip placeholder positions (all 1.000 means "not yet placed")
-            if (posX == 1.0f && posY == 1.0f && posZ == 1.0f) continue;
+            // (1,1,1) rows are LSB's "not yet placed" sentinel — coords are
+            // unusable but the mobid is real. We keep the row so MobIndex flows
+            // through (load-bearing for /api/zones/{id}/nm's mobIndices[]); the
+            // /spawns endpoint filters these out for map-pin rendering.
 
             groupInfoMap.TryGetValue((zoneId, groupId), out var info);
 

@@ -827,10 +827,57 @@ export interface WarpUnlocks {
 
 export interface ProgressionResponse {
   limitPoints: number | null
+  meritPoints: number | null
   meritPointsMax: number | null
   jobPointsUnlocked: boolean | null
   jobPoints: JobPointEntry[] | null
   warps: WarpUnlocks | null
+  updatedAt: string | null
+}
+
+// Missions — sourced from packet 0x056. Each line is either bitfield-style
+// (completed = array of mission indices) or pointer-style (current = single int).
+export interface MissionLineState {
+  completed?: number[] | null
+  current?: number | null
+}
+
+// Collection — spells (incl. trusts) + key items, sourced from Windower
+// runtime APIs (windower.ffxi.get_spells / get_key_items).
+export interface CollectionResponse {
+  spellIds: number[] | null
+  keyItemIds: number[] | null
+  updatedAt: string | null
+}
+
+// Titles — accumulator over per-sync TitleId snapshots. Each row is one
+// distinct title ever observed equipped on this character during a sync.
+export interface TitleEntry {
+  titleId: number
+  firstSeenAt: string
+  lastEquippedAt: string
+}
+
+export interface TitlesResponse {
+  currentTitleId: number | null
+  titles: TitleEntry[]
+}
+
+export interface MissionsResponse {
+  sandoriaMissions: MissionLineState | null
+  bastokMissions: MissionLineState | null
+  windurstMissions: MissionLineState | null
+  zilartMissions: MissionLineState | null
+  ahturhganMissions: MissionLineState | null
+  wotgMissions: MissionLineState | null
+  assaults: MissionLineState | null
+  copMissions: MissionLineState | null
+  acpMissions: MissionLineState | null
+  mkdMissions: MissionLineState | null
+  asaMissions: MissionLineState | null
+  soaMissions: MissionLineState | null
+  rovMissions: MissionLineState | null
+  tvrMissions: MissionLineState | null
   updatedAt: string | null
 }
 

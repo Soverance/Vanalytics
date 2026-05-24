@@ -137,6 +137,31 @@ public class SyncController : ControllerBase
             ? JsonSerializer.Serialize(request.Merits)
             : null;
 
+        // Title accumulator: record every distinct title ever observed
+        // equipped during a sync. FFXIAH-style — a title equipped only
+        // briefly between syncs won't be captured. Collection grows over
+        // time as the player browses through and equips different titles.
+        if (request.TitleId is int titleId && titleId > 0)
+        {
+            var existingTitle = await _db.CharacterTitles
+                .FirstOrDefaultAsync(t => t.CharacterId == character.Id && t.TitleId == titleId);
+            var titleSeenAt = DateTimeOffset.UtcNow;
+            if (existingTitle is null)
+            {
+                _db.CharacterTitles.Add(new CharacterTitle
+                {
+                    CharacterId = character.Id,
+                    TitleId = titleId,
+                    FirstSeenAt = titleSeenAt,
+                    LastEquippedAt = titleSeenAt,
+                });
+            }
+            else
+            {
+                existingTitle.LastEquippedAt = titleSeenAt;
+            }
+        }
+
         // Full state replacement
         await _db.CharacterJobs.Where(j => j.CharacterId == character.Id).ExecuteDeleteAsync();
         await _db.EquippedGear.Where(g => g.CharacterId == character.Id).ExecuteDeleteAsync();

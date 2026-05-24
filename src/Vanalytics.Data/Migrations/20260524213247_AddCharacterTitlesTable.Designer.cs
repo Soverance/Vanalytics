@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vanalytics.Data;
 
@@ -11,9 +12,11 @@ using Vanalytics.Data;
 namespace Vanalytics.Data.Migrations
 {
     [DbContext(typeof(VanalyticsDbContext))]
-    partial class VanalyticsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260524213247_AddCharacterTitlesTable")]
+    partial class AddCharacterTitlesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -781,25 +784,6 @@ namespace Vanalytics.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Characters");
-                });
-
-            modelBuilder.Entity("Vanalytics.Core.Models.CharacterCollection", b =>
-                {
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("KeyItemIdsJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SpellIdsJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("CharacterId");
-
-                    b.ToTable("CharacterCollection");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterInventory", b =>
@@ -2249,17 +2233,6 @@ namespace Vanalytics.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Vanalytics.Core.Models.CharacterCollection", b =>
-                {
-                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
-                        .WithOne()
-                        .HasForeignKey("Vanalytics.Core.Models.CharacterCollection", "CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterInventory", b =>
