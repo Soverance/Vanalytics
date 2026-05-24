@@ -1,0 +1,83 @@
+{
+  "zoneId": 114,
+  "zoneName": "Eastern Altepa Desert",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Eastern_Altepa_Desert",
+  "nms": [
+    {
+      "name": "Cactrot Rapido",
+      "genus": "Sabotender",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24h; passive, sound aggro; drops Arco De Velocidad."
+    },
+    {
+      "name": "Centurio XII-I",
+      "genus": "Antica",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21h; sound aggro; drops Intruder Earring."
+    },
+    {
+      "name": "Decurio I-III",
+      "genus": "Antica",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'A Craftsman's Work'; sound aggro."
+    },
+    {
+      "name": "Dune Widow",
+      "genus": "Spider",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Giant Spider", "mobIndex": null }
+      ],
+      "notes": "Lottery from Giant Spider; sound/link aggro; drops Spider Torque."
+    },
+    {
+      "name": "Nandi",
+      "genus": "Dhalmel",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive, sight aggro; drops Rathe Earring."
+    },
+    {
+      "name": "Sabotender Corrido",
+      "genus": "Sabotender",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed 2h; sound aggro; drops Aptant: Ishis, Aptant: Tachus."
+    },
+    {
+      "name": "Donnergugi",
+      "genus": "Beetle",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Sand Beetle", "mobIndex": null }
+      ],
+      "notes": "Lottery from Sand Beetle; passive; drops Thunder Coral."
+    },
+    {
+      "name": "Tsuchigumo",
+      "genus": "Spider",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from '20 in Pirate Years'; sound/link aggro."
+    },
+    {
+      "name": "Cactrot Veloz",
+      "genus": "Sabotender",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,800 Unity Accolades to trigger."
+    }
+  ]
+}

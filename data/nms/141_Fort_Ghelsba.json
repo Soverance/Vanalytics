@@ -1,0 +1,41 @@
+{
+  "zoneId": 141,
+  "zoneName": "Fort Ghelsba",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Fort_Ghelsba",
+  "nms": [
+    {
+      "name": "Chariotbuster Byakzak",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": 75600,
+      "placeholders": [
+        { "name": "Orcish Panzer", "mobIndex": null }
+      ],
+      "notes": "Lottery from Orcish Panzer every 21-24 hours; drops Auriga Xiphos."
+    },
+    {
+      "name": "Hundredscar Hajwaj",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn from various Orcs; drops Coarse Leggings and Wild Cudgel."
+    },
+    {
+      "name": "Kegpaunch Doshgnosh",
+      "genus": "Orcish Warmachine",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 60-90 min respawn; drops Frugal Cape."
+    },
+    {
+      "name": "Orcish Panzer",
+      "genus": "Orcish Warmachine",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 60-70 minute respawn; serves as PH for Chariotbuster Byakzak."
+    }
+  ]
+}

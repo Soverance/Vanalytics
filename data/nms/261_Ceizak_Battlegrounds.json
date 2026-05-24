@@ -1,0 +1,55 @@
+{
+  "zoneId": 261,
+  "zoneName": "Ceizak Battlegrounds",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Ceizak_Battlegrounds",
+  "nms": [
+    {
+      "name": "Unfettered Twitherym",
+      "genus": "Twitherym",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Celadon Yggrete Shard I to ??? at J-7."
+    },
+    {
+      "name": "Supernal Chapuli",
+      "genus": "Chapuli",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Celadon Yggrete Shard II to ??? at J-9."
+    },
+    {
+      "name": "Transcendent Scorpion",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Celadon Yggrete Shard III to ??? at I-10."
+    },
+    {
+      "name": "Mastop",
+      "genus": "Gnat",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Celadon Yggrete Shard IV to ??? at G-8."
+    },
+    {
+      "name": "Tax'et",
+      "genus": "Wamoura",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Celadon Yggrete Shard V to ??? at G-10."
+    },
+    {
+      "name": "Colkhab",
+      "genus": "Bztavian",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Wildskeeper Reive encounter at H-6; level 105-110."
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+# Retry candidates from the bulk BG-wiki scaffold pass (2026-05-24).
+# These zones have nms[] still empty. Grouped by likely cause so you can
+# prioritize the retry pass (or decide some are truly empty and leave them).
+
+# ============================================================
+# A. URL encoding — likely fixable by trying alt URL pattern
+# ============================================================
+# Batches 01/02 discovered BG-wiki uses these patterns:
+#   - Apostrophes:  literal '  OR  %27-encoded (BG-wiki accepts both)
+#   - [S] campaign: (S)  with parens, NOT brackets
+#   - Dynamis:      Dynamis_-_<ZoneName>  (underscore-hyphen-underscore)
+# Apply the same patterns to retry these:
+
+288_Escha_ZiTah.json            try: Escha_-_Zi%27Tah  or  Escha_-_Zi'Tah
+289_Escha_RuAun.json            try: Escha_-_Ru%27Aun  or  Escha_-_Ru'Aun
+278_Gwora-Corridor.json         try: Gwora_Corridor  or  Gwora-Corridor (verify)
+080_Southern_San_dOria__S_.json try: Southern_San_d%27Oria_(S)
+
+# ============================================================
+# B. HTTP 429 (rate-limited mid-scaffold — retry when wiki recovers)
+# ============================================================
+# These zones returned 429 and were written empty. The wiki pages likely
+# exist; just need to retry with the URL patterns noted (Dynamis pattern
+# uses _-_ separator):
+
+294_Dynamis-San_dOria__D_.json   try: Dynamis_-_San_d%27Oria_(D)
+295_Dynamis-Bastok__D_.json      try: Dynamis_-_Bastok_(D)
+296_Dynamis-Windurst__D_.json    try: Dynamis_-_Windurst_(D)
+297_Dynamis-Jeuno__D_.json       try: Dynamis_-_Jeuno_(D)
+298_Walk_of_Echoes__P1_.json     try: Walk_of_Echoes_(P1)
+299_Gwora-Throne_Room.json       try: Gwora_Throne_Room  or  Gwora-Throne_Room (verify)
+
+# Batches 02/03 also noted ~720s rate-limit windows hit during their runs;
+# all such zones were retried within the same agent session, so this list
+# only covers batch_04 (which terminated before re-attempting).
+
+# ============================================================
+# C. Likely truly empty on BG-wiki (no retry needed)
+# ============================================================
+# Transit, instanced, or system zones — BG-wiki typically has no NM section
+# for these. Verify by visiting the URL once if you care; otherwise leave
+# nms[] empty.
+
+# Transit:
+002_Carpenters_Landing.json
+009_PsoXja.json
+046_Open_sea_route_to_Al_Zahbi.json
+047_Open_sea_route_to_Mhaura.json
+058_Silver_Sea_route_to_Nashmau.json
+059_Silver_Sea_route_to_Al_Zahbi.json
+220_Ship_bound_for_Selbina.json
+221_Ship_bound_for_Mhaura.json
+223_San_dOria-Jeuno_Airship.json
+224_Bastok-Jeuno_Airship.json
+225_Windurst-Jeuno_Airship.json
+226_Kazham-Jeuno_Airship.json
+227_Ship_bound_for_Selbina_Pirates.json
+228_Ship_bound_for_Mhaura_Pirates.json
+
+# Residential / system:
+199_Residential_Area.json
+210_GM_Home.json
+214_Residential_Area.json
+219_Residential_Area.json
+229_Throne_Room__V_.json
+286_286.json  (this zoneId has no LSB name — probably unused/reserved)
+
+# Promyvion / Lumoria area (battlefield-only, NMs are inside specific BCNMs):
+015_Abyssea-Konschtat.json   (this is the SHELL zone, NMs live in sub-areas)
+016_Promyvion-Holla.json
+018_Promyvion-Dem.json
+020_Promyvion-Mea.json
+022_Promyvion-Vahzl.json
+029_Riverne-Site_B01.json
+030_Riverne-Site_A01.json
+032_Sealions_Den.json
+033_AlTaieu.json
+034_Grand_Palace_of_HuXzoi.json
+035_The_Garden_of_RuHmet.json
+
+# Dynamis [D] (Dynamis-Divergence) outdoor variants — likely fixable per Section B above.
+
+# Abyssea-U (Uleguerand/Grauberg/Empyreal Paradox) — newer Abyssea zones, may
+# not have BG-wiki coverage. Worth one manual look.
+253_Abyssea-Uleguerand.json
+254_Abyssea-Grauberg.json
+255_Abyssea-Empyreal_Paradox.json
+
+# Ra'Kaznar / U-variant new content — BG-wiki coverage sparse:
+133_Outer_RaKaznar__U2_.json
+259_Rala_Waterways_U.json
+264_Yorcia_Weald_U.json
+271_Cirdas_Caverns_U.json
+274_Outer_RaKaznar.json
+275_Outer_RaKaznar__U1_.json
+276_RaKaznar_Inner_Court.json
+277_RaKaznar_Turris.json
+
+# Other:
+044_Abdhaljs_Isle-Purgonorgo.json
+279_Walk_of_Echoes__P2_.json     try: Walk_of_Echoes_(P2)
+287_Maquette_Abdhaljs-Legion_B.json
+290_Desuetia_Empyreal_Paradox.json

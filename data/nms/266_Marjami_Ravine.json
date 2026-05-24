@@ -1,0 +1,55 @@
+{
+  "zoneId": 266,
+  "zoneName": "Marjami Ravine",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Marjami_Ravine",
+  "nms": [
+    {
+      "name": "Broxa",
+      "genus": "Colibri",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Phlox Yggrete Shard I to ???; aggressive, True Sight."
+    },
+    {
+      "name": "Plaguevein Bats",
+      "genus": "Flock Bat",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Phlox Yggrete Shard II to ???; aggressive, True Sound."
+    },
+    {
+      "name": "Hakawai",
+      "genus": "Tulfaires",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Phlox Yggrete Shard III to ???; aggressive."
+    },
+    {
+      "name": "Ironbeak Inguza",
+      "genus": "Apkallu",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Phlox Yggrete Shard IV to ???; aggressive."
+    },
+    {
+      "name": "Podarge",
+      "genus": "Harpeia",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Phlox Yggrete Shard V to ???; aggressive."
+    },
+    {
+      "name": "Hurkan",
+      "genus": "Waktza",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Wildskeeper Reive encounter; passive, links."
+    }
+  ]
+}

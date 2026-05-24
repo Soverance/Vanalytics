@@ -807,6 +807,32 @@ export interface RelicsResponse {
   weapons: RelicWeapon[]
 }
 
+// Progression — sourced from packet 0x063 Orders 0x02 / 0x05 / 0x06.
+export interface JobPointEntry {
+  jobId: number
+  capacityPoints: number
+  points: number
+  pointsSpent: number
+}
+
+export interface WarpUnlocks {
+  homePoints: number[]
+  survivalGuides: number[]
+  waypoints: number[]
+  telepoints: number[]
+  atmas: number[]
+  eschanPortals: number[]
+}
+
+export interface ProgressionResponse {
+  limitPoints: number | null
+  meritPointsMax: number | null
+  jobPointsUnlocked: boolean | null
+  jobPoints: JobPointEntry[] | null
+  warps: WarpUnlocks | null
+  updatedAt: string | null
+}
+
 export interface ZoneSpawnDto {
   poolId: number | null
   name: string

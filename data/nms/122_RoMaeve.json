@@ -1,0 +1,107 @@
+{
+  "zoneId": 122,
+  "zoneName": "RoMaeve",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/RoMaeve",
+  "nms": [
+    {
+      "name": "Nightmare Vase",
+      "genus": "Magic Pot",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Magic Flagon", "mobIndex": null }
+      ],
+      "notes": "Lottery from Magic Flagon; aggro to magic."
+    },
+    {
+      "name": "Shikigami Weapon",
+      "genus": "Evil Weapon",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21h 0-15 min; sound and magic aggro."
+    },
+    {
+      "name": "Martinet",
+      "genus": "Doll",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed 2h respawn; magic aggro."
+    },
+    {
+      "name": "Nargun",
+      "genus": "Golem",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; magic aggro."
+    },
+    {
+      "name": "Rogue Receptacle",
+      "genus": "Magic Pot",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Magic Flagon", "mobIndex": null }
+      ],
+      "notes": "Lottery from Magic Flagon; passive."
+    },
+    {
+      "name": "Eldhrimnir",
+      "genus": "Magic Pot",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'Orastery Woes'; magic aggro."
+    },
+    {
+      "name": "Mokkurkalfi",
+      "genus": "Golem",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 7-1; sight and magic aggro."
+    },
+    {
+      "name": "Fired Urn",
+      "genus": "Magic Pot",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Always spawned with immediate respawn; passive; drops key item."
+    },
+    {
+      "name": "Lode Golem",
+      "genus": "Doll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Always spawned with immediate respawn; passive; drops key item."
+    },
+    {
+      "name": "Steely Weapon",
+      "genus": "Evil Weapon",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Always spawned with immediate respawn; passive; drops key item."
+    },
+    {
+      "name": "Douma Weapon",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,100 Unity Accolades to trigger; level 125."
+    },
+    {
+      "name": "Mimic King",
+      "genus": "Mimic",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires specific abyssite and Voidstone."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "zoneId": 138,
+  "zoneName": "Castle Zvahl Baileys [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Castle_Zvahl_Baileys_(S)",
+  "nms": [
+    {
+      "name": "Icefall",
+      "genus": "Snoll",
+      "spawnType": "timed",
+      "respawnTime": 960,
+      "placeholders": [],
+      "notes": "Timed 16-minute respawn; WAR job, sight and magic aggro."
+    }
+  ]
+}

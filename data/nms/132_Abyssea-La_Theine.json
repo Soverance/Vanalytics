@@ -1,0 +1,231 @@
+{
+  "zoneId": 132,
+  "zoneName": "Abyssea-La Theine",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Abyssea-La_Theine",
+  "nms": [
+    {
+      "name": "Adamastor",
+      "genus": "Gigas",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Trophy Shield to ???."
+    },
+    {
+      "name": "Akash",
+      "genus": "Avatar",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed 20 min; 5 spawns total."
+    },
+    {
+      "name": "Baba Yaga",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Piceous Scale to ???."
+    },
+    {
+      "name": "Briareus",
+      "genus": "Gigas",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Examine ??? with 3 key items."
+    },
+    {
+      "name": "Carabosse",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Examine ??? with 2 key items."
+    },
+    {
+      "name": "Chasmic Hornet",
+      "genus": "Bee",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed 10-15 min."
+    },
+    {
+      "name": "Dozing Dorian",
+      "genus": "Sheep",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Dried Chigoe to ???."
+    },
+    {
+      "name": "Grandgousier",
+      "genus": "Gigas",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Massive Armband to ???."
+    },
+    {
+      "name": "Hadhayosh",
+      "genus": "Behemoth",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Examine ??? with 4 key items."
+    },
+    {
+      "name": "Irrlicht",
+      "genus": "Corpselight",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed 10-15 min."
+    },
+    {
+      "name": "Karkinos",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up with Dried Squid bait."
+    },
+    {
+      "name": "Keesha Poppo",
+      "genus": "Opo-opo",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed 10-15 min."
+    },
+    {
+      "name": "La Theine Liege",
+      "genus": "Fly",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Transparent Insect Wing to ???."
+    },
+    {
+      "name": "Lugarhoo",
+      "genus": "Gnole",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Filthy Gnole Claw to ???."
+    },
+    {
+      "name": "Mangy-tailed Marvin",
+      "genus": "Rabbit",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed 10-15 min."
+    },
+    {
+      "name": "Megamaw Mikey",
+      "genus": "Worm",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed 10-15 min."
+    },
+    {
+      "name": "Megantereon",
+      "genus": "Tiger",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Gargantuan Black Tiger Fang to ???."
+    },
+    {
+      "name": "Nahn",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up in water areas."
+    },
+    {
+      "name": "Nguruvilu",
+      "genus": "Puk",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Winter Puk Egg to ???."
+    },
+    {
+      "name": "Ovni",
+      "genus": "Yovra",
+      "spawnType": "timed",
+      "respawnTime": 900,
+      "placeholders": [],
+      "notes": "Timed 15-20 min."
+    },
+    {
+      "name": "Pantagruel",
+      "genus": "Gigas",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Oversized Sock to ???."
+    },
+    {
+      "name": "Piasa",
+      "genus": "Lesser Bird",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed 10-15 min."
+    },
+    {
+      "name": "Poroggo Dom Juan",
+      "genus": "Poroggo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Bug-eaten Hat to ???."
+    },
+    {
+      "name": "Toppling Tuber",
+      "genus": "Funguar",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Giant Agaricus to ???."
+    },
+    {
+      "name": "Trudging Thomas",
+      "genus": "Ram",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading R. Mutton Chop to ???."
+    },
+    {
+      "name": "Brooder",
+      "genus": "Thinker",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Abyssea NM — rest with Colorful demilune abyssite."
+    },
+    {
+      "name": "Meditator",
+      "genus": "Seether",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Abyssea NM — rest with Clear demilune abyssite."
+    },
+    {
+      "name": "Ruminator",
+      "genus": "Thinker",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Abyssea NM — rest with Scarlet demilune abyssite."
+    }
+  ]
+}

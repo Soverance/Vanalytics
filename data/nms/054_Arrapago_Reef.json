@@ -1,0 +1,137 @@
+{
+  "zoneId": 54,
+  "zoneName": "Arrapago Reef",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Arrapago_Reef",
+  "nms": [
+    {
+      "name": "Bloody Bones",
+      "genus": "Skeleton",
+      "spawnType": "lottery",
+      "respawnTime": 75600,
+      "placeholders": [
+        { "name": "Draugar Servant", "mobIndex": null }
+      ],
+      "notes": "Lottery from Draugar Servant; window every 21-24 hours."
+    },
+    {
+      "name": "Euryale",
+      "genus": "Lamiae",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; respawn duration not specified on wiki."
+    },
+    {
+      "name": "Giant Orobon",
+      "genus": "Orobon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up at fishing spots in the zone."
+    },
+    {
+      "name": "Lamie No.7",
+      "genus": "Lamiae",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; Corsair job variant."
+    },
+    {
+      "name": "Lamie No.8",
+      "genus": "Lamiae",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; Ranger job variant."
+    },
+    {
+      "name": "Lamie No.9",
+      "genus": "Lamiae",
+      "spawnType": "timed",
+      "respawnTime": 259200,
+      "placeholders": [],
+      "notes": "Timed spawn; Summoner job variant; approximately 72-hour respawn."
+    },
+    {
+      "name": "Lamie No.19",
+      "genus": "Lamiae",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn triggered when a player dies in specific zone area; Black Mage variant."
+    },
+    {
+      "name": "Lil' Apkallu",
+      "genus": "Apkallu",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Greenling to ??? to force spawn."
+    },
+    {
+      "name": "Medusa",
+      "genus": "Lamiae",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed spawn; approximately 1-hour respawn; Ranger variant."
+    },
+    {
+      "name": "Merrow No.5",
+      "genus": "Lamiae",
+      "spawnType": "timed",
+      "respawnTime": 172800,
+      "placeholders": [],
+      "notes": "Timed spawn; Bard job variant; 48-72 hour respawn."
+    },
+    {
+      "name": "Nuhn",
+      "genus": "Orobon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Rose Scampi to ??? to force spawn."
+    },
+    {
+      "name": "Velionis",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Golden Teeth to ??? to force spawn; Red Mage variant."
+    },
+    {
+      "name": "Zareehkl the Jubilant",
+      "genus": "Qutrub",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Merrow No. 11 Molting to ??? to force spawn."
+    },
+    {
+      "name": "Dimgruzub",
+      "genus": "Qutrub",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Amber stratum abyssite + Voidstone."
+    },
+    {
+      "name": "Bukki",
+      "genus": "Imp",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Die Is Cast; Black Mage variant."
+    },
+    {
+      "name": "Ornery Orobon",
+      "genus": "Orobon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Art of War."
+    }
+  ]
+}

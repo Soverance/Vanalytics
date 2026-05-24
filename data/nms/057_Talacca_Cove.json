@@ -1,0 +1,15 @@
+{
+  "zoneId": 57,
+  "zoneName": "Talacca Cove",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Talacca_Cove",
+  "nms": [
+    {
+      "name": "Giant Orobon",
+      "genus": "Orobon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up at fishing spots in the zone; sound-aggro."
+    }
+  ]
+}

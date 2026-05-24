@@ -1,0 +1,62 @@
+{
+  "zoneId": 143,
+  "zoneName": "Palborough Mines",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Palborough_Mines",
+  "nms": [
+    {
+      "name": "Bu'Ghi Howlblade",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Copper Beetle", "mobIndex": null }
+      ],
+      "notes": "Lottery from Copper Beetle; sound aggro."
+    },
+    {
+      "name": "Zi'Ghi Boneeater",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Veteran Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery from Veteran Quadav; sound aggro."
+    },
+    {
+      "name": "No'Mho Crimsonarmor",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn; aggressive."
+    },
+    {
+      "name": "Be'Hya Hundredwall",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Copper Quadav", "mobIndex": null },
+        { "name": "Old Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery from Copper Quadav and Old Quadav; passive."
+    },
+    {
+      "name": "Qu'Vho Deathhurler",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; aggressive, links with other Quadav."
+    },
+    {
+      "name": "Ni'Ghu Nestfender",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The Talekeeper's Truth\"; passive."
+    }
+  ]
+}

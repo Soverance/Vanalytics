@@ -1,0 +1,23 @@
+{
+  "zoneId": 268,
+  "zoneName": "Sih Gates",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Sih_Gates",
+  "nms": [
+    {
+      "name": "Fomor Pioneer",
+      "genus": "Fomor",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Scaredy-Cats; aggressive, True Sound, HP-based aggro; level 126."
+    },
+    {
+      "name": "Furious Arundmite",
+      "genus": "Diremite",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Sliced Thread to ???; passive, True Sight."
+    }
+  ]
+}

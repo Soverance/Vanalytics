@@ -399,13 +399,12 @@ public class ZoneSyncProvider : ISyncProvider
         var validSet = new HashSet<int>(validZoneIds);
         parsed = parsed.Where(s => validSet.Contains(s.ZoneId)).ToList();
 
-        // Full replace strategy
-        var existingCount = await db.ZoneSpawns.CountAsync(ct);
-        if (existingCount > 0)
-        {
-            db.ZoneSpawns.RemoveRange(db.ZoneSpawns);
-            await db.SaveChangesAsync(ct);
-        }
+        // Full replace strategy. ExecuteDeleteAsync issues a single bulk
+        // `DELETE FROM ZoneSpawns` statement — without this, EF Core's
+        // RemoveRange would materialize ~30k rows into the change tracker
+        // and issue ~30k per-row DELETE round-trips, taking many minutes
+        // and saturating the SQL log.
+        await db.ZoneSpawns.ExecuteDeleteAsync(ct);
 
         var now = DateTimeOffset.UtcNow;
         foreach (var spawn in parsed)
@@ -414,13 +413,17 @@ public class ZoneSyncProvider : ISyncProvider
             spawn.UpdatedAt = now;
         }
 
-        // Batch insert
+        // Batch insert. ChangeTracker.Clear() after each batch prevents the
+        // tracker from accumulating every previously-saved entity across
+        // batches — without it, each SaveChangesAsync walks an ever-growing
+        // tracker and the whole insert phase slows to a crawl by the end.
         const int batchSize = 1000;
         for (var i = 0; i < parsed.Count; i += batchSize)
         {
             var batch = parsed.Skip(i).Take(batchSize);
             db.ZoneSpawns.AddRange(batch);
             await db.SaveChangesAsync(ct);
+            db.ChangeTracker.Clear();
         }
 
         _logger.LogInformation("Spawn sync: {Count} spawns across {Zones} zones (from {Groups} group mappings)",

@@ -1,0 +1,130 @@
+{
+  "zoneId": 194,
+  "zoneName": "Outer Horutoto Ruins",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Outer_Horutoto_Ruins",
+  "nms": [
+    {
+      "name": "Bomb King",
+      "genus": "Bomb",
+      "spawnType": "lottery",
+      "respawnTime": 480,
+      "placeholders": [
+        { "name": "Balloon", "mobIndex": null }
+      ],
+      "notes": "Lottery from Balloon at (G-7), (I-7), or (J-6); shares timer with Doppelganger Dio and Gog; drops Bomb Ring."
+    },
+    {
+      "name": "Doppelganger Dio",
+      "genus": "Fomor",
+      "spawnType": "lottery",
+      "respawnTime": 480,
+      "placeholders": [
+        { "name": "Balloon", "mobIndex": null }
+      ],
+      "notes": "Lottery from Balloon at (J-6), (I-7), or (G-7); shares timer with Bomb King and Doppelganger Gog; drops Cruel Scythe."
+    },
+    {
+      "name": "Doppelganger Gog",
+      "genus": "Fomor",
+      "spawnType": "lottery",
+      "respawnTime": 480,
+      "placeholders": [
+        { "name": "Balloon", "mobIndex": null }
+      ],
+      "notes": "Lottery from Balloon at (J-6), (I-7), or (G-7); shares timer with Bomb King and Doppelganger Dio; drops Cruel Spear."
+    },
+    {
+      "name": "Legalox Heftyhind",
+      "genus": "Goblin",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10 min in room at (I-7) Amaryllis Tower; drops Hefty Oak Lumber."
+    },
+    {
+      "name": "Ah Puch",
+      "genus": "Skeleton",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "BLM-type Ghoul", "mobIndex": "0x038" },
+        { "name": "BLM-type Ghoul", "mobIndex": "0x03c" }
+      ],
+      "notes": "Lottery from BLM-type Ghoul; Amaryllis Tower Map 5; can take up to 6 hours; drops Spiro Staff."
+    },
+    {
+      "name": "Desmodont",
+      "genus": "Bat",
+      "spawnType": "lottery",
+      "respawnTime": 900,
+      "placeholders": [
+        { "name": "Stink Bat", "mobIndex": "0x01c" }
+      ],
+      "notes": "Lottery from Stink Bat; window reopens ~15 min after defeat; drops Fidelity Mantle."
+    },
+    {
+      "name": "Jack of Batons",
+      "genus": "Cardian",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Windurst Mission 6-1; mission-spawned Cardian NM."
+    },
+    {
+      "name": "Jack of Coins",
+      "genus": "Cardian",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Windurst Mission 6-1; mission-spawned Cardian NM."
+    },
+    {
+      "name": "Jack of Cups",
+      "genus": "Cardian",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Windurst Mission 6-1; mission-spawned Cardian NM."
+    },
+    {
+      "name": "Jack of Swords",
+      "genus": "Cardian",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Windurst Mission 6-1; mission-spawned Cardian NM."
+    },
+    {
+      "name": "Queen of Coins",
+      "genus": "Cardian",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Windurst Mission 8-2; mission-spawned Cardian NM."
+    },
+    {
+      "name": "Queen of Swords",
+      "genus": "Cardian",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Windurst Mission 8-2; mission-spawned Cardian NM."
+    },
+    {
+      "name": "Custom Cardian",
+      "genus": "Cardian",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Kupo Mission 6; spawns 5-15 instances."
+    },
+    {
+      "name": "Voidwrought",
+      "genus": "Iron Giant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch (Jade IV) — Jade stratum abyssite IV + Voidstone."
+    }
+  ]
+}

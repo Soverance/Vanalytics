@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Vanalytics.Core.Data;
 using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.Porter;
+using Vanalytics.Core.DTOs.Sync;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
 
@@ -123,6 +124,39 @@ public class CharactersController : ControllerBase
             .ToDictionary(g => g.Key, g => g.ToList());
 
         return Ok(grouped);
+    }
+
+    [HttpGet("{id:guid}/progression")]
+    public async Task<IActionResult> GetProgression(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var row = await _db.CharacterProgression
+            .FirstOrDefaultAsync(p => p.CharacterId == id);
+
+        if (row is null)
+        {
+            // No packet data has arrived yet — return an empty shell so the UI can show its empty state.
+            return Ok(new ProgressionResponse());
+        }
+
+        return Ok(new ProgressionResponse
+        {
+            LimitPoints = row.LimitPoints,
+            MeritPointsMax = row.MeritPointsMax,
+            JobPointsUnlocked = row.JobPointsUnlocked,
+            JobPoints = row.JobPointsJson is null
+                ? null
+                : JsonSerializer.Deserialize<List<JobPointEntry>>(row.JobPointsJson),
+            Warps = row.WarpsJson is null
+                ? null
+                : JsonSerializer.Deserialize<WarpUnlocks>(row.WarpsJson),
+            UpdatedAt = row.UpdatedAt,
+        });
     }
 
     [HttpGet("{id:guid}/relics")]

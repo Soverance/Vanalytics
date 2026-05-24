@@ -1,0 +1,97 @@
+{
+  "zoneId": 124,
+  "zoneName": "Yhoator Jungle",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Yhoator_Jungle",
+  "nms": [
+    {
+      "name": "Bisque-heeled Sunberry",
+      "genus": "Tonberry",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 1-2h; drops Rancor Handle."
+    },
+    {
+      "name": "Bright-handed Kunberry",
+      "genus": "Tonberry",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21h; drops Resentment Cape."
+    },
+    {
+      "name": "Edacious Opo-opo",
+      "genus": "Opo-opo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Pamamas or Wild Pamamas to ???; drops Nanban Kariginu."
+    },
+    {
+      "name": "Woodland Sage",
+      "genus": "Treant",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24h; drops multiple logs and Sunlight Pole."
+    },
+    {
+      "name": "Acolnahuacatl",
+      "genus": "Coeurl",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed 2h; drops Echo Cape."
+    },
+    {
+      "name": "Hoar-knuckled Rimberry",
+      "genus": "Tonberry",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tonberry Shadower", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tonberry Shadower and Tonberry Creeper; drops Sarabande Earring."
+    },
+    {
+      "name": "Powderer Penny",
+      "genus": "Bee",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed 90-120 min; drops Chary Earring."
+    },
+    {
+      "name": "Kappa Akuso",
+      "genus": "Sahagin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'True Will'; no item drops listed."
+    },
+    {
+      "name": "Kappa Biwa",
+      "genus": "Sahagin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'True Will'; no item drops listed."
+    },
+    {
+      "name": "Kappa Bonze",
+      "genus": "Sahagin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'True Will'; no item drops listed."
+    },
+    {
+      "name": "Woodland Mender",
+      "genus": "Treant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,800 Unity Accolades to trigger."
+    }
+  ]
+}

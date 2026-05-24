@@ -1,0 +1,126 @@
+{
+  "zoneId": 151,
+  "zoneName": "Castle Oztroja",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Castle_Oztroja",
+  "nms": [
+    {
+      "name": "Moo Ouzi the Swiftblade",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Yagudo Theologist", "mobIndex": null }
+      ],
+      "notes": "Lottery from Yagudo Theologist; SAM job."
+    },
+    {
+      "name": "Mee Deggi the Punisher",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Lottery spawn every 1-3 hours; MNK job."
+    },
+    {
+      "name": "Quu Domi the Gallant",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Yagudo Herald", "mobIndex": null },
+        { "name": "Yagudo Oracle", "mobIndex": null }
+      ],
+      "notes": "Lottery from Yagudo Herald and Oracle; NIN job."
+    },
+    {
+      "name": "Yaa Haqa the Profane",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery from various Yagudo; BLM job."
+    },
+    {
+      "name": "Yagudo High Priest",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": 1500,
+      "placeholders": [],
+      "notes": "Timed 25-minute respawn; WHM job."
+    },
+    {
+      "name": "Yagudo Avatar",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn; SMN job; serves as PH for Tzee Xicu."
+    },
+    {
+      "name": "Tzee Xicu the Manifest",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Yagudo Avatar", "mobIndex": null }
+      ],
+      "notes": "Lottery from Yagudo Avatar every 2 Earth days; SMN job."
+    },
+    {
+      "name": "Saa Doyi the Fervid",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 60-90 minute respawn; NIN job."
+    },
+    {
+      "name": "Yagudo Templar",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed 20-minute respawn; SAM job."
+    },
+    {
+      "name": "Lii Jixa the Somnolist",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed 1.5-hour respawn; WHM job."
+    },
+    {
+      "name": "Warder Partisan",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; MNK job."
+    },
+    {
+      "name": "Huu Xalmo the Savage",
+      "genus": "Yagudo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"True Strength\"; MNK job."
+    },
+    {
+      "name": "Odontotyrannus",
+      "genus": "Pugil",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"A Boy's Dream\"; WAR job."
+    },
+    {
+      "name": "Yagudo Muralist",
+      "genus": "Yagudo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Picture Perfect\"; BLM job."
+    }
+  ]
+}

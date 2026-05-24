@@ -1,0 +1,39 @@
+{
+  "zoneId": 75,
+  "zoneName": "Bhaflau Remnants",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Bhaflau_Remnants",
+  "nms": [
+    {
+      "name": "Mad Bomber",
+      "genus": "Bomb",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on Floor 1 end rooms; grows over time and self-destructs if not killed quickly."
+    },
+    {
+      "name": "Demented Jalaawa",
+      "genus": "Aquan",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on Floor 3; trade Arrapago Card to Slot to pop."
+    },
+    {
+      "name": "Archaic Gears",
+      "genus": "Gear",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NMs on Floors 3 and 4; defeating all 10 on Floor 4 without warping weakens boss."
+    },
+    {
+      "name": "Long-Bowed Chariot",
+      "genus": "Chariot",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage boss on Floor 5; drops exactly two level-25 salvage pieces."
+    }
+  ]
+}

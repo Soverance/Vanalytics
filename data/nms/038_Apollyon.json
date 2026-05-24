@@ -1,0 +1,239 @@
+{
+  "zoneId": 38,
+  "zoneName": "Apollyon",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Apollyon",
+  "nms": [
+    {
+      "name": "Pummeler",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM; random job variant; one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Anchorite",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Monk job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Theophany",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (White Mage job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Spaekona",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Black Mage job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Atrophy",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Red Mage job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Pillager",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Thief job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Reverence",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Paladin job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Ignominy",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Dark Knight job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Totemic",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Beastmaster job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Brioso",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Bard job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Orion",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Ranger job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Wakido",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Samurai job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Hachiya",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Ninja job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Vishap",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Dragoon job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Convoker",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Summoner job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Assimilator",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Blue Mage job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Laksamana",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Corsair job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Foire",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Puppetmaster job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Maxixi",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Dancer job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Academic",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Scholar job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Runeist",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Rune Fencer job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Geomancy",
+      "genus": "Mannequin",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Limbus roaming NM (Geomancer job); one per sector, resets at JP midnight."
+    },
+    {
+      "name": "Ischyros Sandworm",
+      "genus": "Sandworm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Apollyon Tier 1 central NM; popped by completing first floor objectives."
+    },
+    {
+      "name": "Ischyros Mantis",
+      "genus": "Mantis",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Apollyon Tier 1 central NM; popped by completing first floor objectives."
+    },
+    {
+      "name": "Ischyros Adamantoise",
+      "genus": "Adamantoise",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Apollyon Tier 1 central NM; popped by completing first floor objectives."
+    },
+    {
+      "name": "Tolimi Wyrm",
+      "genus": "Dragon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Apollyon Tier 2 central NM; spawns after defeating all Tier 1 NMs."
+    },
+    {
+      "name": "Tolimi Dvergr",
+      "genus": "Dvergr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Apollyon Tier 2 central NM; spawns after defeating all Tier 1 NMs."
+    },
+    {
+      "name": "Tolimi Vampyr",
+      "genus": "Vampyr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Apollyon Tier 2 central NM; spawns after defeating all Tier 1 NMs."
+    },
+    {
+      "name": "Omega Forerunner",
+      "genus": "Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Apollyon Tier 3 boss; spawns after defeating all Tier 2 NMs; clearable once monthly."
+    }
+  ]
+}

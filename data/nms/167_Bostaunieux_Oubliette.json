@@ -1,0 +1,87 @@
+{
+  "zoneId": 167,
+  "zoneName": "Bostaunieux Oubliette",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Bostaunieux_Oubliette",
+  "nms": [
+    {
+      "name": "Arioch",
+      "genus": "Bat",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Werebat", "mobIndex": null }
+      ],
+      "notes": "Lottery from Werebat."
+    },
+    {
+      "name": "Sewer Syrup",
+      "genus": "Slime",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Mousse", "mobIndex": null }
+      ],
+      "notes": "Lottery from Mousse."
+    },
+    {
+      "name": "Shii",
+      "genus": "Hound",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Garm", "mobIndex": null }
+      ],
+      "notes": "Lottery from Garm."
+    },
+    {
+      "name": "Bloodsucker",
+      "genus": "Leech",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 1-hour respawn anywhere on Map 3."
+    },
+    {
+      "name": "Drexerion the Condemned",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": 216000,
+      "placeholders": [],
+      "notes": "Timed 60-72 hour respawn; RNG job."
+    },
+    {
+      "name": "Phanduron the Condemned",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": 216000,
+      "placeholders": [],
+      "notes": "Timed 60-72 hour respawn; BLM job."
+    },
+    {
+      "name": "Manes",
+      "genus": "Ghost",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gespenst", "mobIndex": null }
+      ],
+      "notes": "Lottery from Gespenst; WAR job."
+    },
+    {
+      "name": "Bodach",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The Walls of Your Mind\"; WAR job."
+    },
+    {
+      "name": "Garbage Gel",
+      "genus": "Slime",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM requiring 1,800 Unity Accolades; level 122."
+    }
+  ]
+}

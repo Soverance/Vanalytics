@@ -1,0 +1,107 @@
+{
+  "zoneId": 193,
+  "zoneName": "Ordelles Caves",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Ordelles_Caves",
+  "nms": [
+    {
+      "name": "Bombast",
+      "genus": "Bomb",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed spawn every 60-90 min at (G-9) Map 3; drops Ardent Earring."
+    },
+    {
+      "name": "Morbolger",
+      "genus": "Morbol",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed spawn every 1-2 h at (H-10); sound-aggro; guaranteed Morbolger Vine drop."
+    },
+    {
+      "name": "Aroma Leech",
+      "genus": "Leech",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn during player's race RSE week; check ??? in zone."
+    },
+    {
+      "name": "Donggu",
+      "genus": "Funguar",
+      "spawnType": "lottery",
+      "respawnTime": 300,
+      "placeholders": [
+        { "name": "Fly Agaric", "mobIndex": "0x035" }
+      ],
+      "notes": "Lottery from Fly Agaric (PH respawn 5 min); drops Fidelity Earring."
+    },
+    {
+      "name": "Agar Agar",
+      "genus": "Slime",
+      "spawnType": "lottery",
+      "respawnTime": 3600,
+      "placeholders": [
+        { "name": "Jelly", "mobIndex": null }
+      ],
+      "notes": "Lottery from Jelly at (G/H-8) Map 2; window opens 60+ min; drops Soarer Earring."
+    },
+    {
+      "name": "Gerwitz's Axe",
+      "genus": "Evil Weapon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Dark Puppet; guaranteed Gerwitz's Axe drop."
+    },
+    {
+      "name": "Gerwitz's Sword",
+      "genus": "Evil Weapon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Dark Puppet; guaranteed Gerwitz's Sword drop."
+    },
+    {
+      "name": "Gerwitz's Soul",
+      "genus": "Ghost",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Dark Puppet; accompanies Gerwitz's Axe and Gerwitz's Sword encounter."
+    },
+    {
+      "name": "Metallic Slime",
+      "genus": "Slime",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Blighted Gloom; mission-related encounter."
+    },
+    {
+      "name": "Necroplasm",
+      "genus": "Doomed",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Eco-Warrior San d'Oria; spawned for the Eco-Warrior quest."
+    },
+    {
+      "name": "Polevik",
+      "genus": "Elemental",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Sharpening the Sword; mission-related elemental NM."
+    },
+    {
+      "name": "Krabimanjaro",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch (Crimson II) — Crimson stratum abyssite II + Voidstone."
+    }
+  ]
+}

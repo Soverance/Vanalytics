@@ -1,0 +1,47 @@
+{
+  "zoneId": 27,
+  "zoneName": "Phomiuna Aqueducts",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Phomiuna_Aqueducts",
+  "nms": [
+    {
+      "name": "Duendes' Amoroso",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns continuously; sound and HP aggro."
+    },
+    {
+      "name": "Eba",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": 36000,
+      "placeholders": [],
+      "notes": "8-12 hours; shares timer with Mahisha."
+    },
+    {
+      "name": "Mahisha",
+      "genus": "Taurus",
+      "spawnType": "timed",
+      "respawnTime": 36000,
+      "placeholders": [],
+      "notes": "8-12 hours; shares timer with Eba."
+    },
+    {
+      "name": "Minotaur",
+      "genus": "Taurus",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "20 minute respawn."
+    },
+    {
+      "name": "Tres Duendes",
+      "genus": "Flock Bat",
+      "spawnType": "timed",
+      "respawnTime": 82800,
+      "placeholders": [],
+      "notes": "21-24 hour respawn."
+    }
+  ]
+}

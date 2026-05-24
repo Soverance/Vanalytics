@@ -1,0 +1,193 @@
+{
+  "zoneId": 24,
+  "zoneName": "Lufaise Meadows",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Lufaise_Meadows",
+  "nms": [
+    {
+      "name": "Amaltheia",
+      "genus": "Ram",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Relic Shield to ???."
+    },
+    {
+      "name": "Colorful Leshy",
+      "genus": "Treant",
+      "spawnType": "timed",
+      "respawnTime": 82800,
+      "placeholders": [],
+      "notes": "Morphs from Leshy when undisturbed; 21-24h."
+    },
+    {
+      "name": "Defoliate Leshy",
+      "genus": "Treant",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Morphs from Colorful Leshy after extended undisturbed period."
+    },
+    {
+      "name": "Kurrea",
+      "genus": "Bugard",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Adamantoise Soup to ???."
+    },
+    {
+      "name": "Megalobugard",
+      "genus": "Bugard",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gigantobugard", "mobIndex": null }
+      ],
+      "notes": "Lottery from Gigantobugard."
+    },
+    {
+      "name": "Padfoot",
+      "genus": "Sheep",
+      "spawnType": "timed",
+      "respawnTime": 82800,
+      "placeholders": [],
+      "notes": "21-24 hour timer."
+    },
+    {
+      "name": "Flockbock",
+      "genus": "Ram",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive spawn with sight-aggro."
+    },
+    {
+      "name": "Rainbringer Vjatvot",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest-related NM."
+    },
+    {
+      "name": "Sengann",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Night spawn 20:00-22:00, despawns at 4:00."
+    },
+    {
+      "name": "Yal-un Eke",
+      "genus": "Cluster",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Weather-dependent (Fog usually 2:00-7:00)."
+    },
+    {
+      "name": "Abhac",
+      "genus": "Pugil",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Big One."
+    },
+    {
+      "name": "Asrai",
+      "genus": "Flytrap",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Big One."
+    },
+    {
+      "name": "Baumesel",
+      "genus": "Flytrap",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Petals for Parelbriaux."
+    },
+    {
+      "name": "Blackbone Frazdiz",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A Bitter Past."
+    },
+    {
+      "name": "Cetic Parasite",
+      "genus": "Leech",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Big One."
+    },
+    {
+      "name": "Ferrocrab",
+      "genus": "Crab",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Big One."
+    },
+    {
+      "name": "Nakki",
+      "genus": "Doomed",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Big One."
+    },
+    {
+      "name": "Petrocrab",
+      "genus": "Crab",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Big One."
+    },
+    {
+      "name": "Splinterspine Grukjuk",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A Hard Day's Knight."
+    },
+    {
+      "name": "Vu-Murt",
+      "genus": "Sea Monk",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Big One."
+    },
+    {
+      "name": "Immanibugard",
+      "genus": "Bugard",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,500 Accolades."
+    },
+    {
+      "name": "Vermillion Fishfly",
+      "genus": "Fly",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,100 Accolades."
+    },
+    {
+      "name": "Abununnu",
+      "genus": "Demon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Hyacinth stratum abyssite + Voidstone."
+    }
+  ]
+}

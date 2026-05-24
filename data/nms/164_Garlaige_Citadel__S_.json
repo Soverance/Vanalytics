@@ -1,0 +1,31 @@
+{
+  "zoneId": 164,
+  "zoneName": "Garlaige Citadel [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Garlaige_Citadel_(S)",
+  "nms": [
+    {
+      "name": "Buarainech",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": 14400,
+      "placeholders": [],
+      "notes": "Timed 4-hour respawn; DRG job, sound and HP aggro."
+    },
+    {
+      "name": "Elatha",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": 14400,
+      "placeholders": [],
+      "notes": "Timed 4-5 hour respawn; DRK/BLU job, sound and HP aggro."
+    },
+    {
+      "name": "Laidly Laurence",
+      "genus": "Sandworm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM requiring White stratum abyssite II and Voidstone; aggressive."
+    }
+  ]
+}

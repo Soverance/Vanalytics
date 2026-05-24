@@ -1,0 +1,77 @@
+{
+  "zoneId": 173,
+  "zoneName": "Korroloka Tunnel",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Korroloka_Tunnel",
+  "nms": [
+    {
+      "name": "Morion Worm",
+      "genus": "Worm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Iron Ore to ???; drops Darksteel Ore and Morion Tathlum."
+    },
+    {
+      "name": "Cargo Crab Colin",
+      "genus": "Crab",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Clipper", "mobIndex": null }
+      ],
+      "notes": "Lottery from Clipper at H-7/8 Map 4; drops Nadrs."
+    },
+    {
+      "name": "Falcatus Aranei",
+      "genus": "Spider",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Huge Spider", "mobIndex": null }
+      ],
+      "notes": "Lottery from Huge Spider at J-7 Map 3; drops Webcutter and Spider Web."
+    },
+    {
+      "name": "Dame Blanche",
+      "genus": "Ghost",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Bogy", "mobIndex": null }
+      ],
+      "notes": "Lottery from Bogy at G-9 to I-10 Map 5; sound aggro, drops Sarcenet Cloth."
+    },
+    {
+      "name": "Thoon",
+      "genus": "Gigas",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 1-hour respawn at E-8 to F-9 Map 1; links, drops Impetus Earring."
+    },
+    {
+      "name": "Jammer Leech",
+      "genus": "Leech",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Personal Hygiene\"; passive."
+    },
+    {
+      "name": "Korroloka Leech",
+      "genus": "Leech",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Ayame and Kaede\"; passive."
+    },
+    {
+      "name": "Metallic Slime",
+      "genus": "Slime",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Blighted Gloom\"; passive."
+    }
+  ]
+}

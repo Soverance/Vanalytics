@@ -1,0 +1,107 @@
+{
+  "zoneId": 190,
+  "zoneName": "King Ranperres Tomb",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/King_Ranperres_Tomb",
+  "nms": [
+    {
+      "name": "Ankou",
+      "genus": "Skeleton",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Spawns 20:00-4:00 hourly."
+    },
+    {
+      "name": "Arcus Blades",
+      "genus": "Animated Weapon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Epiphany\"; triggered via Strange Apparatus."
+    },
+    {
+      "name": "Barbastelle",
+      "genus": "Bat",
+      "spawnType": "timed",
+      "respawnTime": 3000,
+      "placeholders": [],
+      "notes": "Timed 50-90 min respawn."
+    },
+    {
+      "name": "Cemetery Cherry",
+      "genus": "Treant",
+      "spawnType": "timed",
+      "respawnTime": 216000,
+      "placeholders": [],
+      "notes": "Timed 60-72 hours after all Cherry Sapling are killed."
+    },
+    {
+      "name": "Corrupted Soffeil",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for San d'Oria Mission 6-2."
+    },
+    {
+      "name": "Corrupted Ulbrig",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for San d'Oria Mission 6-2."
+    },
+    {
+      "name": "Corrupted Yorgos",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for San d'Oria Mission 6-2."
+    },
+    {
+      "name": "Crypt Ghost",
+      "genus": "Ghost",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tomb Bat", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tomb Bat."
+    },
+    {
+      "name": "Gwyllgi",
+      "genus": "Hound",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Nachzehrer", "mobIndex": null }
+      ],
+      "notes": "Lottery from Nachzehrer in the hall."
+    },
+    {
+      "name": "Hahava",
+      "genus": "Naraka",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM requiring Crimson stratum abyssite IV and Voidstone."
+    },
+    {
+      "name": "Spook",
+      "genus": "Ghost",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Spawns 20:00-4:00 or underground/inside; undead."
+    },
+    {
+      "name": "Vrtra",
+      "genus": "Wyrm",
+      "spawnType": "timed",
+      "respawnTime": 259200,
+      "placeholders": [],
+      "notes": "Timed 3-5 day respawn; summons Airi, Iruci, and Pey during combat."
+    }
+  ]
+}

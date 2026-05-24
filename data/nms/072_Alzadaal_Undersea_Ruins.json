@@ -1,0 +1,81 @@
+{
+  "zoneId": 72,
+  "zoneName": "Alzadaal Undersea Ruins",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Alzadaal_Undersea_Ruins",
+  "nms": [
+    {
+      "name": "Armed Gears",
+      "genus": "Gear",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Ferrite to ??? to force spawn; true sound aggro."
+    },
+    {
+      "name": "Boompadu",
+      "genus": "Acrolith",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn; 120-150 minute respawn; true sound aggro."
+    },
+    {
+      "name": "Cookieduster Lipiroon",
+      "genus": "Qiqirn",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Qiqirn Goldsmith", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Qiqirn Goldsmith; passive."
+    },
+    {
+      "name": "Cheese Hoarder Gigiroon",
+      "genus": "Qiqirn",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Rodent Cheese to ??? to force spawn; aggressive."
+    },
+    {
+      "name": "Ob",
+      "genus": "Automaton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Cog Lubricant to ??? to force spawn; true sound aggro."
+    },
+    {
+      "name": "Oupire",
+      "genus": "Vampyr",
+      "spawnType": "timed",
+      "respawnTime": 14400,
+      "placeholders": [],
+      "notes": "Timed spawn; 4-5 hour respawn; true sound and HP aggro."
+    },
+    {
+      "name": "Vidmapire",
+      "genus": "Vampyr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,400 Unity Accolades to trigger; level 128."
+    },
+    {
+      "name": "Wulgaru",
+      "genus": "Wulgaru",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Opalus Gem to ??? at G-6 to force spawn; true sound aggro."
+    },
+    {
+      "name": "Nepionic Soulflayer",
+      "genus": "Soulflayer",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest-triggered spawn (Transformations); passive normally."
+    }
+  ]
+}

@@ -918,6 +918,34 @@ namespace Vanalytics.Data.Migrations
                     b.ToTable("CharacterPorterSlips");
                 });
 
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterProgression", b =>
+                {
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("JobPointsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("JobPointsUnlocked")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LimitPoints")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MeritPointsMax")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("WarpsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("CharacterId");
+
+                    b.ToTable("CharacterProgression");
+                });
+
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterSkill", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2148,6 +2176,17 @@ namespace Vanalytics.Data.Migrations
                     b.HasOne("Vanalytics.Core.Models.Character", "Character")
                         .WithMany()
                         .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterProgression", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithOne()
+                        .HasForeignKey("Vanalytics.Core.Models.CharacterProgression", "CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

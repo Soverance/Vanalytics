@@ -1,0 +1,61 @@
+{
+  "zoneId": 96,
+  "zoneName": "Fort Karugo-Narugo [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Fort_Karugo-Narugo_[S]",
+  "nms": [
+    {
+      "name": "Dark Ixion",
+      "genus": "Monoceros",
+      "spawnType": "timed",
+      "respawnTime": 72000,
+      "placeholders": [],
+      "notes": "20-24h timed spawn; must claim with Stygian Ash; roams Map 1."
+    },
+    {
+      "name": "Demoiselle Desolee",
+      "genus": "Fly",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Dragonfly", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Dragonfly at G/H-4/5; sound/link aggro."
+    },
+    {
+      "name": "Emela-ntouka",
+      "genus": "Lizard",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed spawn 90-120 min at H-6; sound/link aggro."
+    },
+    {
+      "name": "Kirtimukha",
+      "genus": "Rafflesia",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Rafflesia", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Rafflesia at I-10; sound aggro."
+    },
+    {
+      "name": "Ratatoskr",
+      "genus": "Rabbit",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Vorpal Bunny", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Vorpal Bunny at H-10/11; sight aggro."
+    },
+    {
+      "name": "Kalasutrax",
+      "genus": "Naraka",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires White stratum abyssite VI, emblem, and Voidstone."
+    }
+  ]
+}

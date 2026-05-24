@@ -1,0 +1,189 @@
+{
+  "zoneId": 120,
+  "zoneName": "Sauromugue Champaign",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Sauromugue_Champaign",
+  "nms": [
+    {
+      "name": "Bashe",
+      "genus": "Hill Lizard",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Hill Lizard", "mobIndex": null }
+      ],
+      "notes": "Lottery from Hill Lizard; drops Affinity Earring."
+    },
+    {
+      "name": "Deadly Dodo",
+      "genus": "Cockatrice",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tabar Beak", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tabar Beak; drops Dodo Skin."
+    },
+    {
+      "name": "Roc",
+      "genus": "Greater Bird",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24h; White Mage job; drops Damascus Ingot and Dryad Staff."
+    },
+    {
+      "name": "Thunderclaw Thuban",
+      "genus": "Raptor",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed 1.5-2h; drops Psyche Earring."
+    },
+    {
+      "name": "Blighting Brand",
+      "genus": "Evil Weapon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Evil Weapon", "mobIndex": null }
+      ],
+      "notes": "Lottery from RDM-type Evil Weapon; drops Cassandra's Earring."
+    },
+    {
+      "name": "Climbpix Highrise",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'As Thick as Thieves'; Thief job; drops Grapnel."
+    },
+    {
+      "name": "Dribblix Greasemaw",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Crystalline Mission 3; Ranger job."
+    },
+    {
+      "name": "Old Sabertooth",
+      "genus": "Tiger",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'The Fanged One'; Warrior job."
+    },
+    {
+      "name": "Arke",
+      "genus": "Greater Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,100 Unity Accolades to trigger; WHM/BRD jobs."
+    },
+    {
+      "name": "Goji",
+      "genus": "Gargouille",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires White stratum abyssite and Voidstone."
+    },
+    {
+      "name": "Aither",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Deorc",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Eorthe",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Puretos",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Pruina",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Beorht",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Thunor",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Lacus",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Urd",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Skuld",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Verthandi",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Yellow abyssite; 2-4h respawn."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

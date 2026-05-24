@@ -1,0 +1,79 @@
+{
+  "zoneId": 28,
+  "zoneName": "Sacrarium",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Sacrarium",
+  "nms": [
+    {
+      "name": "Balor",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Fomor Codex to Stale Draft."
+    },
+    {
+      "name": "Caithleann",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Fomor Codex to Stale Draft."
+    },
+    {
+      "name": "Elel",
+      "genus": "Corse",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Dark weather + Undead time 20:00-4:00."
+    },
+    {
+      "name": "Indich",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Fomor Codex to Stale Draft."
+    },
+    {
+      "name": "Keremet",
+      "genus": "Corse",
+      "spawnType": "timed",
+      "respawnTime": 1500,
+      "placeholders": [],
+      "notes": "20-30 minute respawn."
+    },
+    {
+      "name": "Lobais",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Fomor Codex to Stale Draft."
+    },
+    {
+      "name": "Luaith",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Fomor Codex to Stale Draft."
+    },
+    {
+      "name": "Old Professor Mariselle",
+      "genus": "Ghost",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission: The Secrets of Worship."
+    },
+    {
+      "name": "Mariselle's Pupil",
+      "genus": "Ghost",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Assists Old Professor Mariselle."
+    }
+  ]
+}

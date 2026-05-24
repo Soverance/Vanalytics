@@ -1,0 +1,39 @@
+{
+  "zoneId": 177,
+  "zoneName": "VeLugannon Palace",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Ve%27Lugannon_Palace",
+  "nms": [
+    {
+      "name": "Brigandish Blade",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Curtana to ??? at H-12 Map 1; level 82."
+    },
+    {
+      "name": "Steam Cleaner",
+      "genus": "Magic Pot",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed respawn; assists Detector on Maps 2, 5, 6, 9 near Ru'Aun Gardens entrances."
+    },
+    {
+      "name": "Zipacna",
+      "genus": "Golem",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed 2-4 hour respawn at E/K-3/4 Map 1."
+    },
+    {
+      "name": "Uptala",
+      "genus": "Naraka",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM requiring Ashen stratum abyssite III and Voidstone; drops Murasamemaru."
+    }
+  ]
+}

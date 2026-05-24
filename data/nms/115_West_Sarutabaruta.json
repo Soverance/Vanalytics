@@ -1,0 +1,91 @@
+{
+  "zoneId": 115,
+  "zoneName": "West Sarutabaruta",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/West_Sarutabaruta",
+  "nms": [
+    {
+      "name": "Tom Tit Tat",
+      "genus": "Mandragora",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Mandragora", "mobIndex": null }
+      ],
+      "notes": "Lottery from Mandragora family; passive, sound aggro."
+    },
+    {
+      "name": "Nunyenunc",
+      "genus": "Bird",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Carrion Crow", "mobIndex": null }
+      ],
+      "notes": "Lottery from Carrion Crow; passive, sound aggro; drops Pilgrim's Wand."
+    },
+    {
+      "name": "Numbing Norman",
+      "genus": "Bee",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive; drops Pike."
+    },
+    {
+      "name": "Virvatuli",
+      "genus": "Corpselight",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires Jade stratum abyssite and Voidstone."
+    },
+    {
+      "name": "Rummager Beetle",
+      "genus": "Beetle",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Raker Bee",
+      "genus": "Bee",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Farruca Fly",
+      "genus": "Fly",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn; drops Alert Ring."
+    },
+    {
+      "name": "Jyeshtha",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn; drops Fatality Belt."
+    },
+    {
+      "name": "Orcus",
+      "genus": "Antlion",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Brown abyssite; 2-4h respawn; drops Corneus Ring."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

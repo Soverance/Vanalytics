@@ -1,0 +1,15 @@
+{
+  "zoneId": 273,
+  "zoneName": "Woh Gates",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Woh_Gates",
+  "nms": [
+    {
+      "name": "Cowll Hippogryph",
+      "genus": "Hippogryph",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Sullied Feather to ??? at G-10 (Map 2); passive."
+    }
+  ]
+}

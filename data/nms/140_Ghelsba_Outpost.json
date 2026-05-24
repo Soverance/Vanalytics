@@ -1,0 +1,95 @@
+{
+  "zoneId": 140,
+  "zoneName": "Ghelsba Outpost",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Ghelsba_Outpost",
+  "nms": [
+    {
+      "name": "Thousandarm Deshglesh",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn from various Orcs; drops Obelisk and Plate Belt."
+    },
+    {
+      "name": "Orcish Wallbreacher",
+      "genus": "Orcish Warmachine",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 60-90 minute respawn; drops Strike Baghnakhs."
+    },
+    {
+      "name": "Orcish Barricader",
+      "genus": "Orcish Warmachine",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 60-90 minute respawn; drops Lantern Shield."
+    },
+    {
+      "name": "Bloody Vrukwuk",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Alternates with Fogweaver Mozzfuzz; despawns if Warchief Vatgit is killed without aggro."
+    },
+    {
+      "name": "Fogweaver Mozzfuzz",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Alternates with Bloody Vrukwuk; despawns if Warchief Vatgit is killed without aggro."
+    },
+    {
+      "name": "Warchief Vatgit",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": 960,
+      "placeholders": [],
+      "notes": "Timed 16-minute respawn; sight-aggro."
+    },
+    {
+      "name": "Carrion Dragon",
+      "genus": "Dragon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Mirror, Mirror\"."
+    },
+    {
+      "name": "Cyranuce M Cutauleon",
+      "genus": "Wyvern",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The Holy Crest\"."
+    },
+    {
+      "name": "Fodderchief Vokdek",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for \"Save the Children\"."
+    },
+    {
+      "name": "Strongarm Zodvad",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for \"Save the Children\"."
+    },
+    {
+      "name": "Sureshot Snatgat",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for \"Save the Children\"."
+    }
+  ]
+}

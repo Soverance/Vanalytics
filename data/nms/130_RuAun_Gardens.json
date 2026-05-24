@@ -1,0 +1,57 @@
+{
+  "zoneId": 130,
+  "zoneName": "Ru'Aun Gardens",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Ru%27Aun_Gardens",
+  "nms": [
+    {
+      "name": "Byakko",
+      "genus": "Tiger",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Gem of the West and Autumnstone to ???; aggressive; level 88-90."
+    },
+    {
+      "name": "Despot",
+      "genus": "Doll",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Groundskeeper", "mobIndex": null }
+      ],
+      "notes": "Lottery from blue light Groundskeepers in hallway; sight/magic aggro; level 80-82."
+    },
+    {
+      "name": "Genbu",
+      "genus": "Adamantoise",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Gem of the North and Winterstone to ???; aggressive; level 88-90."
+    },
+    {
+      "name": "Seiryu",
+      "genus": "Wyvern",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Gem of the East and Springstone to ???; aggressive; level 88-90."
+    },
+    {
+      "name": "Suzaku",
+      "genus": "Greater Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Gem of the South and Summerstone to ???; aggressive; level 88-90."
+    },
+    {
+      "name": "Aello",
+      "genus": "Harpeia",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires Ashen stratum abyssite III and Voidstone."
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "zoneId": 79,
+  "zoneName": "Caedarva Mire",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Caedarva_Mire",
+  "nms": [
+    {
+      "name": "Experimental Lamia",
+      "genus": "Lamiae",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Myrrh."
+    },
+    {
+      "name": "Khimaira",
+      "genus": "Khimaira",
+      "spawnType": "timed",
+      "respawnTime": 172800,
+      "placeholders": [],
+      "notes": "48-72 hours from death, 12-36 hours post-maintenance."
+    },
+    {
+      "name": "Mahjlaef the Paintorn",
+      "genus": "Soulflayer",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Exorcism Treatise."
+    },
+    {
+      "name": "Tyger",
+      "genus": "Khimaira",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Singed Buffalo."
+    },
+    {
+      "name": "Verdelet",
+      "genus": "Imp",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Mint Drop."
+    },
+    {
+      "name": "Zikko",
+      "genus": "Imp",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawn on Weight effect in lake."
+    },
+    {
+      "name": "Peallaidh",
+      "genus": "Sheep",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Wild Karakul", "mobIndex": null }
+      ],
+      "notes": "Lottery from Wild Karakul."
+    },
+    {
+      "name": "Shedu",
+      "genus": "Khimaira",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 3,100 Accolades."
+    },
+    {
+      "name": "Brekekekex",
+      "genus": "Poroggo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Amber stratum abyssite + Voidstone."
+    }
+  ]
+}

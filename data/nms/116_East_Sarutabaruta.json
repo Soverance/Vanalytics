@@ -1,0 +1,51 @@
+{
+  "zoneId": 116,
+  "zoneName": "East Sarutabaruta",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/East_Sarutabaruta",
+  "nms": [
+    {
+      "name": "Duke Decapod",
+      "genus": "Crab",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive spawn; drops Pelte."
+    },
+    {
+      "name": "Spiny Spipi",
+      "genus": "Crawler",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Crawler", "mobIndex": null }
+      ],
+      "notes": "Lottery from Crawler; drops Mist Silk Cape and Silk Thread."
+    },
+    {
+      "name": "Sharp-Eared Ropipi",
+      "genus": "Rabbit",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Savanna Rarab", "mobIndex": null }
+      ],
+      "notes": "Lottery from Savanna Rarab; drops Entrancing Ribbon."
+    },
+    {
+      "name": "Prickly Pitriv",
+      "genus": "Crawler",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 200 Unity Accolades to trigger."
+    },
+    {
+      "name": "Rw Nw Prt M Hrw",
+      "genus": "Grimoire",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires White stratum abyssite IV and Voidstone."
+    }
+  ]
+}

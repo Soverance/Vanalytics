@@ -1,0 +1,67 @@
+{
+  "zoneId": 145,
+  "zoneName": "Giddeus",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Giddeus",
+  "nms": [
+    {
+      "name": "Juu Duzu the Whirlwind",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery from various Yagudo enemies; sight aggro, drops Hunter's Longbow."
+    },
+    {
+      "name": "Hoo Mjuu the Torrent",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Yagudo Mendicant", "mobIndex": null }
+      ],
+      "notes": "Lottery from Yagudo Mendicant; sight aggro, drops Monster Signa."
+    },
+    {
+      "name": "Vuu Puqu the Beguiler",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Yagudo Piper", "mobIndex": null }
+      ],
+      "notes": "Lottery from Yagudo Piper; sight aggro, drops Bird Whistle."
+    },
+    {
+      "name": "Eyy Mon the Ironbreaker",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Timed 5-minute respawn; passive, sight detection, drops Aspir Knife."
+    },
+    {
+      "name": "Quu Xijo the Illusory",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive, sight detection; drops Ephemeral Cloth."
+    },
+    {
+      "name": "Zhuu Buxu the Silent",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Timed 5-minute respawn; passive, sight detection, drops Parana Shield."
+    },
+    {
+      "name": "Vaa Huja the Erudite",
+      "genus": "Yagudo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Dark Legacy\"; passive, sight detection."
+    }
+  ]
+}

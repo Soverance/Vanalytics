@@ -1,0 +1,41 @@
+{
+  "zoneId": 12,
+  "zoneName": "Newton Movalpolos",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Newton_Movalpolos",
+  "nms": [
+    {
+      "name": "Bugbear Matman",
+      "genus": "Bugbear",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Air Tank to Moblin Showman."
+    },
+    {
+      "name": "Goblin Collector",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Premium Bag to ???."
+    },
+    {
+      "name": "Swashstox Beadblinker",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Goblin Swordsman", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn."
+    },
+    {
+      "name": "Sword Sorcerer Solisoq",
+      "genus": "Moblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawn method unknown (TODO on wiki)."
+    }
+  ]
+}

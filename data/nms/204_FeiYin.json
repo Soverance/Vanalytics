@@ -1,0 +1,131 @@
+{
+  "zoneId": 204,
+  "zoneName": "FeiYin",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/FeiYin",
+  "nms": [
+    {
+      "name": "Capricious Cassie",
+      "genus": "Morbol",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn every 2+ h at (G-6); drops Cassie Earring and Aiming Bracelets."
+    },
+    {
+      "name": "Eastern Shadow",
+      "genus": "Fomor",
+      "spawnType": "lottery",
+      "respawnTime": 57600,
+      "placeholders": [
+        { "name": "Specter", "mobIndex": "0x121" }
+      ],
+      "notes": "Lottery from Specter at (G-6/7) every 16-32 h; drops Vali's Bow."
+    },
+    {
+      "name": "Northern Shadow",
+      "genus": "Fomor",
+      "spawnType": "lottery",
+      "respawnTime": 57600,
+      "placeholders": [
+        { "name": "Specter", "mobIndex": "0x117" }
+      ],
+      "notes": "Lottery from Specter at (F-6) every 16-30 h; drops Executioner."
+    },
+    {
+      "name": "Southern Shadow",
+      "genus": "Fomor",
+      "spawnType": "lottery",
+      "respawnTime": 57600,
+      "placeholders": [
+        { "name": "Specter", "mobIndex": null }
+      ],
+      "notes": "Lottery from Specter at (F-7/8) every 16-30 h; drops Master Shield."
+    },
+    {
+      "name": "Western Shadow",
+      "genus": "Fomor",
+      "spawnType": "lottery",
+      "respawnTime": 57600,
+      "placeholders": [
+        { "name": "Specter", "mobIndex": null }
+      ],
+      "notes": "Lottery from Specter every 16-30 h; drops Retaliators."
+    },
+    {
+      "name": "Goliath",
+      "genus": "Golem",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Colossus", "mobIndex": null }
+      ],
+      "notes": "Lottery from Colossus at (F-6/7) Map 2; drops Granite."
+    },
+    {
+      "name": "Jenglot",
+      "genus": "Doll",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn every 2 h at (H-8) Map 1; drops Aptant: Secan and Aptant: Haelan."
+    },
+    {
+      "name": "Mind Hoarder",
+      "genus": "Magic Pot",
+      "spawnType": "lottery",
+      "respawnTime": 5400,
+      "placeholders": [
+        { "name": "Clockwork Pod", "mobIndex": null }
+      ],
+      "notes": "Lottery from Clockwork Pod at (H-9/10) Map 1; window opens 90 min after PH ToD; drops Lleu's Charm."
+    },
+    {
+      "name": "Sluagh",
+      "genus": "Ghost",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed aggressive spawn; drops Ensanguined Cloth."
+    },
+    {
+      "name": "Altedour I Tavnazia",
+      "genus": "Fomor",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Pieuje's Decision; drops Tavnazian Mask (guaranteed)."
+    },
+    {
+      "name": "Dabotz's Ghost",
+      "genus": "Ghost",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Scattered into Shadow."
+    },
+    {
+      "name": "Miser Murphy",
+      "genus": "Ghost",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Peace for the Spirit; drops Antique Coin (guaranteed)."
+    },
+    {
+      "name": "Borealis Shadow",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,400 Unity Accolades required."
+    },
+    {
+      "name": "Carousing Celine",
+      "genus": "Morbol",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,400 Unity Accolades required; drops Celine's Vine and Gazu Bracelets."
+    }
+  ]
+}

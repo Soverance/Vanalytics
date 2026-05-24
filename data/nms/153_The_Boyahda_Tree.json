@@ -1,0 +1,99 @@
+{
+  "zoneId": 153,
+  "zoneName": "The Boyahda Tree",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/The_Boyahda_Tree",
+  "nms": [
+    {
+      "name": "Ancient Goobbue",
+      "genus": "Goobbue",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour spawn on Map 3; drops Daihannya, Sukesada, Great Boyahda Moss."
+    },
+    {
+      "name": "Aquarius",
+      "genus": "Crab",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Robber Crab", "mobIndex": null }
+      ],
+      "notes": "Lottery from Robber Crab on Map 1; drops Fransisca."
+    },
+    {
+      "name": "Ellyllon",
+      "genus": "Funguar",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Death Cap", "mobIndex": null }
+      ],
+      "notes": "Lottery from Death Cap on Map 1; drops Mushroom Helm and King Truffle."
+    },
+    {
+      "name": "Leshonki",
+      "genus": "Sapling",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn on Map 4; guarantees Leshonki Bulb drop."
+    },
+    {
+      "name": "Unut",
+      "genus": "Rabbit",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn on Map 1; sight aggro, drops Luna Subligar."
+    },
+    {
+      "name": "Voluptuous Vivian",
+      "genus": "Morbol",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn on Map 4; sound aggro, drops Black Ribbon and Vivian Ring."
+    },
+    {
+      "name": "Agas",
+      "genus": "Ahriman",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Searching for the Right Words\"; sound and sight aggro."
+    },
+    {
+      "name": "Beet Leafhopper",
+      "genus": "Fly",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Shoot First, Ask Questions Later\"; passive, sound aggro."
+    },
+    {
+      "name": "Ayapec",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM requiring 2,100 Unity Accolades to trigger; level 125."
+    },
+    {
+      "name": "Hidhaegg",
+      "genus": "Wyrm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM requiring 3,100 Unity Accolades to trigger; level 135."
+    },
+    {
+      "name": "Modron",
+      "genus": "Treant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM requiring Ashen stratum abyssite II and Voidstone; aggressive."
+    }
+  ]
+}

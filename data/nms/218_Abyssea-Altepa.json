@@ -1,0 +1,207 @@
+{
+  "zoneId": 218,
+  "zoneName": "Abyssea-Altepa",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Abyssea-Altepa",
+  "nms": [
+    {
+      "name": "Amarok",
+      "genus": "Cerberus",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade High-Quality Dhalmel Hide, Tiger King's Hide, and Sharabha Hide to ???."
+    },
+    {
+      "name": "Ansherekh",
+      "genus": "Tiger",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Altepa."
+    },
+    {
+      "name": "Battlerigged Chariot",
+      "genus": "Chariot",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Altepa."
+    },
+    {
+      "name": "Bennu",
+      "genus": "Greater Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with Resplendent roc quill."
+    },
+    {
+      "name": "Bugul Noz",
+      "genus": "Mandragora",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Sabulous Clay to ???."
+    },
+    {
+      "name": "Chickcharney",
+      "genus": "Cockatrice",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade High-Quality Cockatrice Skin to ???."
+    },
+    {
+      "name": "Cuijatender",
+      "genus": "Sabotender",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Altepa."
+    },
+    {
+      "name": "Dragua",
+      "genus": "Wyrm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with Bloodied dragon ear."
+    },
+    {
+      "name": "Emperador de Altepa",
+      "genus": "Sabotender",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Oasis Water and Giant Mistletoe to ???."
+    },
+    {
+      "name": "Hazhdiha",
+      "genus": "Dragon",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Altepa."
+    },
+    {
+      "name": "Hedjedjet",
+      "genus": "Scorpion",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Altepa."
+    },
+    {
+      "name": "Ironclad Smiter",
+      "genus": "Iron Giant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Tablilla Mercury and Smoldering Arm to ???."
+    },
+    {
+      "name": "Long-Barreled Chariot",
+      "genus": "Chariot",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Altepa."
+    },
+    {
+      "name": "Orthrus",
+      "genus": "Cerberus",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with Steaming cerberus tongue."
+    },
+    {
+      "name": "Ouzelum",
+      "genus": "Greater Bird",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Altepa."
+    },
+    {
+      "name": "Rani",
+      "genus": "Caturae",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with Broken iron giant spike and Rusted chariot gear."
+    },
+    {
+      "name": "Sharabha",
+      "genus": "Manticore",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Sand-caked Fang to ???."
+    },
+    {
+      "name": "Shaula",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade High-Quality Scorpion Claw and Vadleany Fluid to ???."
+    },
+    {
+      "name": "Tablilla",
+      "genus": "Doll",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Sandy Shard to ???."
+    },
+    {
+      "name": "Vadleany",
+      "genus": "Ladybug",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Ladybird Leaf to ???."
+    },
+    {
+      "name": "Waugyl",
+      "genus": "Puk",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Puppet's Blood to ???."
+    },
+    {
+      "name": "Earth Elemental",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — rest with Clear demilune abyssite."
+    },
+    {
+      "name": "Fire Elemental",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — rest with Clear demilune abyssite."
+    },
+    {
+      "name": "Brulo",
+      "genus": "Avatar",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — rest with Emerald demilune abyssite."
+    },
+    {
+      "name": "Koios",
+      "genus": "Avatar",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — rest with Colorful demilune abyssite."
+    }
+  ]
+}

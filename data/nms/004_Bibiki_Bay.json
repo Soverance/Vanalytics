@@ -1,0 +1,51 @@
+{
+  "zoneId": 4,
+  "zoneName": "Bibiki Bay",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Bibiki_Bay",
+  "nms": [
+    {
+      "name": "Intulo",
+      "genus": "Eft",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eft", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eft at H/I-7."
+    },
+    {
+      "name": "Locus Fiddler Crab",
+      "genus": "Crab",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Locus Ghost Crab", "mobIndex": null }
+      ],
+      "notes": "Lottery at G-10."
+    },
+    {
+      "name": "Splacknuck",
+      "genus": "Eft",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive encounter."
+    },
+    {
+      "name": "Dalham",
+      "genus": "Sea Monk",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission: Promathia Mission 7-4: Calm Before the Storm."
+    },
+    {
+      "name": "Intuila",
+      "genus": "Eft",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,500 Unity Accolades."
+    }
+  ]
+}

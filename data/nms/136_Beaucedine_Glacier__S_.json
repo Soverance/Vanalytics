@@ -1,0 +1,99 @@
+{
+  "zoneId": 136,
+  "zoneName": "Beaucedine Glacier [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Beaucedine_Glacier_[S]",
+  "nms": [
+    {
+      "name": "Amphiptere",
+      "genus": "Amphiptere",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Regular timed NM; aggressive, sight aggro."
+    },
+    {
+      "name": "Came-cruse",
+      "genus": "Corpselight",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed NM; sound and HP-based aggro; level 74."
+    },
+    {
+      "name": "Scylla",
+      "genus": "Ruszor",
+      "spawnType": "timed",
+      "respawnTime": 14400,
+      "placeholders": [],
+      "notes": "Timed 4-5h; true sight aggro; links with nearby mobs."
+    },
+    {
+      "name": "Becut",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gigas", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Gigas; aggressive."
+    },
+    {
+      "name": "Grand'Goule",
+      "genus": "Gargouille",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gargouille", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Gargouille; aggressive."
+    },
+    {
+      "name": "Gjenganger",
+      "genus": "Ghost",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn; true sound aggro."
+    },
+    {
+      "name": "Gorehound",
+      "genus": "Hound",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn; true sound aggro."
+    },
+    {
+      "name": "Erebus",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn; true sound aggro."
+    },
+    {
+      "name": "Feuerunke",
+      "genus": "Doomed",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Lord Ruthven",
+      "genus": "Vampyr",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Purple abyssite; 2-4h respawn; true sight aggro."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

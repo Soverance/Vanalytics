@@ -1,0 +1,71 @@
+{
+  "zoneId": 262,
+  "zoneName": "Foret de Hennetiel",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Foret_de_Hennetiel",
+  "nms": [
+    {
+      "name": "Cunning Craklaw",
+      "genus": "Craklaw",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Poisoning the Well; passive."
+    },
+    {
+      "name": "Pungent Patricia",
+      "genus": "Morbol",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Not-So-Clean Bill; aggressive, True Sound."
+    },
+    {
+      "name": "Faded Craklaw",
+      "genus": "Craklaw",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Zaffre Yggrete Shard I to ???; aggressive."
+    },
+    {
+      "name": "Aberrant Uragnite",
+      "genus": "Uragnite",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Zaffre Yggrete Shard II to ???; aggressive, True Sound."
+    },
+    {
+      "name": "Divagating Jagil",
+      "genus": "Pugil",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Zaffre Yggrete Shard III to ???; aggressive."
+    },
+    {
+      "name": "Nerrivik",
+      "genus": "Orobon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Zaffre Yggrete Shard IV to ???; aggressive."
+    },
+    {
+      "name": "Krabakarpo",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Zaffre Yggrete Shard V to ???; aggressive."
+    },
+    {
+      "name": "Tchakka",
+      "genus": "Rockfin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Wildskeeper Reive encounter; passive, links."
+    }
+  ]
+}

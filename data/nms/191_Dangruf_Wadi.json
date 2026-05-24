@@ -1,0 +1,41 @@
+{
+  "zoneId": 191,
+  "zoneName": "Dangruf Wadi",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dangruf_Wadi",
+  "nms": [
+    {
+      "name": "Geyser Lizard",
+      "genus": "Lizard",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns when one of three geysers erupts each Vana'diel day at (E-7), (H-3), or (F-9/10); despawns if unclaimed."
+    },
+    {
+      "name": "Chocoboleech",
+      "genus": "Leech",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn by trading Fresh Blood to ??? at (F-8/9), (E-10), or (J-6)."
+    },
+    {
+      "name": "Teporingo",
+      "genus": "Rabbit",
+      "spawnType": "lottery",
+      "respawnTime": 600,
+      "placeholders": [
+        { "name": "Hoarder Hare", "mobIndex": "0x01f" }
+      ],
+      "notes": "Lottery from Hoarder Hare; window as short as 10 min from PH ToD."
+    },
+    {
+      "name": "Celaeno",
+      "genus": "Harpeia",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch (Indigo IV) — Indigo stratum abyssite IV + Voidstone at rifts (H-4), (I-12), (J-8)."
+    }
+  ]
+}

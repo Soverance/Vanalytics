@@ -1,0 +1,247 @@
+{
+  "zoneId": 45,
+  "zoneName": "Abyssea-Tahrongi",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Abyssea-Tahrongi",
+  "nms": [
+    {
+      "name": "Cluckatrice",
+      "genus": "Cockatrice",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Chunk of Cockatrice Tailmeat to ??? at H-8."
+    },
+    {
+      "name": "Alectryon",
+      "genus": "Cockatrice",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade tailmeat and eft egg to ??? at H-8; requires Cluckatrice defeated."
+    },
+    {
+      "name": "Glavoid",
+      "genus": "Sandworm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Examine ??? with Luxuriant manticore mane and three other key items at I-5."
+    },
+    {
+      "name": "Abas",
+      "genus": "Eft",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Eft Egg to ??? at K-10."
+    },
+    {
+      "name": "Hieracosphinx",
+      "genus": "Manticore",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn at J-6; approximately 10-15 minute respawn."
+    },
+    {
+      "name": "Muscaliet",
+      "genus": "Manticore",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Resilient Mane and whisker to ??? at I-6."
+    },
+    {
+      "name": "Tefenet",
+      "genus": "Coeurl",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Shocking whisker to ??? at G-6."
+    },
+    {
+      "name": "Adze",
+      "genus": "Gnat",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn at G-5; approximately 10-15 minute respawn; sound-aggro."
+    },
+    {
+      "name": "Minhocao",
+      "genus": "Sandworm",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn at I-6; approximately 10-15 minute respawn; sound-aggro."
+    },
+    {
+      "name": "Chloris",
+      "genus": "Mandragora",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Torn bat wing, eyelid, shell, and claw to ??? at I-8."
+    },
+    {
+      "name": "Cannered Noz",
+      "genus": "Corpselight",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade skull to ??? at F-6."
+    },
+    {
+      "name": "Hedetet",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade stinger and humus to ??? at F-7."
+    },
+    {
+      "name": "Gancanagh",
+      "genus": "Mandragora",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade alkaline humus to ??? at H-8."
+    },
+    {
+      "name": "Ophanim",
+      "genus": "Hecteyes",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade fang, wing, and pincer to ??? at G-9."
+    },
+    {
+      "name": "Halimede",
+      "genus": "Clionid",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade wing to ??? at G-12."
+    },
+    {
+      "name": "Vetehinen",
+      "genus": "Limule",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade pincer to ??? at H-10."
+    },
+    {
+      "name": "Chukwa",
+      "genus": "Adamantoise",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn at F-5; approximately 10-15 minute respawn."
+    },
+    {
+      "name": "Cuelebre",
+      "genus": "Wyrm",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn at F-8/9; approximately 10-15 minute respawn."
+    },
+    {
+      "name": "Treble Noctules",
+      "genus": "Bat",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade fang and skull to ??? at I-9."
+    },
+    {
+      "name": "Iratham",
+      "genus": "Caturae",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Active 17:00-21:00 game time; roams the zone."
+    },
+    {
+      "name": "Quetzalli",
+      "genus": "Greater Bird",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Active 9:00-21:00 game time; roams the zone."
+    },
+    {
+      "name": "Manananggal",
+      "genus": "Qutrub",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn at I-12; approximately 10-15 minute respawn."
+    },
+    {
+      "name": "Mictlantecuhtli",
+      "genus": "Corse",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn at F/G-4; approximately 10-15 minute respawn."
+    },
+    {
+      "name": "Lachrymater",
+      "genus": "Weeper",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade moaning vestige to ??? at G-10."
+    },
+    {
+      "name": "Lacovie",
+      "genus": "Adamantoise",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Examine ??? with sandworm tooth and flower at F-5."
+    },
+    {
+      "name": "Myrmecoleon",
+      "genus": "Antlion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Drag Lachrymater to Myrmecoleon's location at G-10 to trigger."
+    },
+    {
+      "name": "Rubicund Adenium",
+      "genus": "Mandragora",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest-triggered spawn at H-7."
+    },
+    {
+      "name": "Hungerer",
+      "genus": "Wanderer",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Rest with clear demilune abyssite equipped; roams the zone."
+    },
+    {
+      "name": "Usurper",
+      "genus": "Craver",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Rest with viridian demilune abyssite equipped; roams the zone."
+    },
+    {
+      "name": "Yearner",
+      "genus": "Craver",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Rest with colorful demilune abyssite equipped; roams the zone."
+    }
+  ]
+}

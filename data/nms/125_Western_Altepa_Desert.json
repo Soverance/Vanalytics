@@ -1,0 +1,111 @@
+{
+  "zoneId": 125,
+  "zoneName": "Western Altepa Desert",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Western_Altepa_Desert",
+  "nms": [
+    {
+      "name": "Cactuar Cantautor",
+      "genus": "Sabotender",
+      "spawnType": "lottery",
+      "respawnTime": 3600,
+      "placeholders": [
+        { "name": "Cactuar", "mobIndex": "0x157" }
+      ],
+      "notes": "Window opens 1h after PH ToD; sound-aggro, sleepga."
+    },
+    {
+      "name": "Celphie",
+      "genus": "Dhalmel",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Desert Dhalmel", "mobIndex": null }
+      ],
+      "notes": "Lottery from Desert Dhalmel (I/J-7); sight-aggro."
+    },
+    {
+      "name": "King Vinegarroon",
+      "genus": "Scorpion",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "21-24h during earth weather (double earth is guaranteed in that window). Sound-aggro."
+    },
+    {
+      "name": "Calchas",
+      "genus": "Scorpion",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tulwar Scorpion", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tulwar Scorpion (F-9)."
+    },
+    {
+      "name": "Dahu",
+      "genus": "Manticore",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Hourly during earth weather, wide range (F/I/L-6)~(D-10)."
+    },
+    {
+      "name": "Picolaton",
+      "genus": "Greater Bird",
+      "spawnType": "lottery",
+      "respawnTime": 5400,
+      "placeholders": [
+        { "name": "Phorusrhacos", "mobIndex": null }
+      ],
+      "notes": "Window reopens 90min after last pop. PH at (D-10/11)."
+    },
+    {
+      "name": "Eastern Sphinx",
+      "genus": "Manticore",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 6-1. Sight-aggro."
+    },
+    {
+      "name": "Western Sphinx",
+      "genus": "Manticore",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 6-1. Sight-aggro."
+    },
+    {
+      "name": "Maharaja",
+      "genus": "Tiger",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Inheritance. Sight-aggro."
+    },
+    {
+      "name": "Sabotender Enamorado",
+      "genus": "Sabotender",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "San d'Oria Mission 6-1. Sound-aggro."
+    },
+    {
+      "name": "King Uropygid",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,100 Unity Accolades to trigger."
+    },
+    {
+      "name": "Sabotender Campeador",
+      "genus": "Sabotender",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Ashen stratum abyssite + Voidstone."
+    }
+  ]
+}

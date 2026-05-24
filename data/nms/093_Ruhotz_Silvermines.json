@@ -1,0 +1,23 @@
+{
+  "zoneId": 93,
+  "zoneName": "Ruhotz Silvermines",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Ruhotz_Silvermines",
+  "nms": [
+    {
+      "name": "Lambton Worm",
+      "genus": "Sandworm",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Sound aggro; drops Fragarach and Ancient Torque."
+    },
+    {
+      "name": "Guivre",
+      "genus": "Wyvern",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Sight aggro; drops Zahak's Mail and Guivre's Skull."
+    }
+  ]
+}

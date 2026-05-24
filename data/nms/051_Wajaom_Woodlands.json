@@ -1,0 +1,99 @@
+{
+  "zoneId": 51,
+  "zoneName": "Wajaom Woodlands",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Wajaom_Woodlands",
+  "nms": [
+    {
+      "name": "Chelicerata",
+      "genus": "Chigoe",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn at K-9; approximately 2-hour respawn."
+    },
+    {
+      "name": "Gharial",
+      "genus": "Wivre",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn at E-8; approximately 2-hour respawn."
+    },
+    {
+      "name": "Gotoh Zha the Redolent",
+      "genus": "Mamool Ja",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Sheep Botfly to ??? at F-5."
+    },
+    {
+      "name": "Hydra",
+      "genus": "Hydra",
+      "spawnType": "timed",
+      "respawnTime": 172800,
+      "placeholders": [],
+      "notes": "Timed spawn at F-10; 48-72 hour respawn; true sight aggro."
+    },
+    {
+      "name": "Jaded Jody",
+      "genus": "Morbol",
+      "spawnType": "lottery",
+      "respawnTime": 7200,
+      "placeholders": [
+        { "name": "Great Ameretat", "mobIndex": null }
+      ],
+      "notes": "Lottery from Great Ameretat at E-11; window opens 120 min after PH ToD."
+    },
+    {
+      "name": "Iriz Ima",
+      "genus": "Marid",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Senorita Pamama to ??? at J-8."
+    },
+    {
+      "name": "Tinnin",
+      "genus": "Hydra",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Monkey Wine to ??? at J-13."
+    },
+    {
+      "name": "Vulpangue",
+      "genus": "Puk",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Hellcage Butterfly to ??? at D-10."
+    },
+    {
+      "name": "Zoraal Ja's Pkuucha",
+      "genus": "Colibri",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Lesser Colibri", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Lesser Colibri at I-9."
+    },
+    {
+      "name": "Kubool Ja's Mhuufya",
+      "genus": "Colibri",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,100 Unity Accolades to trigger; level 125."
+    },
+    {
+      "name": "Thu'ban",
+      "genus": "Hydra",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 3,100 Unity Accolades to trigger; level 135."
+    }
+  ]
+}

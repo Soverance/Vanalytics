@@ -1,0 +1,83 @@
+{
+  "zoneId": 157,
+  "zoneName": "Middle Delkfutts Tower",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Middle_Delkfutts_Tower",
+  "nms": [
+    {
+      "name": "Eurytos",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gigas", "mobIndex": null }
+      ],
+      "notes": "Lottery from Gigas at H-6 4th Floor Map 1; RNG job, drops Maple Shield."
+    },
+    {
+      "name": "Ogygos",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gigas Wallwatcher", "mobIndex": null }
+      ],
+      "notes": "Lottery from Gigas Wallwatcher at F-8 9th Floor Map 6; WAR job, drops Ogygos's Bracelets."
+    },
+    {
+      "name": "Ophion",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gigas Kettlemaster", "mobIndex": null }
+      ],
+      "notes": "Lottery from Gigas Kettlemaster at G-8/9 7th Floor Map 4; BST job."
+    },
+    {
+      "name": "Polybotes",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gigas", "mobIndex": null }
+      ],
+      "notes": "Lottery from Gigas at F-9 5th Floor Map 2; WAR job."
+    },
+    {
+      "name": "Rhoikos",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gigas Quarrier", "mobIndex": null }
+      ],
+      "notes": "Lottery from Gigas Quarrier at I/J-7 8th Floor Map 5; RNG job."
+    },
+    {
+      "name": "Rhoitos",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gigas", "mobIndex": null }
+      ],
+      "notes": "Lottery from Gigas at J-6 6th Floor Map 3; MNK job."
+    },
+    {
+      "name": "Gerwitz's Scythe",
+      "genus": "Evil Weapon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Blade of Evil\"; RDM job, sound and magic aggro."
+    },
+    {
+      "name": "Scythe Victim",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Blade of Evil\"; BLM and WAR jobs."
+    }
+  ]
+}

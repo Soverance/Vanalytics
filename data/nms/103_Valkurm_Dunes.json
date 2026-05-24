@@ -1,0 +1,79 @@
+{
+  "zoneId": 103,
+  "zoneName": "Valkurm Dunes",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Valkurm_Dunes",
+  "nms": [
+    {
+      "name": "Metal Shears",
+      "genus": "Crab",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive spawn."
+    },
+    {
+      "name": "Golden Bat",
+      "genus": "Bat",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive/Sound aggro."
+    },
+    {
+      "name": "Valkurm Emperor",
+      "genus": "Fly",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Aggressive with sound and links."
+    },
+    {
+      "name": "Hippomaritimus",
+      "genus": "Pugil",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive; timed spawn."
+    },
+    {
+      "name": "Doman",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Aggressive with sound, HP, and links."
+    },
+    {
+      "name": "Marchelute",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Aggressive with sound, HP, and links."
+    },
+    {
+      "name": "Onryo",
+      "genus": "Ghost",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Aggressive with sound and HP."
+    },
+    {
+      "name": "Valkurm Imperator",
+      "genus": "Fly",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity Concord — 1,500 Accolades."
+    },
+    {
+      "name": "Ig-Alima",
+      "genus": "Gallu",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Aggressive spawn."
+    }
+  ]
+}

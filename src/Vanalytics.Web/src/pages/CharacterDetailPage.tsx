@@ -16,6 +16,7 @@ import FullscreenViewer from '../components/character/FullscreenViewer'
 import InventoryTab from '../components/character/InventoryTab'
 import PorterTab from '../components/character/PorterTab'
 import RelicsTab from '../components/character/RelicsTab'
+import ProgressionTab from '../components/character/ProgressionTab'
 import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
 import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
@@ -23,7 +24,7 @@ import SessionsTab from '../components/session/SessionsTab'
 import { ApiError } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
 
-const STAT_TABS = ['Jobs', 'Crafting', 'Ultimate Weapons'] as const
+const STAT_TABS = ['Jobs', 'Crafting', 'Ultimate Weapons', 'Progression'] as const
 type StatTab = typeof STAT_TABS[number]
 
 const GEAR_TABS = ['Equipment', 'Inventory', 'Porter', 'Macros', 'Sessions'] as const
@@ -193,6 +194,7 @@ export default function CharacterDetailPage() {
               {activeTab === 'Jobs' && <JobsGrid jobs={character.jobs} />}
               {activeTab === 'Crafting' && <CraftingTable skills={character.craftingSkills} />}
               {activeTab === 'Ultimate Weapons' && <RelicsTab characterId={character.id} />}
+              {activeTab === 'Progression' && <ProgressionTab characterId={character.id} />}
             </div>
           </div>
 

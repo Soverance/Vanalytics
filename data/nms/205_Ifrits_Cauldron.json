@@ -1,0 +1,136 @@
+{
+  "zoneId": 205,
+  "zoneName": "Ifrits Cauldron",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Ifrits_Cauldron",
+  "nms": [
+    {
+      "name": "Ash Dragon",
+      "genus": "Dragon",
+      "spawnType": "timed",
+      "respawnTime": 259200,
+      "placeholders": [],
+      "notes": "Timed spawn every ~72 h at (F-8/9); sound-aggro; drops high-end gear."
+    },
+    {
+      "name": "Bomb Queen",
+      "genus": "Bomb",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Bomb Queen Core and 3 Bomb Queen Ash to ???; spawns Bomb Bastard, Bomb Prince, and Bomb Princess adds."
+    },
+    {
+      "name": "Bomb Bastard",
+      "genus": "Bomb",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawned as add during Bomb Queen fight; sight and magic detection."
+    },
+    {
+      "name": "Bomb Prince",
+      "genus": "Bomb",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawned as add during Bomb Queen fight; sight and magic detection."
+    },
+    {
+      "name": "Bomb Princess",
+      "genus": "Bomb",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawned as add during Bomb Queen fight; sight and magic detection."
+    },
+    {
+      "name": "Foreseer Oramix",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Goblin Alchemist", "mobIndex": null }
+      ],
+      "notes": "Lottery from Goblin Alchemist at (G-9) Map 3; sight-aggro."
+    },
+    {
+      "name": "Lindwurm",
+      "genus": "Raptor",
+      "spawnType": "lottery",
+      "respawnTime": 3600,
+      "placeholders": [
+        { "name": "Eotyrannus", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eotyrannus at (F-8)-(G-9) Map 5; minimum 1h respawn; sound-aggro."
+    },
+    {
+      "name": "Tarasque",
+      "genus": "Hill Lizard",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Rattling Egg to ???; sound-aggro."
+    },
+    {
+      "name": "Tyrannic Tunnok",
+      "genus": "Scorpion",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Sulfur Scorpion", "mobIndex": null }
+      ],
+      "notes": "Lottery from Sulfur Scorpion at (E-10) Map 7; sound-aggro."
+    },
+    {
+      "name": "Vouivre",
+      "genus": "Wyvern",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Hurricane Wyvern", "mobIndex": "0x0e2" },
+        { "name": "Hurricane Wyvern", "mobIndex": "0x0de" }
+      ],
+      "notes": "Lottery from Hurricane Wyvern; PH alternates between (H-6) and (I-6); sight-aggro."
+    },
+    {
+      "name": "Cailleach Bheur",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Blood and Glory; sound and HP aggro."
+    },
+    {
+      "name": "Magma",
+      "genus": "Bomb",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 6-2; sight and magic detection."
+    },
+    {
+      "name": "Salamander",
+      "genus": "Hill Lizard",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 6-2; sound-aggro, links."
+    },
+    {
+      "name": "Coca",
+      "genus": "Wyvern",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM (level 125) — requires 2,100 Unity Accolades."
+    },
+    {
+      "name": "Ildebrann",
+      "genus": "Wyrm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch operation — requires abyssite and Voidstone."
+    }
+  ]
+}

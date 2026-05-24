@@ -1,0 +1,575 @@
+{
+  "zoneId": 134,
+  "zoneName": "Dynamis-Beaucedine",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dynamis-Beaucedine",
+  "nms": [
+    {
+      "name": "Ascetox Ratgums",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Black Mage job."
+    },
+    {
+      "name": "Be'Zhe Keeprazer",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Summoner job."
+    },
+    {
+      "name": "Bhuu Wjato the Firepool",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Black Mage job."
+    },
+    {
+      "name": "Bordox Kittyback",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Thief job."
+    },
+    {
+      "name": "Brewnix Bittypupils",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; White Mage job."
+    },
+    {
+      "name": "Caa Xaza the Madpiercer",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Red Mage job."
+    },
+    {
+      "name": "Cobraclaw Buchzvotch",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Monk job."
+    },
+    {
+      "name": "De'Bho Pyrohand",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Black Mage job."
+    },
+    {
+      "name": "Deathcaller Bidfbid",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Summoner job."
+    },
+    {
+      "name": "Drakefeast Wubmfub",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Dragoon job."
+    },
+    {
+      "name": "Draklix Scalecrust",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Dragoon job."
+    },
+    {
+      "name": "Droprix Granitepalms",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Monk job."
+    },
+    {
+      "name": "Elvaanlopper Grokdok",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Samurai job."
+    },
+    {
+      "name": "Foo Peku the Bloodcloak",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Warrior job."
+    },
+    {
+      "name": "Ga'Fho Venomtouch",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; White Mage job."
+    },
+    {
+      "name": "Galkarider Retzpratz",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Ranger job."
+    },
+    {
+      "name": "Gibberox Pimplebeak",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Red Mage job."
+    },
+    {
+      "name": "Go'Tyo Magenapper",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Dragoon job."
+    },
+    {
+      "name": "Gu'Khu Dukesniper",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Ranger job."
+    },
+    {
+      "name": "Gu'Nha Wallstormer",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Warrior job."
+    },
+    {
+      "name": "Guu Waji the Preacher",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Paladin job."
+    },
+    {
+      "name": "Heavymail Djidzbad",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Paladin job."
+    },
+    {
+      "name": "Hee Mida the Meticulous",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Ranger job."
+    },
+    {
+      "name": "Humegutter Adzjbadj",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Warrior job."
+    },
+    {
+      "name": "Jeunoraider Gepkzip",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Ninja job."
+    },
+    {
+      "name": "Ji'Fhu Infiltrator",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Thief job."
+    },
+    {
+      "name": "Ji'Khu Towercleaver",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Samurai job."
+    },
+    {
+      "name": "Knii Hoqo the Bisector",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Samurai job."
+    },
+    {
+      "name": "Koo Saxu the Everfast",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; White Mage job."
+    },
+    {
+      "name": "Kuu Xuka the Nimble",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Ninja job."
+    },
+    {
+      "name": "Lockbuster Zapdjipp",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Thief job."
+    },
+    {
+      "name": "Maa Zaua the Wyrmkeeper",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Dragoon job."
+    },
+    {
+      "name": "Mi'Rhe Whisperblade",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Ninja job."
+    },
+    {
+      "name": "Mithraslaver Debhabob",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Beastmaster job."
+    },
+    {
+      "name": "Moltenox Stubthumbs",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Warrior job."
+    },
+    {
+      "name": "Morblox Chubbychin",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Summoner job."
+    },
+    {
+      "name": "Mu'Gha Legionkiller",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Paladin job."
+    },
+    {
+      "name": "Na'Hya Floodmaker",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Red Mage job."
+    },
+    {
+      "name": "Nee Huxa the Judgmental",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Dark Knight job."
+    },
+    {
+      "name": "Nu'Bhi Spiraleye",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Bard job."
+    },
+    {
+      "name": "Puu Timu the Phantasmal",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Summoner job."
+    },
+    {
+      "name": "Routsix Rubbertendon",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Beastmaster job."
+    },
+    {
+      "name": "Ruffbix Jumbolobes",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Paladin job."
+    },
+    {
+      "name": "Ryy Qihi the Idolrobber",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Thief job."
+    },
+    {
+      "name": "Shisox Widebrow",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Samurai job."
+    },
+    {
+      "name": "Skinmask Ugghfogg",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Dark Knight job."
+    },
+    {
+      "name": "Slinkix Trufflesniff",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Ranger job."
+    },
+    {
+      "name": "So'Gho Adderhandler",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Beastmaster job."
+    },
+    {
+      "name": "So'Zho Metalbender",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Monk job."
+    },
+    {
+      "name": "Soo Jopo the Fiendking",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Beastmaster job."
+    },
+    {
+      "name": "Spinalsucker Galflmall",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Red Mage job."
+    },
+    {
+      "name": "Swypestix Tigershins",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Ninja job."
+    },
+    {
+      "name": "Ta'Hyu Gallanthunter",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Dark Knight job."
+    },
+    {
+      "name": "Taruroaster Biggsjig",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Black Mage job."
+    },
+    {
+      "name": "Tocktix Thinlids",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Dark Knight job."
+    },
+    {
+      "name": "Ultrasonic Zeknajak",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Bard job."
+    },
+    {
+      "name": "Whistrix Toadthroat",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Bard job."
+    },
+    {
+      "name": "Wraithdancer Gidbnod",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; White Mage job."
+    },
+    {
+      "name": "Xaa Chau the Roctalon",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Monk job."
+    },
+    {
+      "name": "Xhoo Fuza the Sublime",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery pop; trade Leering Bijou to ??? to spawn; Bard job."
+    },
+    {
+      "name": "Angra Mainyu",
+      "genus": "Ahriman",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Leering Bijou at (J-5); Red Mage/Black Mage jobs."
+    },
+    {
+      "name": "Dagourmarche",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Traitor's Fortune Parchment at (G-9); Summoner/Beastmaster/Dragoon."
+    },
+    {
+      "name": "Goublefaupe",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Despot's Fortune Parchment at (I-7); Warrior/Paladin/Red Mage."
+    },
+    {
+      "name": "Mildaunegeux",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Villain's Fortune Parchment at (H-10); Monk/Thief/Ninja."
+    },
+    {
+      "name": "Quiebitiel",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Sadist's Fortune Parchment at (H-8); White Mage/Black Mage/Bard."
+    },
+    {
+      "name": "Velosareon",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Deluder's Fortune Parchment at (J-8); Ranger/Samurai/Dark Knight."
+    },
+    {
+      "name": "Taquede",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Odious Talisman at (G-9); Dragoon/Monk jobs."
+    },
+    {
+      "name": "Pignonpausard",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Odious Bell at (H-7); Samurai/White Mage jobs."
+    },
+    {
+      "name": "Hitaume",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Odious Root at (G-8); Ranger/Warrior jobs."
+    },
+    {
+      "name": "Cavanneche",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Odious Mirror at (F-7); Dark Knight/Black Mage jobs."
+    },
+    {
+      "name": "Arch Angra Mainyu",
+      "genus": "Ahriman",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading all five Fiendish Tome chapters at (J-5); Red Mage/Black Mage."
+    }
+  ]
+}

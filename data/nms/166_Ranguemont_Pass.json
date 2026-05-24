@@ -1,0 +1,59 @@
+{
+  "zoneId": 166,
+  "zoneName": "Ranguemont Pass",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Ranguemont_Pass",
+  "nms": [
+    {
+      "name": "Taisaijin",
+      "genus": "Hecteyes",
+      "spawnType": "timed",
+      "respawnTime": 82800,
+      "placeholders": [],
+      "notes": "Morphs from Taisai if all are undisturbed for 23-25 hours; drops Spelunker's Hat and Refresh scrolls."
+    },
+    {
+      "name": "Mucoid Mass",
+      "genus": "Slime",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed 90-100 min at J-10; drops Spellcaster's Ecu."
+    },
+    {
+      "name": "Gloom Eye",
+      "genus": "Ahriman",
+      "spawnType": "lottery",
+      "respawnTime": 3600,
+      "placeholders": [
+        { "name": "Seeker Bat", "mobIndex": null }
+      ],
+      "notes": "Lottery from Seeker Bats every 1-1.5 hours; drops Wit Pendant."
+    },
+    {
+      "name": "Hyakume",
+      "genus": "Hecteyes",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Hecteyes", "mobIndex": null }
+      ],
+      "notes": "Lottery from Hecteyes; sound aggro, drops Booster Earring."
+    },
+    {
+      "name": "Metallic Slime",
+      "genus": "Slime",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Blighted Gloom\"; aggressive, sound aggro."
+    },
+    {
+      "name": "Tros",
+      "genus": "Sea Monk",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Painful Memory\"; aggressive, sound aggro."
+    }
+  ]
+}

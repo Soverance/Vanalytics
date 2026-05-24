@@ -1,0 +1,115 @@
+{
+  "zoneId": 117,
+  "zoneName": "Tahrongi Canyon",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Tahrongi_Canyon",
+  "nms": [
+    {
+      "name": "Yara Ma Yha Who",
+      "genus": "Sapling",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Distilled Water to ??? every 50 min; drops Fasting Ring."
+    },
+    {
+      "name": "Serpopard Ishtar",
+      "genus": "Dhalmel",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Wild Dhalmel", "mobIndex": null }
+      ],
+      "notes": "Lottery from Wild Dhalmel; drops Cerulean Pendant."
+    },
+    {
+      "name": "Goblin Archaeologist",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading items to ???; drops Gold Beastcoin."
+    },
+    {
+      "name": "Habrok",
+      "genus": "Bird",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Weather-dependent spawn (Wind element); drops Besieger Mantle."
+    },
+    {
+      "name": "Herbage Hunter",
+      "genus": "Crawler",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Canyon Crawler", "mobIndex": null }
+      ],
+      "notes": "Lottery from Canyon Crawler; drops Precision Bandana."
+    },
+    {
+      "name": "Serpopard Ninlil",
+      "genus": "Dhalmel",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 400 Unity Accolades to trigger; level 99."
+    },
+    {
+      "name": "Smierc",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires White stratum abyssite V and Voidstone."
+    },
+    {
+      "name": "Prickly Sheep",
+      "genus": "Sheep",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Void Hare",
+      "genus": "Rabbit",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Chesma",
+      "genus": "Coeurl",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn; drops Halting Stole."
+    },
+    {
+      "name": "Tammuz",
+      "genus": "Ram",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn; drops Repelling Collar."
+    },
+    {
+      "name": "Dawon",
+      "genus": "Tiger",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Grey abyssite; 2-4h respawn; drops Pelt of Dawon."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

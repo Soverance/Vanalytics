@@ -1,0 +1,131 @@
+{
+  "zoneId": 25,
+  "zoneName": "Misareaux Coast",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Misareaux_Coast",
+  "nms": [
+    {
+      "name": "Alsha",
+      "genus": "Fomor",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Knocking on Forbidden Doors."
+    },
+    {
+      "name": "Bloody Coffin",
+      "genus": "Crab",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Call of the Sea."
+    },
+    {
+      "name": "Boggelmann",
+      "genus": "Bugard",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission: Promathia Mission 7-4: Calm Before the Storm."
+    },
+    {
+      "name": "Goaftrap",
+      "genus": "Flytrap",
+      "spawnType": "timed",
+      "respawnTime": 6300,
+      "placeholders": [],
+      "notes": "90-120 minute respawn."
+    },
+    {
+      "name": "Gration",
+      "genus": "Gigas",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Hickory Shield or Picaroon's Shield to ???."
+    },
+    {
+      "name": "Odqan",
+      "genus": "Cluster",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Atomic Cluster", "mobIndex": null }
+      ],
+      "notes": "Lottery during fog weather."
+    },
+    {
+      "name": "Okyupete",
+      "genus": "Greater Bird",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Diatryma", "mobIndex": null }
+      ],
+      "notes": "Lottery from Diatryma."
+    },
+    {
+      "name": "Upyri",
+      "genus": "Bat",
+      "spawnType": "timed",
+      "respawnTime": 82800,
+      "placeholders": [],
+      "notes": "21-24 hour cycle."
+    },
+    {
+      "name": "Warder Aglaia",
+      "genus": "Detector",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission: Promathia Mission 7-5: A Place to Return."
+    },
+    {
+      "name": "Warder Euphrosyne",
+      "genus": "Detector",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission: Promathia Mission 7-5: A Place to Return."
+    },
+    {
+      "name": "Warder Thalia",
+      "genus": "Detector",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission: Promathia Mission 7-5: A Place to Return."
+    },
+    {
+      "name": "Ziphius",
+      "genus": "Pugil",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Slice of Carp to six ??? between 22:00-0:00, check 4:00-7:00."
+    },
+    {
+      "name": "Tiyanak",
+      "genus": "Bat",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,800 Accolades."
+    },
+    {
+      "name": "Volatile Cluster",
+      "genus": "Cluster",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,400 Accolades."
+    },
+    {
+      "name": "Tsui-Goab",
+      "genus": "Mantid",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Hyacinth stratum abyssite + Voidstone."
+    }
+  ]
+}

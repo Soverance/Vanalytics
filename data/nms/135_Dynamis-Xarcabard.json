@@ -1,0 +1,343 @@
+{
+  "zoneId": 135,
+  "zoneName": "Dynamis-Xarcabard",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dynamis-Xarcabard",
+  "nms": [
+    {
+      "name": "Effigy Prototype",
+      "genus": "Replica",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Short-timer timed spawn; grants 10 min time extension."
+    },
+    {
+      "name": "Icon Prototype",
+      "genus": "Replica",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Short-timer timed spawn; grants 10 min time extension."
+    },
+    {
+      "name": "Tombstone Prototype",
+      "genus": "Replica",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Short-timer timed spawn; grants 10 min time extension."
+    },
+    {
+      "name": "Statue Prototype",
+      "genus": "Replica",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Short-timer timed spawn; grants 10 min time extension."
+    },
+    {
+      "name": "Prototype Eye",
+      "genus": "Ahriman",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Short-timer timed spawn; grants 20 min time extension."
+    },
+    {
+      "name": "Count Vine",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Count Zaebos",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Duke Berith",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Duke Gomory",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Duke Scox",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "King Zagan",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Marquis Andras",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Marquis Cimeries",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Marquis Decarabia",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Marquis Gamygyn",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Marquis Nebiros",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Marquis Orias",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Marquis Sabnak",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Prince Seere",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Count Raum",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn in Dynamis-Xarcabard; drops Shrouded Bijou."
+    },
+    {
+      "name": "Animated Claymore",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Dagger",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Great Axe",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Gun",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Hammer",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Horn",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Kunai",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Knuckles",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Longbow",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Longsword",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Scythe",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Shield",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Spear",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Staff",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Tabar",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Animated Tachi",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading specific goad to ???."
+    },
+    {
+      "name": "Duke Haures",
+      "genus": "Demon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading odious item to ???."
+    },
+    {
+      "name": "Marquis Caim",
+      "genus": "Demon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading odious item to ???."
+    },
+    {
+      "name": "Baron Avnas",
+      "genus": "Demon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading odious item to ???."
+    },
+    {
+      "name": "Count Haagenti",
+      "genus": "Demon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading odious item to ???."
+    },
+    {
+      "name": "Dynamis Lord",
+      "genus": "Demon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Shrouded Bijou; final boss of Dynamis-Xarcabard."
+    },
+    {
+      "name": "Arch Dynamis Lord",
+      "genus": "Demon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading all 5 Fiendish Tomes (Chapters 26-30); ultimate Dynamis boss."
+    }
+  ]
+}

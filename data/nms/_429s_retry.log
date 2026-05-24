@@ -1,0 +1,14 @@
+# Zones where BG-wiki returned HTTP 429 (rate-limited) during the bulk scaffold.
+# These were written as empty `nms: []` but the wiki page LIKELY exists — they need a retry pass once BG-wiki rate-limiting subsides.
+# Format: <filename>  <wiki url>  <source-batch>
+
+294_Dynamis-San_dOria__D_.json    https://www.bg-wiki.com/ffxi/Dynamis-San_d%27Oria_[D]    batch_04
+295_Dynamis-Bastok__D_.json       https://www.bg-wiki.com/ffxi/Dynamis-Bastok_[D]          batch_04
+296_Dynamis-Windurst__D_.json     https://www.bg-wiki.com/ffxi/Dynamis-Windurst_[D]        batch_04
+297_Dynamis-Jeuno__D_.json        https://www.bg-wiki.com/ffxi/Dynamis-Jeuno_[D]           batch_04
+298_Walk_of_Echoes__P1_.json      https://www.bg-wiki.com/ffxi/Walk_of_Echoes_[P1]         batch_04
+299_Gwora-Throne_Room.json        https://www.bg-wiki.com/ffxi/Gwora-Throne_Room           batch_04
+
+# Note: batch_00 reported NM-detail (per-NM page) 429s — those zones got populated from the zone-page fetch but with placeholder mobIndex values set to null. They're "partially populated, retry to fill PH IDs" rather than "completely empty, retry to fill anything." Not listed here because the zone files do contain data.
+
+# Note: This log will be appended to as batches 01, 02, and 03 complete.

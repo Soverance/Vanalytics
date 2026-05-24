@@ -1,0 +1,47 @@
+{
+  "zoneId": 175,
+  "zoneName": "The Eldieme Necropolis [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/The_Eldieme_Necropolis_(S)",
+  "nms": [
+    {
+      "name": "Ethniu",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": 14400,
+      "placeholders": [],
+      "notes": "Timed 4-5 hour respawn; sound and HP aggro."
+    },
+    {
+      "name": "Laelaps",
+      "genus": "Hound",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; sound and HP aggro."
+    },
+    {
+      "name": "Tethra",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; sound and HP aggro."
+    },
+    {
+      "name": "Orcish Transporter",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns when Orcish Hosts control the zone; passive."
+    },
+    {
+      "name": "Giltine",
+      "genus": "Corse",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM requiring White stratum abyssite II and Voidstone; aggressive."
+    }
+  ]
+}

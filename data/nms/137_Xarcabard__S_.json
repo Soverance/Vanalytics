@@ -1,0 +1,105 @@
+{
+  "zoneId": 137,
+  "zoneName": "Xarcabard [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Xarcabard_[S]",
+  "nms": [
+    {
+      "name": "Zirnitra",
+      "genus": "Amphiptere",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; true sight and true sound aggro."
+    },
+    {
+      "name": "Torvotaur",
+      "genus": "Taurus",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; true sight aggro."
+    },
+    {
+      "name": "Graoully",
+      "genus": "Dragon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Dire Gargouille", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Dire Gargouille; passive."
+    },
+    {
+      "name": "Prince Orobas",
+      "genus": "Demon",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive spawn; timer not documented."
+    },
+    {
+      "name": "Greater Amphiptere",
+      "genus": "Amphiptere",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 60 min; true sight aggro."
+    },
+    {
+      "name": "Tikbalang",
+      "genus": "Taurus",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; aggressive."
+    },
+    {
+      "name": "Gjenganger",
+      "genus": "Ghost",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn; true sound aggro."
+    },
+    {
+      "name": "Gorehound",
+      "genus": "Hound",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn; true sound aggro."
+    },
+    {
+      "name": "Erebus",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn; true sound aggro."
+    },
+    {
+      "name": "Feuerunke",
+      "genus": "Doomed",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Lord Ruthven",
+      "genus": "Vampyr",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Purple abyssite; 2-4h respawn; true sight aggro."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "zoneId": 102,
+  "zoneName": "La Theine Plateau",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/La_Theine_Plateau",
+  "nms": [
+    {
+      "name": "Nihniknoovi",
+      "genus": "Lesser Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Examine Fallen Egg."
+    },
+    {
+      "name": "Tumbling Truffle",
+      "genus": "Funguar",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Poison Funguar", "mobIndex": null }
+      ],
+      "notes": "Lottery from Poison Funguar."
+    },
+    {
+      "name": "Lumbering Lambert",
+      "genus": "Ram",
+      "spawnType": "lottery",
+      "respawnTime": 7200,
+      "placeholders": [
+        { "name": "Battering Ram", "mobIndex": null }
+      ],
+      "notes": "Lottery with 2 hour window."
+    },
+    {
+      "name": "Goblin Archaeologist",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn with various items."
+    },
+    {
+      "name": "Bloodtear Baldurf",
+      "genus": "Ram",
+      "spawnType": "lottery",
+      "respawnTime": 82800,
+      "placeholders": [
+        { "name": "Lumbering Lambert", "mobIndex": null }
+      ],
+      "notes": "Lottery with 21-24 hour window."
+    },
+    {
+      "name": "Slumbering Samwell",
+      "genus": "Sheep",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn."
+    },
+    {
+      "name": "Ironhorn Baldurno",
+      "genus": "Ram",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 400 Accolades."
+    },
+    {
+      "name": "Stachysaurus",
+      "genus": "Wivre",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM."
+    },
+    {
+      "name": "Prickly Sheep",
+      "genus": "Sheep",
+      "spawnType": "timed",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker (Clear abyssite) 1-3 min."
+    },
+    {
+      "name": "Void Hare",
+      "genus": "Rabbit",
+      "spawnType": "timed",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker (Clear abyssite) 1-3 min."
+    },
+    {
+      "name": "Chesma",
+      "genus": "Coeurl",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker (Colorful abyssite) 1 hour."
+    },
+    {
+      "name": "Tammuz",
+      "genus": "Ram",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker (Colorful abyssite) 1 hour."
+    },
+    {
+      "name": "Dawon",
+      "genus": "Tiger",
+      "spawnType": "timed",
+      "respawnTime": 10800,
+      "placeholders": [],
+      "notes": "Voidwalker (Grey abyssite) 2-4 hours."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker (Black abyssite) 1 hour."
+    }
+  ]
+}

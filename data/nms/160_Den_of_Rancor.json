@@ -1,0 +1,133 @@
+{
+  "zoneId": 160,
+  "zoneName": "Den of Rancor",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Den_of_Rancor",
+  "nms": [
+    {
+      "name": "Bistre-hearted Malberry",
+      "genus": "Tonberry",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tonberry Beleaguerer", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tonberry Beleaguerer."
+    },
+    {
+      "name": "Carmine-tailed Janberry",
+      "genus": "Tonberry",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tonberry Imprecator", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tonberry Imprecator."
+    },
+    {
+      "name": "Celeste-eyed Tozberry",
+      "genus": "Tonberry",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tonberry Trailer", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tonberry Trailer."
+    },
+    {
+      "name": "Friar Rush",
+      "genus": "Bomb",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Bifrons", "mobIndex": null }
+      ],
+      "notes": "Lottery from Bifrons."
+    },
+    {
+      "name": "Hakutaku",
+      "genus": "Hecteyes",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Hakutaku Eye Cluster to ???."
+    },
+    {
+      "name": "Ogama",
+      "genus": "Doomed",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Doom Toad", "mobIndex": null }
+      ],
+      "notes": "Lottery from Doom Toad."
+    },
+    {
+      "name": "Sozu Bliberry",
+      "genus": "Tonberry",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tonberry Imprecator", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tonberry Imprecator."
+    },
+    {
+      "name": "Tawny-fingered Mugberry",
+      "genus": "Tonberry",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tonberry Slasher", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tonberry Slasher."
+    },
+    {
+      "name": "Tonberry Decapitator",
+      "genus": "Tonberry",
+      "spawnType": "timed",
+      "respawnTime": 1440,
+      "placeholders": [],
+      "notes": "Timed 24-minute respawn."
+    },
+    {
+      "name": "Tonberry Pontifex",
+      "genus": "Tonberry",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn."
+    },
+    {
+      "name": "Tonberry Tracker",
+      "genus": "Tonberry",
+      "spawnType": "timed",
+      "respawnTime": 1440,
+      "placeholders": [],
+      "notes": "Timed 24-minute respawn."
+    },
+    {
+      "name": "Mokumokuren",
+      "genus": "Hecteyes",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Souls in Shadow\"."
+    },
+    {
+      "name": "Rancor Torch",
+      "genus": "Bomb",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Everyone's Grudging\"."
+    },
+    {
+      "name": "Azrael",
+      "genus": "Hecteyes",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM requiring 2,400 Unity Accolades."
+    }
+  ]
+}

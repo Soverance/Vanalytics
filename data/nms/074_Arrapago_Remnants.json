@@ -1,0 +1,63 @@
+{
+  "zoneId": 74,
+  "zoneName": "Arrapago Remnants",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Arrapago_Remnants",
+  "nms": [
+    {
+      "name": "Archaic Rampart",
+      "genus": "Golem",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM; conditional spawn on Floor 1 entrance hallway and Floor 6."
+    },
+    {
+      "name": "Qiqirn Astrologer",
+      "genus": "Qiqirn",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM; appears on Floor 2 and Floor 5; uses spells and Warp ability."
+    },
+    {
+      "name": "Qiqirn Treasure Hunter",
+      "genus": "Qiqirn",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on Floors 3, 4, and 6; flees toward teleporter when engaged, drops mines."
+    },
+    {
+      "name": "Deviate Bhoot",
+      "genus": "Ghost",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on Floor 4 north room; enhanced abilities vs normal version."
+    },
+    {
+      "name": "Psycheflayer",
+      "genus": "Soulflayer",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on Floor 4 south room."
+    },
+    {
+      "name": "Archaic Chariot",
+      "genus": "Chariot",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM; spawns on Floor 5 after opening the 6F door."
+    },
+    {
+      "name": "Armored Chariot",
+      "genus": "Chariot",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage boss on Floor 7; uses Mortal Revolution; drops exactly two level-25 salvage pieces."
+    }
+  ]
+}

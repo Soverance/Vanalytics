@@ -1,0 +1,91 @@
+{
+  "zoneId": 126,
+  "zoneName": "Qufim Island",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Qufim_Island",
+  "nms": [
+    {
+      "name": "Dosetsu Tree",
+      "genus": "Treant",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed ~21h during thunder weather; drops Raikiri at (F-8)-(G-9)."
+    },
+    {
+      "name": "Trickster Kinetix",
+      "genus": "Evil Weapon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Dancing Weapon", "mobIndex": null }
+      ],
+      "notes": "Lottery from Dancing Weapon at (G-7); drops Tabar."
+    },
+    {
+      "name": "Kraken",
+      "genus": "Sea Monk",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up in water areas; drops Egret Fishing Rod."
+    },
+    {
+      "name": "Slippery Sucker",
+      "genus": "Leech",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Giant Ranger", "mobIndex": null }
+      ],
+      "notes": "Lottery from Giant leech variants at (H-8); drops Mystique Earring."
+    },
+    {
+      "name": "Atkorkamuy",
+      "genus": "Sea Monk",
+      "spawnType": "timed",
+      "respawnTime": 1800,
+      "placeholders": [],
+      "notes": "Timed 30 min at (F/G-8); drops Aptant items."
+    },
+    {
+      "name": "Qoofim",
+      "genus": "Pugil",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn at (G-6); drops Sylph Earring."
+    },
+    {
+      "name": "Ingaevon",
+      "genus": "Gigas",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'Regaining Trust' at (E-6)."
+    },
+    {
+      "name": "Seed Mandragora",
+      "genus": "Mandragora",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Crystalline Mission 4 spawn."
+    },
+    {
+      "name": "Jester Malatrix",
+      "genus": "Evil Weapon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,500 Unity Accolades to trigger; level 119; at (G-7)-(I-8)."
+    },
+    {
+      "name": "Kaggen",
+      "genus": "Mantid",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires White stratum abyssite III and Voidstone."
+    }
+  ]
+}

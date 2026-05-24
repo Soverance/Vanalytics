@@ -1,0 +1,95 @@
+{
+  "zoneId": 62,
+  "zoneName": "Halvung",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Halvung",
+  "nms": [
+    {
+      "name": "Achamoth",
+      "genus": "Wamoura",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Rock Juice to ??? to force spawn."
+    },
+    {
+      "name": "Big Bomb",
+      "genus": "Bomb",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Smoky Flask to ??? to force spawn."
+    },
+    {
+      "name": "Dextrose",
+      "genus": "Flan",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Granulated Sugar to ??? to force spawn."
+    },
+    {
+      "name": "Reacton",
+      "genus": "Bomb",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Bone Charcoal to ??? to force spawn."
+    },
+    {
+      "name": "Gurfurlur the Menacing",
+      "genus": "Troll",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed spawn at K-11; approximately 21-24 hour respawn; requires three Halvung keys to access area."
+    },
+    {
+      "name": "Copper Borer",
+      "genus": "Wamouracampa",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed or lottery spawn in Halvung."
+    },
+    {
+      "name": "Dorgerwor the Astute",
+      "genus": "Troll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn in Halvung."
+    },
+    {
+      "name": "Farlarder the Shrewd",
+      "genus": "Troll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn in Halvung."
+    },
+    {
+      "name": "Flammeri",
+      "genus": "Flan",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn in Halvung."
+    },
+    {
+      "name": "Kirlirger the Abhorrent",
+      "genus": "Troll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn in Halvung."
+    },
+    {
+      "name": "Mythril Mouth Monamaq",
+      "genus": "Goblin",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn in Halvung."
+    }
+  ]
+}

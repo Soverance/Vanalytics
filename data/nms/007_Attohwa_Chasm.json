@@ -1,0 +1,99 @@
+{
+  "zoneId": 7,
+  "zoneName": "Attohwa Chasm",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Attohwa_Chasm",
+  "nms": [
+    {
+      "name": "Alastor Antlion",
+      "genus": "Antlion",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Sound-aggro."
+    },
+    {
+      "name": "Ambusher Antlion",
+      "genus": "Antlion",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Trench Antlion", "mobIndex": null }
+      ],
+      "notes": "Lottery from Trench Antlion; sound-aggro."
+    },
+    {
+      "name": "Citipati",
+      "genus": "Corse",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Corse", "mobIndex": null }
+      ],
+      "notes": "Lottery from Corse; sound and HP aggro."
+    },
+    {
+      "name": "Feeler Antlion",
+      "genus": "Antlion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Antlion Trap to ???. Uses Sandblast."
+    },
+    {
+      "name": "Tiamat",
+      "genus": "Wyrm",
+      "spawnType": "timed",
+      "respawnTime": 259200,
+      "placeholders": [],
+      "notes": "3-5 Earth days; true sight aggro."
+    },
+    {
+      "name": "Xolotl",
+      "genus": "Corse",
+      "spawnType": "timed",
+      "respawnTime": 82800,
+      "placeholders": [],
+      "notes": "21-24h during 20:00-4:00; sound and HP aggro."
+    },
+    {
+      "name": "Sargas",
+      "genus": "Scorpion",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "90-120 minutes."
+    },
+    {
+      "name": "Sekhmet",
+      "genus": "Coeurl",
+      "spawnType": "timed",
+      "respawnTime": 4500,
+      "placeholders": [],
+      "notes": "60-90 minutes; sound-aggro."
+    },
+    {
+      "name": "Lioumere",
+      "genus": "Antlion",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Promathia Mission 3-3; sound-aggro."
+    },
+    {
+      "name": "Muut",
+      "genus": "Corse",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,100 Unity Accolades."
+    },
+    {
+      "name": "Fjalar",
+      "genus": "Dvergr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Hyacinth stratum abyssite + Voidstone."
+    }
+  ]
+}

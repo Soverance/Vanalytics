@@ -1,0 +1,101 @@
+{
+  "zoneId": 92,
+  "zoneName": "Beadeaux [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Beadeaux_[S]",
+  "nms": [
+    {
+      "name": "Ba'Tho Mercifulheart",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Adaman Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Adaman Quadav; Dark Knight job."
+    },
+    {
+      "name": "Blifnix Oilycheeks",
+      "genus": "Goblin",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Ranger job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Bres",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Monk job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Da'Dha Hundredmask",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gold Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Gold Quadav; Thief job."
+    },
+    {
+      "name": "Di'Zho Spongeshell",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Dark Knight job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Ea'Tho Cruelheart",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Adaman Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Adaman Quadav; Dark Knight job."
+    },
+    {
+      "name": "Ga'Lhu Nevermolt",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Paladin job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Mu'Nhi Thimbletail",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Thief job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Observant Zekka",
+      "genus": "Imp",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Black Mage job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Ra'Dha Scarscute",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Warrior job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Va'Gho Bloodbasked",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Red Mage job; level 85."
+    }
+  ]
+}

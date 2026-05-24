@@ -1,0 +1,101 @@
+{
+  "zoneId": 89,
+  "zoneName": "Grauberg [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Grauberg_[S]",
+  "nms": [
+    {
+      "name": "Dark Ixion",
+      "genus": "Monoceros",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "21-24h timed spawn; must claim with Stygian Ash."
+    },
+    {
+      "name": "Kotan-kor Kamuy",
+      "genus": "Hippogryph",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Grauberg Hippogryph", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Grauberg Hippogryph; true sight detection."
+    },
+    {
+      "name": "Sarcopsylla",
+      "genus": "Chigoe",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn ~2h; hides in a bush; sight and sound aggro."
+    },
+    {
+      "name": "Scitalis",
+      "genus": "Wyvern",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ajattara", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Ajattara; sight-aggro, links."
+    },
+    {
+      "name": "Vasiliceratops",
+      "genus": "Wivre",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Wivre", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Wivre; sight/sound/scent detection."
+    },
+    {
+      "name": "Migratory Hippogryph",
+      "genus": "Hippogryph",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM; true sight aggro."
+    },
+    {
+      "name": "Quadav Transporter",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns when Quadav faction controls zone; roaming."
+    },
+    {
+      "name": "Quadav Guard",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Assists Quadav Transporter; sound/link detection."
+    },
+    {
+      "name": "Ru'Bha Stonewall",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM; aggressive."
+    },
+    {
+      "name": "Sentinel Wivre",
+      "genus": "Wivre",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Assists Ru'Bha Stonewall; multiple detection types."
+    },
+    {
+      "name": "Ocythoe",
+      "genus": "Harpeia",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires specific abyssite and emblem."
+    }
+  ]
+}

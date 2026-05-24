@@ -1,0 +1,77 @@
+{
+  "zoneId": 52,
+  "zoneName": "Bhaflau Thickets",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Bhaflau_Thickets",
+  "nms": [
+    {
+      "name": "Berried Chigoe",
+      "genus": "Chigoe",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest-based spawn (Totoroon's Treasure Hunt); passive."
+    },
+    {
+      "name": "Dea",
+      "genus": "Wivre",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Olzhiryan Cactus to ??? to force spawn."
+    },
+    {
+      "name": "Emergent Elm",
+      "genus": "Treant",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Olden Treant", "mobIndex": null }
+      ],
+      "notes": "Lottery from Olden Treant at G-6 to H-7; sound-aggro."
+    },
+    {
+      "name": "Harvestman",
+      "genus": "Spider",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; sound-aggro."
+    },
+    {
+      "name": "Lividroot Amooshah",
+      "genus": "Morbol",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Oily Blood to ??? to force spawn; sound-aggro."
+    },
+    {
+      "name": "Mahishasura",
+      "genus": "Marid",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Marid", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Marid; sight/scent aggro."
+    },
+    {
+      "name": "Nis Puk",
+      "genus": "Puk",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Sea Puk", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Sea Puk; sight/sound aggro."
+    },
+    {
+      "name": "Plague Chigoe",
+      "genus": "Chigoe",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest-based spawn (The Prankster); sound-aggro."
+    }
+  ]
+}

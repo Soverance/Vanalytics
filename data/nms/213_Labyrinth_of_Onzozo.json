@@ -1,0 +1,99 @@
+{
+  "zoneId": 213,
+  "zoneName": "Labyrinth of Onzozo",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Labyrinth_of_Onzozo",
+  "nms": [
+    {
+      "name": "Mysticmaker Profblix",
+      "genus": "Goblin",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn every 2-2.5 h; Black Mage job; sight-aggro."
+    },
+    {
+      "name": "Peg Powler",
+      "genus": "Sea Monk",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Flying Manta", "mobIndex": null }
+      ],
+      "notes": "Lottery from Flying Manta; Monk job; sound-aggro."
+    },
+    {
+      "name": "Hellion",
+      "genus": "Doomed",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tainted Flesh", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tainted Flesh; sound-aggro and low-HP aggro."
+    },
+    {
+      "name": "Soulstealer Skullnix",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Goblin Bandit", "mobIndex": null }
+      ],
+      "notes": "Lottery from Goblin Bandit; Thief job; sight-aggro."
+    },
+    {
+      "name": "Ose",
+      "genus": "Coeurl",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Torama", "mobIndex": null }
+      ],
+      "notes": "Lottery from Torama; Warrior job; sight and scent aggro; guaranteed Ose Whisker drop."
+    },
+    {
+      "name": "Lord of Onzozo",
+      "genus": "Sea Monk",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Flying Manta", "mobIndex": null }
+      ],
+      "notes": "Lottery from Flying Manta; sound-aggro."
+    },
+    {
+      "name": "Narasimha",
+      "genus": "Manticore",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Labyrinth Manticore", "mobIndex": null }
+      ],
+      "notes": "Lottery from Labyrinth Manticore; Warrior job; sight and scent aggro."
+    },
+    {
+      "name": "Megapod Megalops",
+      "genus": "Crab",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Bugi Soden; Paladin job; sound-aggro."
+    },
+    {
+      "name": "Ubume",
+      "genus": "Greater Bird",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Yomi Okuri; Bard job; sight-aggro."
+    },
+    {
+      "name": "Voso",
+      "genus": "Coeurl",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM (level 122); requires 1,800 Unity Accolades; guaranteed Voso's Coffer drop."
+    }
+  ]
+}
