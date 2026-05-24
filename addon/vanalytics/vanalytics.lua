@@ -14,6 +14,7 @@ local texts = require('texts')
 local packets = require('packets')
 local session = require('session')
 local inventory = require('inventory')
+local porter = require('porter')
 local macro_lib = require('macros')
 local moves_lib = require('moves')
 
@@ -661,6 +662,14 @@ inventory.init({
     log_error = log_error,
 })
 
+porter.init({
+    settings = settings,
+    http_request = http_request,
+    json_encode = json_encode,
+    log = log,
+    log_error = log_error,
+})
+
 -----------------------------------------------------------------------
 -- Read character state from Windower APIs
 -----------------------------------------------------------------------
@@ -1031,12 +1040,13 @@ local function do_sync()
             log_error('Sync failed with status ' .. tostring(status_code))
         end
 
-    -- Sync inventory diffs
+    -- Sync inventory diffs and porter storage contents
     local player = windower.ffxi.get_player()
     local info = windower.ffxi.get_info()
     if player and info then
         local server_name = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
         inventory.sync(player.name, server_name)
+        porter.sync(player.name, server_name)
     end
 end
 
