@@ -15,7 +15,7 @@ const JOB_NAMES: Record<number, string> = {
 }
 
 const WARP_CATEGORIES: WarpCategory[] = [
-    'homePoints', 'survivalGuides', 'waypoints', 'telepoints', 'atmas', 'eschanPortals',
+    'homePoints', 'survivalGuides', 'waypoints', 'telepoints', 'cavernousMaws', 'lycopodium', 'eschanPortals',
 ]
 
 function StatCard({ label, value, sublabel }: { label: string; value: string | number; sublabel?: string }) {
@@ -142,13 +142,13 @@ export default function ProgressionTab({ characterId }: Props) {
             <div className="grid grid-cols-2 gap-3">
                 <StatCard
                     label="Limit Points"
-                    value={data!.limitPoints?.toLocaleString() ?? '—'}
-                    sublabel="Toward next merit"
+                    value={data!.limitPoints !== null ? `${data!.limitPoints.toLocaleString()} / 10,000` : '—'}
+                    sublabel="Gauge to next merit point"
                 />
                 <StatCard
-                    label="Merit Cap"
+                    label="Merit Slots"
                     value={data!.meritPointsMax?.toLocaleString() ?? '—'}
-                    sublabel="Maximum merits earnable"
+                    sublabel="Cap on unspent merits held"
                 />
             </div>
 

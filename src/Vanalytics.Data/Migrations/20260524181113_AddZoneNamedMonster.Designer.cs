@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vanalytics.Data;
 
@@ -11,9 +12,11 @@ using Vanalytics.Data;
 namespace Vanalytics.Data.Migrations
 {
     [DbContext(typeof(VanalyticsDbContext))]
-    partial class VanalyticsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260524181113_AddZoneNamedMonster")]
+    partial class AddZoneNamedMonster
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1992,9 +1995,6 @@ namespace Vanalytics.Data.Migrations
                     b.Property<int>("MinLevel")
                         .HasColumnType("int");
 
-                    b.Property<int>("MobIndex")
-                        .HasColumnType("int");
-
                     b.Property<string>("MobName")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -2032,8 +2032,6 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("PoolId");
 
                     b.HasIndex("ZoneId");
-
-                    b.HasIndex("ZoneId", "MobName");
 
                     b.ToTable("ZoneSpawns");
                 });

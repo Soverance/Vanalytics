@@ -144,6 +144,11 @@ public class CharactersController : ControllerBase
             return Ok(new ProgressionResponse());
         }
 
+        // Stored JSON is camelCase (written via ProgressionController.JsonOpts).
+        // Deserialize with the matching naming policy — otherwise all fields
+        // silently fall back to defaults (empty arrays, zeros).
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
         return Ok(new ProgressionResponse
         {
             LimitPoints = row.LimitPoints,
@@ -151,10 +156,10 @@ public class CharactersController : ControllerBase
             JobPointsUnlocked = row.JobPointsUnlocked,
             JobPoints = row.JobPointsJson is null
                 ? null
-                : JsonSerializer.Deserialize<List<JobPointEntry>>(row.JobPointsJson),
+                : JsonSerializer.Deserialize<List<JobPointEntry>>(row.JobPointsJson, jsonOpts),
             Warps = row.WarpsJson is null
                 ? null
-                : JsonSerializer.Deserialize<WarpUnlocks>(row.WarpsJson),
+                : JsonSerializer.Deserialize<WarpUnlocks>(row.WarpsJson, jsonOpts),
             UpdatedAt = row.UpdatedAt,
         });
     }

@@ -1,0 +1,47 @@
+{
+  "zoneId": 295,
+  "zoneName": "Dynamis - Bastok (D)",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dynamis_-_Bastok_(D)",
+  "nms": [
+    {
+      "name": "Aurix",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Aggro colorless (grey-eye) statues to pop. One per wave; despawns after 2-3min if undamaged."
+    },
+    {
+      "name": "Mu'Sha Effigy",
+      "genus": "Replica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mid-boss near zone to Bastok Markets. +30min time on defeat."
+    },
+    {
+      "name": "Ka'Rho Fearsinger",
+      "genus": "Quadav",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zone boss near Mog House; spawns after Mu'Sha Effigy. MNK."
+    },
+    {
+      "name": "Disjoined Galka",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Disjoined Boss near zone to South Gustaberg; spawns after Ka'Rho Fearsinger. Multi-zone title."
+    },
+    {
+      "name": "Disjoined Galka ???",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Wave 3 variant spawned from elemental circle fetters."
+    }
+  ]
+}

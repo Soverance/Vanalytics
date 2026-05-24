@@ -11,6 +11,7 @@ public class ZoneSpawnConfiguration : IEntityTypeConfiguration<ZoneSpawn>
         builder.HasKey(s => s.Id);
         builder.HasIndex(s => s.ZoneId);
         builder.HasIndex(s => s.PoolId);
+        builder.HasIndex(s => new { s.ZoneId, s.MobName });
         builder.Property(s => s.MobName).HasMaxLength(64).IsRequired();
     }
 }

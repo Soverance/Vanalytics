@@ -24,6 +24,7 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<NpcPool> NpcPools => Set<NpcPool>();
     public DbSet<Zone> Zones => Set<Zone>();
     public DbSet<ZoneSpawn> ZoneSpawns => Set<ZoneSpawn>();
+    public DbSet<ZoneNamedMonster> ZoneNamedMonsters => Set<ZoneNamedMonster>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<SessionEvent> SessionEvents => Set<SessionEvent>();
     public DbSet<CharacterInventory> CharacterInventories => Set<CharacterInventory>();

@@ -71,23 +71,32 @@ public class ZonesController : ControllerBase
     {
         // Returns per-mob metadata for every distinct spawn name in the zone:
         //
-        //   { "Cactuar":            { "isNm": false, "respawn": 300 },
-        //     "Cactuar Cantautor":  { "isNm": true,  "respawn": 3600 }, ... }
+        //   { "Cactuar":            { "isNm": false, "respawn": 300, "mobIndices": ["0x157"] },
+        //     "Cactuar Cantautor":  { "isNm": true,  "respawn": 3600,
+        //                             "mobIndices": ["0x158"],   // low 12 bits of LSB mobid
+        //                             "spawnType": "lottery", "genus": "Sabotender",
+        //                             "placeholder": { "name": "Cactuar", "mobIndex": "0x157" },
+        //                             "notes": "Window opens 1h..." }, ... }
         //
-        // The addon uses isNm to choose between notify_NM.wav / notify_Standard.wav
-        // and respawn to render a live pop countdown in the watch panel.
+        // The addon uses isNm to choose between notify_NM.wav / notify_Standard.wav,
+        // respawn to render a live pop countdown, and mobIndices for Phase 2
+        // watch-by-index (Cactuar Cantautor PH at 0x157 / NM pops at 0x158).
         //
-        // NM classification heuristic — a name is treated as an NM if ANY of:
-        //   (a) any of its spawns have spawntype with TIMED (2) or SCRIPTED (4)
-        //       bits set — these LSB spawn modes strongly correlate with NMs;
-        //   (b) any of its spawns have respawntime >= 600s (10 min) — regular
-        //       mobs respawn in 300s, anything longer is NM-grade;
-        //   (c) the name has exactly one spawn entry in the zone — singleton
-        //       spawns are almost always NMs / event mobs.
-        const int NmSpawntypeMask = 0x6;   // TIMED | SCRIPTED
+        // Curated data (ZoneNamedMonsters) wins when present for the zone — its
+        // existence implicitly suppresses the heuristic. For uncurated zones the
+        // heuristic falls back to:
+        //   (a) any spawns have spawntype with TIMED (2) or SCRIPTED (4) bits set,
+        //   (b) any spawns have respawntime >= 600s, or
+        //   (c) the name has exactly one spawn entry (singleton ≈ NM/event).
+        const int NmSpawntypeMask = 0x6;
         const int NmRespawnThreshold = 600;
-        var groups = await _db.ZoneSpawns
+
+        var spawns = await _db.ZoneSpawns
             .Where(s => s.ZoneId == id)
+            .Select(s => new { s.MobName, s.RespawnTime, s.SpawnType, s.MobIndex })
+            .ToListAsync();
+
+        var groups = spawns
             .GroupBy(s => s.MobName)
             .Select(g => new
             {
@@ -95,18 +104,82 @@ public class ZonesController : ControllerBase
                 Count = g.Count(),
                 MaxRespawn = g.Max(s => s.RespawnTime),
                 AnyNmSpawntype = g.Any(s => (s.SpawnType & NmSpawntypeMask) != 0),
+                MobIndices = g.Select(s => s.MobIndex)
+                              .Where(i => i > 0)
+                              .Distinct()
+                              .OrderBy(i => i)
+                              .Select(FormatMobIndex)
+                              .ToArray(),
             })
-            .ToListAsync();
+            .ToList();
 
-        var result = groups.ToDictionary(
-            g => g.Name,
-            g => new
+        var curated = await _db.ZoneNamedMonsters
+            .Where(n => n.ZoneId == id)
+            .ToDictionaryAsync(n => n.MobName, StringComparer.OrdinalIgnoreCase);
+
+        var result = new Dictionary<string, object>();
+
+        if (curated.Count == 0)
+        {
+            // Uncurated zone — heuristic path.
+            foreach (var g in groups)
             {
-                isNm = g.AnyNmSpawntype || g.MaxRespawn >= NmRespawnThreshold || g.Count <= 1,
-                respawn = g.MaxRespawn,
-            });
+                result[g.Name] = new
+                {
+                    isNm = g.AnyNmSpawntype || g.MaxRespawn >= NmRespawnThreshold || g.Count <= 1,
+                    respawn = g.MaxRespawn,
+                    mobIndices = g.MobIndices,
+                };
+            }
+            return Ok(result);
+        }
+
+        // Curated zone — heuristic is suppressed; only names in the curated file
+        // are NMs. Regular spawns still appear with isNm=false so the addon can
+        // distinguish them from unknown mobs.
+        var seenCurated = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var g in groups)
+        {
+            if (curated.TryGetValue(g.Name, out var nm))
+            {
+                seenCurated.Add(g.Name);
+                result[g.Name] = BuildCuratedEntry(nm, fallbackRespawn: g.MaxRespawn, mobIndices: g.MobIndices);
+            }
+            else
+            {
+                result[g.Name] = new { isNm = false, respawn = g.MaxRespawn, mobIndices = g.MobIndices };
+            }
+        }
+
+        // Popped / quest NMs (and any other curated rows not in ZoneSpawns)
+        foreach (var (name, nm) in curated)
+        {
+            if (seenCurated.Contains(name)) continue;
+            result[name] = BuildCuratedEntry(nm, fallbackRespawn: 0, mobIndices: Array.Empty<string>());
+        }
 
         return Ok(result);
+    }
+
+    private static string FormatMobIndex(int index) => $"0x{index:X3}";
+
+    private static object BuildCuratedEntry(
+        Core.Models.ZoneNamedMonster nm,
+        int fallbackRespawn,
+        string[] mobIndices)
+    {
+        return new
+        {
+            isNm = true,
+            respawn = nm.RespawnTime ?? fallbackRespawn,
+            mobIndices,
+            spawnType = string.IsNullOrEmpty(nm.SpawnTypeLabel) ? null : nm.SpawnTypeLabel,
+            genus = nm.Genus,
+            placeholder = nm.PlaceholderName is null && nm.PlaceholderMobIndex is null
+                ? null
+                : (object)new { name = nm.PlaceholderName, mobIndex = nm.PlaceholderMobIndex },
+            notes = nm.Notes,
+        };
     }
 
     [HttpPost("/api/admin/zones/discovered")]

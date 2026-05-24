@@ -1,0 +1,39 @@
+{
+  "zoneId": 294,
+  "zoneName": "Dynamis - San d'Oria (D)",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dynamis_-_San_d%27Oria_(D)",
+  "nms": [
+    {
+      "name": "Aurix",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Aggro colorless (grey-eye) statues to pop. One per wave; despawns after 2-3min if undamaged."
+    },
+    {
+      "name": "Overseer's Tombstone",
+      "genus": "Replica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mid-boss near Northern San d'Oria entrance (I-8). +30min time on defeat."
+    },
+    {
+      "name": "Halphas",
+      "genus": "Orc",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zone boss at Mog House (M-5); spawns after Overseer's Tombstone. Quad-job PLD/RUN/WAR/DRK. +30min on defeat."
+    },
+    {
+      "name": "Disjoined Elvaan",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Wave 3, spawns after Halphas. Passive; counts toward 'Judge, Jury and Executioner' title."
+    }
+  ]
+}

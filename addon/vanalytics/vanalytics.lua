@@ -31,7 +31,6 @@ local defaults = {
     HuntTargetPos = { x = 10, y = 400 },
     HuntWidescanPos = { x = 180, y = 10 },
     HuntWatchPos = { x = 900, y = 350 },
-    HuntTrackingPos = { x = 10, y = 10 },
     HuntSoundEnabled = true,
     HuntNmPos = { x = 1200, y = 50 },
     HuntNmVisible = false,
@@ -444,14 +443,8 @@ end
 -- (e.g. "ID 157" = 0x157 = decimal 343).
 -- Part of the `hunt` feature group, gated behind `settings.HuntEnabled`.
 -----------------------------------------------------------------------
--- Forward-declaration for the target HP-bar image prim. The actual image
--- object is built much further down (alongside the watch-panel pills) where
--- it's grouped with the other images-library overlays, but hide_hunt_target_panel
--- and update_hunt_target_text (defined just below) need the name + sizing
--- constants in scope here.
-local target_hp_bar
-local TARGET_HP_BAR_MAX_WIDTH = 120
-local TARGET_HP_BAR_HEIGHT = 4
+-- (Earlier had a prim-based HP bar here. Dropped — replaced by a third text
+-- object stacked under the target stats. See hunt_target_hp_text.)
 -----------------------------------------------------------------------
 -- Target overlay is split into two stacked text objects so the mob name can
 -- carry a different color/size/weight than the supporting stats. Only the
@@ -489,18 +482,39 @@ local hunt_target_stats_text = texts.new(
         flags = { draggable = false, bold = false, italic = false },
     }
 )
+-- HP bar — third stacked text under stats. Color shifts green/amber/red
+-- based on current HP%. ASCII bar (10 cells = 10% granularity) replaces the
+-- earlier prim-based bar which didn't render.
+local hunt_target_hp_text = texts.new(
+    '${content|}',
+    {
+        pos = { x = settings.HuntTargetPos.x or 10, y = (settings.HuntTargetPos.y or 400) + 72 },
+        bg = { alpha = 200, red = 0, green = 0, blue = 0, visible = true },
+        padding = 6,
+        text = {
+            font = 'Consolas',
+            size = 10,
+            alpha = 255,
+            red = 130, green = 170, blue = 100,
+            stroke = { width = 1, alpha = 255, red = 0, green = 0, blue = 0 },
+        },
+        flags = { draggable = false, bold = true, italic = false },
+    }
+)
 hunt_target_name_text:hide()
 hunt_target_stats_text:hide()
+hunt_target_hp_text:hide()
 
--- Name is one line of size-14 bold + padding both sides. Approximate vertical
--- footprint used to position the stats block below it. Mirrors the WATCH_*
--- constants used for the watch panel split.
+-- Name is one line of size-14 bold + padding both sides. Stats block is two
+-- size-10 lines + padding. Heights used for vertical stacking of the three
+-- target text objects (name → stats → hp bar). Mirrors the WATCH_* constants.
 local TARGET_NAME_HEIGHT = 40
+local TARGET_STATS_HEIGHT = 42  -- 2 lines * ~15px + 12 padding
 
 local function hide_hunt_target_panel()
     hunt_target_name_text:hide()
     hunt_target_stats_text:hide()
-    if target_hp_bar then target_hp_bar:hide() end
+    hunt_target_hp_text:hide()
 end
 
 local function update_hunt_target_text()
@@ -533,29 +547,27 @@ local function update_hunt_target_text()
         claim = (mob.claim_id and mob.claim_id ~= 0) and tostring(mob.claim_id) or '-',
     })
 
-    -- Sync stats position to the name each tick so drag-on-name carries stats with it.
-    hunt_target_stats_text:pos(hunt_target_name_text:pos_x(), hunt_target_name_text:pos_y() + TARGET_NAME_HEIGHT)
+    -- HP bar (text-based): 10-cell █/░ bar + numeric %. Color shifts as HP
+    -- drops. Sits under the stats block, derived position.
+    local hp = mob.hpp or 0
+    if hp < 0 then hp = 0 elseif hp > 100 then hp = 100 end
+    local filled = math.floor(hp / 10 + 0.5)
+    -- Plain ASCII bar — unicode block chars (U+2588/U+2591) might not render
+    -- through Windower's text path. '=' and '-' work everywhere.
+    local bar = string.rep('=', filled) .. string.rep('-', 10 - filled)
+    hunt_target_hp_text:update({ content = string.format('[%s] %3d%%', bar, hp) })
+    if hp >= 75 then     hunt_target_hp_text:color(130, 170, 100)
+    elseif hp >= 25 then hunt_target_hp_text:color(210, 180, 120)
+    else                 hunt_target_hp_text:color(190, 110, 110) end
+
+    -- Sync positions every tick: name → stats → hp bar.
+    local nx, ny = hunt_target_name_text:pos_x(), hunt_target_name_text:pos_y()
+    hunt_target_stats_text:pos(nx, ny + TARGET_NAME_HEIGHT)
+    hunt_target_hp_text:pos(nx, ny + TARGET_NAME_HEIGHT + TARGET_STATS_HEIGHT)
 
     hunt_target_name_text:show()
     hunt_target_stats_text:show()
-
-    -- HP bar: width scales with mob.hpp (0-100), color steps green/amber/red.
-    -- Positioned just below the stats text block, aligned to its left edge.
-    if target_hp_bar then
-        local hp = mob.hpp or 0
-        if hp < 0 then hp = 0 elseif hp > 100 then hp = 100 end
-        local bar_width = math.max(1, math.floor(TARGET_HP_BAR_MAX_WIDTH * hp / 100))
-        local r, g, b
-        if hp >= 75 then     r, g, b = 130, 170, 100
-        elseif hp >= 25 then r, g, b = 210, 180, 120
-        else                 r, g, b = 190, 110, 110 end
-        target_hp_bar:size(bar_width, TARGET_HP_BAR_HEIGHT)
-        target_hp_bar:color(r, g, b)
-        -- Stats block has 2 lines of size-10 text + padding both sides. ~32px tall.
-        target_hp_bar:pos(hunt_target_stats_text:pos_x() + 6,
-                          hunt_target_stats_text:pos_y() + 36)
-        target_hp_bar:show()
-    end
+    hunt_target_hp_text:show()
 end
 
 -----------------------------------------------------------------------
@@ -634,14 +646,14 @@ local hunt_widescan_body_text = texts.new(
 hunt_widescan_header_text:hide()
 hunt_widescan_body_text:hide()
 
--- Tracking panel: separate from Wide Scan because it updates every frame
--- (distance/direction recompute as the player moves) whereas the Wide Scan
--- list only refreshes when a 0x0F4 packet burst arrives. Mixing live data
--- with stale data in the same panel was confusing.
+-- Tracking text: separate text object so it can carry its own color/weight,
+-- but position is now derived from the watch panel header (see
+-- update_hunt_watch_text). Initial position doesn't matter — it gets
+-- repositioned each tick when the watch panel updates.
 local hunt_tracking_text = texts.new(
     '${content|}',
     {
-        pos = { x = settings.HuntTrackingPos.x or 10, y = settings.HuntTrackingPos.y or 10 },
+        pos = { x = 0, y = 0 },
         bg = { alpha = 200, red = 0, green = 0, blue = 0, visible = true },
         padding = 6,
         text = {
@@ -718,24 +730,10 @@ local function build_widescan_panel(scan_target)
            table.concat(body_lines, '\n')
 end
 
-local function update_hunt_tracking_text()
-    if not settings.HuntEnabled then
-        hunt_tracking_text:hide()
-        return
-    end
-    local scan_target = windower.ffxi.get_mob_by_target('scan')
-    if not scan_target or not scan_target.index then
-        hunt_tracking_text:hide()
-        return
-    end
-    local dist_str, dir_str = tracking_dist_dir(scan_target.index)
-    hunt_tracking_text:update({
-        content = string.format('>> Tracking: %s (idx %d / 0x%03X)  ~%sy %s',
-            scan_target.name or '?', scan_target.index, scan_target.index,
-            dist_str, dir_str)
-    })
-    hunt_tracking_text:show()
-end
+-- Tracking display is rendered inline with the watch panel — see
+-- update_hunt_watch_text below for the actual placement logic. Kept as its
+-- own text object so it can carry a distinct color/weight, but position is
+-- now derived from the watch header (no independent draggability).
 
 local function update_hunt_widescan_text()
     if not settings.HuntEnabled then return end
@@ -763,16 +761,17 @@ local function update_hunt_widescan_text()
         local header_str, body_str = build_widescan_panel(scan_target)
         hunt_widescan_header_text:update({ content = header_str })
         hunt_widescan_body_text:update({ content = body_str })
-
-        -- Sync body position to the header. Header is always 1 line now that
-        -- the tracking line lives in its own panel.
-        local hx = hunt_widescan_header_text:pos_x()
-        local hy = hunt_widescan_header_text:pos_y()
-        local header_h = WIDESCAN_LINE_HEIGHT + WIDESCAN_PANEL_PADDING * 2
-        hunt_widescan_body_text:pos(hx, hy + header_h)
-
         widescan_dirty = false
     end
+
+    -- Position sync runs every tick (not just on rebuild). Otherwise if the
+    -- user drags either text object — or if draggable=false fails to actually
+    -- block dragging — the body can detach from the header and never recover.
+    local hx = hunt_widescan_header_text:pos_x()
+    local hy = hunt_widescan_header_text:pos_y()
+    local header_h = WIDESCAN_LINE_HEIGHT + WIDESCAN_PANEL_PADDING * 2
+    hunt_widescan_body_text:pos(hx, hy + header_h)
+
     hunt_widescan_header_text:show()
     if #widescan_entries > 0 then hunt_widescan_body_text:show() else hunt_widescan_body_text:hide() end
 end
@@ -909,12 +908,29 @@ local function fetch_zone_nms(zone_id)
     local total, nm_count = 0, 0
     for name, info in pairs(payload) do
         if type(name) == 'string' and type(info) == 'table' then
-            mob_info[name] = {
-                isNm    = info.isNm == true,
-                respawn = tonumber(info.respawn) or 0,
+            local entry = {
+                isNm        = info.isNm == true,
+                respawn     = tonumber(info.respawn) or 0,
+                spawnType   = type(info.spawnType) == 'string' and info.spawnType or nil,
+                genus       = type(info.genus) == 'string' and info.genus or nil,
+                notes       = type(info.notes) == 'string' and info.notes or nil,
+                mobIndices  = {},
+                placeholder = nil,
             }
+            if type(info.mobIndices) == 'table' then
+                for _, ix in ipairs(info.mobIndices) do
+                    if type(ix) == 'string' then entry.mobIndices[#entry.mobIndices + 1] = ix end
+                end
+            end
+            if type(info.placeholder) == 'table' then
+                entry.placeholder = {
+                    name     = type(info.placeholder.name) == 'string' and info.placeholder.name or nil,
+                    mobIndex = type(info.placeholder.mobIndex) == 'string' and info.placeholder.mobIndex or nil,
+                }
+            end
+            mob_info[name] = entry
             total = total + 1
-            if mob_info[name].isNm then nm_count = nm_count + 1 end
+            if entry.isNm then nm_count = nm_count + 1 end
         end
     end
     mob_info_zone = zone_id
@@ -1055,16 +1071,18 @@ hunt_watch_dead_text:hide()
 
 -- ============================================================
 -- Colored prim accents (images-library overlays). We don't ship per-color
--- assets — instead a single 1x1 white PNG is tinted at runtime via
--- images.color() and stretched to size via images.size(). Multiplicative
--- tint over a white source yields any solid color.
+-- assets at native size. The white-pixel + runtime color tint approach didn't
+-- render (lib reported image objects fine but nothing appeared on screen), so
+-- we ship per-color PNGs and let fit=true size each prim to its texture.
 -- Declared before hide_hunt_watch_panel so the hide helper can reach them.
 -- ============================================================
-local WHITE_PIXEL_PATH = windower.addon_path .. 'white_pixel.png'
+local PILL_ALIVE_PATH = windower.addon_path .. 'pill_alive.png'
+local PILL_DEAD_PATH  = windower.addon_path .. 'pill_dead.png'
 
 -- Watch panel status pills: thin vertical bars to the left of each row.
 -- Green for alive, red for dead. Pool sized to MAX_WATCH_PILLS so we never
--- allocate per-update; surplus pills hide each tick.
+-- allocate per-update; surplus pills hide each tick. Each pill swaps its
+-- texture path between PILL_ALIVE_PATH and PILL_DEAD_PATH on each render.
 local MAX_WATCH_PILLS = 32
 local WATCH_PILL_WIDTH = 4
 local WATCH_PILL_HEIGHT = 14
@@ -1074,42 +1092,22 @@ for i = 1, MAX_WATCH_PILLS do
     watch_pills[i] = images.new('watch_pill_' .. i, {
         pos = { x = 0, y = 0 },
         visible = false,
-        color = { alpha = 230, red = 130, green = 170, blue = 100 },
+        color = { alpha = 230, red = 255, green = 255, blue = 255 },
         size = { width = WATCH_PILL_WIDTH, height = WATCH_PILL_HEIGHT },
-        texture = { path = WHITE_PIXEL_PATH, fit = false },
+        texture = { path = PILL_ALIVE_PATH, fit = true },
         draggable = false,
     })
 end
 
--- Target HP bar: horizontal bar below the target stats. Width scales with
--- hp%, color steps green → amber → red as it drops. Sizing constants are
--- forward-declared near the top of the file (alongside target_hp_bar) so
--- update_hunt_target_text can reach them.
-target_hp_bar = images.new('target_hp_bar', {
-    pos = { x = 0, y = 0 },
-    visible = false,
-    color = { alpha = 230, red = 130, green = 170, blue = 100 },
-    size = { width = TARGET_HP_BAR_MAX_WIDTH, height = TARGET_HP_BAR_HEIGHT },
-    texture = { path = WHITE_PIXEL_PATH, fit = false },
-    draggable = false,
-})
-
--- Belt-and-suspenders: re-apply path / size / color / alpha after the
--- constructor in case apply_settings missed any of them on initial load.
-target_hp_bar:path(WHITE_PIXEL_PATH)
-target_hp_bar:size(TARGET_HP_BAR_MAX_WIDTH, TARGET_HP_BAR_HEIGHT)
-target_hp_bar:alpha(230)
-target_hp_bar:color(130, 170, 100)
-for i = 1, MAX_WATCH_PILLS do
-    watch_pills[i]:path(WHITE_PIXEL_PATH)
-    watch_pills[i]:size(WATCH_PILL_WIDTH, WATCH_PILL_HEIGHT)
-    watch_pills[i]:alpha(230)
-end
+-- target_hp_bar is no longer used (the prim-based HP bar didn't render). We
+-- now display HP via a third target text object — see hunt_target_hp_text.
+-- The forward declaration up top stays for the hide_hunt_target_panel guard.
 
 local function hide_hunt_watch_panel()
     hunt_watch_header_text:hide()
     hunt_watch_alive_text:hide()
     hunt_watch_dead_text:hide()
+    hunt_tracking_text:hide()
     for i = 1, MAX_WATCH_PILLS do watch_pills[i]:hide() end
 end
 
@@ -1220,32 +1218,56 @@ local WATCH_LINE_HEIGHT = 18
 local WATCH_PANEL_PADDING = 6
 
 local function update_hunt_watch_text()
-    if not settings.HuntEnabled or #watch_list == 0 then
+    -- Panel is visible if hunt is on AND (any watched mob OR in-game Track active).
+    -- Tracking-without-watch is a valid state — user might be probing a mob
+    -- before adding it to the watch list.
+    local scan_target = settings.HuntEnabled and windower.ffxi.get_mob_by_target('scan') or nil
+    local has_tracking = scan_target ~= nil and scan_target.index ~= nil
+    local has_watches = settings.HuntEnabled and #watch_list > 0
+
+    if not has_tracking and not has_watches then
         hide_hunt_watch_panel()
         return
     end
-    local header_str, alive_str, dead_str, alive_count = build_watch_panel()
+
+    -- Header content: show watch count even if zero (so "Hunt Watch (0)" appears
+    -- when only tracking is active, making the panel state explicit).
+    local header_str, alive_str, dead_str, alive_count
+    if has_watches then
+        header_str, alive_str, dead_str, alive_count = build_watch_panel()
+    else
+        header_str, alive_str, dead_str, alive_count = 'Hunt Watch (0)', '', '', 0
+    end
     hunt_watch_header_text:update({ content = header_str })
     hunt_watch_alive_text:update({ content = alive_str })
     hunt_watch_dead_text:update({ content = dead_str })
 
-    -- Sync stacked positions every frame so drag on the header carries the
-    -- other two with it. Header height = 1 line + padding both sides.
+    if has_tracking then
+        local dist_str, dir_str = tracking_dist_dir(scan_target.index)
+        hunt_tracking_text:update({
+            content = string.format('>> Tracking: %s (idx %d / 0x%03X)  ~%sy %s',
+                scan_target.name or '?', scan_target.index, scan_target.index,
+                dist_str, dir_str)
+        })
+    end
+
+    -- Position sync (runs every tick): header → tracking → alive → dead.
     local hx = hunt_watch_header_text:pos_x()
     local hy = hunt_watch_header_text:pos_y()
     local header_h = WATCH_LINE_HEIGHT + WATCH_PANEL_PADDING * 2
+    local tracking_h = has_tracking and (WATCH_LINE_HEIGHT + WATCH_PANEL_PADDING * 2) or 0
     local alive_h = (alive_count > 0) and (alive_count * WATCH_LINE_HEIGHT + WATCH_PANEL_PADDING * 2) or 0
-    hunt_watch_alive_text:pos(hx, hy + header_h)
-    hunt_watch_dead_text:pos(hx, hy + header_h + alive_h)
+    hunt_tracking_text:pos(hx, hy + header_h)
+    hunt_watch_alive_text:pos(hx, hy + header_h + tracking_h)
+    hunt_watch_dead_text:pos(hx, hy + header_h + tracking_h + alive_h)
 
     hunt_watch_header_text:show()
+    if has_tracking then hunt_tracking_text:show() else hunt_tracking_text:hide() end
     if alive_count > 0 then hunt_watch_alive_text:show() else hunt_watch_alive_text:hide() end
     if (#watch_list - alive_count) > 0 then hunt_watch_dead_text:show() else hunt_watch_dead_text:hide() end
 
-    -- Render pills: one per watch row, color-coded by section. Pills sit just
-    -- to the left of the alive/dead text blocks. Vertical centering: pills are
-    -- WATCH_PILL_HEIGHT (14) tall, line height is WATCH_LINE_HEIGHT (18), so
-    -- offset by (18-14)/2 = 2 to vertically center on each row's baseline.
+    -- Render pills: one per watch row (alive=green, dead=red). Pills sit just
+    -- to the left of the alive/dead text blocks. Tracking line gets no pill.
     local pill_x = hx - WATCH_PILL_WIDTH - WATCH_PILL_GAP
     local pill_y_offset = math.floor((WATCH_LINE_HEIGHT - WATCH_PILL_HEIGHT) / 2)
     local pill_idx = 1
@@ -1254,7 +1276,7 @@ local function update_hunt_watch_text()
     for i = 1, alive_count do
         if pill_idx > MAX_WATCH_PILLS then break end
         local p = watch_pills[pill_idx]
-        p:color(130, 170, 100)
+        p:path(PILL_ALIVE_PATH)
         p:pos(pill_x, alive_top + (i - 1) * WATCH_LINE_HEIGHT + pill_y_offset)
         p:show()
         pill_idx = pill_idx + 1
@@ -1265,7 +1287,7 @@ local function update_hunt_watch_text()
     for i = 1, dead_count do
         if pill_idx > MAX_WATCH_PILLS then break end
         local p = watch_pills[pill_idx]
-        p:color(190, 110, 110)
+        p:path(PILL_DEAD_PATH)
         p:pos(pill_x, dead_top + (i - 1) * WATCH_LINE_HEIGHT + pill_y_offset)
         p:show()
         pill_idx = pill_idx + 1
@@ -1337,7 +1359,9 @@ end
 
 local function build_nm_panel()
     -- Returns (header_str, body_str). Header carries the count + zone; body
-    -- holds the NM list (cyan).
+    -- renders 3-line-per-NM details: stats / placeholder+index / notes.
+    -- Optional lines (PH/index, notes) are skipped when the curated data is
+    -- absent — uncurated zones collapse to the single name+respawn line.
     local nm_names = {}
     for name, info in pairs(mob_info) do
         if info.isNm then nm_names[#nm_names + 1] = name end
@@ -1352,7 +1376,35 @@ local function build_nm_panel()
     if #nm_names == 0 then return header, '' end
     local body_lines = {}
     for _, n in ipairs(nm_names) do
-        body_lines[#body_lines + 1] = string.format('  %-26s [%s]', n, format_respawn(mob_info[n].respawn))
+        local info = mob_info[n]
+        local resp = format_respawn(info.respawn)
+        body_lines[#body_lines + 1] = string.format('  %-30s [%s]', n, resp)
+
+        -- Line 2: PH name (+ PH index) and/or NM mobIndices. Skip if neither.
+        local ph = info.placeholder
+        local has_ph = ph and (ph.name or ph.mobIndex)
+        local has_nm_idx = info.mobIndices and #info.mobIndices > 0
+        if has_ph or has_nm_idx then
+            local parts = {}
+            if has_ph then
+                if ph.name and ph.mobIndex then
+                    parts[#parts + 1] = string.format('PH: %s (%s)', ph.name, ph.mobIndex)
+                elseif ph.name then
+                    parts[#parts + 1] = 'PH: ' .. ph.name
+                else
+                    parts[#parts + 1] = 'PH: ' .. ph.mobIndex
+                end
+            end
+            if has_nm_idx then
+                parts[#parts + 1] = 'NM: ' .. table.concat(info.mobIndices, ', ')
+            end
+            body_lines[#body_lines + 1] = '    ' .. table.concat(parts, '  ')
+        end
+
+        -- Line 3: notes if present.
+        if info.notes and info.notes ~= '' then
+            body_lines[#body_lines + 1] = '    ' .. info.notes
+        end
     end
     return header, table.concat(body_lines, '\n')
 end
@@ -1913,7 +1965,6 @@ windower.register_event('prerender', function()
     -- Refresh overlays every frame (all gated on settings.HuntEnabled)
     update_hunt_target_text()
     update_hunt_widescan_text()
-    update_hunt_tracking_text()
 
     -- Watch list: detect in-game Track to auto-add, then poll watched
     -- mobs for name/status transitions and fire alerts. Cheap (small list,
@@ -2272,23 +2323,20 @@ windower.register_event('addon command', function(command, ...)
                     settings.HuntWatchPos.x or 0, settings.HuntWatchPos.y or 0))
                 log(string.format('NM cache: (%d, %d)',
                     settings.HuntNmPos.x or 0, settings.HuntNmPos.y or 0))
-                log(string.format('Tracking: (%d, %d)',
-                    settings.HuntTrackingPos.x or 0, settings.HuntTrackingPos.y or 0))
-                log('Set: //va hunt pos <target|widescan|watch|nm|tracking> <x> <y>  |  Save dragged: //va hunt pos save')
+                log('Set: //va hunt pos <target|widescan|watch|nm> <x> <y>  |  Save dragged: //va hunt pos save')
+                log('(Tracking line is nested under the watch panel — no separate position.)')
             elseif which == 'save' then
                 settings.HuntTargetPos = { x = hunt_target_name_text:pos_x(), y = hunt_target_name_text:pos_y() }
                 settings.HuntWidescanPos = { x = hunt_widescan_header_text:pos_x(), y = hunt_widescan_header_text:pos_y() }
                 settings.HuntWatchPos = { x = hunt_watch_header_text:pos_x(), y = hunt_watch_header_text:pos_y() }
                 settings.HuntNmPos = { x = hunt_nm_header_text:pos_x(), y = hunt_nm_header_text:pos_y() }
-                settings.HuntTrackingPos = { x = hunt_tracking_text:pos_x(), y = hunt_tracking_text:pos_y() }
                 config.save(settings)
-                log(string.format('Saved: target (%d,%d), widescan (%d,%d), watch (%d,%d), nm (%d,%d), tracking (%d,%d)',
+                log(string.format('Saved: target (%d,%d), widescan (%d,%d), watch (%d,%d), nm (%d,%d)',
                     settings.HuntTargetPos.x, settings.HuntTargetPos.y,
                     settings.HuntWidescanPos.x, settings.HuntWidescanPos.y,
                     settings.HuntWatchPos.x, settings.HuntWatchPos.y,
-                    settings.HuntNmPos.x, settings.HuntNmPos.y,
-                    settings.HuntTrackingPos.x, settings.HuntTrackingPos.y))
-            elseif which == 'target' or which == 'widescan' or which == 'watch' or which == 'nm' or which == 'tracking' then
+                    settings.HuntNmPos.x, settings.HuntNmPos.y))
+            elseif which == 'target' or which == 'widescan' or which == 'watch' or which == 'nm' then
                 local x = tonumber(args[3])
                 local y = tonumber(args[4])
                 if not x or not y then
@@ -2307,18 +2355,15 @@ windower.register_event('addon command', function(command, ...)
                     settings.HuntWatchPos = { x = x, y = y }
                     hunt_watch_header_text:pos(x, y)
                     -- alive/dead text objects re-sync to the header on the next update tick
-                elseif which == 'nm' then
+                else
                     settings.HuntNmPos = { x = x, y = y }
                     hunt_nm_header_text:pos(x, y)
                     -- body re-syncs to the header on the next update tick
-                else
-                    settings.HuntTrackingPos = { x = x, y = y }
-                    hunt_tracking_text:pos(x, y)
                 end
                 config.save(settings)
                 log(string.format('%s position set to (%d, %d)', which, x, y))
             else
-                log_error('Usage: //va hunt pos [target|widescan|watch|nm|tracking <x> <y> | save]')
+                log_error('Usage: //va hunt pos [target|widescan|watch|nm <x> <y> | save]')
             end
         elseif arg == 'probe' then
             -- //va hunt probe [label]
@@ -2459,11 +2504,11 @@ windower.register_event('addon command', function(command, ...)
             settings.HuntEnabled = true
             config.save(settings)
             log('Hunt overlays: ON')
-            -- One-time prim diagnostic — helps us see whether the PNG asset
-            -- path resolves and the image library reports a real object.
-            log(string.format('PRIM debug: white_pixel.png path = %s', tostring(WHITE_PIXEL_PATH)))
-            log(string.format('PRIM debug: target_hp_bar = %s | watch_pills[1] = %s',
-                tostring(target_hp_bar), tostring(watch_pills[1])))
+            -- One-time prim diagnostic — confirms PNG paths resolve and that
+            -- the watch_pill image objects were constructed.
+            log(string.format('PRIM debug: pill_alive = %s', tostring(PILL_ALIVE_PATH)))
+            log(string.format('PRIM debug: pill_dead  = %s', tostring(PILL_DEAD_PATH)))
+            log(string.format('PRIM debug: watch_pills[1] = %s', tostring(watch_pills[1])))
             -- Fetch NM list for the current zone (otherwise classifier would
             -- silently default everything to standard until next zone-in).
             local info = windower.ffxi.get_info()
@@ -2474,8 +2519,7 @@ windower.register_event('addon command', function(command, ...)
             settings.HuntEnabled = false
             hide_hunt_target_panel()
             hide_hunt_widescan_panel()
-            hunt_tracking_text:hide()
-            hide_hunt_watch_panel()
+            hide_hunt_watch_panel()  -- also hides nested tracking
             hide_hunt_nm_panel()
             clear_watch_list()
             config.save(settings)
@@ -2485,8 +2529,7 @@ windower.register_event('addon command', function(command, ...)
             if not settings.HuntEnabled then
                 hide_hunt_target_panel()
                 hide_hunt_widescan_panel()
-                hunt_tracking_text:hide()
-                hide_hunt_watch_panel()
+                hide_hunt_watch_panel()  -- also hides nested tracking
                 hide_hunt_nm_panel()
                 clear_watch_list()
             end

@@ -40,6 +40,9 @@ public class WarpUnlocks
     public List<int> SurvivalGuides { get; set; } = [];
     public List<int> Waypoints { get; set; } = [];
     public List<int> Telepoints { get; set; } = [];
-    public List<int> Atmas { get; set; } = [];
+    // 0x3C uint32 is shared: cavernous maws (low bits) + lycopodium (high bits).
+    // Partitioned by the addon based on known bit ranges (XIchecklist maps).
+    public List<int> CavernousMaws { get; set; } = [];
+    public List<int> Lycopodium { get; set; } = [];
     public List<int> EschanPortals { get; set; } = [];
 }

@@ -363,6 +363,7 @@ public class ZoneSyncProvider : ISyncProvider
         {
             var mobId = int.Parse(m.Groups[1].Value);
             var zoneId = (mobId >> 12) & 0xFFF;
+            var mobIndex = mobId & 0xFFF;
             var mobName = m.Groups[4].Value; // polutils_name (human-readable, has spaces)
             var groupId = int.Parse(m.Groups[5].Value);
             var minLevel = int.Parse(m.Groups[6].Value);
@@ -391,6 +392,7 @@ public class ZoneSyncProvider : ISyncProvider
                 MaxLevel = maxLevel,
                 SpawnType = info.spawnType,
                 RespawnTime = info.respawnTime,
+                MobIndex = mobIndex,
             });
         }
 

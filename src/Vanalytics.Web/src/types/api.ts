@@ -820,7 +820,8 @@ export interface WarpUnlocks {
   survivalGuides: number[]
   waypoints: number[]
   telepoints: number[]
-  atmas: number[]
+  cavernousMaws: number[]
+  lycopodium: number[]
   eschanPortals: number[]
 }
 

@@ -27,6 +27,15 @@ public class ZoneSpawn
     /// addon to render a live countdown to the next pop in the watch panel.
     /// </summary>
     public int RespawnTime { get; set; }
+    /// <summary>
+    /// Low 12 bits of LSB mobid (mobid &amp; 0xFFF). The full mobid is
+    /// (zoneId &lt;&lt; 12) | mobIndex, so this column captures the per-zone
+    /// part — what wide scan / get_mob_by_index actually keys against.
+    /// Surfaced to the addon so Phase 2 watch-by-PH-index can target any
+    /// of an NM's documented PH slots regardless of which one currently
+    /// holds the NM (PHs and NMs share a group; index drifts on pop).
+    /// </summary>
+    public int MobIndex { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }

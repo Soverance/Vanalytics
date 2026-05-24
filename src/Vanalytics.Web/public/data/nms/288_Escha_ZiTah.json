@@ -1,0 +1,131 @@
+{
+  "zoneId": 288,
+  "zoneName": "Escha - Zi'Tah",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Escha_-_Zi%27Tah",
+  "nms": [
+    {
+      "name": "Prickly Pitriv",
+      "genus": "Crawler",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Crawler", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Crawler."
+    },
+    {
+      "name": "Hugemaw Harold",
+      "genus": "Worm",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Worm", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Worm."
+    },
+    {
+      "name": "Serpopard Ninlil",
+      "genus": "Dhalmel",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Dhalmel", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Dhalmel."
+    },
+    {
+      "name": "Abyssdiver",
+      "genus": "Bird",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Vulture", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Vulture."
+    },
+    {
+      "name": "Immanibugard",
+      "genus": "Bugard",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Bugard", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Bugard."
+    },
+    {
+      "name": "Jester Malatrix",
+      "genus": "Evil Weapon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Weapon", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Weapon."
+    },
+    {
+      "name": "Keeper of Heiligtum",
+      "genus": "Goobbue",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Goobbue", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Goobbue."
+    },
+    {
+      "name": "Voso",
+      "genus": "Coeurl",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Coeurl", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Coeurl."
+    },
+    {
+      "name": "Emperor Arthro",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up; requires fishing trigger."
+    },
+    {
+      "name": "Beist",
+      "genus": "Dragon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Shadow Dragon", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Shadow Dragon."
+    },
+    {
+      "name": "Muut",
+      "genus": "Corse",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Corse", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Corse."
+    },
+    {
+      "name": "Eschan Jewelweed",
+      "genus": "Snapweed",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn from most Eschan mobs."
+    },
+    {
+      "name": "Azi Dahaka",
+      "genus": "Wyrm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Domain Invasion event spawn."
+    }
+  ]
+}

@@ -1,16 +1,13 @@
 // Warp / teleport destination catalogs.
 //
 // The addon decodes packet 0x063 Order 0x06 bitmasks into bit-index IDs,
-// one ID per unlocked destination. The mapping from bit-index → destination
-// name is *not* documented in atom0s/XiPackets; it has to be reverse-
-// engineered by triggering the packet in-game and matching arrived IDs
-// against destinations the player is known to have unlocked.
+// one ID per unlocked destination. Catalog entries (bit-index → name) are
+// sourced from the open-source XIchecklist project's maps/warps.lua, which
+// has confirmed mappings via in-game verification.
 //
-// Until that catalog is populated, the UI falls back to displaying the
-// raw ID (e.g. "Home Point #42"). Add entries here as they're confirmed.
-//
-// Source of truth when adding entries: BG-Wiki destination lists +
-// in-game verification of which bit flips when each is unlocked.
+// Source: https://github.com/HiPotionQ8/XIchecklist/blob/main/maps/warps.lua
+// Entries marked "Unknown" in XIchecklist are omitted here; the UI falls
+// back to "<Category> #N" for any unrecognized index.
 
 export interface WarpEntry {
     id: number
@@ -23,7 +20,8 @@ export type WarpCategory =
     | 'survivalGuides'
     | 'waypoints'
     | 'telepoints'
-    | 'atmas'
+    | 'cavernousMaws'
+    | 'lycopodium'
     | 'eschanPortals'
 
 export const WARP_CATEGORY_LABELS: Record<WarpCategory, string> = {
@@ -31,37 +29,325 @@ export const WARP_CATEGORY_LABELS: Record<WarpCategory, string> = {
     survivalGuides: 'Survival Guides',
     waypoints: 'Waypoints',
     telepoints: 'Telepoints',
-    atmas: 'Atmas',
+    cavernousMaws: 'Cavernous Maws',
+    lycopodium: 'Lycopodium',
     eschanPortals: 'Eschan Portals',
 }
 
-// Each category covers a documented number of bits per the XiPackets layout
-// for Order 0x06 (e.g. home_point[4] = 128 bits = up to 128 destinations).
-// Used by the UI for the "X unlocked / Y possible" progress label.
+// Number of distinct destinations in each category (used for "X / Y" progress
+// display). Matches XIchecklist's catalog counts — the packet bitfields have
+// more bits than this in some categories, but the extra bits are unmapped.
 export const WARP_CATEGORY_CAPACITY: Record<WarpCategory, number> = {
-    homePoints: 128,
-    survivalGuides: 128,
-    waypoints: 128,
-    telepoints: 32,
-    atmas: 32,
+    homePoints: 122,
+    survivalGuides: 98,
+    waypoints: 51,
+    telepoints: 9,
+    cavernousMaws: 9,
+    lycopodium: 3,
     eschanPortals: 32,
 }
 
-// Empty catalogs — populate as IDs are confirmed in-game. Keep entries
-// ordered by ID so the UI renders a stable, expansion-grouped list.
-export const HOME_POINTS: WarpEntry[] = []
-export const SURVIVAL_GUIDES: WarpEntry[] = []
-export const WAYPOINTS: WarpEntry[] = []
-export const TELEPOINTS: WarpEntry[] = []
-export const ATMAS: WarpEntry[] = []
-export const ESCHAN_PORTALS: WarpEntry[] = []
+export const HOME_POINTS: WarpEntry[] = [
+    { id: 0, name: "Southern San d'Oria HP#1" },
+    { id: 1, name: "Southern San d'Oria HP#2" },
+    { id: 2, name: "Southern San d'Oria HP#3" },
+    { id: 3, name: "Northern San d'Oria HP#1" },
+    { id: 4, name: "Northern San d'Oria HP#2" },
+    { id: 5, name: "Northern San d'Oria HP#3" },
+    { id: 6, name: "Port San d'Oria HP#1" },
+    { id: 7, name: "Port San d'Oria HP#2" },
+    { id: 8, name: "Port San d'Oria HP#3" },
+    { id: 9, name: "Bastok Mines HP#1" },
+    { id: 10, name: "Bastok Mines HP#2" },
+    { id: 11, name: "Bastok Markets HP#1" },
+    { id: 12, name: "Bastok Markets HP#2" },
+    { id: 13, name: "Bastok Markets HP#3" },
+    { id: 14, name: "Port Bastok HP#1" },
+    { id: 15, name: "Port Bastok HP#2" },
+    { id: 16, name: "Metalworks HP#1" },
+    { id: 17, name: "Windurst Waters HP#1" },
+    { id: 18, name: "Windurst Waters HP#2" },
+    { id: 19, name: "Windurst Walls HP#1" },
+    { id: 20, name: "Windurst Walls HP#2" },
+    { id: 21, name: "Windurst Walls HP#3" },
+    { id: 22, name: "Port Windurst HP#1" },
+    { id: 23, name: "Port Windurst HP#2" },
+    { id: 24, name: "Port Windurst HP#3" },
+    { id: 25, name: "Windurst Woods HP#1" },
+    { id: 26, name: "Windurst Woods HP#2" },
+    { id: 27, name: "Windurst Woods HP#3" },
+    { id: 28, name: "Windurst Woods HP#4" },
+    { id: 29, name: "Ru'Lude Gardens HP#1" },
+    { id: 30, name: "Ru'Lude Gardens HP#2" },
+    { id: 31, name: "Ru'Lude Gardens HP#3" },
+    { id: 32, name: "Upper Jeuno HP#1" },
+    { id: 33, name: "Upper Jeuno HP#2" },
+    { id: 34, name: "Upper Jeuno HP#3" },
+    { id: 35, name: "Lower Jeuno HP#1" },
+    { id: 36, name: "Lower Jeuno HP#2" },
+    { id: 37, name: "Port Jeuno HP#1" },
+    { id: 38, name: "Port Jeuno HP#2" },
+    { id: 39, name: "Kazham HP#1" },
+    { id: 40, name: "Mhaura HP#1" },
+    { id: 41, name: "Norg HP#1" },
+    { id: 42, name: "Rabao HP#1" },
+    { id: 43, name: "Selbina HP#1" },
+    { id: 44, name: "Western Adoulin HP#1" },
+    { id: 45, name: "Eastern Adoulin HP#1" },
+    { id: 46, name: "Ceizak Battlegrounds HP#1" },
+    { id: 47, name: "Foret de Hennetiel HP#1" },
+    { id: 48, name: "Morimar Basalt Fields HP#1" },
+    { id: 49, name: "Yorcia Weald HP#1" },
+    { id: 50, name: "Marjami Ravine HP#1" },
+    { id: 51, name: "Kamihr Drifts HP#1" },
+    { id: 52, name: "Yughott Grotto HP#1" },
+    { id: 53, name: "Palborough Mines HP#1" },
+    { id: 54, name: "Giddeus HP#1" },
+    { id: 55, name: "Fei'Yin HP#1" },
+    { id: 56, name: "Quicksand Caves HP#1" },
+    { id: 57, name: "Den of Rancor HP#1" },
+    { id: 58, name: "Castle Zvahl Keep HP#1" },
+    { id: 59, name: "Ru'Aun Gardens HP#1" },
+    { id: 60, name: "Ru'Aun Gardens HP#2" },
+    { id: 61, name: "Ru'Aun Gardens HP#3" },
+    { id: 62, name: "Ru'Aun Gardens HP#4" },
+    { id: 63, name: "Ru'Aun Gardens HP#5" },
+    { id: 64, name: "Tavnazian Safehold HP#1" },
+    { id: 65, name: "Aht Urhgan Whitegate HP#1" },
+    { id: 66, name: "Nashmau HP#1" },
+    { id: 68, name: "Southern San d'Oria [S] HP#1" },
+    { id: 69, name: "Bastok Markets [S] HP#1" },
+    { id: 70, name: "Windurst Waters [S] HP#1" },
+    { id: 71, name: "Upper Delkfutt's Tower HP#1" },
+    { id: 72, name: "The Shrine of Ru'Avitau HP#1" },
+    { id: 73, name: "Riverne - Site #B01 HP#1" },
+    { id: 74, name: "Bhaflau Thickets HP#1" },
+    { id: 75, name: "Caedarva Mire HP#1" },
+    { id: 76, name: "Uleguerand Range HP#1" },
+    { id: 77, name: "Uleguerand Range HP#2" },
+    { id: 78, name: "Uleguerand Range HP#3" },
+    { id: 79, name: "Uleguerand Range HP#4" },
+    { id: 80, name: "Uleguerand Range HP#5" },
+    { id: 81, name: "Attohwa Chasm HP#1" },
+    { id: 82, name: "Pso'Xja HP#1" },
+    { id: 83, name: "Newton Movalpolos HP#1" },
+    { id: 84, name: "Riverne - Site #A01 HP#1" },
+    { id: 85, name: "Al'Taieu HP#1" },
+    { id: 86, name: "Al'Taieu HP#2" },
+    { id: 87, name: "Al'Taieu HP#3" },
+    { id: 88, name: "Grand Palace of Hu'Xzoi HP#1" },
+    { id: 89, name: "The Garden of Ru'Hmet HP#1" },
+    { id: 90, name: "Mount Zhayolm HP#1" },
+    { id: 91, name: "Cape Teriggan HP#1" },
+    { id: 92, name: "The Boyahda Tree HP#1" },
+    { id: 93, name: "Den of Rancor HP#2" },
+    { id: 94, name: "Fei'Yin HP#2" },
+    { id: 95, name: "Ifrit's Cauldron HP#1" },
+    { id: 96, name: "Quicksand Caves HP#2" },
+    { id: 97, name: "Southern San d'Oria HP#4" },
+    { id: 98, name: "Northern San d'Oria HP#4" },
+    { id: 99, name: "Bastok Mines HP#3" },
+    { id: 100, name: "Bastok Markets HP#4" },
+    { id: 101, name: "Port Bastok HP#3" },
+    { id: 102, name: "Metalworks HP#2" },
+    { id: 103, name: "Windurst Waters HP#3" },
+    { id: 104, name: "Norg HP#2" },
+    { id: 105, name: "Rabao HP#2" },
+    { id: 106, name: "Aht Urhgan Whitegate HP#2" },
+    { id: 107, name: "Aht Urhgan Whitegate HP#3" },
+    { id: 108, name: "Aht Urhgan Whitegate HP#4" },
+    { id: 109, name: "Western Adoulin HP#2" },
+    { id: 110, name: "Eastern Adoulin HP#2" },
+    { id: 111, name: "Xarcabard [S] HP#1" },
+    { id: 112, name: "Leafallia HP#1" },
+    { id: 113, name: "Castle Zvahl Keep [S] HP#1" },
+    { id: 114, name: "Qufim Island HP#1" },
+    { id: 115, name: "Toraimarai Canal HP#1" },
+    { id: 116, name: "Ra'Kaznar Inner Court HP#1" },
+    { id: 117, name: "Misareaux Coast HP#1" },
+    { id: 118, name: "Windurst Waters HP#4" },
+    { id: 119, name: "Windurst Woods HP#5" },
+    { id: 120, name: "Tavnazian Safehold HP#2" },
+    { id: 121, name: "Tavnazian Safehold HP#3" },
+]
+
+export const SURVIVAL_GUIDES: WarpEntry[] = [
+    { id: 0, name: "West Ronfaure" },
+    { id: 1, name: "Valkurm Dunes" },
+    { id: 2, name: "Jugner Forest" },
+    { id: 3, name: "North Gustaberg" },
+    { id: 4, name: "Pashhow Marshlands" },
+    { id: 5, name: "West Sarutabaruta" },
+    { id: 6, name: "Buburimu Peninsula" },
+    { id: 7, name: "Beaucedine Glacier" },
+    { id: 8, name: "Xarcabard" },
+    { id: 9, name: "Qufim Island" },
+    { id: 10, name: "Meriphataud Mountains" },
+    { id: 11, name: "The Sanctuary of Zi'Tah" },
+    { id: 12, name: "Eastern Altepa Desert" },
+    { id: 13, name: "Cape Teriggan" },
+    { id: 14, name: "Yuhtunga Jungle" },
+    { id: 15, name: "Yhoator Jungle" },
+    { id: 16, name: "Lufaise Meadows" },
+    { id: 17, name: "Ru'Aun Gardens" },
+    { id: 18, name: "Oldton Movalpolos" },
+    { id: 19, name: "Bostaunieux Oubliette" },
+    { id: 20, name: "Toraimarai Canal" },
+    { id: 21, name: "The Eldieme Necropolis" },
+    { id: 22, name: "Crawlers' Nest" },
+    { id: 23, name: "Garlaige Citadel" },
+    { id: 24, name: "Northern San d'Oria" },
+    { id: 25, name: "Bastok Mines" },
+    { id: 26, name: "Port Windurst" },
+    { id: 27, name: "Ru'Lude Gardens" },
+    { id: 28, name: "La Theine Plateau" },
+    { id: 29, name: "Batallia Downs" },
+    { id: 30, name: "Konschtat Highlands" },
+    { id: 31, name: "Rolanberry Fields" },
+    { id: 32, name: "Tahrongi Canyon" },
+    { id: 33, name: "Sauromugue Champaign" },
+    { id: 34, name: "Fort Ghelsba" },
+    { id: 35, name: "Beadeaux" },
+    { id: 36, name: "Davoi" },
+    { id: 37, name: "Castle Oztroja" },
+    { id: 38, name: "Castle Zvahl Baileys" },
+    { id: 39, name: "Ranguemont Pass" },
+    { id: 40, name: "Lower Delkfutt's Tower" },
+    { id: 41, name: "King Ranperre's Tomb" },
+    { id: 42, name: "Dangruf Wadi" },
+    { id: 43, name: "Inner Horutoto Ruins" },
+    { id: 44, name: "Ordelle's Caves" },
+    { id: 45, name: "Gusgen Mines" },
+    { id: 46, name: "Maze of Shakhrami" },
+    { id: 47, name: "Ro'Maeve" },
+    { id: 48, name: "Western Altepa Desert" },
+    { id: 49, name: "Temple of Uggalepih" },
+    { id: 50, name: "Korroloka Tunnel" },
+    { id: 51, name: "Kuftal Tunnel" },
+    { id: 52, name: "Sea Serpent Grotto" },
+    { id: 53, name: "Gustav Tunnel" },
+    { id: 54, name: "Labyrinth of Onzozo" },
+    { id: 55, name: "Carpenters' Landing" },
+    { id: 56, name: "Bibiki Bay" },
+    { id: 57, name: "Misareaux Coast" },
+    { id: 58, name: "Phomiuna Aqueducts" },
+    { id: 59, name: "Sacrarium" },
+    { id: 60, name: "Wajaom Woodlands" },
+    { id: 61, name: "Mamook" },
+    { id: 62, name: "Aydeewa Subterrane" },
+    { id: 63, name: "East Ronfaure [S]" },
+    { id: 64, name: "Jugner Forest [S]" },
+    { id: 65, name: "Vunkerl Inlet [S]" },
+    { id: 66, name: "Batallia Downs [S]" },
+    { id: 67, name: "North Gustaberg [S]" },
+    { id: 68, name: "Grauberg [S]" },
+    { id: 69, name: "Pashhow Marshlands [S]" },
+    { id: 70, name: "Rolanberry Fields [S]" },
+    { id: 71, name: "West Sarutabaruta [S]" },
+    { id: 72, name: "Fort Karugo-Narugo [S]" },
+    { id: 73, name: "Meriphataud Mountains [S]" },
+    { id: 74, name: "Sauromugue Champaign [S]" },
+    { id: 75, name: "Beaucedine Glacier [S]" },
+    { id: 76, name: "Castle Zvahl Baileys [S]" },
+    { id: 77, name: "Garlaige Citadel [S]" },
+    { id: 78, name: "Crawlers' Nest [S]" },
+    { id: 79, name: "The Eldieme Necropolis [S]" },
+    { id: 80, name: "Kazham" },
+    { id: 81, name: "Norg" },
+    { id: 82, name: "Rabao" },
+    { id: 83, name: "Tavnazian Safehold" },
+    { id: 84, name: "Aht Urhgan Whitegate" },
+    { id: 85, name: "Nashmau" },
+    { id: 86, name: "Southern San d'Oria [S]" },
+    { id: 88, name: "Windurst Waters [S]" },
+    { id: 89, name: "Caedarva Mire" },
+    { id: 90, name: "Arrapago Reef" },
+    { id: 91, name: "Halvung" },
+    { id: 92, name: "Behemoth's Dominion" },
+    { id: 93, name: "Dragon's Aery" },
+    { id: 94, name: "Valley of Sorrows" },
+    { id: 95, name: "Ifrit's Cauldron" },
+    { id: 96, name: "Zeruhn Mines" },
+    { id: 97, name: "Eastern Adoulin" },
+]
+
+export const WAYPOINTS: WarpEntry[] = [
+    { id: 0, name: "Western Adoulin" }, { id: 1, name: "Western Adoulin" }, { id: 2, name: "Western Adoulin" },
+    { id: 3, name: "Western Adoulin" }, { id: 4, name: "Western Adoulin" }, { id: 5, name: "Western Adoulin" },
+    { id: 6, name: "Western Adoulin" }, { id: 7, name: "Western Adoulin" }, { id: 8, name: "Western Adoulin" },
+    { id: 9, name: "Eastern Adoulin" }, { id: 10, name: "Eastern Adoulin" }, { id: 11, name: "Eastern Adoulin" },
+    { id: 12, name: "Eastern Adoulin" }, { id: 13, name: "Eastern Adoulin" }, { id: 14, name: "Eastern Adoulin" },
+    { id: 15, name: "Eastern Adoulin" }, { id: 16, name: "Eastern Adoulin" }, { id: 17, name: "Eastern Adoulin" },
+    { id: 18, name: "Ceizak Battlegrounds" }, { id: 19, name: "Ceizak Battlegrounds" },
+    { id: 20, name: "Ceizak Battlegrounds" }, { id: 21, name: "Ceizak Battlegrounds" },
+    { id: 22, name: "Yahse Hunting Grounds #FS" }, { id: 23, name: "Yahse Hunting Grounds #1" },
+    { id: 24, name: "Yahse Hunting Grounds #2" }, { id: 25, name: "Yahse Hunting Grounds #3" },
+    { id: 26, name: "Foret de Hennetiel #1" }, { id: 27, name: "Foret de Hennetiel" },
+    { id: 28, name: "Foret de Hennetiel" }, { id: 29, name: "Foret de Hennetiel" },
+    { id: 30, name: "Foret de Hennetiel" }, { id: 31, name: "Morimar Basalt Fields" },
+    { id: 32, name: "Morimar Basalt Fields" }, { id: 33, name: "Morimar Basalt Fields" },
+    { id: 34, name: "Morimar Basalt Fields #4" }, { id: 35, name: "Morimar Basalt Fields" },
+    { id: 36, name: "Morimar Basalt Fields" }, { id: 37, name: "Yorcia Weald" },
+    { id: 38, name: "Yorcia Weald" }, { id: 39, name: "Yorcia Weald" },
+    { id: 40, name: "Yorcia Weald #3" }, { id: 41, name: "Marjami Ravine" },
+    { id: 42, name: "Marjami Ravine" }, { id: 43, name: "Marjami Ravine" },
+    { id: 44, name: "Marjami Ravine #3" }, { id: 45, name: "Marjami Ravine" },
+    { id: 46, name: "Kamihr Drifts" }, { id: 47, name: "Kamihr Drifts" },
+    { id: 48, name: "Kamihr Drifts" }, { id: 49, name: "Kamihr Drifts" },
+    { id: 50, name: "Kamihr Drifts" },
+]
+
+export const TELEPOINTS: WarpEntry[] = [
+    { id: 0, name: "Holla gate crystal" },
+    { id: 1, name: "Dem gate crystal" },
+    { id: 2, name: "Mea gate crystal" },
+    { id: 3, name: "Vahzl gate crystal" },
+    { id: 4, name: "Yhoator gate crystal" },
+    { id: 5, name: "Altepa gate crystal" },
+    { id: 6, name: "Jugner gate crystal" },
+    { id: 7, name: "Pashhow gate crystal" },
+    { id: 8, name: "Meriphataud gate crystal" },
+]
+
+export const CAVERNOUS_MAWS: WarpEntry[] = [
+    { id: 0, name: "Cavernous Maw #1" },
+    { id: 1, name: "Cavernous Maw #2" },
+    { id: 2, name: "Cavernous Maw #3" },
+    { id: 3, name: "Cavernous Maw #4" },
+    { id: 4, name: "Cavernous Maw #5" },
+    { id: 5, name: "Cavernous Maw #6" },
+    { id: 6, name: "Cavernous Maw #7" },
+    { id: 7, name: "Cavernous Maw #8" },
+    { id: 8, name: "Cavernous Maw #9" },
+]
+
+export const LYCOPODIUM: WarpEntry[] = [
+    { id: 13, name: "Lycopodium Batallia Downs [S]" },
+    { id: 14, name: "Lycopodium North Gustaberg [S]" },
+    { id: 15, name: "Lycopodium Garlaige Citadel [S]" },
+]
+
+export const ESCHAN_PORTALS: WarpEntry[] = [
+    { id: 0, name: "Zi'tah #1" }, { id: 1, name: "Zi'tah #2" }, { id: 2, name: "Zi'tah #3" },
+    { id: 3, name: "Zi'tah #4" }, { id: 4, name: "Zi'tah #5" }, { id: 5, name: "Zi'tah #6" },
+    { id: 6, name: "Zi'tah #7" }, { id: 7, name: "Zi'tah #8" },
+    { id: 8, name: "Ru'Aun #1" }, { id: 9, name: "Ru'Aun #2" }, { id: 10, name: "Ru'Aun #3" },
+    { id: 11, name: "Ru'Aun #4" }, { id: 12, name: "Ru'Aun #5" }, { id: 13, name: "Ru'Aun #6" },
+    { id: 14, name: "Ru'Aun #7" }, { id: 15, name: "Ru'Aun #8" }, { id: 16, name: "Ru'Aun #9" },
+    { id: 17, name: "Ru'Aun #10" }, { id: 18, name: "Ru'Aun #11" }, { id: 19, name: "Ru'Aun #12" },
+    { id: 20, name: "Ru'Aun #13" }, { id: 21, name: "Ru'Aun #14" }, { id: 22, name: "Ru'Aun #15" },
+    { id: 23, name: "Reisenjima #1" }, { id: 24, name: "Reisenjima #2" }, { id: 25, name: "Reisenjima #3" },
+    { id: 26, name: "Reisenjima #4" }, { id: 27, name: "Reisenjima #5" }, { id: 28, name: "Reisenjima #6" },
+    { id: 29, name: "Reisenjima #7" }, { id: 30, name: "Reisenjima #8" }, { id: 31, name: "Reisenjima #9" },
+]
 
 const CATALOG: Record<WarpCategory, WarpEntry[]> = {
     homePoints: HOME_POINTS,
     survivalGuides: SURVIVAL_GUIDES,
     waypoints: WAYPOINTS,
     telepoints: TELEPOINTS,
-    atmas: ATMAS,
+    cavernousMaws: CAVERNOUS_MAWS,
+    lycopodium: LYCOPODIUM,
     eschanPortals: ESCHAN_PORTALS,
 }
 

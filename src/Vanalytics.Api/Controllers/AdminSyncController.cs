@@ -18,7 +18,7 @@ public class AdminSyncController : ControllerBase
     };
 
     // Known provider IDs — add new providers here as they're created
-    private static readonly string[] ProviderIds = ["items", "icons", "zones"];
+    private static readonly string[] ProviderIds = ["items", "icons", "zones", "named-monsters"];
 
     public AdminSyncController(SyncOrchestrator orchestrator)
     {

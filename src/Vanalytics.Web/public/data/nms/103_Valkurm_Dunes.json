@@ -23,8 +23,8 @@
       "name": "Valkurm Emperor",
       "genus": "Fly",
       "spawnType": "timed",
-      "respawnTime": null,
-      "placeholders": [],
+      "respawnTime": 900,
+      "placeholders": [{ "name": "Damselfly", "mobIndex": "0x14A" }],
       "notes": "Aggressive with sound and links."
     },
     {
