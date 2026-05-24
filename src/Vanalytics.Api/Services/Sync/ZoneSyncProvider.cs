@@ -339,18 +339,21 @@ public class ZoneSyncProvider : ISyncProvider
         }
 
         // Parse mob_groups: (groupid, poolid, zoneid, name, respawntime, spawntype, ...)
-        // spawntype is a bitmask — 0 = normal respawn; non-zero (timed, scripted,
-        // lights-day, moon phase, fog, etc.) is characteristic of NM / event
-        // spawns, which we use downstream for NM classification.
-        var groupInfoMap = new Dictionary<(int zoneId, int groupId), (int poolId, int spawnType)>();
+        // - spawntype: bitmask. 0=normal; non-zero (timed/script/day/moon/fog)
+        //   characteristic of NM/event spawns; downstream we use the TIMED|SCRIPTED
+        //   bits as the strong NM signal.
+        // - respawntime: seconds. Regular mobs ~300s, NMs typically 3600s+. Strong
+        //   NM signal and used by the addon to render a pop countdown.
+        var groupInfoMap = new Dictionary<(int zoneId, int groupId), (int poolId, int spawnType, int respawnTime)>();
         var groupRegex = new Regex(@"\((\d+),(\d+),(\d+),'([^']*)',(\d+),(\d+),");
         foreach (Match m in groupRegex.Matches(groupsSql))
         {
             var groupId = int.Parse(m.Groups[1].Value);
             var poolId = int.Parse(m.Groups[2].Value);
             var zoneId = int.Parse(m.Groups[3].Value);
+            var respawnTime = int.Parse(m.Groups[5].Value);
             var spawnType = int.Parse(m.Groups[6].Value);
-            groupInfoMap[(zoneId, groupId)] = (poolId, spawnType);
+            groupInfoMap[(zoneId, groupId)] = (poolId, spawnType, respawnTime);
         }
 
         // Parse mob_spawn_points: (mobid, spawnslotid, mobname, polutils_name, groupid, minLevel, maxLevel, pos_x, pos_y, pos_z, pos_rot)
@@ -387,6 +390,7 @@ public class ZoneSyncProvider : ISyncProvider
                 MinLevel = minLevel,
                 MaxLevel = maxLevel,
                 SpawnType = info.spawnType,
+                RespawnTime = info.respawnTime,
             });
         }
 

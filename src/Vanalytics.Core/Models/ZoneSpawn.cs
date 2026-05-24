@@ -20,6 +20,13 @@ public class ZoneSpawn
     /// with low spawn-count to classify mobs as Notorious Monsters.
     /// </summary>
     public int SpawnType { get; set; }
+    /// <summary>
+    /// LSB mob_groups.respawntime, in seconds. Regular mobs respawn in ~300s;
+    /// NMs typically respawn in 3600s (1h) or more, with boss-class NMs going
+    /// 6h+. Strong signal for NM classification on its own, and used by the
+    /// addon to render a live countdown to the next pop in the watch panel.
+    /// </summary>
+    public int RespawnTime { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }

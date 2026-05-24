@@ -69,24 +69,44 @@ public class ZonesController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetNotoriousMonsters(int id)
     {
-        // A spawn point is treated as belonging to an NM (or other special
-        // mob) if either:
-        //   (a) its mob_groups.spawntype is non-zero — lottery/timed/script/
-        //       lights/darks/moon/fog, all of which are characteristic of
-        //       NM spawn rules, OR
-        //   (b) the mob name appears in fewer than three spawn entries in
-        //       this zone — regular PHs spawn many times across a zone,
-        //       NMs typically have one or two designated spawn points.
-        // Returns DISTINCT names so the addon can build a quick lookup set.
-        var nmNames = await _db.ZoneSpawns
+        // Returns per-mob metadata for every distinct spawn name in the zone:
+        //
+        //   { "Cactuar":            { "isNm": false, "respawn": 300 },
+        //     "Cactuar Cantautor":  { "isNm": true,  "respawn": 3600 }, ... }
+        //
+        // The addon uses isNm to choose between notify_NM.wav / notify_Standard.wav
+        // and respawn to render a live pop countdown in the watch panel.
+        //
+        // NM classification heuristic — a name is treated as an NM if ANY of:
+        //   (a) any of its spawns have spawntype with TIMED (2) or SCRIPTED (4)
+        //       bits set — these LSB spawn modes strongly correlate with NMs;
+        //   (b) any of its spawns have respawntime >= 600s (10 min) — regular
+        //       mobs respawn in 300s, anything longer is NM-grade;
+        //   (c) the name has exactly one spawn entry in the zone — singleton
+        //       spawns are almost always NMs / event mobs.
+        const int NmSpawntypeMask = 0x6;   // TIMED | SCRIPTED
+        const int NmRespawnThreshold = 600;
+        var groups = await _db.ZoneSpawns
             .Where(s => s.ZoneId == id)
             .GroupBy(s => s.MobName)
-            .Where(g => g.Any(s => s.SpawnType != 0) || g.Count() <= 2)
-            .Select(g => g.Key)
-            .OrderBy(name => name)
+            .Select(g => new
+            {
+                Name = g.Key,
+                Count = g.Count(),
+                MaxRespawn = g.Max(s => s.RespawnTime),
+                AnyNmSpawntype = g.Any(s => (s.SpawnType & NmSpawntypeMask) != 0),
+            })
             .ToListAsync();
 
-        return Ok(nmNames);
+        var result = groups.ToDictionary(
+            g => g.Name,
+            g => new
+            {
+                isNm = g.AnyNmSpawntype || g.MaxRespawn >= NmRespawnThreshold || g.Count <= 1,
+                respawn = g.MaxRespawn,
+            });
+
+        return Ok(result);
     }
 
     [HttpPost("/api/admin/zones/discovered")]

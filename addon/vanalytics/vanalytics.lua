@@ -30,6 +30,8 @@ local defaults = {
     HuntWidescanPos = { x = 180, y = 10 },
     HuntWatchPos = { x = 900, y = 350 },
     HuntSoundEnabled = true,
+    HuntNmPos = { x = 1200, y = 50 },
+    HuntNmVisible = false,
 }
 
 local settings = config.load(defaults)
@@ -659,8 +661,8 @@ end
 -----------------------------------------------------------------------
 local watch_list = {}                  -- ordered array of watch entries (see add_to_watch for shape)
 local watch_index_map = {}             -- mob.index -> position in watch_list[]
-local nm_set = {}                      -- name (string) -> true for current zone's known NMs
-local nm_set_zone = nil                -- the zone_id nm_set was loaded for (nil = not loaded)
+local mob_info = {}                    -- name (string) -> { isNm = bool, respawn = seconds } for every distinct mob in current zone
+local mob_info_zone = nil              -- zone_id mob_info was loaded for (nil = not loaded)
 local last_scan_target_idx = nil       -- for nil->mob and A->B transition detection on auto-add
 
 local function parse_mob_idx(s)
@@ -679,7 +681,15 @@ local function is_status_alive(status, hpp)
 end
 
 local function classify_as_nm(name)
-    return name ~= nil and nm_set[name] == true
+    if not name then return false end
+    local info = mob_info[name]
+    return info ~= nil and info.isNm == true
+end
+
+local function get_respawn_seconds(name)
+    if not name then return nil end
+    local info = mob_info[name]
+    return info and info.respawn or nil
 end
 
 local function play_alert(is_nm)
@@ -703,13 +713,21 @@ end
 local function add_to_watch(mob)
     if not mob or not mob.index then return false end
     if watch_index_map[mob.index] then return false end  -- already watched
+
+    -- IMPORTANT: scan_target (and any mob struct read while the mob is
+    -- outside client render range) carries zeroed/garbage values for
+    -- status/hpp/x/y/z. Baselining with those would make us display "DEAD"
+    -- for a perfectly alive mob and fire a false "respawn" alert the
+    -- moment we walk into range. Instead we leave last_status / last_hpp
+    -- nil here; the poll loop will populate them on the first frame the
+    -- mob is genuinely in client memory.
     local entry = {
         idx       = mob.index,
         added_at  = os.time(),
         added_name = mob.name or '?',     -- baseline name for "differs from add" indicator
         last_name = mob.name,
-        last_status = mob.status,
-        last_hpp  = mob.hpp,
+        last_status = nil,
+        last_hpp  = nil,
     }
     watch_list[#watch_list + 1] = entry
     watch_index_map[mob.index] = #watch_list
@@ -726,9 +744,10 @@ local function remove_from_watch(idx)
     return true
 end
 
--- Fetch the authoritative NM name set for a zone. HTTP is synchronous via
--- the existing http_request helper — brief stutter on zone-in is acceptable
--- given the data is small and fetches are infrequent (one per zone-change).
+-- Fetch the authoritative per-mob metadata for a zone (NM classification
+-- + respawn time per name). HTTP is synchronous via the existing helper —
+-- brief stutter on zone-in is acceptable since the payload is small and
+-- fetches are infrequent (one per zone-change).
 local function fetch_zone_nms(zone_id)
     if not zone_id or zone_id == 0 then return end
     local url = settings.ApiUrl .. '/api/zones/' .. tostring(zone_id) .. '/nm'
@@ -740,30 +759,35 @@ local function fetch_zone_nms(zone_id)
         sink = ltn12.sink.table(response_body),
     })
     if not result or status_code ~= 200 then
-        log_error(string.format('NM fetch failed for zone %d (status %s) — alerts default to standard sound.',
+        log_error(string.format('Mob info fetch failed for zone %d (status %s) — alerts default to standard sound, no countdown.',
             zone_id, tostring(status_code)))
-        nm_set = {}
-        nm_set_zone = zone_id
+        mob_info = {}
+        mob_info_zone = zone_id
         return
     end
     local body = table.concat(response_body)
-    local nms = json_decode(body)
-    if type(nms) ~= 'table' then
-        log_error('NM fetch: invalid response for zone ' .. zone_id)
-        nm_set = {}
-        nm_set_zone = zone_id
+    local payload = json_decode(body)
+    if type(payload) ~= 'table' then
+        log_error('Mob info fetch: invalid response for zone ' .. zone_id)
+        mob_info = {}
+        mob_info_zone = zone_id
         return
     end
-    nm_set = {}
-    local count = 0
-    for _, name in ipairs(nms) do
-        if type(name) == 'string' then
-            nm_set[name] = true
-            count = count + 1
+    mob_info = {}
+    local total, nm_count = 0, 0
+    for name, info in pairs(payload) do
+        if type(name) == 'string' and type(info) == 'table' then
+            mob_info[name] = {
+                isNm    = info.isNm == true,
+                respawn = tonumber(info.respawn) or 0,
+            }
+            total = total + 1
+            if mob_info[name].isNm then nm_count = nm_count + 1 end
         end
     end
-    nm_set_zone = zone_id
-    log(string.format('Loaded %d known NM names for zone %d.', count, zone_id))
+    mob_info_zone = zone_id
+    log(string.format('Loaded mob info for zone %d: %d total names, %d classified as NM.',
+        zone_id, total, nm_count))
 end
 
 -- Watch auto-add: detect in-game Track transitions and append the targeted
@@ -819,6 +843,17 @@ local function poll_watch_entry(entry)
             label, current_name, entry.idx, entry.idx, current_hpp))
     end
 
+    -- Track death timestamp for the live respawn countdown. We only set it on
+    -- a real alive -> dead transition (so a freshly-watched corpse we never
+    -- saw alive doesn't get a bogus countdown). Cleared whenever we observe
+    -- the mob alive again.
+    if was_alive and not now_alive and current_hpp == 0 then
+        entry.died_at = os.time()
+    end
+    if now_alive then
+        entry.died_at = nil
+    end
+
     entry.last_name = current_name
     entry.last_status = current_status
     entry.last_hpp = current_hpp
@@ -866,9 +901,9 @@ local function build_watch_panel()
         local name = (mob and mob.name and mob.name ~= '' and mob.name)
             or e.last_name or e.added_name or '?'
         local eff_status = (mob and mob.status) or e.last_status
-        local eff_hpp = (mob and mob.hpp) or e.last_hpp or 0
-        local status_label, dist_str = '???', ''
-        if eff_status ~= nil then
+        local eff_hpp = (mob and mob.hpp) or e.last_hpp
+        local status_label, dist_str = 'out of range', ''
+        if eff_status ~= nil and eff_hpp ~= nil then
             if is_status_alive(eff_status, eff_hpp) then
                 status_label = string.format('alive %3d%%', eff_hpp)
                 -- Live distance only when the mob is currently in memory.
@@ -880,9 +915,21 @@ local function build_watch_panel()
                         direction_8(dx, dy))
                 end
             elseif eff_hpp == 0 then
-                -- HPP 0 covers both the corpse phase (status 2, ~20s after kill)
-                -- and the fully-despawned phase (status 3). Either way: dead.
+                -- HPP 0 (with a non-nil status from a real observation) covers
+                -- both the corpse phase (status 2, ~20s after kill) and the
+                -- fully-despawned phase (status 3). Either way: dead.
                 status_label = 'DEAD'
+                -- Append live respawn countdown when we know when the mob
+                -- died (real alive->dead transition observed) AND we have a
+                -- respawn time for its name from the zone's mob_info cache.
+                if e.died_at then
+                    local respawn = get_respawn_seconds(name)
+                        or get_respawn_seconds(e.added_name)
+                    if respawn and respawn > 0 then
+                        local remaining = respawn - (os.time() - e.died_at)
+                        status_label = 'DEAD  ' .. format_countdown_signed(remaining)
+                    end
+                end
             else
                 status_label = 'st=' .. tostring(eff_status)
             end
@@ -890,7 +937,7 @@ local function build_watch_panel()
         -- Two-column prefix: column 1 = tracked-by-game-scan (>), column 2 = popped (* = name differs from baseline)
         local m1 = (scan_idx == e.idx) and '>' or ' '
         local m2 = (name ~= e.added_name) and '*' or ' '
-        lines[#lines + 1] = string.format('%s%s %-18s 0x%03X %-10s%s',
+        lines[#lines + 1] = string.format('%s%s %-18s 0x%03X %-22s%s',
             m1, m2, name, e.idx, status_label, dist_str)
     end
     return table.concat(lines, '\n')
@@ -903,6 +950,98 @@ local function update_hunt_watch_text()
     end
     hunt_watch_text:update({ content = build_watch_panel() })
     hunt_watch_text:show()
+end
+
+-----------------------------------------------------------------------
+-- Hunt: NM cache inspector
+-- Debug overlay that lists every name in nm_set for the current zone.
+-- Useful for spotting false positives in the server-side classification
+-- heuristic (name appears <= 2 times OR spawntype != 0).
+-----------------------------------------------------------------------
+local hunt_nm_text = texts.new(
+    '${content|NM Cache (empty)}',
+    {
+        pos = { x = settings.HuntNmPos.x or 1200, y = settings.HuntNmPos.y or 50 },
+        bg = { alpha = 180, red = 0, green = 0, blue = 0, visible = true },
+        padding = 4,
+        text = {
+            font = 'Consolas',
+            size = 10,
+            alpha = 255,
+            red = 255, green = 255, blue = 255,
+            stroke = { width = 2, alpha = 255, red = 0, green = 0, blue = 0 },
+        },
+        flags = { draggable = true, bold = false, italic = false },
+    }
+)
+hunt_nm_text:hide()
+
+local function format_respawn(seconds)
+    if not seconds or seconds <= 0 then return '?' end
+    if seconds < 60 then return seconds .. 's' end
+    if seconds < 3600 then return string.format('%dm', math.floor(seconds / 60)) end
+    local h = math.floor(seconds / 3600)
+    local m = math.floor((seconds % 3600) / 60)
+    if m == 0 then return h .. 'h' end
+    return string.format('%dh%dm', h, m)
+end
+
+-- Granular MM:SS / H:MM:SS used for the live respawn countdown — we want
+-- per-second precision near the pop window so it actually feels like a
+-- countdown, not a chunky '4m' that doesn't change for 60 seconds.
+-- IMPORTANT: math.floor every input. Windower runs Lua 5.1, where %d in
+-- string.format strictly requires an integer-typed number; respawn values
+-- arrive from JSON as doubles, and `seconds % 60` produces doubles too,
+-- which would otherwise throw and crash the prerender hook.
+local function format_countdown(seconds)
+    seconds = math.floor(seconds)
+    if seconds < 60 then return string.format('%ds', seconds) end
+    if seconds < 3600 then
+        return string.format('%dm %02ds', math.floor(seconds / 60), seconds % 60)
+    end
+    local h = math.floor(seconds / 3600)
+    local rem = seconds % 3600
+    return string.format('%dh %dm %02ds', h, math.floor(rem / 60), rem % 60)
+end
+
+local function format_countdown_signed(remaining)
+    remaining = math.floor(remaining)
+    if remaining <= 0 then
+        local overdue = -remaining
+        if overdue < 5 then return 'DUE' end
+        return 'DUE +' .. format_countdown(overdue)
+    end
+    return 'in ' .. format_countdown(remaining)
+end
+
+local function build_nm_panel()
+    -- Show only mobs classified as NM, sorted by name, with respawn time.
+    local nm_names = {}
+    for name, info in pairs(mob_info) do
+        if info.isNm then nm_names[#nm_names + 1] = name end
+    end
+    table.sort(nm_names)
+    local header
+    if mob_info_zone then
+        header = string.format('NM Cache (%d — zone %d)', #nm_names, mob_info_zone)
+    else
+        header = 'NM Cache (not loaded)'
+    end
+    if #nm_names == 0 then return header end
+    local lines = { header }
+    for _, n in ipairs(nm_names) do
+        lines[#lines + 1] = string.format('  %-26s [%s]', n, format_respawn(mob_info[n].respawn))
+    end
+    return table.concat(lines, '\n')
+end
+
+local function update_hunt_nm_text()
+    if not settings.HuntEnabled or not settings.HuntNmVisible then
+        hunt_nm_text:hide()
+        return
+    end
+    hunt_nm_text:update({ content = build_nm_panel() })
+    hunt_nm_text:show()
 end
 
 -----------------------------------------------------------------------
@@ -1443,6 +1582,7 @@ windower.register_event('prerender', function()
         check_all_watches()
     end
     update_hunt_watch_text()
+    update_hunt_nm_text()
 
     -- Process one queued work item per frame
     if #work_queue > 0 then
@@ -1760,12 +1900,16 @@ windower.register_event('addon command', function(command, ...)
             end
             log(string.format('Watch list: %d entries  |  Sound: %s',
                 #watch_list, settings.HuntSoundEnabled and 'ON' or 'OFF'))
-            local nm_count = 0
-            for _ in pairs(nm_set) do nm_count = nm_count + 1 end
-            if nm_set_zone then
-                log(string.format('NM cache: %d names loaded for zone %d', nm_count, nm_set_zone))
+            local nm_count, total = 0, 0
+            for _, info in pairs(mob_info) do
+                total = total + 1
+                if info.isNm then nm_count = nm_count + 1 end
+            end
+            if mob_info_zone then
+                log(string.format('Mob info cache: %d total / %d NMs for zone %d',
+                    total, nm_count, mob_info_zone))
             else
-                log('NM cache: (not loaded — fetched on zone-in)')
+                log('Mob info cache: (not loaded — fetched on zone-in)')
             end
         elseif arg == 'pos' then
             -- //va hunt pos                              -> show positions
@@ -1781,17 +1925,21 @@ windower.register_event('addon command', function(command, ...)
                     settings.HuntWidescanPos.x or 0, settings.HuntWidescanPos.y or 0))
                 log(string.format('Watch list: (%d, %d)',
                     settings.HuntWatchPos.x or 0, settings.HuntWatchPos.y or 0))
-                log('Set: //va hunt pos <target|widescan|watch> <x> <y>  |  Save dragged: //va hunt pos save')
+                log(string.format('NM cache: (%d, %d)',
+                    settings.HuntNmPos.x or 0, settings.HuntNmPos.y or 0))
+                log('Set: //va hunt pos <target|widescan|watch|nm> <x> <y>  |  Save dragged: //va hunt pos save')
             elseif which == 'save' then
                 settings.HuntTargetPos = { x = hunt_target_text:pos_x(), y = hunt_target_text:pos_y() }
                 settings.HuntWidescanPos = { x = hunt_widescan_text:pos_x(), y = hunt_widescan_text:pos_y() }
                 settings.HuntWatchPos = { x = hunt_watch_text:pos_x(), y = hunt_watch_text:pos_y() }
+                settings.HuntNmPos = { x = hunt_nm_text:pos_x(), y = hunt_nm_text:pos_y() }
                 config.save(settings)
-                log(string.format('Saved: target (%d,%d), widescan (%d,%d), watch (%d,%d)',
+                log(string.format('Saved: target (%d,%d), widescan (%d,%d), watch (%d,%d), nm (%d,%d)',
                     settings.HuntTargetPos.x, settings.HuntTargetPos.y,
                     settings.HuntWidescanPos.x, settings.HuntWidescanPos.y,
-                    settings.HuntWatchPos.x, settings.HuntWatchPos.y))
-            elseif which == 'target' or which == 'widescan' or which == 'watch' then
+                    settings.HuntWatchPos.x, settings.HuntWatchPos.y,
+                    settings.HuntNmPos.x, settings.HuntNmPos.y))
+            elseif which == 'target' or which == 'widescan' or which == 'watch' or which == 'nm' then
                 local x = tonumber(args[3])
                 local y = tonumber(args[4])
                 if not x or not y then
@@ -1804,14 +1952,17 @@ windower.register_event('addon command', function(command, ...)
                 elseif which == 'widescan' then
                     settings.HuntWidescanPos = { x = x, y = y }
                     hunt_widescan_text:pos(x, y)
-                else
+                elseif which == 'watch' then
                     settings.HuntWatchPos = { x = x, y = y }
                     hunt_watch_text:pos(x, y)
+                else
+                    settings.HuntNmPos = { x = x, y = y }
+                    hunt_nm_text:pos(x, y)
                 end
                 config.save(settings)
                 log(string.format('%s position set to (%d, %d)', which, x, y))
             else
-                log_error('Usage: //va hunt pos [target|widescan|watch <x> <y> | save]')
+                log_error('Usage: //va hunt pos [target|widescan|watch|nm <x> <y> | save]')
             end
         elseif arg == 'probe' then
             -- //va hunt probe [label]
@@ -1963,6 +2114,7 @@ windower.register_event('addon command', function(command, ...)
             hunt_target_text:hide()
             hunt_widescan_text:hide()
             hunt_watch_text:hide()
+            hunt_nm_text:hide()
             clear_watch_list()
             config.save(settings)
             log('Hunt overlays: OFF (watch list cleared)')
@@ -1972,6 +2124,7 @@ windower.register_event('addon command', function(command, ...)
                 hunt_target_text:hide()
                 hunt_widescan_text:hide()
                 hunt_watch_text:hide()
+                hunt_nm_text:hide()
                 clear_watch_list()
             end
             config.save(settings)
@@ -1992,9 +2145,9 @@ windower.register_event('addon command', function(command, ...)
                     local current = windower.ffxi.get_mob_by_index(e.idx)
                     local cur_name = (current and current.name) or e.last_name or e.added_name or '?'
                     local eff_status = (current and current.status) or e.last_status
-                    local eff_hpp = (current and current.hpp) or e.last_hpp or 0
+                    local eff_hpp = (current and current.hpp) or e.last_hpp
                     local state
-                    if eff_status ~= nil then
+                    if eff_status ~= nil and eff_hpp ~= nil then
                         if is_status_alive(eff_status, eff_hpp) then
                             state = string.format('alive %d%%', eff_hpp)
                         elseif eff_hpp == 0 then
@@ -2027,6 +2180,43 @@ windower.register_event('addon command', function(command, ...)
             else
                 log_error('Usage: //va hunt watch [list|remove <idx|hex>|clear]')
             end
+        elseif arg == 'nm' then
+            -- //va hunt nm                  -> toggle the NM cache debug overlay
+            -- //va hunt nm show|hide        -> explicit visibility
+            -- //va hunt nm list             -> dump the cache to chat
+            local sub = args[2] and args[2]:lower() or 'toggle'
+            if sub == 'show' then
+                settings.HuntNmVisible = true
+                config.save(settings)
+                log('NM cache overlay: ON')
+            elseif sub == 'hide' then
+                settings.HuntNmVisible = false
+                hunt_nm_text:hide()
+                config.save(settings)
+                log('NM cache overlay: OFF')
+            elseif sub == 'toggle' then
+                settings.HuntNmVisible = not settings.HuntNmVisible
+                if not settings.HuntNmVisible then hunt_nm_text:hide() end
+                config.save(settings)
+                log('NM cache overlay: ' .. (settings.HuntNmVisible and 'ON' or 'OFF'))
+            elseif sub == 'list' then
+                local names = {}
+                for name, info in pairs(mob_info) do
+                    if info.isNm then names[#names + 1] = name end
+                end
+                table.sort(names)
+                if #names == 0 then
+                    log('NM cache is empty for zone ' .. tostring(mob_info_zone or '?') .. '.')
+                    return
+                end
+                log(string.format('--- NM cache (%d names, zone %s) ---',
+                    #names, tostring(mob_info_zone or '?')))
+                for _, n in ipairs(names) do
+                    log(string.format('  %s  [respawn %s]', n, format_respawn(mob_info[n].respawn)))
+                end
+            else
+                log_error('Usage: //va hunt nm [show|hide|toggle|list]')
+            end
         elseif arg == 'sound' then
             local s = args[2] and args[2]:lower() or nil
             if s == 'on' then
@@ -2045,7 +2235,7 @@ windower.register_event('addon command', function(command, ...)
             config.save(settings)
             log('Hunt sound: ' .. (settings.HuntSoundEnabled and 'ON' or 'OFF'))
         else
-            log_error('Usage: //va hunt [on|off|toggle|pos|watch|sound|probe]  (no args shows status)')
+            log_error('Usage: //va hunt [on|off|toggle|pos|watch|sound|nm|probe]  (no args shows status)')
         end
 
     elseif command == 'widescan' then
@@ -2265,6 +2455,8 @@ windower.register_event('addon command', function(command, ...)
         log('//va hunt watch remove <idx>    - Stop watching a mob (decimal or 0x-hex)')
         log('//va hunt watch clear           - Clear all watched mobs')
         log('//va hunt sound on|off|test     - Toggle pop alert sounds (or test playback)')
+        log('//va hunt nm show|hide|toggle   - Show/hide the NM cache debug overlay')
+        log('//va hunt nm list               - Dump the cached NM name list to chat')
         log('//va hunt probe [label]         - Recon: dump cursor-candidate state to hunt-probe-N.txt')
         log('//va session start   - Start a performance tracking session')
         log('//va session stop    - Stop the active session and upload data')
