@@ -14,6 +14,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const CATEGORY_ORDER = ['Relic', 'Mythic', 'Empyrean', 'Aeonic', 'Ergon']
 
+function stageBadgeClass(stage: string): string {
+  if (stage === 'Afterglow') return 'bg-yellow-400 text-yellow-950'
+  if (stage === 'Reforged') return 'bg-amber-600 text-white'
+  if (stage === 'Lv.99 (Augmented)') return 'bg-blue-500 text-white'
+  if (stage.startsWith('Lv.')) return 'bg-gray-600 text-gray-100'
+  return 'bg-gray-700 text-gray-300'
+}
+
 interface Props {
   characterId: string
 }
@@ -143,7 +151,7 @@ export default function RelicsTab({ characterId }: Props) {
                 <th className="px-4 py-2 text-left">Weapon</th>
                 <th className="px-4 py-2 text-left">Category</th>
                 <th className="px-4 py-2 text-left">Weapon Skill</th>
-                <th className="px-4 py-2 text-right">Version</th>
+                <th className="px-4 py-2 text-left">Stage</th>
               </tr>
             </thead>
             <tbody>
@@ -186,8 +194,10 @@ export default function RelicsTab({ characterId }: Props) {
                         </td>
                       </>
                     ) : null}
-                    <td className="px-4 py-1.5 text-right text-gray-400 text-xs">
-                      {ver.itemLevel ? `iLvl ${ver.itemLevel}` : ver.level ? `Lv.${ver.level}` : '—'}
+                    <td className="px-4 py-1.5">
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${stageBadgeClass(ver.stage)}`}>
+                        {ver.stage}
+                      </span>
                     </td>
                   </tr>
                 ))

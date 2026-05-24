@@ -764,13 +764,14 @@ export interface RelicWeaponVersion {
   level: number | null
   damage: number | null
   delay: number | null
+  stage: string
   currentlyHeld: boolean
 }
 
 export interface RelicWeapon {
   baseName: string
   category: string
-  weaponSkill: string
+  weaponSkill: string | null
   versions: RelicWeaponVersion[]
 }
 

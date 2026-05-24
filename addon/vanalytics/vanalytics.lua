@@ -10,6 +10,8 @@ _addon.commands = {'vanalytics', 'va'}
 local config = require('config')
 local res = require('resources')
 require('pack')
+local texts = require('texts')
+local packets = require('packets')
 local session = require('session')
 local inventory = require('inventory')
 local macro_lib = require('macros')
@@ -22,6 +24,9 @@ local defaults = {
     SyncInterval = 60,
     NotifyOnSync = true,
     macro_hashes = {},
+    HuntEnabled = false,
+    HuntTargetPos = { x = 10, y = 400 },
+    HuntWidescanPos = { x = 180, y = 10 },
 }
 
 local settings = config.load(defaults)
@@ -421,6 +426,218 @@ if settings.macro_hashes then
             settings.macro_hashes[key] = { ['local'] = value, remote = '' }
         end
     end
+end
+
+-----------------------------------------------------------------------
+-- Hunt: target overlay
+-- In-game UI panel that mirrors the standard Windower `targetinfo` addon:
+-- shows the current target's mob.index in both decimal and 3-digit hex,
+-- the convention BG-wiki / LSB / community tools use for placeholder IDs
+-- (e.g. "ID 157" = 0x157 = decimal 343).
+-- Part of the `hunt` feature group, gated behind `settings.HuntEnabled`.
+-----------------------------------------------------------------------
+local hunt_target_text = texts.new(
+    '${name|---}\nidx ${idx_dec|-} (0x${idx_hex|-})  st ${status|-}  hp ${hpp|-}%\n${distance|-}y  id ${id|-}  claim ${claim|-}',
+    {
+        pos = { x = settings.HuntTargetPos.x or 10, y = settings.HuntTargetPos.y or 400 },
+        bg = { alpha = 180, red = 0, green = 0, blue = 0, visible = true },
+        padding = 4,
+        text = {
+            font = 'Consolas',
+            size = 10,
+            alpha = 255,
+            red = 255, green = 255, blue = 255,
+            stroke = { width = 2, alpha = 255, red = 0, green = 0, blue = 0 },
+        },
+        flags = { draggable = true, bold = false, italic = false },
+    }
+)
+hunt_target_text:hide()
+
+local function update_hunt_target_text()
+    if not settings.HuntEnabled then return end
+    local mob = windower.ffxi.get_mob_by_target('st')
+        or windower.ffxi.get_mob_by_target('t')
+    if not mob or not mob.id or mob.id == 0 then
+        hunt_target_text:hide()
+        return
+    end
+
+    local distance = '?'
+    local player = windower.ffxi.get_player()
+    if player then
+        local self_mob = windower.ffxi.get_mob_by_id(player.id)
+        if self_mob and mob.x and self_mob.x then
+            local dx = mob.x - self_mob.x
+            local dy = mob.y - self_mob.y
+            distance = string.format('%.1f', math.sqrt(dx * dx + dy * dy))
+        end
+    end
+
+    hunt_target_text:update({
+        name = mob.name or '?',
+        idx_dec = tostring(mob.index or 0),
+        idx_hex = string.format('%03X', mob.index or 0),
+        status = tostring(mob.status or 0),
+        hpp = tostring(mob.hpp or 0),
+        distance = distance,
+        id = tostring(mob.id),
+        claim = (mob.claim_id and mob.claim_id ~= 0) and tostring(mob.claim_id) or '-',
+    })
+    hunt_target_text:show()
+end
+
+-----------------------------------------------------------------------
+-- Hunt: Wide Scan tracker overlay
+-- Hooks incoming packet 0x0F4 (one per mob in the in-game Wide Scan
+-- result) and renders a parallel panel that mirrors the game's native
+-- list with each mob's index in 3-digit hex (matching the BG-wiki
+-- convention) plus relative distance and 8-way compass direction.
+--
+-- Highlights the mob currently set as the in-game "Track" target
+-- (windower.ffxi.get_mob_by_target('scan')) with a '>' prefix and a
+-- tracking header line that shows live distance/direction as the player
+-- moves. Discovered via the //va hunt probe recon — the 'scan' target
+-- slot populates only after the user commits a Track action in-game.
+--
+-- Visibility:
+--   * Shows when a Wide Scan burst (0x0F4 packets) just arrived. This
+--     is the only signal the *user actually triggered Wide Scan*; any
+--     other menu (inventory, status, chat) doesn't fire these packets,
+--     so the panel won't appear unless it's relevant.
+--   * Stays shown while tracking (get_mob_by_target('scan') is set),
+--     so it persists as a navigation companion after Track closes the
+--     map.
+--   * Hidden the moment any menu closes (info.menu_open flips to
+--     false). Closing the map dismisses the panel as expected, and
+--     reopening any menu *without* re-scanning won't reshow it —
+--     prevents the panel from being stale clutter.
+--
+-- Part of the `hunt` feature group, gated behind `settings.HuntEnabled`:
+-- //va hunt on  -> both target overlay and this panel active
+-- //va hunt off -> both hidden
+-----------------------------------------------------------------------
+local widescan_entries = {}        -- ordered array of {name, idx, x_off, y_off, seen_at}, in 0x0F4 arrival order (matches game's native list)
+local widescan_index_map = {}      -- mob.index -> position in widescan_entries[]; lets us update-in-place on duplicates without changing list order
+local last_widescan_packet = 0     -- os.clock() of most recent 0x0F4
+local widescan_dirty = false       -- set true when panel needs re-render (only for non-tracking refresh; tracking forces re-render each frame for live distance)
+local widescan_active = false      -- gates panel visibility: true after a 0x0F4 burst (user just triggered Wide Scan), cleared the moment any menu closes
+local SCAN_RESET_GAP = 1.0         -- seconds; gap >= this before a new packet = new scan
+local hunt_probe_counter = 0       -- incremented per //va hunt probe; resets on addon reload
+
+local hunt_widescan_text = texts.new(
+    '${content|Wide Scan (no data)}',
+    {
+        pos = { x = settings.HuntWidescanPos.x or 10, y = settings.HuntWidescanPos.y or 50 },
+        bg = { alpha = 180, red = 0, green = 0, blue = 0, visible = true },
+        padding = 4,
+        text = {
+            font = 'Consolas',
+            size = 10,
+            alpha = 255,
+            red = 255, green = 255, blue = 255,
+            stroke = { width = 2, alpha = 255, red = 0, green = 0, blue = 0 },
+        },
+        flags = { draggable = true, bold = false, italic = false },
+    }
+)
+hunt_widescan_text:hide()
+
+-- Convert (x_off, y_off) to an 8-way compass label.
+-- FFXI convention: +X east, +Y north. If in-game testing shows N/S inverted,
+-- flip the sign on y_off in the atan2 call below.
+local DIR_LABELS = { 'E', 'NE', 'N', 'NW', 'W', 'SW', 'S', 'SE' }
+local function direction_8(x_off, y_off)
+    if not x_off or not y_off then return '?' end
+    if x_off == 0 and y_off == 0 then return '·' end
+    local angle = math.atan2(y_off, x_off)
+    local sector = math.floor((angle + math.pi / 8) / (math.pi / 4)) % 8
+    return DIR_LABELS[sector + 1]
+end
+
+local function distance_yards(x_off, y_off)
+    if not x_off or not y_off then return 0 end
+    return math.floor(math.sqrt(x_off * x_off + y_off * y_off) + 0.5)
+end
+
+-- Compute live distance + direction from the player to a tracked mob.
+-- Returns strings ready for display. Falls back to '?' if any data is missing.
+local function tracking_dist_dir(tracked_index)
+    local tracked = windower.ffxi.get_mob_by_index(tracked_index)
+    if not tracked or not tracked.x then return '?', '?' end
+    local player = windower.ffxi.get_player()
+    if not player then return '?', '?' end
+    local self_mob = windower.ffxi.get_mob_by_id(player.id)
+    if not self_mob or not self_mob.x then return '?', '?' end
+    local dx = tracked.x - self_mob.x
+    local dy = tracked.y - self_mob.y
+    return string.format('%d', math.floor(math.sqrt(dx * dx + dy * dy) + 0.5)),
+        direction_8(dx, dy)
+end
+
+local function build_widescan_panel(scan_target)
+    -- Render in arrival order: the game's native Wide Scan list orders entries
+    -- by the order the server sent 0x0F4 packets (mob category / family
+    -- grouping). Preserving arrival order keeps our panel aligned with the
+    -- in-game list visually.
+    local lines = {}
+
+    -- Tracking header: shown when the in-game "Track" action is active, i.e.
+    -- get_mob_by_target('scan') returns a mob. Distance/direction recomputed
+    -- each frame from live mob position so it stays accurate as the player
+    -- moves toward the target.
+    if scan_target and scan_target.index then
+        local dist_str, dir_str = tracking_dist_dir(scan_target.index)
+        lines[#lines + 1] = string.format('>> Tracking: %s (idx %d / 0x%03X)  ~%sy %s',
+            scan_target.name or '?', scan_target.index, scan_target.index,
+            dist_str, dir_str)
+    end
+
+    if #widescan_entries == 0 then
+        if scan_target then return table.concat(lines, '\n') end
+        return 'Wide Scan (waiting for scan...)'
+    end
+
+    if scan_target then lines[#lines + 1] = '' end  -- blank separator below header
+    lines[#lines + 1] = string.format('Wide Scan (%d)', #widescan_entries)
+    for _, e in ipairs(widescan_entries) do
+        -- Prefix the tracked row with '>' so it stands out at a glance.
+        local prefix = (scan_target and scan_target.index == e.idx) and '>' or ' '
+        lines[#lines + 1] = string.format('%s %-18s 0x%03X %4dy %s',
+            prefix, e.name or '?', e.idx,
+            distance_yards(e.x_off, e.y_off),
+            direction_8(e.x_off, e.y_off))
+    end
+    return table.concat(lines, '\n')
+end
+
+local function update_hunt_widescan_text()
+    if not settings.HuntEnabled then return end
+
+    local info = windower.ffxi.get_info()
+    local menu_open = info and info.menu_open
+    local scan_target = windower.ffxi.get_mob_by_target('scan')
+
+    -- Closing any menu deactivates the panel. Reopening a menu does NOT
+    -- reactivate it — only a fresh widescan burst (handled in 0x0F4) does.
+    -- This keeps the panel from appearing when the user opens inventory,
+    -- chat, etc. but hasn't actually triggered a Wide Scan.
+    if not menu_open then
+        widescan_active = false
+    end
+
+    if not widescan_active and not scan_target then
+        hunt_widescan_text:hide()
+        return
+    end
+
+    -- Re-render every frame when tracking (distance/direction change live);
+    -- otherwise only when scan list contents changed.
+    if scan_target or widescan_dirty then
+        hunt_widescan_text:update({ content = build_widescan_panel(scan_target) })
+        widescan_dirty = false
+    end
+    hunt_widescan_text:show()
 end
 
 -----------------------------------------------------------------------
@@ -940,6 +1157,10 @@ end
 
 -- Single prerender handler registered once at load time
 windower.register_event('prerender', function()
+    -- Refresh overlays every frame (both gated on settings.HuntEnabled)
+    update_hunt_target_text()
+    update_hunt_widescan_text()
+
     -- Process one queued work item per frame
     if #work_queue > 0 then
         local task = table.remove(work_queue, 1)
@@ -1017,6 +1238,38 @@ windower.register_event('incoming chunk', function(id, data)
     elseif id == 0x00A then
         -- Playtime in seconds (uint32 at offset 0xA0)
         playtime_seconds = data:unpack('I', 0xA0 + 1) or 0
+    elseif id == 0x0F4 then
+        -- Wide Scan tracker: server sends one of these per mob detected
+        -- by the player's most recent wide scan. Parsed via Windower's
+        -- packets lib so we don't depend on hard-coded byte offsets.
+        local ok, p = pcall(packets.parse, 'incoming', data)
+        if not ok or not p or not p.Index then return end
+
+        local now = os.clock()
+        if last_widescan_packet > 0 and (now - last_widescan_packet) > SCAN_RESET_GAP then
+            widescan_entries = {}
+            widescan_index_map = {}
+        end
+        last_widescan_packet = now
+
+        local entry = {
+            name    = p.Name or '?',
+            idx     = p.Index,
+            x_off   = p['X Offset'],
+            y_off   = p['Y Offset'],
+            seen_at = now,
+        }
+        local existing_pos = widescan_index_map[p.Index]
+        if existing_pos then
+            -- Same scan re-emitting this mob (or packet retry): update in place,
+            -- preserving its position in the displayed list.
+            widescan_entries[existing_pos] = entry
+        else
+            widescan_entries[#widescan_entries + 1] = entry
+            widescan_index_map[p.Index] = #widescan_entries
+        end
+        widescan_dirty = true
+        widescan_active = true   -- a fresh Wide Scan just happened; activate panel
     end
 end)
 
@@ -1196,6 +1449,340 @@ windower.register_event('addon command', function(command, ...)
             log_error('Failed to write dump file.')
         end
 
+    elseif command == 'hunt' then
+        local arg = args[1] and args[1]:lower() or nil
+        if arg == nil then
+            -- Bare command: show hunt status
+            local target_pos = settings.HuntTargetPos or { x = 0, y = 0 }
+            local widescan_pos = settings.HuntWidescanPos or { x = 0, y = 0 }
+            local n_entries = #widescan_entries
+            log('--- Hunt Status ---')
+            log('Overlays: ' .. (settings.HuntEnabled and 'ON' or 'OFF'))
+            log(string.format('Target overlay pos: (%d, %d)', target_pos.x or 0, target_pos.y or 0))
+            log(string.format('Wide scan tracker pos: (%d, %d)', widescan_pos.x or 0, widescan_pos.y or 0))
+            if last_widescan_packet > 0 then
+                local ago = math.floor(os.clock() - last_widescan_packet)
+                log(string.format('Wide scan entries: %d (last scan %ds ago)', n_entries, ago))
+            else
+                log(string.format('Wide scan entries: %d (no scans this session)', n_entries))
+            end
+            local scan_target = windower.ffxi.get_mob_by_target('scan')
+            if scan_target then
+                local dist_str, dir_str = tracking_dist_dir(scan_target.index)
+                log(string.format('Tracking: %s (idx %d / 0x%03X) ~%sy %s',
+                    scan_target.name or '?', scan_target.index, scan_target.index,
+                    dist_str, dir_str))
+            else
+                log('Tracking: (none — use in-game Track on a widescan entry)')
+            end
+        elseif arg == 'pos' then
+            -- //va hunt pos                              -> show positions
+            -- //va hunt pos target <x> <y>               -> set target overlay pos
+            -- //va hunt pos widescan <x> <y>             -> set wide scan panel pos
+            -- //va hunt pos save                         -> capture current dragged positions
+            local which = args[2] and args[2]:lower() or nil
+            if which == nil then
+                log(string.format('Target overlay: (%d, %d)',
+                    settings.HuntTargetPos.x or 0, settings.HuntTargetPos.y or 0))
+                log(string.format('Wide scan tracker: (%d, %d)',
+                    settings.HuntWidescanPos.x or 0, settings.HuntWidescanPos.y or 0))
+                log('Set: //va hunt pos <target|widescan> <x> <y>  |  Save dragged: //va hunt pos save')
+            elseif which == 'save' then
+                settings.HuntTargetPos = { x = hunt_target_text:pos_x(), y = hunt_target_text:pos_y() }
+                settings.HuntWidescanPos = { x = hunt_widescan_text:pos_x(), y = hunt_widescan_text:pos_y() }
+                config.save(settings)
+                log(string.format('Saved positions: target (%d, %d), widescan (%d, %d)',
+                    settings.HuntTargetPos.x, settings.HuntTargetPos.y,
+                    settings.HuntWidescanPos.x, settings.HuntWidescanPos.y))
+            elseif which == 'target' or which == 'widescan' then
+                local x = tonumber(args[3])
+                local y = tonumber(args[4])
+                if not x or not y then
+                    log_error('Usage: //va hunt pos ' .. which .. ' <x> <y>')
+                    return
+                end
+                if which == 'target' then
+                    settings.HuntTargetPos = { x = x, y = y }
+                    hunt_target_text:pos(x, y)
+                else
+                    settings.HuntWidescanPos = { x = x, y = y }
+                    hunt_widescan_text:pos(x, y)
+                end
+                config.save(settings)
+                log(string.format('%s position set to (%d, %d)', which, x, y))
+            else
+                log_error('Usage: //va hunt pos [target|widescan <x> <y> | save]')
+            end
+        elseif arg == 'probe' then
+            -- //va hunt probe [label]
+            -- Recon dump: writes every plausible cursor-related signal we can
+            -- get out of Windower to addon/vanalytics/hunt-probe-<N>[-label].txt
+            -- so we can diff multiple captures and see what (if anything)
+            -- changes with the in-game widescan cursor.
+            local label = args[2]
+            hunt_probe_counter = hunt_probe_counter + 1
+            local filename = 'hunt-probe-' .. hunt_probe_counter
+            if label and label ~= '' then
+                filename = filename .. '-' .. label
+            end
+            filename = filename .. '.txt'
+            local path = windower.addon_path .. filename
+
+            local lines = {}
+            local function recur_dump(val, prefix, depth)
+                if depth > 4 then
+                    lines[#lines + 1] = prefix .. ' = <max depth>'
+                    return
+                end
+                if type(val) == 'table' then
+                    for k, v in pairs(val) do
+                        local key = prefix .. '.' .. tostring(k)
+                        if type(v) == 'table' then
+                            lines[#lines + 1] = key .. ' = {table}'
+                            recur_dump(v, key, depth + 1)
+                        else
+                            lines[#lines + 1] = key .. ' = ' .. tostring(v) .. ' (' .. type(v) .. ')'
+                        end
+                    end
+                else
+                    lines[#lines + 1] = prefix .. ' = ' .. tostring(val) .. ' (' .. type(val) .. ')'
+                end
+            end
+
+            lines[#lines + 1] = '=== Vanalytics Hunt Probe #' .. hunt_probe_counter .. ' ==='
+            lines[#lines + 1] = 'Timestamp: ' .. os.date('%Y-%m-%d %H:%M:%S')
+            if label then lines[#lines + 1] = 'Label: ' .. label end
+            local info = windower.ffxi.get_info()
+            local zone_name = (info and info.zone and res.zones[info.zone] and res.zones[info.zone].en) or 'Unknown'
+            lines[#lines + 1] = 'Zone: ' .. zone_name .. ' (id=' .. tostring(info and info.zone) .. ')'
+            lines[#lines + 1] = ''
+
+            -- Every target slot string we can think of. pcall guards against
+            -- "invalid target type" errors from slots the API doesn't accept.
+            lines[#lines + 1] = '=== get_mob_by_target(slot) ==='
+            local slots = {
+                't', 'st', 'lastst', 'me', 'tt', 'bt', 'lt',
+                'scan', 'wsm', 'wsl', 'cursor', 'menu', 'lst', 'next', 'lock',
+                'p0', 'p1', 'p2', 'p3', 'p4', 'p5',
+            }
+            for _, slot in ipairs(slots) do
+                local ok, m = pcall(windower.ffxi.get_mob_by_target, slot)
+                if ok and m then
+                    lines[#lines + 1] = string.format("  %-8s -> idx=%-4d name=%-24s id=%d",
+                        slot, m.index or -1, tostring(m.name or '?'), m.id or -1)
+                elseif ok then
+                    lines[#lines + 1] = string.format("  %-8s -> nil", slot)
+                else
+                    lines[#lines + 1] = string.format("  %-8s -> <invalid slot>", slot)
+                end
+            end
+            lines[#lines + 1] = ''
+
+            -- Probe every windower.ffxi function name that could plausibly
+            -- expose menu/cursor state. Most will be nil — we want to see
+            -- which (if any) exist on this Windower build.
+            lines[#lines + 1] = '=== windower.ffxi.* function probe ==='
+            local probe_fns = {
+                'get_menu_id', 'get_menu_data', 'get_menu_name',
+                'get_widescan_data', 'get_widescan_mob', 'get_widescan_target',
+                'get_scan_data', 'get_scan_target', 'get_scan_index',
+                'get_cursor', 'get_cursor_index', 'get_selection',
+                'get_locked_target', 'get_target', 'get_subtarget',
+            }
+            for _, fname in ipairs(probe_fns) do
+                local fn = windower.ffxi[fname]
+                if type(fn) == 'function' then
+                    local ok, result = pcall(fn)
+                    if ok then
+                        lines[#lines + 1] = string.format("  %-26s = %s", fname .. '()', tostring(result))
+                        if type(result) == 'table' then
+                            for k, v in pairs(result) do
+                                lines[#lines + 1] = string.format("      .%s = %s (%s)", tostring(k), tostring(v), type(v))
+                            end
+                        end
+                    else
+                        lines[#lines + 1] = string.format("  %-26s = <call failed: %s>", fname .. '()', tostring(result))
+                    end
+                else
+                    lines[#lines + 1] = string.format("  %-26s = <not a function>", fname)
+                end
+            end
+            lines[#lines + 1] = ''
+
+            lines[#lines + 1] = '=== get_info() (full) ==='
+            recur_dump(info or {}, 'info', 0)
+            lines[#lines + 1] = ''
+
+            local player = windower.ffxi.get_player()
+            lines[#lines + 1] = '=== get_player() — index/cursor candidate fields ==='
+            if player then
+                for k, v in pairs(player) do
+                    local kl = tostring(k):lower()
+                    if kl:find('target') or kl:find('index') or kl:find('cursor')
+                        or kl:find('menu') or kl:find('select') or kl:find('scan') then
+                        lines[#lines + 1] = string.format('  player.%s = %s (%s)', tostring(k), tostring(v), type(v))
+                    end
+                end
+            end
+            lines[#lines + 1] = ''
+
+            -- One mob entry from get_mob_array() chosen at random as a baseline,
+            -- so we can compare field shapes across probes (catches if mobs
+            -- gain/lose a "is_selected"-type flag when hovered in widescan).
+            lines[#lines + 1] = '=== sample mob from get_mob_array() ==='
+            local mob_array = windower.ffxi.get_mob_array()
+            if mob_array then
+                for _, m in pairs(mob_array) do
+                    if m and m.id and m.id ~= 0 then
+                        recur_dump(m, 'mob[' .. tostring(m.index) .. ']', 0)
+                        break
+                    end
+                end
+            end
+
+            local f = io.open(path, 'w')
+            if f then
+                f:write(table.concat(lines, '\n'))
+                f:close()
+                log_success('Probe #' .. hunt_probe_counter .. ' written: ' .. path)
+            else
+                log_error('Failed to write probe file: ' .. path)
+            end
+        elseif arg == 'on' then
+            settings.HuntEnabled = true
+            config.save(settings)
+            log('Hunt overlays: ON')
+        elseif arg == 'off' then
+            settings.HuntEnabled = false
+            hunt_target_text:hide()
+            hunt_widescan_text:hide()
+            config.save(settings)
+            log('Hunt overlays: OFF')
+        elseif arg == 'toggle' then
+            settings.HuntEnabled = not settings.HuntEnabled
+            if not settings.HuntEnabled then
+                hunt_target_text:hide()
+                hunt_widescan_text:hide()
+            end
+            config.save(settings)
+            log('Hunt overlays: ' .. (settings.HuntEnabled and 'ON' or 'OFF'))
+        else
+            log_error('Usage: //va hunt [on|off|toggle|pos|status]  (no args shows status)')
+        end
+
+    elseif command == 'widescan' then
+        -- Recon command: dump the current widescan tracker results with mob index + id + name.
+        -- BG-wiki and LSB pool data publish zone-local mob indexes (e.g. "ID 157"),
+        -- which match windower's mob.index, NOT the full 32-bit mob.id.
+        if not windower.ffxi.get_mob_list then
+            log_error('windower.ffxi.get_mob_list not available in this Windower version.')
+            return
+        end
+
+        local mob_list = windower.ffxi.get_mob_list()
+        if not mob_list then
+            log('No widescan data. Use widescan in-game first (RNG/BST or pet variant).')
+            return
+        end
+
+        local count = 0
+        for _ in pairs(mob_list) do count = count + 1 end
+        if count == 0 then
+            log('Widescan list is empty. Refresh widescan in-game.')
+            return
+        end
+
+        local player = windower.ffxi.get_player()
+        local self_mob = player and windower.ffxi.get_mob_by_id(player.id)
+        local filter = args[1] and args[1]:lower() or nil
+
+        local entries = {}
+        for index, value in pairs(mob_list) do
+            local name = type(value) == 'string' and value
+                or (type(value) == 'table' and value.name)
+                or '?'
+            local entry = { index = index, name = name, raw_type = type(value) }
+            if windower.ffxi.get_mob_by_index then
+                local mob = windower.ffxi.get_mob_by_index(index)
+                if mob then
+                    entry.id = mob.id
+                    entry.x, entry.y, entry.z = mob.x, mob.y, mob.z
+                    entry.hpp = mob.hpp
+                    entry.spawn_type = mob.spawn_type
+                    entry.valid_target = mob.valid_target
+                    entry.status = mob.status
+                    entry.claim_id = mob.claim_id
+                    entry.is_npc = mob.is_npc
+                    if self_mob and mob.x and self_mob.x then
+                        local dx = mob.x - self_mob.x
+                        local dy = mob.y - self_mob.y
+                        entry.distance = math.sqrt(dx*dx + dy*dy)
+                    end
+                end
+            end
+            table.insert(entries, entry)
+        end
+
+        table.sort(entries, function(a, b)
+            if a.name == b.name then return a.index < b.index end
+            return (a.name or '') < (b.name or '')
+        end)
+
+        log('--- Widescan (' .. count .. ' entries' ..
+            (filter and (', filter="' .. filter .. '"') or '') .. ') ---')
+        local shown = 0
+        local CHAT_LIMIT = 30
+        for _, e in ipairs(entries) do
+            if not filter or e.name:lower():find(filter, 1, true) then
+                local dist_str = e.distance and string.format(' %.1fy', e.distance) or ''
+                local live_str = ''
+                if e.status ~= nil or e.valid_target ~= nil then
+                    live_str = string.format(' [vt=%s st=%s hpp=%s]',
+                        tostring(e.valid_target),
+                        tostring(e.status),
+                        e.hpp and (e.hpp .. '%') or '-')
+                end
+                log(string.format('  idx %4d  %s%s%s', e.index, e.name, dist_str, live_str))
+                shown = shown + 1
+                if shown >= CHAT_LIMIT then
+                    log('  ... (truncated; full list in widescan.txt)')
+                    break
+                end
+            end
+        end
+        if filter and shown == 0 then
+            log('  (no matches)')
+        end
+
+        local info = windower.ffxi.get_info()
+        local zone_name = (info and res.zones[info.zone] and res.zones[info.zone].en) or 'Unknown'
+        local file_path = windower.addon_path .. 'widescan.txt'
+        local f = io.open(file_path, 'w')
+        if f then
+            local first_key, first_val = next(mob_list)
+            f:write('=== Widescan dump ===\n')
+            f:write('Zone: ' .. zone_name .. ' (id=' .. tostring(info and info.zone) .. ')\n')
+            f:write('Total entries: ' .. count .. '\n')
+            f:write('Raw value type from get_mob_list(): ' .. type(first_val) ..
+                ' (sample: key=' .. tostring(first_key) .. ' val=' .. tostring(first_val) .. ')\n\n')
+            f:write(string.format('%-6s  %-32s  %-10s  %-8s  %-18s  %-5s  %-5s  %-7s  %-9s  %s\n',
+                'INDEX', 'NAME', 'ID', 'DIST', 'POS(x,y,z)', 'HPP', 'VTGT', 'STATUS', 'CLAIM_ID', 'NPC?'))
+            for _, e in ipairs(entries) do
+                local pos = (e.x and e.y and e.z) and string.format('(%.0f,%.0f,%.0f)', e.x, e.y, e.z) or ''
+                local dist = e.distance and string.format('%.1fy', e.distance) or ''
+                local id_str = e.id and tostring(e.id) or ''
+                local hpp = e.hpp and (e.hpp .. '%') or ''
+                local vtgt = (e.valid_target ~= nil) and tostring(e.valid_target) or ''
+                local status = (e.status ~= nil) and tostring(e.status) or ''
+                local claim = (e.claim_id ~= nil and e.claim_id ~= 0) and tostring(e.claim_id) or ''
+                local npc = (e.is_npc ~= nil) and tostring(e.is_npc) or ''
+                f:write(string.format('%-6d  %-32s  %-10s  %-8s  %-18s  %-5s  %-5s  %-7s  %-9s  %s\n',
+                    e.index, e.name, id_str, dist, pos, hpp, vtgt, status, claim, npc))
+            end
+            f:close()
+            log_success('Full dump: ' .. file_path)
+        end
+
     elseif command == 'url' then
         local url = args[1]
         if not url or url == '' then
@@ -1288,6 +1875,14 @@ windower.register_event('addon command', function(command, ...)
         log('//va interval N   - Set sync interval in minutes (min: ' .. MIN_INTERVAL .. ')')
         log('//va notify on|off - Toggle in-game chat notifications on successful sync')
         log('//va dump         - Dump player data to file')
+        log('//va widescan [filter] - List widescan results with mob indexes (BG-wiki "ID" matches mob.index)')
+        log('//va hunt                       - Show hunt status (overlays, positions, scan state)')
+        log('//va hunt on|off|toggle         - Toggle hunt overlays (target info + wide scan tracker)')
+        log('//va hunt pos                   - Show current overlay positions')
+        log('//va hunt pos target <x> <y>    - Move target overlay (no mouse needed)')
+        log('//va hunt pos widescan <x> <y>  - Move wide scan tracker panel')
+        log('//va hunt pos save              - Persist current dragged positions')
+        log('//va hunt probe [label]         - Recon: dump cursor-candidate state to hunt-probe-N.txt')
         log('//va session start   - Start a performance tracking session')
         log('//va session stop    - Stop the active session and upload data')
         log('//va session status  - Show current session info')
@@ -1344,6 +1939,16 @@ end)
 
 windower.register_event('incoming text', function(original, modified, original_mode, modified_mode, blocked)
     session.on_text(original, modified, original_mode, modified_mode, blocked)
+end)
+
+windower.register_event('zone change', function()
+    -- Wide Scan results are zone-scoped; flush stale state on every transition.
+    widescan_entries = {}
+    widescan_index_map = {}
+    last_widescan_packet = 0
+    widescan_dirty = true
+    widescan_active = false
+    hunt_widescan_text:hide()
 end)
 
 windower.register_event('unload', function()

@@ -3,7 +3,9 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vanalytics.Core.Data;
 using Vanalytics.Core.DTOs.Characters;
+using Vanalytics.Core.DTOs.Porter;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
 
@@ -163,11 +165,13 @@ public class CharactersController : ControllerBase
                 gi.ItemLevel,
                 gi.Level,
                 gi.Damage,
-                gi.Delay
+                gi.Delay,
+                gi.Description
             })
             .ToListAsync();
 
-        // Build response: for each weapon def, find matching items the player has held
+        // Build response: for each weapon def, find matching items the player has held,
+        // collapse duplicate ItemIds at the same stage, and order by canonical progression.
         var results = new List<object>();
 
         foreach (var def in weaponDefs.DistinctBy(d => d.BaseName))
@@ -183,9 +187,41 @@ public class CharactersController : ControllerBase
                     gi.Level,
                     gi.Damage,
                     gi.Delay,
+                    Stage = UltimateWeaponStage.Derive(gi.Level, gi.ItemLevel, gi.Description),
+                    Rank = UltimateWeaponStage.Rank(gi.Level, gi.ItemLevel, gi.Description),
                     CurrentlyHeld = currentItemIds.Contains(gi.ItemId)
                 })
-                .OrderByDescending(v => v.ItemLevel ?? v.Level ?? 0)
+                .GroupBy(v => v.Stage)
+                .Select(g =>
+                {
+                    var rep = g.OrderByDescending(v => v.CurrentlyHeld).First();
+                    return new
+                    {
+                        rep.ItemId,
+                        rep.Name,
+                        rep.IconPath,
+                        rep.ItemLevel,
+                        rep.Level,
+                        rep.Damage,
+                        rep.Delay,
+                        Stage = g.Key,
+                        rep.Rank,
+                        CurrentlyHeld = g.Any(v => v.CurrentlyHeld)
+                    };
+                })
+                .OrderBy(v => v.Rank)
+                .Select(v => new
+                {
+                    v.ItemId,
+                    v.Name,
+                    v.IconPath,
+                    v.ItemLevel,
+                    v.Level,
+                    v.Damage,
+                    v.Delay,
+                    v.Stage,
+                    v.CurrentlyHeld
+                })
                 .ToList();
 
             if (versions.Count > 0)
@@ -215,6 +251,128 @@ public class CharactersController : ControllerBase
             .ToList();
 
         return Ok(new { progress, weapons = results });
+    }
+
+    [HttpGet("{id:guid}/porter")]
+    public async Task<IActionResult> GetPorter(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var slips = await _db.CharacterPorterSlips
+            .Where(s => s.CharacterId == id)
+            .Join(_db.GameItems,
+                s => s.SlipItemId,
+                gi => gi.ItemId,
+                (s, gi) => new
+                {
+                    s.SlipItemId,
+                    s.SlipNumber,
+                    s.SyncedAt,
+                    s.UserHidden,
+                    SlipName = gi.Name ?? gi.NameJa ?? "Unknown",
+                    gi.IconPath
+                })
+            .ToListAsync();
+
+        var items = await _db.CharacterPorterItems
+            .Where(p => p.CharacterId == id)
+            .Join(_db.GameItems,
+                p => p.ItemId,
+                gi => gi.ItemId,
+                (p, gi) => new
+                {
+                    p.SlipItemId,
+                    p.ItemId,
+                    ItemName = gi.Name ?? gi.NameJa ?? "Unknown",
+                    gi.IconPath,
+                    gi.Category,
+                    gi.StackSize,
+                    gi.BaseSell,
+                    IsRare = (gi.Flags & 0x8000) != 0,
+                    IsExclusive = (gi.Flags & 0x4000) != 0
+                })
+            .ToListAsync();
+
+        var itemsBySlip = items
+            .GroupBy(i => i.SlipItemId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var response = slips
+            .OrderBy(s => s.SlipNumber)
+            .Select(s => new PorterSlipResponse
+            {
+                SlipItemId = s.SlipItemId,
+                SlipNumber = s.SlipNumber,
+                SlipName = s.SlipName,
+                SlipIconPath = s.IconPath,
+                SyncedAt = s.SyncedAt,
+                UserHidden = s.UserHidden,
+                Items = itemsBySlip.TryGetValue(s.SlipItemId, out var slipItems)
+                    ? slipItems.OrderBy(i => i.ItemName).Select(i => new PorterItemResponse
+                    {
+                        ItemId = i.ItemId,
+                        ItemName = i.ItemName,
+                        IconPath = i.IconPath,
+                        Category = i.Category,
+                        BaseSell = i.BaseSell,
+                        StackSize = i.StackSize,
+                        IsRare = i.IsRare,
+                        IsExclusive = i.IsExclusive
+                    }).ToList()
+                    : []
+            })
+            .ToList();
+
+        return Ok(response);
+    }
+
+    [HttpPatch("{id:guid}/porter/{slipItemId:int}")]
+    public async Task<IActionResult> UpdatePorterSlip(Guid id, int slipItemId, [FromBody] UpdatePorterSlipRequest request)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var slip = await _db.CharacterPorterSlips
+            .FirstOrDefaultAsync(s => s.CharacterId == id && s.SlipItemId == slipItemId);
+
+        if (slip is null) return NotFound();
+
+        slip.UserHidden = request.UserHidden;
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id:guid}/porter/{slipItemId:int}")]
+    public async Task<IActionResult> ForgetPorterSlip(Guid id, int slipItemId)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var slip = await _db.CharacterPorterSlips
+            .FirstOrDefaultAsync(s => s.CharacterId == id && s.SlipItemId == slipItemId);
+
+        if (slip is null) return NotFound();
+
+        var items = await _db.CharacterPorterItems
+            .Where(p => p.CharacterId == id && p.SlipItemId == slipItemId)
+            .ToListAsync();
+
+        _db.CharacterPorterItems.RemoveRange(items);
+        _db.CharacterPorterSlips.Remove(slip);
+        await _db.SaveChangesAsync();
+
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]

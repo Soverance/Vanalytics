@@ -1,0 +1,20 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Vanalytics.Core.Models;
+
+namespace Vanalytics.Data.Configurations;
+
+public class CharacterPorterSlipConfiguration : IEntityTypeConfiguration<CharacterPorterSlip>
+{
+    public void Configure(EntityTypeBuilder<CharacterPorterSlip> builder)
+    {
+        builder.HasKey(s => s.Id);
+
+        builder.HasIndex(s => new { s.CharacterId, s.SlipItemId }).IsUnique();
+
+        builder.HasOne(s => s.Character)
+            .WithMany()
+            .HasForeignKey(s => s.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
