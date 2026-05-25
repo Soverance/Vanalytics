@@ -45,16 +45,25 @@ public class PorterController : ControllerBase
         var slipsProcessed = 0;
         var itemsProcessed = 0;
 
+        // Preload all slips and items for this character in two queries, then
+        // operate against in-memory dictionaries. Avoids N+1 round-trips.
+        var slipIds = request.Slips.Select(s => s.SlipItemId).ToHashSet();
+
+        var existingSlips = await _db.CharacterPorterSlips
+            .Where(s => s.CharacterId == character.Id && slipIds.Contains(s.SlipItemId))
+            .ToDictionaryAsync(s => s.SlipItemId);
+
+        var existingItemsBySlip = (await _db.CharacterPorterItems
+            .Where(p => p.CharacterId == character.Id && slipIds.Contains(p.SlipItemId))
+            .ToListAsync())
+            .GroupBy(p => p.SlipItemId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         // Per-slip authoritative replace: for each slip in the payload, wipe and rewrite
         // its items. Slips not in the payload are left alone (player wasn't carrying them).
         foreach (var slipEntry in request.Slips)
         {
-            var existingSlip = await _db.CharacterPorterSlips
-                .FirstOrDefaultAsync(s =>
-                    s.CharacterId == character.Id &&
-                    s.SlipItemId == slipEntry.SlipItemId);
-
-            if (existingSlip is null)
+            if (!existingSlips.TryGetValue(slipEntry.SlipItemId, out var existingSlip))
             {
                 _db.CharacterPorterSlips.Add(new CharacterPorterSlip
                 {
@@ -72,10 +81,10 @@ public class PorterController : ControllerBase
                 existingSlip.UserHidden = false;
             }
 
-            var existingItems = await _db.CharacterPorterItems
-                .Where(p => p.CharacterId == character.Id && p.SlipItemId == slipEntry.SlipItemId)
-                .ToListAsync();
-            _db.CharacterPorterItems.RemoveRange(existingItems);
+            if (existingItemsBySlip.TryGetValue(slipEntry.SlipItemId, out var existingItems))
+            {
+                _db.CharacterPorterItems.RemoveRange(existingItems);
+            }
 
             // Dedupe item IDs within a slip — extdata is a bitmap so each item appears once,
             // but a malformed client could send duplicates. Unique index would throw otherwise.

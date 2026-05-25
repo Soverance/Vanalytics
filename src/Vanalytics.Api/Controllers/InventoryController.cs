@@ -50,14 +50,20 @@ public class InventoryController : ControllerBase
         // doesn't conflict (same entity marked Deleted then Modified).
         if (request.FullSync)
         {
-            var existing = await _db.CharacterInventories
+            await _db.CharacterInventories
                 .Where(ci => ci.CharacterId == character.Id)
-                .ToListAsync();
-            _db.CharacterInventories.RemoveRange(existing);
-            await _db.SaveChangesAsync();
+                .ExecuteDeleteAsync();
         }
 
+        // Preload all existing inventory rows in a single query and index by
+        // (ItemId, Bag, SlotIndex) so the per-change lookup is in-memory.
+        // After a full-sync wipe this dictionary is empty, which is correct.
+        var existingByKey = await _db.CharacterInventories
+            .Where(ci => ci.CharacterId == character.Id)
+            .ToDictionaryAsync(ci => (ci.ItemId, ci.Bag, ci.SlotIndex));
+
         var processed = 0;
+        var now = DateTimeOffset.UtcNow;
 
         foreach (var change in request.Changes)
         {
@@ -77,16 +83,11 @@ public class InventoryController : ControllerBase
                 ChangeType = changeType,
                 QuantityBefore = change.QuantityBefore,
                 QuantityAfter = change.QuantityAfter,
-                ChangedAt = DateTimeOffset.UtcNow
+                ChangedAt = now
             });
 
-            // Look up existing inventory record
-            var existing = await _db.CharacterInventories
-                .FirstOrDefaultAsync(ci =>
-                    ci.CharacterId == character.Id &&
-                    ci.ItemId == change.ItemId &&
-                    ci.Bag == bag &&
-                    ci.SlotIndex == change.SlotIndex);
+            var key = (change.ItemId, bag, change.SlotIndex);
+            existingByKey.TryGetValue(key, out var existing);
 
             switch (changeType)
             {
@@ -94,19 +95,21 @@ public class InventoryController : ControllerBase
                     if (existing is not null)
                     {
                         existing.Quantity = change.QuantityAfter;
-                        existing.LastSeenAt = DateTimeOffset.UtcNow;
+                        existing.LastSeenAt = now;
                     }
                     else
                     {
-                        _db.CharacterInventories.Add(new CharacterInventory
+                        var added = new CharacterInventory
                         {
                             CharacterId = character.Id,
                             ItemId = change.ItemId,
                             Bag = bag,
                             SlotIndex = change.SlotIndex,
                             Quantity = change.QuantityAfter,
-                            LastSeenAt = DateTimeOffset.UtcNow
-                        });
+                            LastSeenAt = now
+                        };
+                        _db.CharacterInventories.Add(added);
+                        existingByKey[key] = added;
                     }
                     break;
 
@@ -114,7 +117,7 @@ public class InventoryController : ControllerBase
                     if (existing is not null)
                     {
                         existing.Quantity = change.QuantityAfter;
-                        existing.LastSeenAt = DateTimeOffset.UtcNow;
+                        existing.LastSeenAt = now;
                     }
                     break;
 
@@ -122,6 +125,7 @@ public class InventoryController : ControllerBase
                     if (existing is not null)
                     {
                         _db.CharacterInventories.Remove(existing);
+                        existingByKey.Remove(key);
                     }
                     break;
             }

@@ -251,33 +251,48 @@ public class SyncController : ControllerBase
 
             var modelLookup = request.Models.ToDictionary(m => m.SlotId, m => m.ModelId);
 
+            // Build the set of (ItemId, SlotId) pairs we're about to upsert, then
+            // fetch all matching ItemModelMappings in one round-trip.
+            var pairsToUpsert = new List<(int ItemId, int SlotId, int ModelId)>();
             foreach (var gearEntry in request.Gear)
             {
                 if (gearEntry.ItemId <= 0) continue;
                 if (!slotNameToModelIndex.TryGetValue(gearEntry.Slot, out var modelSlotIndex)) continue;
                 if (!modelLookup.TryGetValue(modelSlotIndex, out var modelId)) continue;
                 if (modelId <= 0) continue;
+                pairsToUpsert.Add((gearEntry.ItemId, modelSlotIndex, modelId));
+            }
 
-                var existing = await _db.ItemModelMappings
-                    .FirstOrDefaultAsync(m => m.ItemId == gearEntry.ItemId && m.SlotId == modelSlotIndex);
+            if (pairsToUpsert.Count > 0)
+            {
+                var itemIds = pairsToUpsert.Select(p => p.ItemId).ToHashSet();
+                var slotIds = pairsToUpsert.Select(p => p.SlotId).ToHashSet();
+                var existingMappings = (await _db.ItemModelMappings
+                    .Where(m => itemIds.Contains(m.ItemId) && slotIds.Contains(m.SlotId))
+                    .ToListAsync())
+                    .ToDictionary(m => (m.ItemId, m.SlotId));
 
-                if (existing != null)
+                var modelNow = DateTimeOffset.UtcNow;
+                foreach (var (itemId, slotId, modelId) in pairsToUpsert)
                 {
-                    existing.ModelId = modelId;
-                    existing.Source = ModelMappingSource.Addon;
-                    existing.UpdatedAt = DateTimeOffset.UtcNow;
-                }
-                else
-                {
-                    _db.ItemModelMappings.Add(new ItemModelMapping
+                    if (existingMappings.TryGetValue((itemId, slotId), out var existing))
                     {
-                        ItemId = gearEntry.ItemId,
-                        SlotId = modelSlotIndex,
-                        ModelId = modelId,
-                        Source = ModelMappingSource.Addon,
-                        CreatedAt = DateTimeOffset.UtcNow,
-                        UpdatedAt = DateTimeOffset.UtcNow
-                    });
+                        existing.ModelId = modelId;
+                        existing.Source = ModelMappingSource.Addon;
+                        existing.UpdatedAt = modelNow;
+                    }
+                    else
+                    {
+                        _db.ItemModelMappings.Add(new ItemModelMapping
+                        {
+                            ItemId = itemId,
+                            SlotId = slotId,
+                            ModelId = modelId,
+                            Source = ModelMappingSource.Addon,
+                            CreatedAt = modelNow,
+                            UpdatedAt = modelNow
+                        });
+                    }
                 }
             }
         }
