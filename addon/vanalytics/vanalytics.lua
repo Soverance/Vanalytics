@@ -21,6 +21,7 @@ local missions_lib = require('missions')
 local collection_lib = require('collection')
 local macro_lib = require('macros')
 local moves_lib = require('moves')
+local async_http = require('async_http')
 
 -- Default settings (matches settings.xml)
 local defaults = {
@@ -65,22 +66,21 @@ local function log_success(msg)
 end
 
 -----------------------------------------------------------------------
--- HTTP helper: use ssl.https for HTTPS URLs, socket.http for HTTP
+-- HTTP helper: non-blocking via async_http. Callers MUST pass a callback;
+-- the request fires asynchronously and the callback runs on a future frame
+-- when the response (or error) is available. Game thread never blocks.
+--
+-- params shape:
+--   url, method, headers, body (string), timeout, label
+-- callback signature:
+--   (ok, status_or_err, headers, body)
+--     ok = true on HTTP response received, nil on connection failure
+--     status_or_err = numeric HTTP status (on success) or labeled error string
+--     headers = lowercased response header table
+--     body = response body string
 -----------------------------------------------------------------------
-local function http_request(params)
-    local ltn12 = require('ltn12')
-    -- 30s budget — long enough for cold-start + initial full-inventory uploads
-    -- on slower connections. The call is still synchronous and freezes the
-    -- game for its duration, so don't raise this without a good reason.
-    if params.url and params.url:sub(1, 5) == 'https' then
-        local https = require('ssl.https')
-        https.TIMEOUT = 30
-        return https.request(params)
-    else
-        local http = require('socket.http')
-        http.TIMEOUT = 30
-        return http.request(params)
-    end
+local function http_request(params, callback)
+    async_http.request(params, callback)
 end
 
 -----------------------------------------------------------------------
@@ -895,66 +895,64 @@ local function remove_from_watch(idx)
 end
 
 -- Fetch the authoritative per-mob metadata for a zone (NM classification
--- + respawn time per name). HTTP is synchronous via the existing helper —
--- brief stutter on zone-in is acceptable since the payload is small and
--- fetches are infrequent (one per zone-change).
+-- + respawn time per name). Async via http_request; mob_info populates on
+-- whichever frame the response arrives. Hunt features that read mob_info
+-- before the response just see an empty table (alerts default gracefully).
 local function fetch_zone_nms(zone_id)
     if not zone_id or zone_id == 0 then return end
     local url = settings.ApiUrl .. '/api/zones/' .. tostring(zone_id) .. '/nm'
-    local ltn12 = require('ltn12')
-    local response_body = {}
-    local result, status_code = http_request({
+    http_request({
         url = url,
         method = 'GET',
-        sink = ltn12.sink.table(response_body),
-    })
-    if not result or status_code ~= 200 then
-        log_error(string.format('Mob info fetch failed for zone %d (status %s) — alerts default to standard sound, no countdown.',
-            zone_id, tostring(status_code)))
-        mob_info = {}
-        mob_info_zone = zone_id
-        return
-    end
-    local body = table.concat(response_body)
-    local payload = json_decode(body)
-    if type(payload) ~= 'table' then
-        log_error('Mob info fetch: invalid response for zone ' .. zone_id)
-        mob_info = {}
-        mob_info_zone = zone_id
-        return
-    end
-    mob_info = {}
-    local total, nm_count = 0, 0
-    for name, info in pairs(payload) do
-        if type(name) == 'string' and type(info) == 'table' then
-            local entry = {
-                isNm        = info.isNm == true,
-                respawn     = tonumber(info.respawn) or 0,
-                spawnType   = type(info.spawnType) == 'string' and info.spawnType or nil,
-                genus       = type(info.genus) == 'string' and info.genus or nil,
-                notes       = type(info.notes) == 'string' and info.notes or nil,
-                mobIndices  = {},
-                placeholder = nil,
-            }
-            if type(info.mobIndices) == 'table' then
-                for _, ix in ipairs(info.mobIndices) do
-                    if type(ix) == 'string' then entry.mobIndices[#entry.mobIndices + 1] = ix end
-                end
-            end
-            if type(info.placeholder) == 'table' then
-                entry.placeholder = {
-                    name     = type(info.placeholder.name) == 'string' and info.placeholder.name or nil,
-                    mobIndex = type(info.placeholder.mobIndex) == 'string' and info.placeholder.mobIndex or nil,
-                }
-            end
-            mob_info[name] = entry
-            total = total + 1
-            if entry.isNm then nm_count = nm_count + 1 end
+        label = 'zone-nms',
+    }, function(result, status_code, _, body)
+        if not result or status_code ~= 200 then
+            log_error(string.format('Mob info fetch failed for zone %d (status %s) — alerts default to standard sound, no countdown.',
+                zone_id, tostring(status_code)))
+            mob_info = {}
+            mob_info_zone = zone_id
+            return
         end
-    end
-    mob_info_zone = zone_id
-    log(string.format('Loaded mob info for zone %d: %d total names, %d classified as NM.',
-        zone_id, total, nm_count))
+        local payload = body and json_decode(body)
+        if type(payload) ~= 'table' then
+            log_error('Mob info fetch: invalid response for zone ' .. zone_id)
+            mob_info = {}
+            mob_info_zone = zone_id
+            return
+        end
+        mob_info = {}
+        local total, nm_count = 0, 0
+        for name, info in pairs(payload) do
+            if type(name) == 'string' and type(info) == 'table' then
+                local entry = {
+                    isNm        = info.isNm == true,
+                    respawn     = tonumber(info.respawn) or 0,
+                    spawnType   = type(info.spawnType) == 'string' and info.spawnType or nil,
+                    genus       = type(info.genus) == 'string' and info.genus or nil,
+                    notes       = type(info.notes) == 'string' and info.notes or nil,
+                    mobIndices  = {},
+                    placeholder = nil,
+                }
+                if type(info.mobIndices) == 'table' then
+                    for _, ix in ipairs(info.mobIndices) do
+                        if type(ix) == 'string' then entry.mobIndices[#entry.mobIndices + 1] = ix end
+                    end
+                end
+                if type(info.placeholder) == 'table' then
+                    entry.placeholder = {
+                        name     = type(info.placeholder.name) == 'string' and info.placeholder.name or nil,
+                        mobIndex = type(info.placeholder.mobIndex) == 'string' and info.placeholder.mobIndex or nil,
+                    }
+                end
+                mob_info[name] = entry
+                total = total + 1
+                if entry.isNm then nm_count = nm_count + 1 end
+            end
+        end
+        mob_info_zone = zone_id
+        log(string.format('Loaded mob info for zone %d: %d total names, %d classified as NM.',
+            zone_id, total, nm_count))
+    end)
 end
 
 -- Watch auto-add: detect in-game Track transitions and append the targeted
@@ -1886,47 +1884,42 @@ local function read_character_state()
 end
 
 -----------------------------------------------------------------------
--- HTTP sync to API
+-- HTTP sync to API (async). Fires the /api/sync POST and calls
+-- on_complete() when finished. Sub-syncs are chained by enqueue_sync_work().
 -----------------------------------------------------------------------
-local function do_sync()
+local function do_sync(on_complete)
+    on_complete = on_complete or function() end
+
     if settings.ApiKey == '' then
         log_error('API key not configured. Set it in addon/vanalytics/settings.xml')
+        on_complete()
         return
     end
 
     local state, err = read_character_state()
     if not state then
         log_error(err)
+        on_complete()
         return
     end
 
     local payload = json_encode(state)
     local url = settings.ApiUrl .. '/api/sync'
-    local ltn12 = require('ltn12')
 
-    -- Note: HTTP request is synchronous and will briefly freeze the game.
-    -- This is acceptable for an infrequent sync (every 5-15 min). A short timeout
-    -- limits the freeze if the API is unreachable.
-    local response_body = {}
-    local result, status_code, headers = http_request({
+    http_request({
         url = url,
         method = 'POST',
         headers = {
             ['Content-Type'] = 'application/json',
-            ['Content-Length'] = tostring(#payload),
             ['X-Api-Key'] = settings.ApiKey,
         },
-        source = ltn12.source.string(payload),
-        sink = ltn12.sink.table(response_body),
-    })
-
+        body = payload,
+        label = 'main-sync',
+    }, function(result, status_code, _, _)
         if not result then
             log_error('Connection failed: ' .. tostring(status_code))
             last_sync_status = 'Connection failed'
-            return
-        end
-
-        if status_code == 200 then
+        elseif status_code == 200 then
             last_sync_time = os.time()
             last_sync_status = 'Success'
             if settings.NotifyOnSync then
@@ -1945,18 +1938,8 @@ local function do_sync()
             last_sync_status = 'Error (' .. tostring(status_code) .. ')'
             log_error('Sync failed with status ' .. tostring(status_code))
         end
-
-    -- Sync inventory diffs and porter storage contents
-    local player = windower.ffxi.get_player()
-    local info = windower.ffxi.get_info()
-    if player and info then
-        local server_name = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
-        inventory.sync(player.name, server_name)
-        porter.sync(player.name, server_name)
-        progression.sync(player.name, server_name)
-        missions_lib.sync(player.name, server_name)
-        collection_lib.sync(player.name, server_name)
-    end
+        on_complete()
+    end)
 end
 
 -----------------------------------------------------------------------
@@ -2022,20 +2005,17 @@ local function scan_bazaars()
     })
 
     local url = settings.ApiUrl .. '/api/economy/bazaar/presence'
-    local ltn12 = require('ltn12')
 
-    local response_body = {}
     http_request({
         url = url,
         method = 'POST',
         headers = {
             ['Content-Type'] = 'application/json',
-            ['Content-Length'] = tostring(#payload),
             ['X-Api-Key'] = settings.ApiKey,
         },
-        source = ltn12.source.string(payload),
-        sink = ltn12.sink.table(response_body),
-    })
+        body = payload,
+        label = 'bazaar-presence',
+    }, function(_, _, _, _) end)
 end
 
 -----------------------------------------------------------------------
@@ -2059,19 +2039,52 @@ moves_lib.init({
         local info = windower.ffxi.get_info()
         if player and info then
             local server_name = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
-            inventory.sync(player.name, server_name)
+            inventory.sync(player.name, server_name, function() end)
         end
     end,
 })
 
+-- Helper: run an array of async steps strictly in sequence. Each step is a
+-- function(done) that must eventually call done(). Avoids deep nested
+-- callbacks at the sync-chain call sites.
+local function run_steps(steps)
+    local function next_step(i)
+        if i > #steps then return end
+        local ok, err = pcall(steps[i], function() next_step(i + 1) end)
+        if not ok then
+            log_error('Sync step ' .. i .. ' threw: ' .. tostring(err))
+            next_step(i + 1)
+        end
+    end
+    next_step(1)
+end
+
 local function enqueue_sync_work()
-    -- Queue each sync task as a separate frame's work
-    -- Macros are intentionally excluded — use //va macros push to sync manually.
-    -- Auto-syncing macros risks overwriting saved macros with empty defaults
-    -- when logging in from a fresh FFXI installation.
-    table.insert(work_queue, function() do_sync() end)
-    table.insert(work_queue, function() scan_bazaars() end)
-    table.insert(work_queue, function() moves_lib.check_pending() end)
+    -- All HTTPS work is non-blocking via async_http. Each step's callback
+    -- triggers the next one, so the chain runs strictly in sequence but
+    -- never blocks a game frame. Macros are intentionally excluded —
+    -- use //va macros push to sync manually (auto-syncing risks overwriting
+    -- saved macros with empty defaults on fresh FFXI installs).
+    local function with_player(fn)
+        return function(done)
+            local player = windower.ffxi.get_player()
+            local info = windower.ffxi.get_info()
+            if not (player and info) then done() return end
+            local server_name = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
+            fn(player.name, server_name, done)
+        end
+    end
+
+    run_steps({
+        function(done) do_sync(done) end,
+        with_player(inventory.sync),
+        with_player(porter.sync),
+        with_player(progression.sync),
+        with_player(missions_lib.sync),
+        with_player(collection_lib.sync),
+        function(done) scan_bazaars(); done() end,
+        function(done) moves_lib.check_pending(false, done) end,
+    })
 end
 
 -- Single prerender handler registered once at load time
@@ -2090,7 +2103,13 @@ windower.register_event('prerender', function()
     update_hunt_watch_text()
     update_hunt_nm_text()
 
-    -- Process one queued work item per frame
+    -- Pump in-flight async HTTP requests. Each call advances all active
+    -- coroutines by however many bytes the socket has ready; cost per
+    -- frame is in microseconds.
+    async_http.poll()
+
+    -- Process one queued work item per frame (used by moves_lib for
+    -- spreading in-game action sequences across frames)
     if #work_queue > 0 then
         local task = table.remove(work_queue, 1)
         task()
@@ -2231,8 +2250,7 @@ windower.register_event('addon command', function(command, ...)
 
     if command == 'sync' then
         if settings.NotifyOnSync then log('Syncing...') end
-        do_sync()
-        moves_lib.check_pending()
+        enqueue_sync_work()
 
     elseif command == 'status' then
         local interval = get_effective_interval()

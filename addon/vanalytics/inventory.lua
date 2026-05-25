@@ -149,9 +149,12 @@ function inventory.compute_diff(old_snap, new_snap)
 end
 
 -----------------------------------------------------------------------
--- Sync inventory changes to the API
+-- Sync inventory changes to the API (async). on_complete() fires when the
+-- request resolves (or immediately if there's nothing to send).
 -----------------------------------------------------------------------
-function inventory.sync(character_name, server)
+function inventory.sync(character_name, server, on_complete)
+    on_complete = on_complete or function() end
+
     local current_snapshot = inventory.read_snapshot()
 
     -- First run: treat entire inventory as "Added" so the server gets the full state.
@@ -161,15 +164,14 @@ function inventory.sync(character_name, server)
         previous_snapshot = {}
     end
 
-    -- Compute diff (on first run, everything in current is "new" vs empty previous)
     local changes = inventory.compute_diff(previous_snapshot, current_snapshot)
 
     -- No changes and not a full sync, return silently
     if #changes == 0 and not is_full_sync then
+        on_complete()
         return
     end
 
-    -- Build API-shaped change entries
     local api_changes = {}
     for _, change in ipairs(changes) do
         table.insert(api_changes, {
@@ -182,45 +184,37 @@ function inventory.sync(character_name, server)
         })
     end
 
-    local body = {
+    local payload = json_encode_fn({
         characterName = character_name,
         server = server,
         changes = api_changes,
         fullSync = is_full_sync,
-    }
+    })
 
-    local payload = json_encode_fn(body)
-    local url = settings.ApiUrl .. '/api/sync/inventory'
-    local ltn12 = require('ltn12')
-
-    local response_body = {}
-    local result, status_code, headers = http_request_fn({
-        url = url,
+    http_request_fn({
+        url = settings.ApiUrl .. '/api/sync/inventory',
         method = 'POST',
         headers = {
             ['Content-Type'] = 'application/json',
-            ['Content-Length'] = tostring(#payload),
             ['X-Api-Key'] = settings.ApiKey,
         },
-        source = ltn12.source.string(payload),
-        sink = ltn12.sink.table(response_body),
-    })
-
-    if not result then
-        log_error_fn('Inventory sync connection failed: ' .. tostring(status_code))
-        return
-    end
-
-    -- Update snapshot regardless of status so we don't re-send same diff
-    previous_snapshot = current_snapshot
-
-    if status_code == 200 then
-        if settings.NotifyOnSync then
-            -- log_fn('Inventory synced: ' .. #changes .. ' change(s)')
+        body = payload,
+        label = 'inventory-sync',
+    }, function(result, status_code, _, _)
+        if not result then
+            log_error_fn('Inventory sync connection failed: ' .. tostring(status_code))
+            on_complete()
+            return
         end
-    else
-        log_error_fn('Inventory sync failed with status ' .. tostring(status_code))
-    end
+
+        -- Update snapshot regardless of status so we don't re-send same diff
+        previous_snapshot = current_snapshot
+
+        if status_code ~= 200 then
+            log_error_fn('Inventory sync failed with status ' .. tostring(status_code))
+        end
+        on_complete()
+    end)
 end
 
 return inventory

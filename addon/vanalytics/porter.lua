@@ -72,45 +72,35 @@ end
 -- session — server-side state is authoritative-by-slip and untouched slips
 -- keep their last known contents.
 -----------------------------------------------------------------------
-function porter.sync(character_name, server)
-    local slips_payload = porter.read_snapshot()
-    if #slips_payload == 0 then return end
+function porter.sync(character_name, server, on_complete)
+    on_complete = on_complete or function() end
 
-    local body = {
+    local slips_payload = porter.read_snapshot()
+    if #slips_payload == 0 then on_complete() return end
+
+    local payload = json_encode_fn({
         characterName = character_name,
         server = server,
         slips = slips_payload,
-    }
+    })
 
-    local payload = json_encode_fn(body)
-    local url = settings.ApiUrl .. '/api/sync/porter'
-    local ltn12 = require('ltn12')
-
-    local response_body = {}
-    local result, status_code, headers = http_request_fn({
-        url = url,
+    http_request_fn({
+        url = settings.ApiUrl .. '/api/sync/porter',
         method = 'POST',
         headers = {
             ['Content-Type'] = 'application/json',
-            ['Content-Length'] = tostring(#payload),
             ['X-Api-Key'] = settings.ApiKey,
         },
-        source = ltn12.source.string(payload),
-        sink = ltn12.sink.table(response_body),
-    })
-
-    if not result then
-        log_error_fn('Porter sync connection failed: ' .. tostring(status_code))
-        return
-    end
-
-    if status_code == 200 then
-        if settings.NotifyOnSync then
-            -- log_fn('Porter synced: ' .. #slips_payload .. ' slip(s)')
+        body = payload,
+        label = 'porter-sync',
+    }, function(result, status_code, _, _)
+        if not result then
+            log_error_fn('Porter sync connection failed: ' .. tostring(status_code))
+        elseif status_code ~= 200 then
+            log_error_fn('Porter sync failed with status ' .. tostring(status_code))
         end
-    else
-        log_error_fn('Porter sync failed with status ' .. tostring(status_code))
-    end
+        on_complete()
+    end)
 end
 
 return porter
