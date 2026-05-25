@@ -42,23 +42,24 @@ public class NamedMonsterSeedProvider : ISyncProvider
 
     public async Task SyncAsync(IProgress<SyncProgressEvent> progress, CancellationToken ct)
     {
-        progress.Report(new SyncProgressEvent
+        SyncProgressEvent NmEvent(SyncEventType type, string message, int current = 0, int total = 0, int added = 0, int updated = 0, int skipped = 0, int failed = 0, string? currentItem = null) => new()
         {
             ProviderId = ProviderId,
-            Type = SyncEventType.Started,
-            Message = "Locating curated NM data..."
-        });
+            Type = type,
+            Phase = 1, PhaseTotal = 1, PhaseLabel = "NM Curation",
+            Message = message,
+            Current = current, Total = total,
+            Added = added, Updated = updated, Skipped = skipped, Failed = failed,
+            CurrentItem = currentItem,
+        };
+
+        progress.Report(NmEvent(SyncEventType.Started, "Locating curated NM data..."));
 
         var dataDir = ResolveDataDir();
         if (dataDir is null)
         {
             _logger.LogWarning("NM data directory not found — skipping seed");
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Completed,
-                Message = "No NM data directory found — nothing to seed."
-            });
+            progress.Report(NmEvent(SyncEventType.Completed, "No NM data directory found — nothing to seed."));
             return;
         }
 
@@ -67,16 +68,13 @@ public class NamedMonsterSeedProvider : ISyncProvider
             .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"Parsing {files.Count} zone files from {dataDir}...",
-            Total = files.Count
-        });
+        progress.Report(NmEvent(SyncEventType.Progress,
+            $"Parsing {files.Count} zone files from {dataDir}...",
+            total: files.Count));
 
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        db.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
 
         var now = DateTimeOffset.UtcNow;
         int added = 0, updated = 0, skipped = 0, failed = 0, zonesProcessed = 0;
@@ -112,37 +110,21 @@ public class NamedMonsterSeedProvider : ISyncProvider
             skipped += s;
             zonesProcessed++;
 
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = $"Seeded {parsed.ZoneName ?? "?"} ({parsed.Nms?.Count ?? 0} NMs)",
-                CurrentItem = fileName,
-                Current = zonesProcessed,
-                Total = files.Count,
-                Added = added,
-                Updated = updated,
-                Skipped = skipped,
-                Failed = failed,
-            });
+            progress.Report(NmEvent(SyncEventType.Progress,
+                $"Seeded {parsed.ZoneName ?? "?"} ({parsed.Nms?.Count ?? 0} NMs)",
+                current: zonesProcessed, total: files.Count,
+                added: added, updated: updated, skipped: skipped, failed: failed,
+                currentItem: fileName));
         }
 
         _logger.LogInformation(
             "NM seed: {Zones} zones processed, {Added} added, {Updated} updated, {Skipped} unchanged, {Failed} failed",
             zonesProcessed, added, updated, skipped, failed);
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Completed,
-            Message = $"NM seed complete: {zonesProcessed} zones, {added} added, {updated} updated, {skipped} unchanged.",
-            Total = files.Count,
-            Current = zonesProcessed,
-            Added = added,
-            Updated = updated,
-            Skipped = skipped,
-            Failed = failed,
-        });
+        progress.Report(NmEvent(SyncEventType.Completed,
+            $"NM seed complete: {zonesProcessed} zones, {added} added, {updated} updated, {skipped} unchanged.",
+            current: zonesProcessed, total: files.Count,
+            added: added, updated: updated, skipped: skipped, failed: failed));
     }
 
     private async Task<(int added, int updated, int skipped)> UpsertZoneAsync(

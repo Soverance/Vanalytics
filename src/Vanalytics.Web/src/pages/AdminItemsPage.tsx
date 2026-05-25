@@ -110,6 +110,17 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString()
 }
 
+function formatDuration(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 0) return '–'
+  const s = Math.floor(ms / 1000)
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  if (h > 0) return `${h}h ${m}m ${sec}s`
+  if (m > 0) return `${m}m ${sec}s`
+  return `${sec}s`
+}
+
 // ─── StatCard ─────────────────────────────────────────────────────────────────
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
@@ -135,6 +146,14 @@ function SyncCard({
   const progress = allProgress[provider.providerId] ?? null
   const [running, setRunning] = useState(provider.isRunning)
   const [error, setError] = useState('')
+  const [, setTick] = useState(0)
+
+  // Tick once per second while running so elapsed/ETA stay live between SSE events.
+  useEffect(() => {
+    if (!running) return
+    const id = window.setInterval(() => setTick(t => t + 1), 1000)
+    return () => window.clearInterval(id)
+  }, [running])
 
   // Auto-connect to SSE stream if a sync is running (including on re-mount after navigation)
   useEffect(() => {
@@ -235,13 +254,36 @@ function SyncCard({
       {/* Running state */}
       {running && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-blue-400 text-sm animate-pulse">● Syncing…</span>
+            {progress && progress.phaseTotal && progress.phaseTotal > 1 && progress.phase && (
+              <span className="text-xs px-1.5 py-0.5 rounded bg-blue-950/60 text-blue-300 border border-blue-900/60">
+                Phase {progress.phase} of {progress.phaseTotal}
+                {progress.phaseLabel && <span className="text-blue-400/70"> — {progress.phaseLabel}</span>}
+              </span>
+            )}
             {progress && progress.total > 0 && (
               <span className="text-xs text-gray-500">
                 {progress.current.toLocaleString()} / {progress.total.toLocaleString()} ({pct}%)
               </span>
             )}
+            {progress?.startedAt && (() => {
+              const elapsed = Date.now() - new Date(progress.startedAt).getTime()
+              const eta = progress.current > 0 && progress.total > progress.current
+                ? elapsed * (progress.total - progress.current) / progress.current
+                : null
+              return (
+                <span className="text-xs text-gray-500 ml-auto">
+                  <span className="text-gray-600">elapsed</span> {formatDuration(elapsed)}
+                  {eta != null && (
+                    <>
+                      <span className="text-gray-700 mx-1.5">·</span>
+                      <span className="text-gray-600">eta</span> {formatDuration(eta)}
+                    </>
+                  )}
+                </span>
+              )
+            })()}
           </div>
 
           {/* Progress bar */}

@@ -15,4 +15,10 @@ public record SyncProgressEvent
     public int Updated { get; init; }
     public int Skipped { get; init; }
     public int Failed { get; init; }
+
+    public int? Phase { get; init; }
+    public int? PhaseTotal { get; init; }
+    public string? PhaseLabel { get; init; }
+
+    public DateTimeOffset? StartedAt { get; init; }
 }
