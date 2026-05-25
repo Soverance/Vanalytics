@@ -1,0 +1,79 @@
+{
+  "zoneId": 127,
+  "zoneName": "Behemoths Dominion",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Behemoths_Dominion",
+  "nms": [
+    {
+      "name": "Behemoth",
+      "genus": "Behemoth",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Beastly Shank to ???; true sight aggro; level 80."
+    },
+    {
+      "name": "King Behemoth",
+      "genus": "Behemoth",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Savory Shank to ???; true sight aggro; level 85."
+    },
+    {
+      "name": "Ancient Weapon",
+      "genus": "Evil Weapon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zilart Mission 5 — Headstone Pilgrimage; sound and magic aggro; level 66."
+    },
+    {
+      "name": "Legendary Weapon",
+      "genus": "Evil Weapon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zilart Mission 5 — Headstone Pilgrimage; sound and magic aggro; level 65."
+    },
+    {
+      "name": "Doglix Muttsnout",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'The Talekeeper's Gift'; sight aggro; level 58."
+    },
+    {
+      "name": "Moxnix Nightgoggle",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'The Talekeeper's Gift'; sight aggro."
+    },
+    {
+      "name": "Picklix Longindex",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'The Talekeeper's Gift'; sight aggro."
+    },
+    {
+      "name": "Sovereign Behemoth",
+      "genus": "Behemoth",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 3,100 Unity Accolades to trigger; level 135."
+    },
+    {
+      "name": "Pil",
+      "genus": "Caturae",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires White stratum abyssite III and Voidstone."
+    }
+  ]
+}

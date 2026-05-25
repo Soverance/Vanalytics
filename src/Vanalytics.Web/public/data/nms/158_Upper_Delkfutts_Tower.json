@@ -1,0 +1,67 @@
+{
+  "zoneId": 158,
+  "zoneName": "Upper Delkfutts Tower",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Upper_Delkfutts_Tower",
+  "nms": [
+    {
+      "name": "Alkyoneus",
+      "genus": "Gigas",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Moldy Buckler to ???; level 75."
+    },
+    {
+      "name": "Autarch",
+      "genus": "Doll",
+      "spawnType": "timed",
+      "respawnTime": 1800,
+      "placeholders": [],
+      "notes": "Timed 30 min to 3 hour respawn; level 83-85."
+    },
+    {
+      "name": "Enkelados",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gigas Bonecutter", "mobIndex": null }
+      ],
+      "notes": "Lottery from Gigas Bonecutter; level 55-58."
+    },
+    {
+      "name": "Ixtab",
+      "genus": "Ghost",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Phasma", "mobIndex": null }
+      ],
+      "notes": "Lottery from Phasma; level 71."
+    },
+    {
+      "name": "Mimas",
+      "genus": "Gigas",
+      "spawnType": "timed",
+      "respawnTime": 900,
+      "placeholders": [],
+      "notes": "Timed 15-minute respawn; level 36."
+    },
+    {
+      "name": "Pallas",
+      "genus": "Gigas",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Hoary Battle Horn to ???; sight aggro."
+    },
+    {
+      "name": "Porphyrion",
+      "genus": "Gigas",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Timed 5-10 minute respawn; level 36, RNG job."
+    }
+  ]
+}

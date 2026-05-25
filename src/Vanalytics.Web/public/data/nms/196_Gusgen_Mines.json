@@ -1,0 +1,103 @@
+{
+  "zoneId": 196,
+  "zoneName": "Gusgen Mines",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Gusgen_Mines",
+  "nms": [
+    {
+      "name": "Asphyxiated Amsel",
+      "genus": "Ghost",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Random spawn at 0:00, 1:00, or 2:00 after siren; one of six ghost NMs that can appear; drops Malgust Ring."
+    },
+    {
+      "name": "Burned Bergmann",
+      "genus": "Ghost",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Random spawn at 0:00, 1:00, or 2:00 after siren; one of six ghost NMs; drops Malflame Ring."
+    },
+    {
+      "name": "Crushed Krause",
+      "genus": "Ghost",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Random spawn at 0:00, 1:00, or 2:00 after siren; one of six ghost NMs; drops Maldust Ring."
+    },
+    {
+      "name": "Pulverized Pfeffer",
+      "genus": "Ghost",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Random spawn at 0:00, 1:00, or 2:00 after siren; one of six ghost NMs; drops Malfrost Ring."
+    },
+    {
+      "name": "Smothered Schmidt",
+      "genus": "Ghost",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Random spawn at 0:00, 1:00, or 2:00 after siren; one of six ghost NMs; drops Malflood Ring."
+    },
+    {
+      "name": "Wounded Wurfel",
+      "genus": "Ghost",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Random spawn at 0:00, 1:00, or 2:00 after siren; one of six ghost NMs; drops Malflash Ring."
+    },
+    {
+      "name": "Foul Meat",
+      "genus": "Doomed",
+      "spawnType": "timed",
+      "respawnTime": 86400,
+      "placeholders": [],
+      "notes": "Timed spawn 24-36 h; drops Clay Amulet."
+    },
+    {
+      "name": "Juggler Hecatomb",
+      "genus": "Evil Weapon",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed spawn 21-24 h; Red Mage type; drops Heavy Halberd."
+    },
+    {
+      "name": "Aroma Fly",
+      "genus": "Fly",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn during player's race RSE week; check ??? in zone."
+    },
+    {
+      "name": "Blind Moby",
+      "genus": "Pugil",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 3-2; guaranteed Glocolite drop."
+    },
+    {
+      "name": "Wandering Ghost",
+      "genus": "Ghost",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Ghosts of the Past; guaranteed Miner's Pendant drop."
+    },
+    {
+      "name": "Lorbulcrud",
+      "genus": "Slime",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch (Indigo II) — Indigo stratum abyssite II + Voidstone."
+    }
+  ]
+}

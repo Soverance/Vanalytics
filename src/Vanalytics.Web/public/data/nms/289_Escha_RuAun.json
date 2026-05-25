@@ -1,0 +1,289 @@
+{
+  "zoneId": 289,
+  "zoneName": "Escha - Ru'Aun",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Escha_-_Ru%27Aun",
+  "nms": [
+    {
+      "name": "Naga Raja",
+      "genus": "Wyrm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Domain Invasion spawn."
+    },
+    {
+      "name": "Naga Raja's Lamia",
+      "genus": "Lamia",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Domain Invasion spawn alongside Naga Raja."
+    },
+    {
+      "name": "Eschan Porxie",
+      "genus": "Porxie",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Eschan Il'aern", "mobIndex": null }
+      ],
+      "notes": "Lottery from Eschan Il'aern."
+    },
+    {
+      "name": "Asida",
+      "genus": "Flan",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Bia",
+      "genus": "Caturae",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Emputa",
+      "genus": "Imp",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Khon",
+      "genus": "Caturae",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Khun",
+      "genus": "Caturae",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Ma",
+      "genus": "Caturae",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Met",
+      "genus": "Caturae",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Peirithoos",
+      "genus": "Monoceros",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Ruea",
+      "genus": "Caturae",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Sava Savanovic",
+      "genus": "Vampyr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Tenodera",
+      "genus": "Mantid",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Wasserspeier",
+      "genus": "Gargouille",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T1 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Amymone",
+      "genus": "Hydra",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T2 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Hanbi",
+      "genus": "Gallu",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T2 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Kammavaca",
+      "genus": "Grimoire",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T2 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Naphula",
+      "genus": "Dvergr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T2 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Palila",
+      "genus": "Waktza",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T2 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Yilan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T2 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Duke Vepar",
+      "genus": "Giant Gnat",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T3 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Pakecet",
+      "genus": "Pteraketos",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T3 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Vir'ava",
+      "genus": "Belladonna",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete T3 — forced pop at ??? with pop item."
+    },
+    {
+      "name": "Ark Angel EV",
+      "genus": "Ark Angel",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Ark Angel forced pop."
+    },
+    {
+      "name": "Ark Angel GK",
+      "genus": "Ark Angel",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Ark Angel forced pop."
+    },
+    {
+      "name": "Ark Angel HM",
+      "genus": "Ark Angel",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Ark Angel forced pop."
+    },
+    {
+      "name": "Ark Angel MR",
+      "genus": "Ark Angel",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Ark Angel forced pop."
+    },
+    {
+      "name": "Ark Angel TT",
+      "genus": "Ark Angel",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Ark Angel forced pop."
+    },
+    {
+      "name": "Byakko",
+      "genus": "Tiger",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Heavenly Beast forced pop."
+    },
+    {
+      "name": "Genbu",
+      "genus": "Adamantoise",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Heavenly Beast forced pop."
+    },
+    {
+      "name": "Kirin",
+      "genus": "Manticore",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Heavenly Beast forced pop."
+    },
+    {
+      "name": "Kouryu",
+      "genus": "Wyrm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Heavenly Beast special forced pop."
+    },
+    {
+      "name": "Seiryu",
+      "genus": "Wyvern",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Heavenly Beast forced pop."
+    },
+    {
+      "name": "Suzaku",
+      "genus": "Greater Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete — Heavenly Beast forced pop."
+    }
+  ]
+}

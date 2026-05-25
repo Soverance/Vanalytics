@@ -1,0 +1,81 @@
+{
+  "zoneId": 184,
+  "zoneName": "Lower Delkfutts Tower",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Lower_Delkfutt%27s_Tower",
+  "nms": [
+    {
+      "name": "Epialtes",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery from standard Gigas; sight aggro."
+    },
+    {
+      "name": "Eurymedon",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Giant Sentry", "mobIndex": null }
+      ],
+      "notes": "Lottery from Giant Sentry; sight aggro."
+    },
+    {
+      "name": "Hippolytos",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn; sight aggro."
+    },
+    {
+      "name": "Tyrant",
+      "genus": "Doll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive aggro."
+    },
+    {
+      "name": "Disaster Idol",
+      "genus": "Doll",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for Promathia Mission 5-3; true sight and sound aggro."
+    },
+    {
+      "name": "Fomorian Spear",
+      "genus": "Evil Weapon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Hyper Active\"; sound and magic aggro, links."
+    },
+    {
+      "name": "Orna",
+      "genus": "Evil Weapon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Hyper Active\"; sound and magic aggro, links."
+    },
+    {
+      "name": "Illusory Pot",
+      "genus": "Magic Pot",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Chameleon Capers\"; magic aggro."
+    },
+    {
+      "name": "Akvan",
+      "genus": "Ahriman",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM requiring White Stratum Abyssite III and Voidstone; aggressive."
+    }
+  ]
+}

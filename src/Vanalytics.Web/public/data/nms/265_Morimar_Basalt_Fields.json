@@ -1,0 +1,71 @@
+{
+  "zoneId": 265,
+  "zoneName": "Morimar Basalt Fields",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Morimar_Basalt_Fields",
+  "nms": [
+    {
+      "name": "Burgeoning Flames",
+      "genus": "Elemental",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Elementary, My Dear Sylvie; passive at K-6."
+    },
+    {
+      "name": "Steam Spout",
+      "genus": "Geyser",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive; spawns throughout the zone."
+    },
+    {
+      "name": "Volatile Matamata",
+      "genus": "Matamata",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Alizarin Yggrete Shard I to ??? at J-8; aggressive, True Sound."
+    },
+    {
+      "name": "Perdurable Raptor",
+      "genus": "Raptor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Alizarin Yggrete Shard II to ??? at H-11; aggressive."
+    },
+    {
+      "name": "Shimmering Tarichuk",
+      "genus": "Eft",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Alizarin Yggrete Shard III to ??? at J-11; aggressive."
+    },
+    {
+      "name": "Tutewehiwehi",
+      "genus": "Peiste",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Alizarin Yggrete Shard IV to ??? at E-7/8; aggressive."
+    },
+    {
+      "name": "Kurma",
+      "genus": "Adamantoise",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Alizarin Yggrete Shard V to ??? at F-10; aggressive."
+    },
+    {
+      "name": "Achuka",
+      "genus": "Gabbrath",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Wildskeeper Reive encounter at E-5; passive, links."
+    }
+  ]
+}

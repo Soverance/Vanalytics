@@ -38,7 +38,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DataProtectionKeys", (string)null);
+                    b.ToTable("DataProtectionKeys");
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.RefreshToken", b =>
@@ -71,7 +71,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.SamlConfig", b =>
@@ -113,7 +113,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasKey("SamlConfigId");
 
-                    b.ToTable("SamlConfigs", (string)null);
+                    b.ToTable("SamlConfigs");
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.SamlRoleMapping", b =>
@@ -141,7 +141,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("SamlConfigId");
 
-                    b.ToTable("SamlRoleMappings", (string)null);
+                    b.ToTable("SamlRoleMappings");
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.User", b =>
@@ -225,7 +225,7 @@ namespace Vanalytics.Data.Migrations
                         .IsUnique()
                         .HasFilter("[OAuthProvider] IS NOT NULL AND [OAuthId] IS NOT NULL");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Soverance.Forum.Models.ForumAttachment", b =>
@@ -269,7 +269,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("UploadedBy");
 
-                    b.ToTable("ForumAttachment", (string)null);
+                    b.ToTable("ForumAttachment");
                 });
 
             modelBuilder.Entity("Soverance.Forum.Models.ForumCategory", b =>
@@ -318,7 +318,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("ForumCategory", (string)null);
+                    b.ToTable("ForumCategory");
                 });
 
             modelBuilder.Entity("Soverance.Forum.Models.ForumPost", b =>
@@ -367,7 +367,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ThreadId", "CreatedAt");
 
-                    b.ToTable("ForumPost", (string)null);
+                    b.ToTable("ForumPost");
                 });
 
             modelBuilder.Entity("Soverance.Forum.Models.ForumReaction", b =>
@@ -395,7 +395,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("PostId", "UserId", "ReactionType")
                         .IsUnique();
 
-                    b.ToTable("ForumReaction", (string)null);
+                    b.ToTable("ForumReaction");
                 });
 
             modelBuilder.Entity("Soverance.Forum.Models.ForumThread", b =>
@@ -453,7 +453,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CategoryId", "Slug")
                         .IsUnique();
 
-                    b.ToTable("ForumThread", (string)null);
+                    b.ToTable("ForumThread");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.AuctionSale", b =>
@@ -506,7 +506,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("ItemId", "ServerId", "Price", "SoldAt", "BuyerName", "SellerName", "StackSize")
                         .IsUnique();
 
-                    b.ToTable("AuctionSales", (string)null);
+                    b.ToTable("AuctionSales");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.BazaarListing", b =>
@@ -561,7 +561,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("SellerName", "ServerId", "IsActive");
 
-                    b.ToTable("BazaarListings", (string)null);
+                    b.ToTable("BazaarListings");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.BazaarPresence", b =>
@@ -605,7 +605,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ServerId", "IsActive", "Zone");
 
-                    b.ToTable("BazaarPresences", (string)null);
+                    b.ToTable("BazaarPresences");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.Character", b =>
@@ -780,7 +780,26 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("Name", "Server")
                         .IsUnique();
 
-                    b.ToTable("Characters", (string)null);
+                    b.ToTable("Characters");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterCollection", b =>
+                {
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("KeyItemIdsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SpellIdsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("CharacterId");
+
+                    b.ToTable("CharacterCollection");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterInventory", b =>
@@ -814,7 +833,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "ItemId", "Bag", "SlotIndex")
                         .IsUnique();
 
-                    b.ToTable("CharacterInventories", (string)null);
+                    b.ToTable("CharacterInventories");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterJob", b =>
@@ -851,7 +870,118 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "JobId")
                         .IsUnique();
 
-                    b.ToTable("CharacterJobs", (string)null);
+                    b.ToTable("CharacterJobs");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterMissions", b =>
+                {
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MissionsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("CharacterId");
+
+                    b.ToTable("CharacterMissions");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterPorterItem", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("SlipItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SlipNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("CharacterId", "SlipItemId", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("CharacterPorterItems");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterPorterSlip", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SlipItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SlipNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("SyncedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("UserHidden")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId", "SlipItemId")
+                        .IsUnique();
+
+                    b.ToTable("CharacterPorterSlips");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterProgression", b =>
+                {
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("JobPointsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("JobPointsUnlocked")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LimitPoints")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MeritPoints")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MeritPointsMax")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("WarpsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("CharacterId");
+
+                    b.ToTable("CharacterProgression");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterSkill", b =>
@@ -876,7 +1006,26 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("CharacterId");
 
-                    b.ToTable("CharacterSkills", (string)null);
+                    b.ToTable("CharacterSkills");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterTitle", b =>
+                {
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TitleId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("FirstSeenAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("LastEquippedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("CharacterId", "TitleId");
+
+                    b.ToTable("CharacterTitles");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CraftingSkill", b =>
@@ -906,7 +1055,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "Craft")
                         .IsUnique();
 
-                    b.ToTable("CraftingSkills", (string)null);
+                    b.ToTable("CraftingSkills");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.DismissedAnomaly", b =>
@@ -933,7 +1082,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "AnomalyKey")
                         .IsUnique();
 
-                    b.ToTable("DismissedAnomalies", (string)null);
+                    b.ToTable("DismissedAnomalies");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.EquippedGear", b =>
@@ -965,7 +1114,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "Slot")
                         .IsUnique();
 
-                    b.ToTable("EquippedGear", (string)null);
+                    b.ToTable("EquippedGear");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.GameItem", b =>
@@ -1135,7 +1284,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("SubCategory");
 
-                    b.ToTable("GameItems", (string)null);
+                    b.ToTable("GameItems");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.GameServer", b =>
@@ -1169,7 +1318,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("GameServers", (string)null);
+                    b.ToTable("GameServers");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.InventoryChange", b =>
@@ -1208,7 +1357,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("CharacterId", "ChangedAt");
 
-                    b.ToTable("InventoryChanges", (string)null);
+                    b.ToTable("InventoryChanges");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.InventoryMoveOrder", b =>
@@ -1250,7 +1399,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("CharacterId", "Status");
 
-                    b.ToTable("InventoryMoveOrders", (string)null);
+                    b.ToTable("InventoryMoveOrders");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.ItemModelMapping", b =>
@@ -1286,7 +1435,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("ItemId", "SlotId")
                         .IsUnique();
 
-                    b.ToTable("ItemModelMappings", (string)null);
+                    b.ToTable("ItemModelMappings");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.Macro", b =>
@@ -1349,7 +1498,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("MacroPageId", "Set", "Position")
                         .IsUnique();
 
-                    b.ToTable("Macros", (string)null);
+                    b.ToTable("Macros");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.MacroBook", b =>
@@ -1389,7 +1538,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("CharacterId", "BookNumber")
                         .IsUnique();
 
-                    b.ToTable("MacroBooks", (string)null);
+                    b.ToTable("MacroBooks");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.MacroBookSnapshot", b =>
@@ -1432,7 +1581,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("MacroBookId", "CreatedAt");
 
-                    b.ToTable("MacroBookSnapshots", (string)null);
+                    b.ToTable("MacroBookSnapshots");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.MacroPage", b =>
@@ -1452,7 +1601,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("MacroBookId", "PageNumber")
                         .IsUnique();
 
-                    b.ToTable("MacroPages", (string)null);
+                    b.ToTable("MacroPages");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.NpcPool", b =>
@@ -1504,7 +1653,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("PoolId")
                         .IsUnique();
 
-                    b.ToTable("NpcPools", (string)null);
+                    b.ToTable("NpcPools");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.RecipeIngredient", b =>
@@ -1529,7 +1678,7 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("RecipeId", "ItemId")
                         .IsUnique();
 
-                    b.ToTable("RecipeIngredients", (string)null);
+                    b.ToTable("RecipeIngredients");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.ServerStatusChange", b =>
@@ -1558,7 +1707,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("GameServerId", "EndedAt");
 
-                    b.ToTable("ServerStatusChanges", (string)null);
+                    b.ToTable("ServerStatusChanges");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.Session", b =>
@@ -1590,7 +1739,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("CharacterId", "Status");
 
-                    b.ToTable("Sessions", (string)null);
+                    b.ToTable("Sessions");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.SessionEvent", b =>
@@ -1641,7 +1790,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("SessionId", "Timestamp");
 
-                    b.ToTable("SessionEvents", (string)null);
+                    b.ToTable("SessionEvents");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.SyncHistory", b =>
@@ -1691,7 +1840,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ProviderId", "StartedAt");
 
-                    b.ToTable("SyncHistory", (string)null);
+                    b.ToTable("SyncHistory");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.SynthRecipe", b =>
@@ -1768,7 +1917,7 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ResultItemId");
 
-                    b.ToTable("SynthRecipes", (string)null);
+                    b.ToTable("SynthRecipes");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.Zone", b =>
@@ -1826,7 +1975,58 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("Name");
 
-                    b.ToTable("Zones", (string)null);
+                    b.ToTable("Zones");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.ZoneNamedMonster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Genus")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("MobName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PlaceholderMobIndex")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<string>("PlaceholderName")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int?>("RespawnTime")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SpawnTypeLabel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("ZoneId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ZoneId", "MobName")
+                        .IsUnique();
+
+                    b.ToTable("ZoneNamedMonsters");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.ZoneSpawn", b =>
@@ -1849,6 +2049,9 @@ namespace Vanalytics.Data.Migrations
                     b.Property<int>("MinLevel")
                         .HasColumnType("int");
 
+                    b.Property<int>("MobIndex")
+                        .HasColumnType("int");
+
                     b.Property<string>("MobName")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -1857,8 +2060,14 @@ namespace Vanalytics.Data.Migrations
                     b.Property<int?>("PoolId")
                         .HasColumnType("int");
 
+                    b.Property<int>("RespawnTime")
+                        .HasColumnType("int");
+
                     b.Property<float>("Rotation")
                         .HasColumnType("real");
+
+                    b.Property<int>("SpawnType")
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -1881,7 +2090,9 @@ namespace Vanalytics.Data.Migrations
 
                     b.HasIndex("ZoneId");
 
-                    b.ToTable("ZoneSpawns", (string)null);
+                    b.HasIndex("ZoneId", "MobName");
+
+                    b.ToTable("ZoneSpawns");
                 });
 
             modelBuilder.Entity("Soverance.Auth.Models.RefreshToken", b =>
@@ -2040,6 +2251,17 @@ namespace Vanalytics.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterCollection", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithOne()
+                        .HasForeignKey("Vanalytics.Core.Models.CharacterCollection", "CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterInventory", b =>
                 {
                     b.HasOne("Vanalytics.Core.Models.Character", "Character")
@@ -2062,10 +2284,65 @@ namespace Vanalytics.Data.Migrations
                     b.Navigation("Character");
                 });
 
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterMissions", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithOne()
+                        .HasForeignKey("Vanalytics.Core.Models.CharacterMissions", "CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterPorterItem", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterPorterSlip", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterProgression", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithOne()
+                        .HasForeignKey("Vanalytics.Core.Models.CharacterProgression", "CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterSkill", b =>
                 {
                     b.HasOne("Vanalytics.Core.Models.Character", "Character")
                         .WithMany("Skills")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterTitle", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithMany()
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

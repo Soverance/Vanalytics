@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from 'react'
 import type { CharacterDetail, GearEntry, GameItemDetail, SkillEntry } from '../../types/api'
 import { calculateBaseStats, STAT_KEYS, getBaseStatBreakdown, getJPGiftBonuses } from '../../lib/ffxi-stats'
 import type { BaseStats } from '../../lib/ffxi-stats'
+import Tabs from '../Tabs'
 
 interface StatusPanelProps {
   character: CharacterDetail
@@ -189,23 +190,12 @@ export default function StatusPanel({ character, gear, itemCache }: StatusPanelP
 
   return (
     <div>
-      <div className="flex gap-1 border-b border-gray-700 mb-4">
-        {TABS.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab
-                ? 'text-blue-400 border-b-2 border-blue-400 -mb-px'
-                : 'text-gray-500 hover:text-gray-300'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      <Tabs items={TABS} value={activeTab} onChange={setActiveTab} />
 
-      <div className="min-h-[320px]">
+      {/* Fixed height + internal scroll matches the left STAT panel
+          (h-[400px] in CharacterDetailPage), so a long sub-tab like Skills
+          doesn't push the bottom GEAR section down. */}
+      <div className="h-[400px] overflow-y-auto styled-scrollbar">
       {activeTab === 'Base' && (
         <BaseTab
           baseStats={baseStats}
@@ -593,22 +583,7 @@ function SkillsTab({ skills }: { skills: SkillEntry[] }) {
 
   return (
     <div>
-      {/* Sub-tab pills */}
-      <div className="flex gap-1 mb-3">
-        {SKILL_CATEGORY_TABS.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-              activeCategory === cat
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+      <Tabs items={SKILL_CATEGORY_TABS} value={activeCategory} onChange={setActiveCategory} />
 
       {/* Skills table */}
       <table className="w-full text-sm">

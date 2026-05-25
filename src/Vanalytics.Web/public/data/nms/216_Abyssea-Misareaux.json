@@ -1,0 +1,199 @@
+{
+  "zoneId": 216,
+  "zoneName": "Abyssea-Misareaux",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Abyssea-Misareaux",
+  "nms": [
+    {
+      "name": "Abyssic Cluster",
+      "genus": "Cluster",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Misareaux."
+    },
+    {
+      "name": "Amhuluk",
+      "genus": "Amphiptere",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with 3 key items."
+    },
+    {
+      "name": "Asanbosam",
+      "genus": "Bat",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Misareaux."
+    },
+    {
+      "name": "Athamas",
+      "genus": "Spider",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Misareaux."
+    },
+    {
+      "name": "Avalerion",
+      "genus": "Colibri",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Mocking Beak to ???."
+    },
+    {
+      "name": "Cep-Kamuy",
+      "genus": "Orobon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Orobon Cheekmeat to ???."
+    },
+    {
+      "name": "Cirein-croin",
+      "genus": "Orobon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with 2 key items."
+    },
+    {
+      "name": "Flame Skimmer",
+      "genus": "Fly",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Misareaux."
+    },
+    {
+      "name": "Funereal Apkallu",
+      "genus": "Apkallu",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Apkallu Down to ???."
+    },
+    {
+      "name": "Gukumatz",
+      "genus": "Peiste",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Misareaux."
+    },
+    {
+      "name": "Heqet",
+      "genus": "Poroggo",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Misareaux."
+    },
+    {
+      "name": "Ironclad Observer",
+      "genus": "Iron Giant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Spheroid Plate to ???."
+    },
+    {
+      "name": "Ironclad Pulverizer",
+      "genus": "Iron Giant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with 2 key items."
+    },
+    {
+      "name": "Ironclad Severer",
+      "genus": "Iron Giant",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Misareaux."
+    },
+    {
+      "name": "Jala",
+      "genus": "Avatar",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed spawn every 20 min with 5 spawns in Abyssea - Misareaux."
+    },
+    {
+      "name": "Karkatakam",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade 2 items to ???."
+    },
+    {
+      "name": "Kutharei",
+      "genus": "Caturae",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed spawn every 20-60 min in Abyssea - Misareaux."
+    },
+    {
+      "name": "Manohra",
+      "genus": "Lesser Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Avian Remex to ???."
+    },
+    {
+      "name": "Minax Bugard",
+      "genus": "Bugard",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Bewitching Tusk to ???."
+    },
+    {
+      "name": "Nehebkau",
+      "genus": "Raptor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Hardened Raptor Skin to ???."
+    },
+    {
+      "name": "Nonno",
+      "genus": "Mandragora",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Worm-Eaten Bud to ???."
+    },
+    {
+      "name": "Npfundlwa",
+      "genus": "Rabbit",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Black Rabbit Tail to ???."
+    },
+    {
+      "name": "Sirrush",
+      "genus": "Hill Lizard",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Molt Scraps to ???."
+    },
+    {
+      "name": "Sobek",
+      "genus": "Bugard",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with 3 key items."
+    }
+  ]
+}

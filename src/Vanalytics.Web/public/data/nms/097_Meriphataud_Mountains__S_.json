@@ -1,0 +1,107 @@
+{
+  "zoneId": 97,
+  "zoneName": "Meriphataud Mountains [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Meriphataud_Mountains_[S]",
+  "nms": [
+    {
+      "name": "Bloodlapper",
+      "genus": "Gnat",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Gnat Pellets to ???."
+    },
+    {
+      "name": "Sandworm",
+      "genus": "Sandworm",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; sound aggro."
+    },
+    {
+      "name": "Centipedal Centruroides",
+      "genus": "Scorpion",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Mountain Scolopendrid", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Mountain Scolopendrid."
+    },
+    {
+      "name": "Hemodrosophila",
+      "genus": "Gnat",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gnat", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from regular Gnat."
+    },
+    {
+      "name": "Muq Shabeel",
+      "genus": "Coeurl",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed spawn ~90 min."
+    },
+    {
+      "name": "Akupara",
+      "genus": "Adamantoise",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires Jade stratum abyssite III and Voidstone."
+    },
+    {
+      "name": "Rummager Beetle",
+      "genus": "Beetle",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Raker Bee",
+      "genus": "Bee",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Farruca Fly",
+      "genus": "Fly",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Jyeshtha",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Orcus",
+      "genus": "Antlion",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Brown abyssite; 2-4h respawn."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

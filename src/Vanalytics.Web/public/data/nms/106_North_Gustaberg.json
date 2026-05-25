@@ -1,0 +1,99 @@
+{
+  "zoneId": 106,
+  "zoneName": "North Gustaberg",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/North_Gustaberg",
+  "nms": [
+    {
+      "name": "Stinging Sophie",
+      "genus": "Bee",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Maneating Hornet", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Maneating Hornet; passive, sight aggro."
+    },
+    {
+      "name": "Maighdean Uaine",
+      "genus": "Sapling",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Walking Sapling", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Walking Sapling; sound aggro."
+    },
+    {
+      "name": "Gambilox Wanderling",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'As Thick as Thieves'; sight/scent/link aggro."
+    },
+    {
+      "name": "Bedrock Barry",
+      "genus": "Worm",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 1h; Black Mage; passive with sound aggro."
+    },
+    {
+      "name": "Sallow Seymour",
+      "genus": "Worm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires Indigo stratum abyssite and Voidstone."
+    },
+    {
+      "name": "Ground Guzzler",
+      "genus": "Worm",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Globster",
+      "genus": "Slime",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Shoggoth",
+      "genus": "Hecteyes",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Lamprey Lord",
+      "genus": "Leech",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Blobdingnag",
+      "genus": "Slime",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Orange/Brown abyssite; 2-4h respawn."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

@@ -24,10 +24,17 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<NpcPool> NpcPools => Set<NpcPool>();
     public DbSet<Zone> Zones => Set<Zone>();
     public DbSet<ZoneSpawn> ZoneSpawns => Set<ZoneSpawn>();
+    public DbSet<ZoneNamedMonster> ZoneNamedMonsters => Set<ZoneNamedMonster>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<SessionEvent> SessionEvents => Set<SessionEvent>();
     public DbSet<CharacterInventory> CharacterInventories => Set<CharacterInventory>();
     public DbSet<InventoryChange> InventoryChanges => Set<InventoryChange>();
+    public DbSet<CharacterPorterSlip> CharacterPorterSlips => Set<CharacterPorterSlip>();
+    public DbSet<CharacterPorterItem> CharacterPorterItems => Set<CharacterPorterItem>();
+    public DbSet<CharacterProgression> CharacterProgression => Set<CharacterProgression>();
+    public DbSet<CharacterMissions> CharacterMissions => Set<CharacterMissions>();
+    public DbSet<CharacterTitle> CharacterTitles => Set<CharacterTitle>();
+    public DbSet<CharacterCollection> CharacterCollection => Set<CharacterCollection>();
     public DbSet<MacroBook> MacroBooks => Set<MacroBook>();
     public DbSet<MacroBookSnapshot> MacroBookSnapshots => Set<MacroBookSnapshot>();
     public DbSet<MacroPage> MacroPages => Set<MacroPage>();

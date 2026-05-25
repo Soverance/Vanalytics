@@ -1,0 +1,83 @@
+{
+  "zoneId": 113,
+  "zoneName": "Cape Teriggan",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Cape_Teriggan",
+  "nms": [
+    {
+      "name": "Frostmane",
+      "genus": "Manticore",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Greater Manticore", "mobIndex": null }
+      ],
+      "notes": "Lottery from Greater Manticore; sight aggro; drops Lockheart."
+    },
+    {
+      "name": "Kreutzet",
+      "genus": "Greater Bird",
+      "spawnType": "timed",
+      "respawnTime": 32400,
+      "placeholders": [],
+      "notes": "Timed 9-12h during Wind weather; sight aggro; drops Sirocco Kukri."
+    },
+    {
+      "name": "Killer Jonny",
+      "genus": "Cockatrice",
+      "spawnType": "lottery",
+      "respawnTime": 7200,
+      "placeholders": [
+        { "name": "Velociraptor", "mobIndex": null }
+      ],
+      "notes": "Lottery from Velociraptor every 2h; passive, sight detection; drops Fendoir."
+    },
+    {
+      "name": "Tegmine",
+      "genus": "Crab",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed 120-130 min; sound aggro; drops Aptant: Bellum, Aptant: Durus."
+    },
+    {
+      "name": "Zmey Gorynych",
+      "genus": "Raptor",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; sound aggro; drops Aptant: Primus, Aptant: Durus."
+    },
+    {
+      "name": "Axesarion the Wanderer",
+      "genus": "Fomor",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zilart Mission 5; Warrior job; links."
+    },
+    {
+      "name": "Stolas",
+      "genus": "Bird",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'From Saplings Grow'; Thief/Warrior; sight aggro."
+    },
+    {
+      "name": "Vedrfolnir",
+      "genus": "Greater Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,400 Unity Accolades to trigger; level 128."
+    },
+    {
+      "name": "Glazemane",
+      "genus": "Manticore",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,400 Unity Accolades to trigger; level 128."
+    }
+  ]
+}

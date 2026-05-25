@@ -1,0 +1,79 @@
+{
+  "zoneId": 188,
+  "zoneName": "Dynamis-Jeuno",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dynamis_-_Jeuno",
+  "nms": [
+    {
+      "name": "Bandrix Rockjaw",
+      "genus": "Goblin",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed Goblin NM; drops Roving Bijou, sight aggro."
+    },
+    {
+      "name": "Blazox Boneybod",
+      "genus": "Goblin",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed Goblin NM; drops Roving Bijou, sight aggro."
+    },
+    {
+      "name": "Bootrix Jaggedelbow",
+      "genus": "Goblin",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed Goblin NM; drops Roving Bijou, sight aggro."
+    },
+    {
+      "name": "Goblin Golem",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Roving Bijou to ??? to activate; drops Fiendish Tome Chapter 16."
+    },
+    {
+      "name": "Quicktrix Hexhands",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Cup; drops Mujin Mantle and Fiendish Tome Chapter 17."
+    },
+    {
+      "name": "Feralox Honeylips",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Die; drops Oneiros Tathlum and Fiendish Tome Chapter 18."
+    },
+    {
+      "name": "Scourquix Scaleskin",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Mask; drops Oneiros Pearl and Fiendish Tome Chapter 19."
+    },
+    {
+      "name": "Wilywox Tenderpalm",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Grenade; drops Mujin Stud and Fiendish Tome Chapter 20."
+    },
+    {
+      "name": "Arch Goblin Golem",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mega Boss — trade all five Fiendish Tomes (Chapters 16-20) to ???; drops Oneiros Knife and Oneiros Coif."
+    }
+  ]
+}

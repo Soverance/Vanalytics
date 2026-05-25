@@ -1,0 +1,119 @@
+{
+  "zoneId": 149,
+  "zoneName": "Davoi",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Davoi",
+  "nms": [
+    {
+      "name": "Blubbery Bulge",
+      "genus": "Slime",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn at E-10; drops Davoi Mush."
+    },
+    {
+      "name": "Dirtyhanded Gochakzuk",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Timed 5-minute respawn at H-8."
+    },
+    {
+      "name": "Hawkeyed Dnatbat",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn at L-9; drops Orcish Cursemaker."
+    },
+    {
+      "name": "Hematic Cyst",
+      "genus": "Slime",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Tea with a Tonberry?\" at J-11."
+    },
+    {
+      "name": "Poisonhand Gnadgad",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn at G-6."
+    },
+    {
+      "name": "Steelbiter Gudrud",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn at K-9/10; drops Orcish Impaler."
+    },
+    {
+      "name": "Tigerbane Bakdak",
+      "genus": "Lizard",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn at J-7; drops War Lizard."
+    },
+    {
+      "name": "Barakbok",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The Doorman\"."
+    },
+    {
+      "name": "Bilopdop",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The First Meeting\"."
+    },
+    {
+      "name": "Deloknok",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The First Meeting\"."
+    },
+    {
+      "name": "Gavotvut",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The Doorman\"."
+    },
+    {
+      "name": "One-eyed Gwajboj",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Under Oath\"."
+    },
+    {
+      "name": "Purpleflash Brukdok",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The Crimson Trial\"."
+    },
+    {
+      "name": "Three-eyed Prozpuz",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Under Oath\"."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "zoneId": 142,
+  "zoneName": "Yughott Grotto",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Yughott_Grotto",
+  "nms": [
+    {
+      "name": "Ashmaker Gotblut",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Orcish Stonechucker", "mobIndex": null },
+        { "name": "Orcish Grunt", "mobIndex": null }
+      ],
+      "notes": "Lottery from Orcish Stonechucker or Orcish Grunt at G/H-9; sight and scent aggro."
+    }
+  ]
+}

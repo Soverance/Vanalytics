@@ -1,0 +1,39 @@
+{
+  "zoneId": 171,
+  "zoneName": "Crawlers Nest [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Crawlers%27_Nest_(S)",
+  "nms": [
+    {
+      "name": "Abatwa",
+      "genus": "Sapling",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn at I-7 Map 2; drops Witch Hazel."
+    },
+    {
+      "name": "Lugh",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": 14400,
+      "placeholders": [],
+      "notes": "Timed 4-5 hour respawn at E-7/8 Map 2."
+    },
+    {
+      "name": "Morille Mortelle",
+      "genus": "Funguar",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn at I-10 Map 2; drops Witch Hazel."
+    },
+    {
+      "name": "Nympha Eunomia",
+      "genus": "Wamouracampa",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM requiring specific key items; appears at F-6, F-8, and I-7 on Map 2."
+    }
+  ]
+}

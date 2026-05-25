@@ -1,0 +1,149 @@
+{
+  "zoneId": 108,
+  "zoneName": "Konschtat Highlands",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Konschtat_Highlands",
+  "nms": [
+    {
+      "name": "Haty",
+      "genus": "Hound",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns during Full Moon; drops Rogetsurin."
+    },
+    {
+      "name": "Bendigeit Vran",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns during New Moon; drops Rogetsurin."
+    },
+    {
+      "name": "Stray Mary",
+      "genus": "Sheep",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Mad Sheep", "mobIndex": null }
+      ],
+      "notes": "Lottery from Mad Sheep; sight aggro; drops Mary's Milk and Mary's Horn."
+    },
+    {
+      "name": "Rampaging Ram",
+      "genus": "Ram",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tremor Ram", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tremor Ram; sight/scent aggro; drops Rampaging Horn."
+    },
+    {
+      "name": "Goblin Archaeologist",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn via item trade at (I-7); sight aggro."
+    },
+    {
+      "name": "Steelfleece Baldarich",
+      "genus": "Ram",
+      "spawnType": "lottery",
+      "respawnTime": 75600,
+      "placeholders": [
+        { "name": "Rampaging Ram", "mobIndex": null }
+      ],
+      "notes": "Lottery from Rampaging Ram every 21-24h; sight/scent aggro; drops Viking Shield."
+    },
+    {
+      "name": "Ghillie Dhu",
+      "genus": "Sapling",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive; drops Estramacon."
+    },
+    {
+      "name": "Highlander Lizard",
+      "genus": "Lizard",
+      "spawnType": "timed",
+      "respawnTime": 1500,
+      "placeholders": [],
+      "notes": "Timed 20-30 min; passive sound aggro; drops Immortal Molt."
+    },
+    {
+      "name": "Forger",
+      "genus": "Bomb",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'Forge Your Destiny'; drops Bomb Steel."
+    },
+    {
+      "name": "Sleepy Mabel",
+      "genus": "Sheep",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 400 Unity Accolades to trigger; level 99."
+    },
+    {
+      "name": "Gwynn Ap Nudd",
+      "genus": "Corpselight",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires specific abyssite and Voidstone."
+    },
+    {
+      "name": "Prickly Sheep",
+      "genus": "Sheep",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Void Hare",
+      "genus": "Rabbit",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Chesma",
+      "genus": "Coeurl",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn; drops Halting Stole."
+    },
+    {
+      "name": "Tammuz",
+      "genus": "Ram",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn; drops Repelling Collar."
+    },
+    {
+      "name": "Dawon",
+      "genus": "Tiger",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Grey abyssite; 2-4h respawn; drops Pelt of Dawon."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

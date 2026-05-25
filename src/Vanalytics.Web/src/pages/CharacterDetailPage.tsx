@@ -14,18 +14,25 @@ import StatusPanel from '../components/character/StatusPanel'
 import EquipmentSwapModal from '../components/character/EquipmentSwapModal'
 import FullscreenViewer from '../components/character/FullscreenViewer'
 import InventoryTab from '../components/character/InventoryTab'
+import PorterTab from '../components/character/PorterTab'
 import RelicsTab from '../components/character/RelicsTab'
+import ProgressionTab from '../components/character/ProgressionTab'
+import MissionsTab from '../components/character/MissionsTab'
+import TitlesTab from '../components/character/TitlesTab'
+import KeyItemsTab from '../components/character/KeyItemsTab'
+import SpellsTab from '../components/character/SpellsTab'
 import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
 import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
 import SessionsTab from '../components/session/SessionsTab'
 import { ApiError } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
+import Tabs from '../components/Tabs'
 
-const STAT_TABS = ['Jobs', 'Crafting', 'Relics'] as const
+const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items'] as const
 type StatTab = typeof STAT_TABS[number]
 
-const GEAR_TABS = ['Equipment', 'Inventory', 'Macros', 'Sessions'] as const
+const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Spells', 'Macros', 'Sessions'] as const
 type GearTab = typeof GEAR_TABS[number]
 
 export default function CharacterDetailPage() {
@@ -173,25 +180,14 @@ export default function CharacterDetailPage() {
         <div className="flex gap-8">
           {/* Left column: Jobs / Crafting */}
           <div className="flex-1 min-w-0">
-            <div className="flex gap-1 border-b border-gray-700 mb-4">
-              {STAT_TABS.map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    activeTab === tab
-                      ? 'text-blue-400 border-b-2 border-blue-400 -mb-px'
-                      : 'text-gray-500 hover:text-gray-300'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+            <Tabs items={STAT_TABS} value={activeTab} onChange={setActiveTab} />
             <div className="h-[400px] overflow-y-auto styled-scrollbar">
               {activeTab === 'Jobs' && <JobsGrid jobs={character.jobs} />}
               {activeTab === 'Crafting' && <CraftingTable skills={character.craftingSkills} />}
-              {activeTab === 'Relics' && <RelicsTab characterId={character.id} />}
+              {activeTab === 'Progression' && <ProgressionTab characterId={character.id} />}
+              {activeTab === 'Missions' && <MissionsTab characterId={character.id} />}
+              {activeTab === 'Titles' && <TitlesTab characterId={character.id} />}
+              {activeTab === 'Key Items' && <KeyItemsTab characterId={character.id} />}
             </div>
           </div>
 
@@ -208,21 +204,7 @@ export default function CharacterDetailPage() {
 
       {/* Equipment / Inventory / Macros tabbed panel */}
       <section className="mb-8">
-        <div className="flex gap-1 border-b border-gray-700 mb-4">
-          {GEAR_TABS.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setGearTab(tab)}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                gearTab === tab
-                  ? 'text-blue-400 border-b-2 border-blue-400 -mb-px'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <Tabs items={GEAR_TABS} value={gearTab} onChange={setGearTab} />
 
         {/* Equipment tab: hidden instead of unmounted to preserve ModelViewer state */}
         <div className={gearTab === 'Equipment' ? '' : 'hidden'}>
@@ -247,8 +229,20 @@ export default function CharacterDetailPage() {
           </div>
         </div>
 
+        {gearTab === 'Ultimate Weapons' && (
+          <RelicsTab characterId={character.id} />
+        )}
+
         {gearTab === 'Inventory' && (
           <InventoryTab characterId={character.id} craftingSkills={character.craftingSkills} />
+        )}
+
+        {gearTab === 'Porter' && (
+          <PorterTab characterId={character.id} />
+        )}
+
+        {gearTab === 'Spells' && (
+          <SpellsTab characterId={character.id} />
         )}
 
         {gearTab === 'Macros' && (

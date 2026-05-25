@@ -1,0 +1,63 @@
+{
+  "zoneId": 263,
+  "zoneName": "Yorcia Weald",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Yorcia_Weald",
+  "nms": [
+    {
+      "name": "Numbing Blossom",
+      "genus": "Blossom",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns throughout the zone; passive."
+    },
+    {
+      "name": "Xag'Nar",
+      "genus": "Panopt",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Russet Yggrete Shard I to ???; aggressive, True Sight."
+    },
+    {
+      "name": "Laevvid",
+      "genus": "Treant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Russet Yggrete Shard II to ???; aggressive, True Sound."
+    },
+    {
+      "name": "Morseiu",
+      "genus": "Snapweed",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Russet Yggrete Shard III to ???; aggressive, True Sound."
+    },
+    {
+      "name": "Ircinraq",
+      "genus": "Mandragora",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Russet Yggrete Shard IV to ???; aggressive."
+    },
+    {
+      "name": "Hyoscya",
+      "genus": "Belladonna",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Russet Yggrete Shard V to ???; aggressive."
+    },
+    {
+      "name": "Yumcax",
+      "genus": "Yggdreant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Wildskeeper Reive encounter; passive, links."
+    }
+  ]
+}

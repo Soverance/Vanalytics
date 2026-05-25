@@ -1,0 +1,121 @@
+{
+  "zoneId": 119,
+  "zoneName": "Meriphataud Mountains",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Meriphataud_Mountains",
+  "nms": [
+    {
+      "name": "Coo Keja the Unseen",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed ~21h; sight aggro."
+    },
+    {
+      "name": "Daggerclaw Dracos",
+      "genus": "Raptor",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Raptor", "mobIndex": null }
+      ],
+      "notes": "Lottery from regular Raptors; sound aggro."
+    },
+    {
+      "name": "Waraxe Beak",
+      "genus": "Cockatrice",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24h; sight aggro."
+    },
+    {
+      "name": "Patripatan",
+      "genus": "Coeurl",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Chonchon",
+      "genus": "Cockatrice",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed 1.5-2h; sound aggro with links."
+    },
+    {
+      "name": "Naa Zeku the Unwaiting",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Warblade Beak",
+      "genus": "Cockatrice",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,800 Unity Accolades to trigger; level 122."
+    },
+    {
+      "name": "Lord Asag",
+      "genus": "Vampyr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires Jade stratum abyssite III and Voidstone."
+    },
+    {
+      "name": "Rummager Beetle",
+      "genus": "Beetle",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Raker Bee",
+      "genus": "Bee",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Farruca Fly",
+      "genus": "Fly",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Jyeshtha",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Orcus",
+      "genus": "Antlion",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Brown abyssite; 2-4h respawn."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

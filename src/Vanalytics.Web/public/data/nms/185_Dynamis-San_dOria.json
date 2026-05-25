@@ -1,0 +1,95 @@
+{
+  "zoneId": 185,
+  "zoneName": "Dynamis-San d'Oria",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dynamis_-_San_d%27Oria",
+  "nms": [
+    {
+      "name": "Reapertongue Gadgquok",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; drops Barbaric Bijou, sound aggro."
+    },
+    {
+      "name": "Voidstreaker Butchnotch",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; drops Barbaric Bijou, sound aggro."
+    },
+    {
+      "name": "Wyrmgnasher Bjakdek",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; drops Barbaric Bijou, sound aggro."
+    },
+    {
+      "name": "Overlord's Tombstone",
+      "genus": "Replica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Barbaric Bijou to ??? near North San d'Oria exit; drops Fiendish Tome Chapter 1."
+    },
+    {
+      "name": "Soulsender Fugbrag",
+      "genus": "Orc",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns alongside Overlord's Tombstone; sound aggro."
+    },
+    {
+      "name": "Battlechoir Gitchfotch",
+      "genus": "Orc",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns alongside Overlord's Tombstone; sound aggro."
+    },
+    {
+      "name": "Bladeburner Rokgevok",
+      "genus": "Orc",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Scale to ???."
+    },
+    {
+      "name": "Steelshank Kratzvatz",
+      "genus": "Orc",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Leather to ???."
+    },
+    {
+      "name": "Bloodfist Voshgrosh",
+      "genus": "Orc",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Cryptex to ???."
+    },
+    {
+      "name": "Spellspear Djokvukk",
+      "genus": "Orc",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Strongbox to ???."
+    },
+    {
+      "name": "Arch Overlord Tombstone",
+      "genus": "Replica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mega Boss — trade all five Fiendish Tomes to ???; true sight aggro, drops Oneiros Lance."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "zoneId": 189,
+  "zoneName": "Outer RaKaznar [U3]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Outer_RaKaznar_[U3]",
+  "nms": [
+    {
+      "name": "Suspended Sculpture",
+      "genus": "Unknown",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; timer info unavailable on wiki."
+    }
+  ]
+}

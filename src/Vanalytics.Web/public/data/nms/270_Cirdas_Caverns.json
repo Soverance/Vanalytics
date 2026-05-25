@@ -1,0 +1,23 @@
+{
+  "zoneId": 270,
+  "zoneName": "Cirdas Caverns",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Cirdas_Caverns",
+  "nms": [
+    {
+      "name": "Vemosia",
+      "genus": "Rafflesia",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Slashed Vine to ???; passive; level 126."
+    },
+    {
+      "name": "Ancestral Rage",
+      "genus": "Unknown",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Communion; located at Map 2 (F-9)."
+    }
+  ]
+}

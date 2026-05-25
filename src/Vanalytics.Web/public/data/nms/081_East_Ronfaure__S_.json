@@ -1,0 +1,115 @@
+{
+  "zoneId": 81,
+  "zoneName": "East Ronfaure [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/East_Ronfaure_[S]",
+  "nms": [
+    {
+      "name": "Dark Ixion",
+      "genus": "Monoceros",
+      "spawnType": "timed",
+      "respawnTime": 72000,
+      "placeholders": [],
+      "notes": "Timed spawn; 20-24 hour respawn; claim with Stygian Ash; passive, roaming."
+    },
+    {
+      "name": "Sandworm",
+      "genus": "Sandworm",
+      "spawnType": "timed",
+      "respawnTime": 72000,
+      "placeholders": [],
+      "notes": "Timed spawn; 20-25 hour respawn; sound-aggro, roaming."
+    },
+    {
+      "name": "Skogs Fru",
+      "genus": "Ladybug",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ladybug", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from regular Ladybugs; sight-aggro."
+    },
+    {
+      "name": "Melusine",
+      "genus": "Pixie",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive but sight-aggro; Black Magic caster."
+    },
+    {
+      "name": "Myradrosh",
+      "genus": "Colibri",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive but sight-aggro; Red Mage caster."
+    },
+    {
+      "name": "Goblintrap",
+      "genus": "Flytrap",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Battrap", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Battrap monsters; sound-aggro."
+    },
+    {
+      "name": "Cottus",
+      "genus": "Gigas",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Crimson stratum abyssite + Voidstone; aggressive."
+    },
+    {
+      "name": "Quagmire Pugil",
+      "genus": "Pugil",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn; true sound aggro."
+    },
+    {
+      "name": "Sunderclaw",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn; aggressive."
+    },
+    {
+      "name": "Yacumama",
+      "genus": "Sea Monk",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; approximately 1-hour respawn; aggressive."
+    },
+    {
+      "name": "Capricornus",
+      "genus": "Pugil",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; approximately 1-hour respawn; aggressive."
+    },
+    {
+      "name": "Krabkatoa",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Blue abyssite; 2-4 hour respawn; aggressive."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; approximately 1-hour respawn; aggressive."
+    }
+  ]
+}

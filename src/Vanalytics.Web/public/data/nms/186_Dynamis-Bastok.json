@@ -1,0 +1,87 @@
+{
+  "zoneId": 186,
+  "zoneName": "Dynamis-Bastok",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dynamis_-_Bastok",
+  "nms": [
+    {
+      "name": "Gi'Pha Manameister",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; aggressive."
+    },
+    {
+      "name": "Gu'Nhi Noondozer",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; aggressive."
+    },
+    {
+      "name": "Ko'Dho Cannonball",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; aggressive."
+    },
+    {
+      "name": "Ze'Vho Fallsplitter",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; aggressive."
+    },
+    {
+      "name": "Gu'Dha Effigy",
+      "genus": "Replica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Steelwall Bijou to ??? near South Gustaberg exit; passive."
+    },
+    {
+      "name": "Zo'Pha Forgesoul",
+      "genus": "Quadav",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Charm to ???."
+    },
+    {
+      "name": "Ra'Gho Darkfount",
+      "genus": "Quadav",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Backscale to ???."
+    },
+    {
+      "name": "Va'Zhe Pummelsong",
+      "genus": "Quadav",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Engraving to ???."
+    },
+    {
+      "name": "Bu'Bho Truesteel",
+      "genus": "Quadav",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Letterbox to ???."
+    },
+    {
+      "name": "Arch Gu'Dha Effigy",
+      "genus": "Replica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mega Boss — trade five Fiendish Tome chapters (6-10) to ??? near South Gustaberg exit."
+    }
+  ]
+}

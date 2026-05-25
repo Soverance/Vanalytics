@@ -1,0 +1,225 @@
+{
+  "zoneId": 105,
+  "zoneName": "Batallia Downs",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Batallia_Downs",
+  "nms": [
+    {
+      "name": "Ahtu",
+      "genus": "Treant",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2-4h."
+    },
+    {
+      "name": "Lumber Jack",
+      "genus": "Beetle",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns after defeating Weeping Willow."
+    },
+    {
+      "name": "Suparna",
+      "genus": "Greater Bird",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "San d'Oria Mission 9-1."
+    },
+    {
+      "name": "Suparna Fledgling",
+      "genus": "Greater Bird",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Assists Suparna in San d'Oria Mission 9-1."
+    },
+    {
+      "name": "Weeping Willow",
+      "genus": "Treant",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24h; spawns with Sobbing Sapling adds."
+    },
+    {
+      "name": "Sobbing Sapling",
+      "genus": "Sapling",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Assists Weeping Willow."
+    },
+    {
+      "name": "Tottering Toby",
+      "genus": "Sapling",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Stalking Sapling", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Stalking Sapling."
+    },
+    {
+      "name": "Eyegouger",
+      "genus": "Bird",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive spawn; timer not documented."
+    },
+    {
+      "name": "Prankster Maverix",
+      "genus": "Evil Weapon",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive spawn; timer not documented."
+    },
+    {
+      "name": "Skirling Liger",
+      "genus": "Tiger",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive spawn; timer not documented."
+    },
+    {
+      "name": "Badshah",
+      "genus": "Tiger",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'A Chocobo's Tale'."
+    },
+    {
+      "name": "Sturmtiger",
+      "genus": "Tiger",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'Chasing Quotas'."
+    },
+    {
+      "name": "Vegnix Greenthumb",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Crystalline Mission 3."
+    },
+    {
+      "name": "Lumber Jill",
+      "genus": "Beetle",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,100 Unity Accolades to trigger."
+    },
+    {
+      "name": "Cherufe",
+      "genus": "Wivre",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires specific abyssite and Voidstone."
+    },
+    {
+      "name": "Aither",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Deorc",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Eorthe",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Puretos",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Pruina",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Beorht",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Thunor",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Lacus",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Urd",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Skuld",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Verthandi",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Yellow abyssite; 2-4h respawn."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

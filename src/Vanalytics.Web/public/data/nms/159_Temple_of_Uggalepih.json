@@ -1,0 +1,175 @@
+{
+  "zoneId": 159,
+  "zoneName": "Temple of Uggalepih",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Temple_of_Uggalepih",
+  "nms": [
+    {
+      "name": "Beryl-footed Molberry",
+      "genus": "Tonberry",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Tonberry Rattle to ???; drops Hototogisu."
+    },
+    {
+      "name": "Bonze Marberry",
+      "genus": "Tonberry",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Timed 5-minute respawn; drops Cursed Key."
+    },
+    {
+      "name": "Crimson-toothed Pawberry",
+      "genus": "Tonberry",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Uggalepih Offering to ???; drops Carbuncle Mitts."
+    },
+    {
+      "name": "Death from Above",
+      "genus": "Bee",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Bee Larvae to ???; drops Hornetneedle and Royal Jelly."
+    },
+    {
+      "name": "Flauros",
+      "genus": "Coeurl",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Torama", "mobIndex": null }
+      ],
+      "notes": "Lottery from Torama; drops Flauros Whisker and High-Quality Coeurl Hide."
+    },
+    {
+      "name": "Habetrot",
+      "genus": "Crawler",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade stack of La Theine Cabbage to ???; drops Twincoon."
+    },
+    {
+      "name": "Manipulator",
+      "genus": "Doll",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed ~2-hour respawn; drops Hard Shield."
+    },
+    {
+      "name": "Sacrificial Goblet",
+      "genus": "Magic Pot",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Uggalepih Whistle to ???; drops Charging Shield."
+    },
+    {
+      "name": "Sozu Rogberry",
+      "genus": "Tonberry",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Flickering Lantern to ???; drops Thief's Knife."
+    },
+    {
+      "name": "Sozu Sarberry",
+      "genus": "Tonberry",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tonberry Cutter", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tonberry Cutter; drops Hocho and ninjutsu scrolls."
+    },
+    {
+      "name": "Sozu Terberry",
+      "genus": "Tonberry",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tonberry Harrier", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tonberry Harrier; drops Light Spirit Pact."
+    },
+    {
+      "name": "Tonberry Kinq",
+      "genus": "Tonberry",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tonberry Dismayer", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tonberry Dismayer; drops Light Spirit Pact and Water Spirit Pact."
+    },
+    {
+      "name": "Cleuvarion M Resoaix",
+      "genus": "Fomor",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Knight Stalker\"; WAR job."
+    },
+    {
+      "name": "Nio-A",
+      "genus": "Doll",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for San d'Oria Mission 8-2: Lightbringer; WAR job."
+    },
+    {
+      "name": "Nio-Hum",
+      "genus": "Doll",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for San d'Oria Mission 8-2: Lightbringer; WAR job."
+    },
+    {
+      "name": "Rompaulion S Citalle",
+      "genus": "Fomor",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Knight Stalker\"; THF job."
+    },
+    {
+      "name": "Trompe L'Oeil",
+      "genus": "Golem",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"A Question of Taste\"."
+    },
+    {
+      "name": "Yallery Brown",
+      "genus": "Sapling",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Axe the Competition\"; WAR job."
+    },
+    {
+      "name": "Azure-toothed Clawberry",
+      "genus": "Tonberry",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM requiring 2,100 Unity Accolades; level 125."
+    },
+    {
+      "name": "Neith",
+      "genus": "Diremite",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM requiring Ashen stratum abyssite and Voidstone; drops Prolix Ring."
+    }
+  ]
+}

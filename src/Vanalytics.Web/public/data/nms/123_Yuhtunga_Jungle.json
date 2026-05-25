@@ -1,0 +1,97 @@
+{
+  "zoneId": 123,
+  "zoneName": "Yuhtunga Jungle",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Yuhtunga_Jungle",
+  "nms": [
+    {
+      "name": "Meww the Turtlerider",
+      "genus": "Sahagin",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21h respawn; drops Oliphant."
+    },
+    {
+      "name": "Mischievous Micholas",
+      "genus": "Opo-opo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Young Opo-opo", "mobIndex": null }
+      ],
+      "notes": "Lottery from Young Opo-opo; drops Kidney Dagger."
+    },
+    {
+      "name": "Rose Garden",
+      "genus": "Morbol",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns at (I-7); morphs to Voluptuous Vilma if left undisturbed ~10 hours."
+    },
+    {
+      "name": "Voluptuous Vilma",
+      "genus": "Morbol",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive; morphs from Rose Garden after extended dormancy; drops Vilma's Ring."
+    },
+    {
+      "name": "Bayawak",
+      "genus": "Lizard",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed 1.5-2h during fire weather; drops Slick Dart."
+    },
+    {
+      "name": "Koropokkur",
+      "genus": "Mandragora",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 60-90 min; drops Aega's Doublet."
+    },
+    {
+      "name": "Pyuu the Spatemaker",
+      "genus": "Sahagin",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed 90-120 min in caves; drops Sahagin Gold."
+    },
+    {
+      "name": "Carthi",
+      "genus": "Opo-opo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zilart Mission 5 spawn."
+    },
+    {
+      "name": "Tipha",
+      "genus": "Opo-opo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zilart Mission 5 spawn."
+    },
+    {
+      "name": "Sybaritic Samantha",
+      "genus": "Morbol",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,500 Unity Accolades to trigger; level 119."
+    },
+    {
+      "name": "Holy Moly",
+      "genus": "Rafflesia",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires Ashen stratum abyssite and Voidstone."
+    }
+  ]
+}

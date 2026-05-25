@@ -1,0 +1,67 @@
+{
+  "zoneId": 107,
+  "zoneName": "South Gustaberg",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/South_Gustaberg",
+  "nms": [
+    {
+      "name": "Tococo",
+      "genus": "Lesser Bird",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 60-70 min; passive; drops Armiger's Lace."
+    },
+    {
+      "name": "Bubbly Bernie",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop via Quus item; sound aggro; drops Steam Clock."
+    },
+    {
+      "name": "Leaping Lizzy",
+      "genus": "Lizard",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Rock Lizard", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Rock Lizard; sound aggro; drops Bounding Boots."
+    },
+    {
+      "name": "Carnero",
+      "genus": "Sheep",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ornery Sheep", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ornery Sheep; Warrior; sight aggro; drops Katayama."
+    },
+    {
+      "name": "Grylio",
+      "genus": "Lizard",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fields of Valor battle NM at E-8; sound aggro."
+    },
+    {
+      "name": "Bounding Belinda",
+      "genus": "Hill Lizard",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 200 Unity Accolades to trigger."
+    },
+    {
+      "name": "Bhishani",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires White stratum abyssite IV and Voidstone."
+    }
+  ]
+}

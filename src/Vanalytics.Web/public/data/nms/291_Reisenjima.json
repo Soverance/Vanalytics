@@ -1,0 +1,375 @@
+{
+  "zoneId": 291,
+  "zoneName": "Reisenjima",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Reisenjima",
+  "nms": [
+    {
+      "name": "Rampaging Beetle",
+      "genus": "Beetle",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Beetle", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Beetle; passive."
+    },
+    {
+      "name": "Agitated Chapuli",
+      "genus": "Chapuli",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Chapuli", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Chapuli; passive."
+    },
+    {
+      "name": "Arboreal Chigoe",
+      "genus": "Chigoe",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Chigoe", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Chigoe; passive."
+    },
+    {
+      "name": "Asphyxiating Cyhiraeth",
+      "genus": "Corpselight",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Cyhiraeth", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Cyhiraeth; aggressive."
+    },
+    {
+      "name": "Indomitable Faaz",
+      "genus": "Raaz",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Faaz", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Faaz; aggressive."
+    },
+    {
+      "name": "Quarrelsome Hippogryph",
+      "genus": "Hippogryph",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Hippogryph", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Hippogryph; aggressive."
+    },
+    {
+      "name": "Glowering Ladybug",
+      "genus": "Ladybug",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Luckybug", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Luckybug; aggressive."
+    },
+    {
+      "name": "Territorial Mantis",
+      "genus": "Mantid",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Mantis", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Mantis; aggressive."
+    },
+    {
+      "name": "Devouring Mosquito",
+      "genus": "Bee",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Mosquito", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Mosquito; passive."
+    },
+    {
+      "name": "Perfervid Naraka",
+      "genus": "Naraka",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Naraka", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Naraka; aggressive."
+    },
+    {
+      "name": "Obstreperous Panopt",
+      "genus": "Panopt",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Panopt", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Panopt; passive."
+    },
+    {
+      "name": "Snaggletoothed Tiger",
+      "genus": "Tiger",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ascended Tiger", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ascended Tiger; passive."
+    },
+    {
+      "name": "Heavenly Veela",
+      "genus": "Pixie",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Aggressive; lottos to Wanton Danaid and Officious Unseelie."
+    },
+    {
+      "name": "Ogdoad",
+      "genus": "Poroggo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up at G-9; passive."
+    },
+    {
+      "name": "Quetzalcoatl",
+      "genus": "Wyrm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Domain Invasion mechanic; passive."
+    },
+    {
+      "name": "Belphegor",
+      "genus": "Corse",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: leader examines ??? and trades Belphegor's crown."
+    },
+    {
+      "name": "Crom Dubh",
+      "genus": "Dullahan",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Crom Dubh's helm."
+    },
+    {
+      "name": "Dazzling Dolores",
+      "genus": "Morbol",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Dazzling Dolores's vine."
+    },
+    {
+      "name": "Golden Kist",
+      "genus": "Mimic",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Golden Kist's key."
+    },
+    {
+      "name": "Kabandha",
+      "genus": "Ahriman",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Kabandha's wing."
+    },
+    {
+      "name": "Mauve-wristed Gomberry",
+      "genus": "Tonberry",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Mauve-wristed Gomberry's knife."
+    },
+    {
+      "name": "Oryx",
+      "genus": "Monoceros",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Oryx's plumage."
+    },
+    {
+      "name": "Sabotender Royal",
+      "genus": "Sabotender",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Sabotender Royal's needle."
+    },
+    {
+      "name": "Sang Buaya",
+      "genus": "Bugard",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Sang Buaya's tusk."
+    },
+    {
+      "name": "Selkit",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Selkit's pincer."
+    },
+    {
+      "name": "Taelmoth the Diremaw",
+      "genus": "Soulflayer",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Taelmoth's staff."
+    },
+    {
+      "name": "Zduhac",
+      "genus": "Greater Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 1: trade Zduhac's talon."
+    },
+    {
+      "name": "Bashmu",
+      "genus": "Hydra",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 2: trade Bashmu's trinket."
+    },
+    {
+      "name": "Gajasimha",
+      "genus": "Khimaira",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 2: trade Gajasimha's mane."
+    },
+    {
+      "name": "Ironside",
+      "genus": "Iron Giant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 2: trade Ironside's maul."
+    },
+    {
+      "name": "Old Shuck",
+      "genus": "Cerberus",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 2: trade Old Shuck's tuft."
+    },
+    {
+      "name": "Sarsaok",
+      "genus": "Behemoth",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 2: trade Sarsaok's hoard."
+    },
+    {
+      "name": "Strophadia",
+      "genus": "Harpeia",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 2: trade Strophadia's pearl."
+    },
+    {
+      "name": "Maju",
+      "genus": "Peiste",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 3: trade Maju's claw."
+    },
+    {
+      "name": "Neak",
+      "genus": "Dragon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 3: trade Neak's treasure."
+    },
+    {
+      "name": "Yakshi",
+      "genus": "Yggdreant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete Tier 3: trade Yakshi's scroll."
+    },
+    {
+      "name": "Albumen",
+      "genus": "Mandragora",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete HELM: trade Albumen's flower."
+    },
+    {
+      "name": "Erinys",
+      "genus": "Amphiptere",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete HELM: trade Erinys's beak."
+    },
+    {
+      "name": "Onychophora",
+      "genus": "Sandworm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete HELM: trade Onychophora's soil."
+    },
+    {
+      "name": "Schah",
+      "genus": "Caturae",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete HELM: trade Schah's gambit."
+    },
+    {
+      "name": "Teles",
+      "genus": "Siren",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete HELM: trade Teles's hymn."
+    },
+    {
+      "name": "Vinipata",
+      "genus": "Naraka",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete HELM: trade Vinipata's blade."
+    },
+    {
+      "name": "Zerde",
+      "genus": "Botulus",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Geas Fete HELM: trade Zerde's cup."
+    }
+  ]
+}

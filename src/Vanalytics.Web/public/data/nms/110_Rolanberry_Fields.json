@@ -1,0 +1,181 @@
+{
+  "zoneId": 110,
+  "zoneName": "Rolanberry Fields",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Rolanberry_Fields",
+  "nms": [
+    {
+      "name": "Black Triple Stars",
+      "genus": "Flock Bat",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Midnight Wings", "mobIndex": null }
+      ],
+      "notes": "Lottery from Midnight Wings during nighttime hours (18:00-6:00)."
+    },
+    {
+      "name": "Drooling Daisy",
+      "genus": "Morbol",
+      "spawnType": "lottery",
+      "respawnTime": 1200,
+      "placeholders": [
+        { "name": "Ochu", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ochu; Ochu repops every 20 min."
+    },
+    {
+      "name": "Silk Caterpillar",
+      "genus": "Crawler",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns when an Airship flies overhead toward Jeuno."
+    },
+    {
+      "name": "Simurgh",
+      "genus": "Greater Bird",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 1-2h respawn."
+    },
+    {
+      "name": "Ravenous Crawler",
+      "genus": "Crawler",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawn mechanic not fully documented."
+    },
+    {
+      "name": "Eldritch Edge",
+      "genus": "Evil Weapon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Evil Weapon", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Evil Weapon."
+    },
+    {
+      "name": "Chuglix Berrypaws",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Crystalline Mission 3."
+    },
+    {
+      "name": "Strix",
+      "genus": "Greater Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,100 Unity Accolades to trigger."
+    },
+    {
+      "name": "Yatagarasu",
+      "genus": "Greater Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires specific abyssite and Voidstone."
+    },
+    {
+      "name": "Aither",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Deorc",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Eorthe",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Puretos",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Pruina",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Beorht",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Thunor",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Lacus",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Urd",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Skuld",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Verthandi",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Yellow abyssite; 2-4h respawn."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

@@ -3,6 +3,8 @@ import { api } from '../../api/client'
 import type { RelicsResponse, GameItemDetail } from '../../types/api'
 import LoadingSpinner from '../LoadingSpinner'
 import ItemPreviewBox from '../economy/ItemPreviewBox'
+import RelicCurrencyProgress from './RelicCurrencyProgress'
+import Tabs from '../Tabs'
 
 const CATEGORY_COLORS: Record<string, string> = {
   Relic: 'bg-amber-500',
@@ -14,6 +16,17 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const CATEGORY_ORDER = ['Relic', 'Mythic', 'Empyrean', 'Aeonic', 'Ergon']
 
+const INNER_TABS = ['Overview', 'Relics'] as const
+type InnerTab = typeof INNER_TABS[number]
+
+function stageBadgeClass(stage: string): string {
+  if (stage === 'Afterglow') return 'bg-yellow-400 text-yellow-950'
+  if (stage === 'Reforged') return 'bg-amber-600 text-white'
+  if (stage === 'Lv.99 (Augmented)') return 'bg-blue-500 text-white'
+  if (stage.startsWith('Lv.')) return 'bg-gray-600 text-gray-100'
+  return 'bg-gray-700 text-gray-300'
+}
+
 interface Props {
   characterId: string
 }
@@ -22,6 +35,7 @@ export default function RelicsTab({ characterId }: Props) {
   const [data, setData] = useState<RelicsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [categoryFilter, setCategoryFilter] = useState<string>('')
+  const [innerTab, setInnerTab] = useState<InnerTab>('Overview')
 
   // Tooltip state
   const [hoveredItemId, setHoveredItemId] = useState<number | null>(null)
@@ -97,6 +111,57 @@ export default function RelicsTab({ characterId }: Props) {
 
   return (
     <div>
+      <Tabs items={INNER_TABS} value={innerTab} onChange={setInnerTab} />
+
+      {innerTab === 'Relics' ? (
+        <RelicCurrencyProgress characterId={characterId} relics={data} />
+      ) : (
+        <OverviewContent
+          sortedProgress={sortedProgress}
+          sortedWeapons={sortedWeapons}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          handleRowEnter={handleRowEnter}
+          handleMouseMove={handleMouseMove}
+          handleRowLeave={handleRowLeave}
+        />
+      )}
+
+      {/* Item preview tooltip */}
+      {hoveredDetail && tooltipPos && (
+        <div
+          ref={tooltipRef}
+          className="fixed z-50 pointer-events-none"
+          style={{ top: tooltipPos.top, left: tooltipPos.left }}
+        >
+          <ItemPreviewBox item={hoveredDetail} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface OverviewProps {
+  sortedProgress: RelicsResponse['progress']
+  sortedWeapons: RelicsResponse['weapons']
+  categoryFilter: string
+  setCategoryFilter: React.Dispatch<React.SetStateAction<string>>
+  handleRowEnter: (itemId: number) => void
+  handleMouseMove: (e: React.MouseEvent) => void
+  handleRowLeave: () => void
+}
+
+function OverviewContent({
+  sortedProgress,
+  sortedWeapons,
+  categoryFilter,
+  setCategoryFilter,
+  handleRowEnter,
+  handleMouseMove,
+  handleRowLeave,
+}: OverviewProps) {
+  return (
+    <div>
       {/* Compact progress row */}
       <div className="flex gap-2 mb-4">
         {sortedProgress.map(p => {
@@ -143,7 +208,7 @@ export default function RelicsTab({ characterId }: Props) {
                 <th className="px-4 py-2 text-left">Weapon</th>
                 <th className="px-4 py-2 text-left">Category</th>
                 <th className="px-4 py-2 text-left">Weapon Skill</th>
-                <th className="px-4 py-2 text-right">Version</th>
+                <th className="px-4 py-2 text-left">Stage</th>
               </tr>
             </thead>
             <tbody>
@@ -182,29 +247,20 @@ export default function RelicsTab({ characterId }: Props) {
                           </span>
                         </td>
                         <td className="px-4 py-1.5 text-gray-300" rowSpan={weapon.versions.length}>
-                          {weapon.weaponSkill}
+                          {weapon.weaponSkill ?? '—'}
                         </td>
                       </>
                     ) : null}
-                    <td className="px-4 py-1.5 text-right text-gray-400 text-xs">
-                      {ver.itemLevel ? `iLvl ${ver.itemLevel}` : ver.level ? `Lv.${ver.level}` : '—'}
+                    <td className="px-4 py-1.5">
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${stageBadgeClass(ver.stage)}`}>
+                        {ver.stage}
+                      </span>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Item preview tooltip */}
-      {hoveredDetail && tooltipPos && (
-        <div
-          ref={tooltipRef}
-          className="fixed z-50 pointer-events-none"
-          style={{ top: tooltipPos.top, left: tooltipPos.left }}
-        >
-          <ItemPreviewBox item={hoveredDetail} />
         </div>
       )}
     </div>

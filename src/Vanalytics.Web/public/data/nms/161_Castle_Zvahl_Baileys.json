@@ -1,0 +1,99 @@
+{
+  "zoneId": 161,
+  "zoneName": "Castle Zvahl Baileys",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Castle_Zvahl_Baileys",
+  "nms": [
+    {
+      "name": "Duke Haborym",
+      "genus": "Demon",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn; DRK job, sight aggro."
+    },
+    {
+      "name": "Grand Duke Batym",
+      "genus": "Demon",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn; SMN job, sight aggro."
+    },
+    {
+      "name": "Marquis Allocen",
+      "genus": "Demon",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn; WAR job, sight aggro."
+    },
+    {
+      "name": "Marquis Amon",
+      "genus": "Demon",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn; BLM job, sight aggro."
+    },
+    {
+      "name": "Marquis Naberius",
+      "genus": "Demon",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 1-2 hour respawn; BLM job, sight aggro."
+    },
+    {
+      "name": "Marquis Sabnock",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Abyssal Demon", "mobIndex": null },
+        { "name": "Doom Demon", "mobIndex": null },
+        { "name": "Blood Demon", "mobIndex": null }
+      ],
+      "notes": "Lottery from Abyssal, Doom, or Blood Demon; WAR job."
+    },
+    {
+      "name": "Dark Spark",
+      "genus": "Bomb",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM related to Borghertz Artifact Hands quests."
+    },
+    {
+      "name": "Marquis Andrealphus",
+      "genus": "Demon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Better the Demon You Know\"."
+    },
+    {
+      "name": "Demon Banneret",
+      "genus": "Demon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest-triggered demon NM."
+    },
+    {
+      "name": "Demon Secretary",
+      "genus": "Demon",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest-triggered demon NM."
+    },
+    {
+      "name": "Likho",
+      "genus": "Ahriman",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "BLM job; aggressive, links."
+    }
+  ]
+}

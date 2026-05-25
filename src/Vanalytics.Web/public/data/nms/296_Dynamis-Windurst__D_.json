@@ -1,0 +1,47 @@
+{
+  "zoneId": 296,
+  "zoneName": "Dynamis - Windurst (D)",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dynamis_-_Windurst_(D)",
+  "nms": [
+    {
+      "name": "Aurix",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Aggro any colorless statue to pop. One up at a time; despawns after 2-3min if undamaged."
+    },
+    {
+      "name": "Evincing Idol",
+      "genus": "Replica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mid-boss near Windurst Waters at (C-6). +30min time on defeat."
+    },
+    {
+      "name": "Fii Pexu the Eternal",
+      "genus": "Yagudo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zone boss near Mog House; spawns after Evincing Idol."
+    },
+    {
+      "name": "Disjoined Tarutaru",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Disjoined Boss near Heaven's Tower (H-7); spawns after Fii Pexu. Passive. Multi-zone title."
+    },
+    {
+      "name": "Disjoined Tarutaru ???",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Wave 3 variant spawned from elemental circle fetters."
+    }
+  ]
+}

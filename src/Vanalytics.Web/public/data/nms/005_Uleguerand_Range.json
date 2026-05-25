@@ -1,0 +1,117 @@
+{
+  "zoneId": 5,
+  "zoneName": "Uleguerand Range",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Uleguerand_Range",
+  "nms": [
+    {
+      "name": "Black Coney",
+      "genus": "Rabbit",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade San d'Orian Carrot during New Moon to Rabbit Footprint."
+    },
+    {
+      "name": "Bonnacon",
+      "genus": "Buffalo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Buffalo", "mobIndex": null }
+      ],
+      "notes": "Lottery from Buffalo."
+    },
+    {
+      "name": "Father Frost",
+      "genus": "Snoll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Morphs from Snow Maiden when undisturbed."
+    },
+    {
+      "name": "Geush Urvan",
+      "genus": "Buffalo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Haunted Muleta to ???"
+    },
+    {
+      "name": "Jormungand",
+      "genus": "Wyrm",
+      "spawnType": "timed",
+      "respawnTime": 259200,
+      "placeholders": [],
+      "notes": "Every 3-5 Earth days."
+    },
+    {
+      "name": "Mountain Worm",
+      "genus": "Worm",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "21 hour timer."
+    },
+    {
+      "name": "Snow Maiden",
+      "genus": "Snoll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Morphs to Father Frost when undisturbed."
+    },
+    {
+      "name": "White Coney",
+      "genus": "Rabbit",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade San d'Orian Carrot during Full Moon to Rabbit Footprint."
+    },
+    {
+      "name": "Frost Flambeau",
+      "genus": "Snoll",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "2-2.5 hour timer."
+    },
+    {
+      "name": "Magnotaur",
+      "genus": "Unknown",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Molech", "mobIndex": null }
+      ],
+      "notes": "Lottery from Molech."
+    },
+    {
+      "name": "Skvader",
+      "genus": "Rabbit",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Polar Hare", "mobIndex": null }
+      ],
+      "notes": "Lottery from Polar Hare."
+    },
+    {
+      "name": "Camahueto",
+      "genus": "Buffalo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,400 Unity Accolades."
+    },
+    {
+      "name": "Isarukitsck",
+      "genus": "Apkallu",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Hyacinth stratum abyssite + Voidstone."
+    }
+  ]
+}

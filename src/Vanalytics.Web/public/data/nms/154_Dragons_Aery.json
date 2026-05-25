@@ -1,0 +1,23 @@
+{
+  "zoneId": 154,
+  "zoneName": "Dragons Aery",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dragons_Aery",
+  "nms": [
+    {
+      "name": "Fafnir",
+      "genus": "Wyrm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Honey Wine to ???; true sight aggro, drops Aegishjalmr and Andvaranauts."
+    },
+    {
+      "name": "Nidhogg",
+      "genus": "Wyrm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Sweet Tea to ???; true sight aggro, drops various Abjurations."
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "zoneId": 267,
+  "zoneName": "Kamihr Drifts",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Kamihr_Drifts",
+  "nms": [
+    {
+      "name": "Calydontis",
+      "genus": "Raaz",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Aster Yggrete Shard I to ??? at I-10; aggressive."
+    },
+    {
+      "name": "Azeman",
+      "genus": "Gnole",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Aster Yggrete Shard II to ??? at H-9; passive."
+    },
+    {
+      "name": "Sinaa",
+      "genus": "Coeurl",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Aster Yggrete Shard III to ??? at I-11; passive."
+    },
+    {
+      "name": "Cherti",
+      "genus": "Ram",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Aster Yggrete Shard IV to ??? at G-8; passive."
+    },
+    {
+      "name": "Mirka",
+      "genus": "Yztarg",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Aster Yggrete Shard V to ??? at F-8; passive."
+    },
+    {
+      "name": "Kumhau",
+      "genus": "Cehuetzi",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Wildskeeper Reive encounter at I-6; passive; level 125."
+    }
+  ]
+}

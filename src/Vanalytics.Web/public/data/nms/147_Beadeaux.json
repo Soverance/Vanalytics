@@ -1,0 +1,97 @@
+{
+  "zoneId": 147,
+  "zoneName": "Beadeaux",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Beadeaux",
+  "nms": [
+    {
+      "name": "Bi'Gho Headtaker",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Brass Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery from Brass Quadav; DRK job."
+    },
+    {
+      "name": "Da'Dha Hundredmask",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Copper Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery from Copper Quadav; THF job."
+    },
+    {
+      "name": "Ge'Dha Evileye",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Old Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery from Old Quadav; WHM job."
+    },
+    {
+      "name": "Zo'Khu Blackcloud",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Zircon Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery from Zircon Quadav; BLM job."
+    },
+    {
+      "name": "Go'Bhu Gascon",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed 20-minute respawn; WAR job."
+    },
+    {
+      "name": "De'Vyu Headhunter",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": 900,
+      "placeholders": [],
+      "notes": "Timed 15-minute respawn; WAR job."
+    },
+    {
+      "name": "Ga'Bhu Unvanquished",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Emerald Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery from Emerald Quadav; RDM job."
+    },
+    {
+      "name": "Mimic",
+      "genus": "Mimic",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns from failed lockpicking attempts; aggressive to magic."
+    },
+    {
+      "name": "Magnes Quadav",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"For the Birds\"; BLM job."
+    },
+    {
+      "name": "Nickel Quadav",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"For the Birds\"; PLD job."
+    }
+  ]
+}

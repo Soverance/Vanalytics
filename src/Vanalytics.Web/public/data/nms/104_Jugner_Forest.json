@@ -1,0 +1,157 @@
+{
+  "zoneId": 104,
+  "zoneName": "Jugner Forest",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Jugner_Forest",
+  "nms": [
+    {
+      "name": "Fradubio",
+      "genus": "Treant",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Fraelissa", "mobIndex": null }
+      ],
+      "notes": "Lottery replacing Fraelissa; drops Bellicose Mantle."
+    },
+    {
+      "name": "Fraelissa",
+      "genus": "Treant",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed ~1h; drops Almogavar Bow."
+    },
+    {
+      "name": "Giollemitte B Feroun",
+      "genus": "Fomor",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'A Timely Visit'; Paladin job."
+    },
+    {
+      "name": "King Arthro",
+      "genus": "Crab",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24h; drops Velocious Belt and Magic Cuisses."
+    },
+    {
+      "name": "Meteormauler Zhagtegg",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed ~21h; drops Garde Pick."
+    },
+    {
+      "name": "Panzer Percival",
+      "genus": "Beetle",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Stag Beetle", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Stag Beetles; drops Neckchopper."
+    },
+    {
+      "name": "Skeleton Esquire",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'A Timely Visit'; Dark Knight job."
+    },
+    {
+      "name": "Sappy Sycamore",
+      "genus": "Sapling",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 60-70 min; Warrior job; drops Seeker Earring."
+    },
+    {
+      "name": "Supplespine Mujwuj",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Orcish Grunt", "mobIndex": null }
+      ],
+      "notes": "Lottery from Orcish Grunts; Dragoon job; drops Blue Jasper."
+    },
+    {
+      "name": "Cernunnos",
+      "genus": "Treant",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Wings of the Goddess Mission 10; BLM/WHM jobs."
+    },
+    {
+      "name": "Emperor Arthro",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,800 Unity Accolades to trigger; level 122."
+    },
+    {
+      "name": "Belphoebe",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires Crimson stratum abyssite III and Voidstone."
+    },
+    {
+      "name": "Quagmire Pugil",
+      "genus": "Pugil",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Sunderclaw",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Yacumama",
+      "genus": "Sea Monk",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Capricornus",
+      "genus": "Pugil",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Krabkatoa",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Blue abyssite; 2-4h respawn."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

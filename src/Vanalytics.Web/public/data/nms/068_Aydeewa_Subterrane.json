@@ -1,0 +1,73 @@
+{
+  "zoneId": 68,
+  "zoneName": "Aydeewa Subterrane",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Aydeewa_Subterrane",
+  "nms": [
+    {
+      "name": "Bluestreak Gyugyuroon",
+      "genus": "Qiqirn",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Qiqirn Archaeologist", "mobIndex": null }
+      ],
+      "notes": "Lottery from Qiqirn Archaeologist at J-8 to J-9 on Map 3."
+    },
+    {
+      "name": "Chigre",
+      "genus": "Chigoe",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Spoilt Blood to ??? at E-8 on Map 2."
+    },
+    {
+      "name": "Crystal Eater",
+      "genus": "Funguar",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade a crystal to roaming Dampsoil spot every 80 minutes on Map 5."
+    },
+    {
+      "name": "Lizardtrap",
+      "genus": "Flytrap",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn at G-8 on Map 1; 120-130 minute respawn cycle."
+    },
+    {
+      "name": "Nosferatu",
+      "genus": "Vampyr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Pure Blood to ??? at F-9 on Map 2."
+    },
+    {
+      "name": "Pandemonium Warden",
+      "genus": "Dvergr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Pandemonium Key to ??? at K-6 on Map 7 to force spawn."
+    },
+    {
+      "name": "Tumult Curator",
+      "genus": "Dvergr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 4,100 Unity Accolades to trigger; level 145."
+    },
+    {
+      "name": "Morta",
+      "genus": "Belladonna",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Amber stratum abyssite II + Voidstone."
+    }
+  ]
+}

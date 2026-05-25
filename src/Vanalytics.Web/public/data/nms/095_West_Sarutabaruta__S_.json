@@ -1,0 +1,115 @@
+{
+  "zoneId": 95,
+  "zoneName": "West Sarutabaruta [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/West_Sarutabaruta_[S]",
+  "nms": [
+    {
+      "name": "Dark Ixion",
+      "genus": "Monoceros",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "21-24h timed spawn; must claim with Stygian Ash."
+    },
+    {
+      "name": "Jeduah",
+      "genus": "Mandragora",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Tiny Lycopodium", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Tiny Lycopodium; sound aggro."
+    },
+    {
+      "name": "Sandworm",
+      "genus": "Sandworm",
+      "spawnType": "timed",
+      "respawnTime": 72000,
+      "placeholders": [],
+      "notes": "Timed spawn 20-25h; sound aggro."
+    },
+    {
+      "name": "Belladonna",
+      "genus": "Rafflesia",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed spawn 90-100 min; sound aggro."
+    },
+    {
+      "name": "Ramponneau",
+      "genus": "Frog",
+      "spawnType": "lottery",
+      "respawnTime": 5400,
+      "placeholders": [
+        { "name": "Toad", "mobIndex": null }
+      ],
+      "notes": "Lottery; Toad placeholder spawns every 90 min; sight aggro."
+    },
+    {
+      "name": "Tiffenotte",
+      "genus": "Pixie",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive."
+    },
+    {
+      "name": "Pancimanci",
+      "genus": "Mandragora",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires Jade stratum abyssite and Voidstone."
+    },
+    {
+      "name": "Rummager Beetle",
+      "genus": "Beetle",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Raker Bee",
+      "genus": "Bee",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Farruca Fly",
+      "genus": "Fly",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Jyeshtha",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Orcus",
+      "genus": "Antlion",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Brown abyssite; 2-4h respawn."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

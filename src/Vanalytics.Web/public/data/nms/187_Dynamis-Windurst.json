@@ -1,0 +1,103 @@
+{
+  "zoneId": 187,
+  "zoneName": "Dynamis-Windurst",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dynamis_-_Windurst",
+  "nms": [
+    {
+      "name": "Loo Hepe the Eyepiercer",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; aggressive."
+    },
+    {
+      "name": "Wuu Qoho the Razorclaw",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; aggressive."
+    },
+    {
+      "name": "Xoo Kaza the Solemn",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; aggressive."
+    },
+    {
+      "name": "Haa Pevi the Stentorian",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; aggressive."
+    },
+    {
+      "name": "Tzee Xicu Idol",
+      "genus": "Replica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Divine Bijou to ??? near Windurst Woods exit; drops Fiendish Tome Chapter 11."
+    },
+    {
+      "name": "Maa Febi the Steadfast",
+      "genus": "Yagudo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns alongside Tzee Xicu Idol."
+    },
+    {
+      "name": "Muu Febi the Steadfast",
+      "genus": "Yagudo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawns alongside Tzee Xicu Idol."
+    },
+    {
+      "name": "Xuu Bhoqa the Enigma",
+      "genus": "Yagudo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Necklace to ???."
+    },
+    {
+      "name": "Fuu Tzapo the Blessed",
+      "genus": "Yagudo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Feather to ???."
+    },
+    {
+      "name": "Naa Yixo the Stillrage",
+      "genus": "Yagudo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Canteen of Odious Holy Water to ???."
+    },
+    {
+      "name": "Tee Zaksa the Ceaseless",
+      "genus": "Yagudo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Odious Quipu to ???."
+    },
+    {
+      "name": "Arch Tzee Xicu Idol",
+      "genus": "Replica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mega Boss — trade all five Fiendish Tome chapters (11-15) to ??? near Windurst Woods exit."
+    }
+  ]
+}

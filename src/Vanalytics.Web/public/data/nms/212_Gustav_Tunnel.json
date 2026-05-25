@@ -1,0 +1,148 @@
+{
+  "zoneId": 212,
+  "zoneName": "Gustav Tunnel",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Gustav_Tunnel",
+  "nms": [
+    {
+      "name": "Amikiri",
+      "genus": "Scorpion",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Antares", "mobIndex": null }
+      ],
+      "notes": "Lottery from Antares at (F-7) Map 2; drops Antares."
+    },
+    {
+      "name": "Baobhan Sith",
+      "genus": "Ghost",
+      "spawnType": "lottery",
+      "respawnTime": 5400,
+      "placeholders": [
+        { "name": "Erlik", "mobIndex": null }
+      ],
+      "notes": "Lottery from Erlik at (J-7) Map 2; window opens 90 min after PH ToD; drops Erlik."
+    },
+    {
+      "name": "Bune",
+      "genus": "Wyvern",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed spawn 21-24 h window."
+    },
+    {
+      "name": "Goblinsavior Heronox",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Goblin Reaper", "mobIndex": null }
+      ],
+      "notes": "Lottery from Goblin Reaper at (I/J-8) Map 1; drops Goblin Reaper."
+    },
+    {
+      "name": "Taxim",
+      "genus": "Skeleton",
+      "spawnType": "lottery",
+      "respawnTime": 7200,
+      "placeholders": [
+        { "name": "Doom Warlock", "mobIndex": null }
+      ],
+      "notes": "Lottery from Doom Warlock at (G-8) Map 2; window opens 2 h after PH ToD; drops Doom Warlock."
+    },
+    {
+      "name": "Ungur",
+      "genus": "Wyvern",
+      "spawnType": "lottery",
+      "respawnTime": 7200,
+      "placeholders": [
+        { "name": "Typhoon Wyvern", "mobIndex": "0x0b9" },
+        { "name": "Typhoon Wyvern", "mobIndex": "0x0d7" }
+      ],
+      "notes": "Lottery from Typhoon Wyvern; window opens 2 h after PH ToD; drops Typhoon Wyvern."
+    },
+    {
+      "name": "Wyvernpoacher Drachlox",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": 7200,
+      "placeholders": [
+        { "name": "Goblin Mercenary", "mobIndex": null }
+      ],
+      "notes": "Lottery from Goblin Mercenary at (H-9) Map 2; window opens 2 h after PH ToD; drops Goblin Mercenary."
+    },
+    {
+      "name": "Baronial Bat",
+      "genus": "Bat",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Cloak and Dagger."
+    },
+    {
+      "name": "Bompupu",
+      "genus": "Tarutaru",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "A Shantotto Ascension Mission 6; Ninja job."
+    },
+    {
+      "name": "Gigaplasm",
+      "genus": "Slime",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 9-1; guaranteed drop."
+    },
+    {
+      "name": "Gorattz",
+      "genus": "Galka",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "A Shantotto Ascension Mission 6; Ninja job."
+    },
+    {
+      "name": "Macroplasm",
+      "genus": "Slime",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 9-1; mission encounter."
+    },
+    {
+      "name": "Microplasm",
+      "genus": "Slime",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 9-1; mission encounter."
+    },
+    {
+      "name": "Nanoplasm",
+      "genus": "Slime",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 9-1; mission encounter."
+    },
+    {
+      "name": "Renfred",
+      "genus": "Hume",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "A Shantotto Ascension Mission 6; Ninja job."
+    },
+    {
+      "name": "Wyvernhunter Bambrox",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM (level 128); requires 2,400 Unity Accolades."
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "zoneId": 61,
+  "zoneName": "Mount Zhayolm",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Mount_Zhayolm",
+  "nms": [
+    {
+      "name": "Anantaboga",
+      "genus": "Dragon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Raw Buffalo to ??? to force spawn."
+    },
+    {
+      "name": "Brass Borer",
+      "genus": "Wamouracampa",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Shadeleaf to ??? to force spawn."
+    },
+    {
+      "name": "Cerberus",
+      "genus": "Cerberus",
+      "spawnType": "timed",
+      "respawnTime": 172800,
+      "placeholders": [],
+      "notes": "Timed spawn at I-8; 48-72 hour respawn with 1-hour intervals; true sight."
+    },
+    {
+      "name": "Claret",
+      "genus": "Slime",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Pectin to ??? to force spawn."
+    },
+    {
+      "name": "Energetic Eruca",
+      "genus": "Crawler",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Magmatic Eruca", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Magmatic Eruca at H-9 to I-10; immune to slashing damage."
+    },
+    {
+      "name": "Garfurlar the Rabid",
+      "genus": "Troll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Besieged spawn when Troll forces advance on Al Zahbi."
+    },
+    {
+      "name": "Garharlor the Unruly",
+      "genus": "Troll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Besieged spawn when Troll forces advance on Al Zahbi."
+    },
+    {
+      "name": "Garhorlur the Brutal",
+      "genus": "Troll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Besieged spawn when Troll forces advance on Al Zahbi."
+    },
+    {
+      "name": "Giant Orobon",
+      "genus": "Orobon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up at fishing spots in the zone."
+    },
+    {
+      "name": "Khromasoul Bhurborlor",
+      "genus": "Troll",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Vinegar Pie to ??? to force spawn."
+    },
+    {
+      "name": "Sarameya",
+      "genus": "Cerberus",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Buffalo Corpse to ??? at I-12 to force spawn."
+    },
+    {
+      "name": "Vanasarvik",
+      "genus": "Imp",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Amber stratum abyssite + Voidstone."
+    },
+    {
+      "name": "Grand Grenade",
+      "genus": "Bomb",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,400 Unity Accolades to trigger; level 128."
+    },
+    {
+      "name": "Sarama",
+      "genus": "Cerberus",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 3,100 Unity Accolades to trigger; level 135."
+    }
+  ]
+}

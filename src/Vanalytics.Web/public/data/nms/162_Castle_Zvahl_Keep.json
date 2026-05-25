@@ -1,0 +1,47 @@
+{
+  "zoneId": 162,
+  "zoneName": "Castle Zvahl Keep",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Castle_Zvahl_Keep",
+  "nms": [
+    {
+      "name": "Baron Vapula",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Demon Wizard", "mobIndex": null }
+      ],
+      "notes": "Lottery from Demon Wizard at I-7 Map 3; BLM job, sight aggro, drops Aeroga III scroll."
+    },
+    {
+      "name": "Baronet Romwe",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Demon Pawn", "mobIndex": null }
+      ],
+      "notes": "Lottery from Demon Pawn at G-8 Map 3; WAR job, sight aggro, drops Demon's Axe."
+    },
+    {
+      "name": "Count Bifrons",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Demon Knight", "mobIndex": null }
+      ],
+      "notes": "Lottery from Demon Knight at I-9 Map 3; DRK job, sight aggro, drops Absorb-DEX scroll."
+    },
+    {
+      "name": "Viscount Morax",
+      "genus": "Demon",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Demon Warlock", "mobIndex": null }
+      ],
+      "notes": "Lottery from Demon Warlock at G-10 Map 3; SMN job, sight aggro, drops Dark Spirit Pact."
+    }
+  ]
+}

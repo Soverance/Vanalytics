@@ -1,0 +1,107 @@
+{
+  "zoneId": 65,
+  "zoneName": "Mamook",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Mamook",
+  "nms": [
+    {
+      "name": "Chamrosh",
+      "genus": "Colibri",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Floral Nectar to ??? to force spawn."
+    },
+    {
+      "name": "Darting Kachaal Ja",
+      "genus": "Mamool Ja",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn in Mamook."
+    },
+    {
+      "name": "Devout Radol Ja",
+      "genus": "Mamool Ja",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn in Mamook."
+    },
+    {
+      "name": "Dragonscaled Bugaal Ja",
+      "genus": "Mamool Ja",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn in Mamook."
+    },
+    {
+      "name": "Gulool Ja Ja",
+      "genus": "Mamool Ja",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed spawn; approximately 1-hour respawn."
+    },
+    {
+      "name": "Hundredfaced Hapool Ja",
+      "genus": "Mamool Ja",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn in Mamook."
+    },
+    {
+      "name": "Iriri Samariri",
+      "genus": "Poroggo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Samariri Corpsehair to ??? to force spawn."
+    },
+    {
+      "name": "Zizzy Zillah",
+      "genus": "Cockatrice",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ziz", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Ziz at I-9."
+    },
+    {
+      "name": "Firedance Magmaal Ja",
+      "genus": "Mamool Ja",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Watch Wyvern", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Watch Wyvern; passive."
+    },
+    {
+      "name": "Venomfang",
+      "genus": "Raptor",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Passive spawn in Mamook."
+    },
+    {
+      "name": "Carpophagous Puk",
+      "genus": "Puk",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest-related spawn (The Art of War); passive."
+    },
+    {
+      "name": "Yalungur",
+      "genus": "Colibri",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Amber stratum abyssite + Voidstone; aggressive."
+    }
+  ]
+}

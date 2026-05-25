@@ -1,0 +1,17 @@
+{
+  "zoneId": 129,
+  "zoneName": "Ghoyus Reverie",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Ghoyus_Reverie",
+  "nms": [
+    {
+      "name": "Serket",
+      "genus": "Scorpion",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Sandworm", "mobIndex": null }
+      ],
+      "notes": "Lottery from Sandworm encounters in West Sarutabaruta (S), Meriphataud (S), or Sauromugue (S); sound aggro; drops Serket Ring."
+    }
+  ]
+}

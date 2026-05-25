@@ -1,0 +1,73 @@
+{
+  "zoneId": 11,
+  "zoneName": "Oldton Movalpolos",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Oldton_Movalpolos",
+  "nms": [
+    {
+      "name": "Bugbear Strongman",
+      "genus": "Bugbear",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Bugbear Bondman", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn; sight-aggro."
+    },
+    {
+      "name": "Goblin Wolfman",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Trade Goblin Drink to Scrawled Writing; sight-aggro."
+    },
+    {
+      "name": "Bugbear Muscleman",
+      "genus": "Bugbear",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive."
+    },
+    {
+      "name": "Bugallug",
+      "genus": "Bugbear",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A Question of Faith."
+    },
+    {
+      "name": "Bugbear Porterman",
+      "genus": "Bugbear",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A Generous General?."
+    },
+    {
+      "name": "Dread Dealing Dredodak",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A Generous General?."
+    },
+    {
+      "name": "Goblin Preceptor",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A Generous General?."
+    },
+    {
+      "name": "Grimoire Guru Grimogek",
+      "genus": "Goblin",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A Generous General?."
+    }
+  ]
+}

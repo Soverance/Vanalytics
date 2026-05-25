@@ -13,6 +13,29 @@ public class ZoneSpawn
     public float Rotation { get; set; }
     public int MinLevel { get; set; }
     public int MaxLevel { get; set; }
+    /// <summary>
+    /// LSB mob_groups.spawntype bitmask. 0 = normal respawn; non-zero values
+    /// (1=attack, 2=timed, 4=script, 8/16=lights/darks day, 32=moon phase,
+    /// 64=fog, etc.) are characteristic of NM / event spawns. Used together
+    /// with low spawn-count to classify mobs as Notorious Monsters.
+    /// </summary>
+    public int SpawnType { get; set; }
+    /// <summary>
+    /// LSB mob_groups.respawntime, in seconds. Regular mobs respawn in ~300s;
+    /// NMs typically respawn in 3600s (1h) or more, with boss-class NMs going
+    /// 6h+. Strong signal for NM classification on its own, and used by the
+    /// addon to render a live countdown to the next pop in the watch panel.
+    /// </summary>
+    public int RespawnTime { get; set; }
+    /// <summary>
+    /// Low 12 bits of LSB mobid (mobid &amp; 0xFFF). The full mobid is
+    /// (zoneId &lt;&lt; 12) | mobIndex, so this column captures the per-zone
+    /// part — what wide scan / get_mob_by_index actually keys against.
+    /// Surfaced to the addon so Phase 2 watch-by-PH-index can target any
+    /// of an NM's documented PH slots regardless of which one currently
+    /// holds the NM (PHs and NMs share a group; index drifts on pop).
+    /// </summary>
+    public int MobIndex { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }

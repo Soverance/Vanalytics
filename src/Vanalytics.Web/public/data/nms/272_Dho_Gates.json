@@ -1,0 +1,15 @@
+{
+  "zoneId": 272,
+  "zoneName": "Dho Gates",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dho_Gates",
+  "nms": [
+    {
+      "name": "Dreadpincer",
+      "genus": "Craklaw",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Wrecked Pincer to ???; passive; level 126; at Map 2 (J-9)."
+    }
+  ]
+}

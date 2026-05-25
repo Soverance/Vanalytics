@@ -1,0 +1,89 @@
+{
+  "zoneId": 148,
+  "zoneName": "Qulun Dome",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Qulun_Dome",
+  "nms": [
+    {
+      "name": "Adaman Quadav",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed 20-minute respawn; drops Dark Knight's Testimony."
+    },
+    {
+      "name": "Ruby Quadav",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed 20-minute respawn; drops Red Mage's Testimony and Shell IV scroll."
+    },
+    {
+      "name": "Diamond Quadav",
+      "genus": "Quadav",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn; drops White Mage's Testimony and Diamond."
+    },
+    {
+      "name": "Za'Dha Adamantking",
+      "genus": "Quadav",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Diamond Quadav", "mobIndex": null }
+      ],
+      "notes": "Lottery from Diamond Quadav every 2-7 Earth days; drops Mistilteinn, Damascene Cloth, rare gems."
+    },
+    {
+      "name": "De'Pha Unscarred",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Affable Adamantking?\"; passive."
+    },
+    {
+      "name": "Hu'Rhe Marrowgorger",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Affable Adamantking?\"; passive."
+    },
+    {
+      "name": "Ka'Ghi Trovetaker",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Affable Adamantking?\"; passive."
+    },
+    {
+      "name": "Mu'Zha Infernoblade",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Affable Adamantking?\"; passive."
+    },
+    {
+      "name": "No'Bhu Unyielding",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Affable Adamantking?\"; passive."
+    },
+    {
+      "name": "So'Hyu Quakemaker",
+      "genus": "Quadav",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Affable Adamantking?\"; passive."
+    }
+  ]
+}

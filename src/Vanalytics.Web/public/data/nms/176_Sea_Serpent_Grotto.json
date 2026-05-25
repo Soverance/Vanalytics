@@ -1,0 +1,209 @@
+{
+  "zoneId": 176,
+  "zoneName": "Sea Serpent Grotto",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Sea_Serpent_Grotto",
+  "nms": [
+    {
+      "name": "Abyss Sahagin",
+      "genus": "Sahagin",
+      "spawnType": "timed",
+      "respawnTime": 960,
+      "placeholders": [],
+      "notes": "Timed 16-21 min respawn; BRD job."
+    },
+    {
+      "name": "Coral Sahagin",
+      "genus": "Sahagin",
+      "spawnType": "timed",
+      "respawnTime": 960,
+      "placeholders": [],
+      "notes": "Timed 16-21 min respawn; WHM job."
+    },
+    {
+      "name": "Ocean Sahagin",
+      "genus": "Sahagin",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn; DRG job."
+    },
+    {
+      "name": "Novv the Whitehearted",
+      "genus": "Sahagin",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed 2+ hour respawn; WHM job."
+    },
+    {
+      "name": "Charybdis",
+      "genus": "Sea Monk",
+      "spawnType": "lottery",
+      "respawnTime": 28800,
+      "placeholders": [
+        { "name": "Devil Manta", "mobIndex": null }
+      ],
+      "notes": "Lottery from Devil Manta every 8 hours; WAR job."
+    },
+    {
+      "name": "Denn the Orcavoiced",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Coastal Sahagin", "mobIndex": null }
+      ],
+      "notes": "Lottery from Coastal Sahagin; BRD job."
+    },
+    {
+      "name": "Fyuu the Seabellow",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Riparian Sahagin", "mobIndex": null }
+      ],
+      "notes": "Lottery from Riparian Sahagin; BRD job."
+    },
+    {
+      "name": "Mouu the Waverider",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Bog Sahagin", "mobIndex": null }
+      ],
+      "notes": "Lottery from Bog Sahagin; DRG job."
+    },
+    {
+      "name": "Pahh the Gullcaller",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Bog Sahagin", "mobIndex": null }
+      ],
+      "notes": "Lottery from Bog Sahagin; DRG job."
+    },
+    {
+      "name": "Voll the Sharkfinned",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Marsh Sahagin", "mobIndex": null }
+      ],
+      "notes": "Lottery from Marsh Sahagin; MNK job."
+    },
+    {
+      "name": "Worr the Clawfisted",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery from various Sahagin; MNK job."
+    },
+    {
+      "name": "Zuug the Shoreleaper",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn; DRG job."
+    },
+    {
+      "name": "Masan",
+      "genus": "Leech",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Royal Leech", "mobIndex": null }
+      ],
+      "notes": "Lottery from Royal Leech; DRK job."
+    },
+    {
+      "name": "Namtar",
+      "genus": "Skeleton",
+      "spawnType": "lottery",
+      "respawnTime": 3600,
+      "placeholders": [
+        { "name": "Ghast", "mobIndex": null }
+      ],
+      "notes": "Lottery from Ghast; BLM job, 1-hour minimum respawn."
+    },
+    {
+      "name": "Sea Hog",
+      "genus": "Pugil",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Razorjaw Pugil", "mobIndex": null }
+      ],
+      "notes": "Lottery from Razorjaw Pugil; WAR job."
+    },
+    {
+      "name": "Seww the Squidlimbed",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Riparian Sahagin", "mobIndex": null }
+      ],
+      "notes": "Lottery from Riparian Sahagin; BRD job."
+    },
+    {
+      "name": "Wuur the Sandcomber",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Spring Sahagin", "mobIndex": null }
+      ],
+      "notes": "Lottery from Spring Sahagin; WHM job."
+    },
+    {
+      "name": "Yarr the Pearleyed",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Lagoon Sahagin", "mobIndex": null }
+      ],
+      "notes": "Lottery from Lagoon Sahagin; WHM job."
+    },
+    {
+      "name": "Qull the Shellbuster",
+      "genus": "Sahagin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Brook Sahagin", "mobIndex": null }
+      ],
+      "notes": "Lottery from Brook Sahagin; MNK job."
+    },
+    {
+      "name": "Glyryvilu",
+      "genus": "Sea Monk",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Undying Pledge\"; MNK job."
+    },
+    {
+      "name": "Water Leaper",
+      "genus": "Pugil",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"Methods Create Madness\"; WAR job."
+    },
+    {
+      "name": "Bakunawa",
+      "genus": "Sea Monk",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM requiring 2,100 Unity Accolades; level 125."
+    }
+  ]
+}

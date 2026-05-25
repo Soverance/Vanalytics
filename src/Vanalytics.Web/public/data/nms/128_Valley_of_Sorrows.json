@@ -1,0 +1,31 @@
+{
+  "zoneId": 128,
+  "zoneName": "Valley of Sorrows",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Valley_of_Sorrows",
+  "nms": [
+    {
+      "name": "Adamantoise",
+      "genus": "Adamantoise",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Blue Pondweed to ???; true sound aggro; level 72-74."
+    },
+    {
+      "name": "Aspidochelone",
+      "genus": "Adamantoise",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by trading Red Pondweed to ???; true sound aggro; level 85-88."
+    },
+    {
+      "name": "Tolba",
+      "genus": "Adamantoise",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 3,100 Unity Accolades to trigger; level 135."
+    }
+  ]
+}

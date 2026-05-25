@@ -1,0 +1,23 @@
+{
+  "zoneId": 269,
+  "zoneName": "Moh Gates",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Moh_Gates",
+  "nms": [
+    {
+      "name": "Staumarth",
+      "genus": "Elemental",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Forging New Bonds; passive at Map 1 (K-8)."
+    },
+    {
+      "name": "Stinkskin",
+      "genus": "Matamata",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop: trade Cracked Matamata Shell to ??? at Map 2 (G-10); passive."
+    }
+  ]
+}

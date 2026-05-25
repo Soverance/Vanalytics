@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { useSyncProgress } from '../context/SyncContext'
 import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
@@ -6,6 +7,14 @@ import { FileTableResolver } from '../lib/ffxi-dat/FileTableResolver'
 import { scanForZoneDats } from '../lib/ffxi-dat/ZoneScanner'
 import type { ScanProgress } from '../lib/ffxi-dat/ZoneScanner'
 import { Map, FolderSearch } from 'lucide-react'
+import Tabs from '../components/Tabs'
+
+type Tab = 'sync' | 'health'
+
+const tabs: { id: Tab; label: string }[] = [
+  { id: 'sync', label: 'Sync' },
+  { id: 'health', label: 'Health' },
+]
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -546,6 +555,14 @@ export default function AdminItemsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [zoneStats, setZoneStats] = useState<ZoneStats | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTab = tabs.find(t => t.id === searchParams.get('tab'))?.id ?? 'sync'
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab)
+    setSearchParams(tab === 'sync' ? {} : { tab }, { replace: true })
+  }
 
   useEffect(() => {
     api<GameDataStats>('/api/admin/items/stats')
@@ -571,53 +588,61 @@ export default function AdminItemsPage() {
 
   return (
     <div>
-      {/* ── Sync section (always visible) ── */}
-      <SyncSection />
+      <Tabs
+        items={tabs.map(t => ({ value: t.id, label: t.label }))}
+        value={activeTab}
+        onChange={handleTabChange}
+      />
 
-      {/* ── Zone Scanner ── */}
-      <div className="mb-8">
-        <h2 className="text-xl font-bold mb-4">Zone Discovery</h2>
-        <ZoneScannerCard />
-      </div>
-
-      {/* ── Data Sources ── */}
-      <div className="mb-8 rounded-lg border border-gray-800 bg-gray-900/50 p-5">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">External Data Sources</h2>
-        <p className="text-xs text-gray-500 mb-4">
-          These sync features depend on the following community-maintained projects. If a source goes offline or stops updating, the corresponding data will need an alternative source.
-        </p>
-        <div className="space-y-3">
-          <DataSource
-            name="Windower Resources"
-            url="https://github.com/Windower/Resources"
-            description="Item names, descriptions, categories, flags, stats, and equipment properties. Extracted from FFXI game data."
-            usedBy="Game Data"
-          />
-          <DataSource
-            name="LandSandBoat"
-            url="https://github.com/LandSandBoat/server"
-            description="Equipment model ID mappings (item_equipment.sql) and NPC/monster pool data (mob_pools.sql). Maps items to visual 3D model IDs and provides NPC model definitions. Updated with each retail FFXI patch."
-            usedBy="Game Data (Model Mappings, NPC Pools)"
-          />
-          <DataSource
-            name="FFXIAH"
-            url="https://www.ffxiah.com"
-            description="Item icon images (32x32 PNG). Icons are downloaded per item ID from ffxiah.com's image CDN."
-            usedBy="Item Icons"
-          />
-        </div>
-      </div>
-
-      <hr className="border-gray-800 mb-8" />
-
-      {/* ── Game Data Health ── */}
-      <h1 className="text-2xl font-bold mb-6">Game Data Health</h1>
-
-      {loading && <p className="text-gray-400">Loading game data stats…</p>}
-      {error && <p className="text-red-400">{error}</p>}
-
-      {stats && (
+      {/* ── Sync tab ── */}
+      {activeTab === 'sync' && (
         <>
+          <SyncSection />
+
+          <div className="mb-8">
+            <h2 className="text-xl font-bold mb-4">Zone Discovery</h2>
+            <ZoneScannerCard />
+          </div>
+
+          <div className="mb-8 rounded-lg border border-gray-800 bg-gray-900/50 p-5">
+            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">External Data Sources</h2>
+            <p className="text-xs text-gray-500 mb-4">
+              These sync features depend on the following community-maintained projects. If a source goes offline or stops updating, the corresponding data will need an alternative source.
+            </p>
+            <div className="space-y-3">
+              <DataSource
+                name="Windower Resources"
+                url="https://github.com/Windower/Resources"
+                description="Item names, descriptions, categories, flags, stats, and equipment properties. Extracted from FFXI game data."
+                usedBy="Game Data"
+              />
+              <DataSource
+                name="LandSandBoat"
+                url="https://github.com/LandSandBoat/server"
+                description="Equipment model ID mappings (item_equipment.sql) and NPC/monster pool data (mob_pools.sql). Maps items to visual 3D model IDs and provides NPC model definitions. Updated with each retail FFXI patch."
+                usedBy="Game Data (Model Mappings, NPC Pools)"
+              />
+              <DataSource
+                name="FFXIAH"
+                url="https://www.ffxiah.com"
+                description="Item icon images (32x32 PNG). Icons are downloaded per item ID from ffxiah.com's image CDN."
+                usedBy="Item Icons"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Health tab ── */}
+      {activeTab === 'health' && (
+        <>
+          <h1 className="text-2xl font-bold mb-6">Game Data Health</h1>
+
+          {loading && <p className="text-gray-400">Loading game data stats…</p>}
+          {error && <p className="text-red-400">{error}</p>}
+
+          {stats && (
+            <>
           {/* ── Overview row ── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
             <StatCard label="Items" value={stats.items.total} />
@@ -735,6 +760,8 @@ export default function AdminItemsPage() {
               </tbody>
             </table>
           </div>
+        </>
+      )}
         </>
       )}
     </div>

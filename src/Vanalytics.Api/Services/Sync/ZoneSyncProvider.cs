@@ -338,15 +338,22 @@ public class ZoneSyncProvider : ISyncProvider
             return;
         }
 
-        // Parse mob_groups: (groupid, poolid, zoneid, name, ...)
-        var groupPoolMap = new Dictionary<(int zoneId, int groupId), int>();
-        var groupRegex = new Regex(@"\((\d+),(\d+),(\d+),'([^']*)'");
+        // Parse mob_groups: (groupid, poolid, zoneid, name, respawntime, spawntype, ...)
+        // - spawntype: bitmask. 0=normal; non-zero (timed/script/day/moon/fog)
+        //   characteristic of NM/event spawns; downstream we use the TIMED|SCRIPTED
+        //   bits as the strong NM signal.
+        // - respawntime: seconds. Regular mobs ~300s, NMs typically 3600s+. Strong
+        //   NM signal and used by the addon to render a pop countdown.
+        var groupInfoMap = new Dictionary<(int zoneId, int groupId), (int poolId, int spawnType, int respawnTime)>();
+        var groupRegex = new Regex(@"\((\d+),(\d+),(\d+),'([^']*)',(\d+),(\d+),");
         foreach (Match m in groupRegex.Matches(groupsSql))
         {
             var groupId = int.Parse(m.Groups[1].Value);
             var poolId = int.Parse(m.Groups[2].Value);
             var zoneId = int.Parse(m.Groups[3].Value);
-            groupPoolMap[(zoneId, groupId)] = poolId;
+            var respawnTime = int.Parse(m.Groups[5].Value);
+            var spawnType = int.Parse(m.Groups[6].Value);
+            groupInfoMap[(zoneId, groupId)] = (poolId, spawnType, respawnTime);
         }
 
         // Parse mob_spawn_points: (mobid, spawnslotid, mobname, polutils_name, groupid, minLevel, maxLevel, pos_x, pos_y, pos_z, pos_rot)
@@ -356,6 +363,7 @@ public class ZoneSyncProvider : ISyncProvider
         {
             var mobId = int.Parse(m.Groups[1].Value);
             var zoneId = (mobId >> 12) & 0xFFF;
+            var mobIndex = mobId & 0xFFF;
             var mobName = m.Groups[4].Value; // polutils_name (human-readable, has spaces)
             var groupId = int.Parse(m.Groups[5].Value);
             var minLevel = int.Parse(m.Groups[6].Value);
@@ -365,16 +373,18 @@ public class ZoneSyncProvider : ISyncProvider
             var posZ = float.Parse(m.Groups[10].Value, System.Globalization.CultureInfo.InvariantCulture);
             var posRot = float.Parse(m.Groups[11].Value, System.Globalization.CultureInfo.InvariantCulture);
 
-            // Skip placeholder positions (all 1.000 means "not yet placed")
-            if (posX == 1.0f && posY == 1.0f && posZ == 1.0f) continue;
+            // (1,1,1) rows are LSB's "not yet placed" sentinel — coords are
+            // unusable but the mobid is real. We keep the row so MobIndex flows
+            // through (load-bearing for /api/zones/{id}/nm's mobIndices[]); the
+            // /spawns endpoint filters these out for map-pin rendering.
 
-            groupPoolMap.TryGetValue((zoneId, groupId), out var poolId);
+            groupInfoMap.TryGetValue((zoneId, groupId), out var info);
 
             parsed.Add(new ZoneSpawn
             {
                 ZoneId = zoneId,
                 GroupId = groupId,
-                PoolId = poolId > 0 ? poolId : null,
+                PoolId = info.poolId > 0 ? info.poolId : null,
                 MobName = mobName.Replace('_', ' '),
                 X = posX,
                 Y = posY,
@@ -382,6 +392,9 @@ public class ZoneSyncProvider : ISyncProvider
                 Rotation = posRot * (MathF.PI / 128f),
                 MinLevel = minLevel,
                 MaxLevel = maxLevel,
+                SpawnType = info.spawnType,
+                RespawnTime = info.respawnTime,
+                MobIndex = mobIndex,
             });
         }
 
@@ -390,13 +403,12 @@ public class ZoneSyncProvider : ISyncProvider
         var validSet = new HashSet<int>(validZoneIds);
         parsed = parsed.Where(s => validSet.Contains(s.ZoneId)).ToList();
 
-        // Full replace strategy
-        var existingCount = await db.ZoneSpawns.CountAsync(ct);
-        if (existingCount > 0)
-        {
-            db.ZoneSpawns.RemoveRange(db.ZoneSpawns);
-            await db.SaveChangesAsync(ct);
-        }
+        // Full replace strategy. ExecuteDeleteAsync issues a single bulk
+        // `DELETE FROM ZoneSpawns` statement — without this, EF Core's
+        // RemoveRange would materialize ~30k rows into the change tracker
+        // and issue ~30k per-row DELETE round-trips, taking many minutes
+        // and saturating the SQL log.
+        await db.ZoneSpawns.ExecuteDeleteAsync(ct);
 
         var now = DateTimeOffset.UtcNow;
         foreach (var spawn in parsed)
@@ -405,17 +417,21 @@ public class ZoneSyncProvider : ISyncProvider
             spawn.UpdatedAt = now;
         }
 
-        // Batch insert
+        // Batch insert. ChangeTracker.Clear() after each batch prevents the
+        // tracker from accumulating every previously-saved entity across
+        // batches — without it, each SaveChangesAsync walks an ever-growing
+        // tracker and the whole insert phase slows to a crawl by the end.
         const int batchSize = 1000;
         for (var i = 0; i < parsed.Count; i += batchSize)
         {
             var batch = parsed.Skip(i).Take(batchSize);
             db.ZoneSpawns.AddRange(batch);
             await db.SaveChangesAsync(ct);
+            db.ChangeTracker.Clear();
         }
 
         _logger.LogInformation("Spawn sync: {Count} spawns across {Zones} zones (from {Groups} group mappings)",
-            parsed.Count, parsed.Select(s => s.ZoneId).Distinct().Count(), groupPoolMap.Count);
+            parsed.Count, parsed.Select(s => s.ZoneId).Distinct().Count(), groupInfoMap.Count);
 
         progress.Report(new SyncProgressEvent
         {

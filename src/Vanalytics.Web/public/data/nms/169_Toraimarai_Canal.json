@@ -1,0 +1,55 @@
+{
+  "zoneId": 169,
+  "zoneName": "Toraimarai Canal",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Toraimarai_Canal",
+  "nms": [
+    {
+      "name": "Oni Carcass",
+      "genus": "Doomed",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn at E-9 Map 1; drops Onikiri."
+    },
+    {
+      "name": "Brazen Bones",
+      "genus": "Skeleton",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn at H-9 Map 2; drops Laran's Pendant."
+    },
+    {
+      "name": "Canal Moocher",
+      "genus": "Leech",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn at H-8 Map 1; passive, drops Aptant: Pera."
+    },
+    {
+      "name": "Konjac",
+      "genus": "Slime",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn at G-6 Map 1; sound aggro, drops Aptant: Durus."
+    },
+    {
+      "name": "Hinge Oil",
+      "genus": "Slime",
+      "spawnType": "timed",
+      "respawnTime": 960,
+      "placeholders": [],
+      "notes": "Timed 16-minute respawn on Map 1; sound aggro."
+    },
+    {
+      "name": "Magic Sludge",
+      "genus": "Elemental",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The Root of the Problem\"; passive."
+    }
+  ]
+}

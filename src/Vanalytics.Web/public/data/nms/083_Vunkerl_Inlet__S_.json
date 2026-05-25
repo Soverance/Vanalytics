@@ -1,0 +1,59 @@
+{
+  "zoneId": 83,
+  "zoneName": "Vunkerl Inlet [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Vunkerl_Inlet_[S]",
+  "nms": [
+    {
+      "name": "Big Bang",
+      "genus": "Djinn",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ignis Djinn", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Ignis Djinn at (E/F-10)."
+    },
+    {
+      "name": "Judgmental Julika",
+      "genus": "Morbol",
+      "spawnType": "timed",
+      "respawnTime": 9000,
+      "placeholders": [],
+      "notes": "Timed spawn every 2.5 hours; SAM-type NM."
+    },
+    {
+      "name": "Pallas",
+      "genus": "Gigas",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Gigas Helmsman", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Gigas Helmsman at (K/J-6); BST job."
+    },
+    {
+      "name": "Procrustes",
+      "genus": "Gigas",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop by touching Shredded Label at (G-4) with Red-labeled crate key item."
+    },
+    {
+      "name": "Warabouc",
+      "genus": "Bugard",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2h after death with 10-minute window at (I-9)."
+    },
+    {
+      "name": "Gaunab",
+      "genus": "Mantid",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires specific abyssites and Voidstone."
+    }
+  ]
+}

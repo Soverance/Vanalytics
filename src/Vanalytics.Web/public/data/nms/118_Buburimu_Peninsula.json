@@ -1,0 +1,59 @@
+{
+  "zoneId": 118,
+  "zoneName": "Buburimu Peninsula",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Buburimu_Peninsula",
+  "nms": [
+    {
+      "name": "Buburimboo",
+      "genus": "Pugil",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Shoal Pugil", "mobIndex": null }
+      ],
+      "notes": "Lottery from Shoal Pugil."
+    },
+    {
+      "name": "Helldiver",
+      "genus": "Bird",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Zu", "mobIndex": null }
+      ],
+      "notes": "Lottery from Zu."
+    },
+    {
+      "name": "Backoo",
+      "genus": "Mandragora",
+      "spawnType": "timed",
+      "respawnTime": 3000,
+      "placeholders": [],
+      "notes": "Timed 50-60 min; daytime only."
+    },
+    {
+      "name": "Wake Warder Wanda",
+      "genus": "Crab",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 1h respawn."
+    },
+    {
+      "name": "Abyssdiver",
+      "genus": "Lesser Bird",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,500 Unity Accolades to trigger; level 119."
+    },
+    {
+      "name": "Botulus Rex",
+      "genus": "Botulus",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires White stratum abyssite VI and Voidstone."
+    }
+  ]
+}

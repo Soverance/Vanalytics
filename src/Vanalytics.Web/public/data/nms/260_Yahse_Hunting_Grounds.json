@@ -1,0 +1,215 @@
+{
+  "zoneId": 260,
+  "zoneName": "Yahse Hunting Grounds",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Yahse_Hunting_Grounds",
+  "nms": [
+    {
+      "name": "Bothersome Chapuli",
+      "genus": "Chapuli",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Hop to It; passive; found at I-6/7."
+    },
+    {
+      "name": "Beady Panopt",
+      "genus": "Panopt",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; aggressive, True Sight, links."
+    },
+    {
+      "name": "Bight Uragnite",
+      "genus": "Uragnite",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive, sound aggro."
+    },
+    {
+      "name": "Broad Scarlet",
+      "genus": "Fly",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive, sound aggro, links."
+    },
+    {
+      "name": "Burning Mantis",
+      "genus": "Mantid",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; aggressive, sight aggro."
+    },
+    {
+      "name": "Calfcleaving Chapuli",
+      "genus": "Chapuli",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive, sight, links."
+    },
+    {
+      "name": "Canopycrusher Beetle",
+      "genus": "Beetle",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive, sight, links."
+    },
+    {
+      "name": "Crusty Crab",
+      "genus": "Crab",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive."
+    },
+    {
+      "name": "Edacious Orobon",
+      "genus": "Orobon",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; aggressive, sound aggro."
+    },
+    {
+      "name": "Fiery Wasp",
+      "genus": "Bee",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive."
+    },
+    {
+      "name": "Frondescent Leafkin",
+      "genus": "Leafkin",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive."
+    },
+    {
+      "name": "Hinterland Peiste",
+      "genus": "Peiste",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; aggressive, sight aggro."
+    },
+    {
+      "name": "Jungle Baelfyr",
+      "genus": "Elemental",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive, magic aggro."
+    },
+    {
+      "name": "Luckybug Hoarder",
+      "genus": "Ladybug",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive."
+    },
+    {
+      "name": "Monstrosiraptor",
+      "genus": "Raptor",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; aggressive, sound aggro."
+    },
+    {
+      "name": "Nettled Wasp",
+      "genus": "Bee",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive."
+    },
+    {
+      "name": "Numbing Blossom",
+      "genus": "Blossom",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive."
+    },
+    {
+      "name": "Pinetorum",
+      "genus": "Mandragora",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive."
+    },
+    {
+      "name": "Shy Heartwing",
+      "genus": "Heartwing",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive."
+    },
+    {
+      "name": "Startled Uragnite",
+      "genus": "Uragnite",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed NM; passive, True Sound aggro."
+    },
+    {
+      "name": "Twitherym Infestation",
+      "genus": "Twitherym",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive, links."
+    },
+    {
+      "name": "Ulbukan Sheep",
+      "genus": "Sheep",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; passive."
+    },
+    {
+      "name": "Umbril",
+      "genus": "Umbril",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; aggressive, sight, magic aggro."
+    },
+    {
+      "name": "Velkk Marauder",
+      "genus": "Velkk",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; aggressive, sight aggro."
+    },
+    {
+      "name": "Verdant Treant",
+      "genus": "Treant",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; aggressive, sight aggro."
+    },
+    {
+      "name": "Wooded Ungeweder",
+      "genus": "Elemental",
+      "spawnType": "timed",
+      "respawnTime": 300,
+      "placeholders": [],
+      "notes": "Adoulin Reive adversary; aggressive, magic aggro."
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "zoneId": 101,
+  "zoneName": "East Ronfaure",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/East_Ronfaure",
+  "nms": [
+    {
+      "name": "Bigmouth Billy",
+      "genus": "Worm",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Carrion Worm", "mobIndex": null }
+      ],
+      "notes": "Lottery from Carrion Worm."
+    },
+    {
+      "name": "Rambukk",
+      "genus": "Ram",
+      "spawnType": "timed",
+      "respawnTime": 1800,
+      "placeholders": [],
+      "notes": "15-60 minute respawn."
+    },
+    {
+      "name": "Swamfisk",
+      "genus": "Pugil",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Pugil", "mobIndex": null }
+      ],
+      "notes": "Lottery from Pugil."
+    },
+    {
+      "name": "Hugemaw Harold",
+      "genus": "Worm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "UNM (Unity Concord)."
+    },
+    {
+      "name": "Sarimanok",
+      "genus": "Puk",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM."
+    },
+    {
+      "name": "Quagmire Pugil",
+      "genus": "Pugil",
+      "spawnType": "timed",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker (Clear abyssite) 1-3 min."
+    },
+    {
+      "name": "Sunderclaw",
+      "genus": "Crab",
+      "spawnType": "timed",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker (Clear abyssite) 1-3 min."
+    },
+    {
+      "name": "Yacumama",
+      "genus": "Sea Monk",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker (Colorful abyssite) 1 hour."
+    },
+    {
+      "name": "Capricornus",
+      "genus": "Pugil",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker (Colorful abyssite) 1 hour."
+    },
+    {
+      "name": "Krabkatoa",
+      "genus": "Crab",
+      "spawnType": "timed",
+      "respawnTime": 10800,
+      "placeholders": [],
+      "notes": "Voidwalker (Blue abyssite) 2-4 hours."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker (Black abyssite) 1 hour."
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "zoneId": 99,
+  "zoneName": "Castle Oztroja [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Castle_Oztroja_[S]",
+  "nms": [
+    {
+      "name": "Aa Xalmo the Savage",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Yagudo Sentinel", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Yagudo Sentinel; Monk job."
+    },
+    {
+      "name": "Asterion",
+      "genus": "Taurus",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Dee Zelko the Esoteric",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Black Mage job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Duu Masa the Onecut",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Yagudo", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from various Yagudo; Samurai job, level 83."
+    },
+    {
+      "name": "Fleshgnasher",
+      "genus": "Gnat",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2-4h; Thief job; drops Bamboo Flower Basket."
+    },
+    {
+      "name": "Loo Kutto the Pensive",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": 14400,
+      "placeholders": [],
+      "notes": "Timed spawn 4-5h; Samurai job; drops Bamboo Bugcage."
+    },
+    {
+      "name": "Maa Illmu the Bestower",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "White Mage job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Marquis Forneus",
+      "genus": "Demon",
+      "spawnType": "timed",
+      "respawnTime": 18000,
+      "placeholders": [],
+      "notes": "Timed spawn 5-6h; Dark Knight job; drops Bamboo Medicine Basket."
+    },
+    {
+      "name": "Suu Xicu the Cantabile",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bard job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Vee Ladu the Titterer",
+      "genus": "Yagudo",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Ninja job; spawn mechanic not fully documented."
+    },
+    {
+      "name": "Zhuu Buxu the Silent",
+      "genus": "Yagudo",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Yagudo", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn; Ninja job; drops Sangoma Lappa."
+    }
+  ]
+}

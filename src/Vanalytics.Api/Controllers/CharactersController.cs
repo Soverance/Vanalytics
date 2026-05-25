@@ -3,7 +3,10 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vanalytics.Core.Data;
 using Vanalytics.Core.DTOs.Characters;
+using Vanalytics.Core.DTOs.Porter;
+using Vanalytics.Core.DTOs.Sync;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
 
@@ -123,6 +126,142 @@ public class CharactersController : ControllerBase
         return Ok(grouped);
     }
 
+    [HttpGet("{id:guid}/progression")]
+    public async Task<IActionResult> GetProgression(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var row = await _db.CharacterProgression
+            .FirstOrDefaultAsync(p => p.CharacterId == id);
+
+        if (row is null)
+        {
+            // No packet data has arrived yet — return an empty shell so the UI can show its empty state.
+            return Ok(new ProgressionResponse());
+        }
+
+        // Stored JSON is camelCase (written via ProgressionController.JsonOpts).
+        // Deserialize with the matching naming policy — otherwise all fields
+        // silently fall back to defaults (empty arrays, zeros).
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+        return Ok(new ProgressionResponse
+        {
+            LimitPoints = row.LimitPoints,
+            MeritPoints = row.MeritPoints,
+            MeritPointsMax = row.MeritPointsMax,
+            JobPointsUnlocked = row.JobPointsUnlocked,
+            JobPoints = row.JobPointsJson is null
+                ? null
+                : JsonSerializer.Deserialize<List<JobPointEntry>>(row.JobPointsJson, jsonOpts),
+            Warps = row.WarpsJson is null
+                ? null
+                : JsonSerializer.Deserialize<WarpUnlocks>(row.WarpsJson, jsonOpts),
+            UpdatedAt = row.UpdatedAt,
+        });
+    }
+
+    [HttpGet("{id:guid}/collection")]
+    public async Task<IActionResult> GetCollection(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var row = await _db.CharacterCollection
+            .FirstOrDefaultAsync(c => c.CharacterId == id);
+
+        if (row is null) return Ok(new CollectionResponse());
+
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+        return Ok(new CollectionResponse
+        {
+            SpellIds = row.SpellIdsJson is null
+                ? null
+                : JsonSerializer.Deserialize<List<int>>(row.SpellIdsJson, jsonOpts),
+            KeyItemIds = row.KeyItemIdsJson is null
+                ? null
+                : JsonSerializer.Deserialize<List<int>>(row.KeyItemIdsJson, jsonOpts),
+            UpdatedAt = row.UpdatedAt,
+        });
+    }
+
+    [HttpGet("{id:guid}/titles")]
+    public async Task<IActionResult> GetTitles(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var titles = await _db.CharacterTitles
+            .Where(t => t.CharacterId == id)
+            .OrderByDescending(t => t.FirstSeenAt)
+            .Select(t => new TitleEntry
+            {
+                TitleId = t.TitleId,
+                FirstSeenAt = t.FirstSeenAt,
+                LastEquippedAt = t.LastEquippedAt,
+            })
+            .ToListAsync();
+
+        return Ok(new TitlesResponse
+        {
+            CurrentTitleId = character.TitleId,
+            Titles = titles,
+        });
+    }
+
+    [HttpGet("{id:guid}/missions")]
+    public async Task<IActionResult> GetMissions(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var row = await _db.CharacterMissions
+            .FirstOrDefaultAsync(m => m.CharacterId == id);
+
+        if (row is null) return Ok(new MissionsResponse());
+
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+        // Stored as Dictionary<string, MissionLineState> with camelCase keys.
+        var dict = row.MissionsJson is null
+            ? new Dictionary<string, MissionLineState>()
+            : JsonSerializer.Deserialize<Dictionary<string, MissionLineState>>(row.MissionsJson, jsonOpts)
+              ?? new Dictionary<string, MissionLineState>();
+
+        return Ok(new MissionsResponse
+        {
+            SandoriaMissions = dict.GetValueOrDefault("sandoriaMissions"),
+            BastokMissions = dict.GetValueOrDefault("bastokMissions"),
+            WindurstMissions = dict.GetValueOrDefault("windurstMissions"),
+            ZilartMissions = dict.GetValueOrDefault("zilartMissions"),
+            AhturhganMissions = dict.GetValueOrDefault("ahturhganMissions"),
+            WotgMissions = dict.GetValueOrDefault("wotgMissions"),
+            Assaults = dict.GetValueOrDefault("assaults"),
+            CopMissions = dict.GetValueOrDefault("copMissions"),
+            AcpMissions = dict.GetValueOrDefault("acpMissions"),
+            MkdMissions = dict.GetValueOrDefault("mkdMissions"),
+            AsaMissions = dict.GetValueOrDefault("asaMissions"),
+            SoaMissions = dict.GetValueOrDefault("soaMissions"),
+            RovMissions = dict.GetValueOrDefault("rovMissions"),
+            TvrMissions = dict.GetValueOrDefault("tvrMissions"),
+            UpdatedAt = row.UpdatedAt,
+        });
+    }
+
     [HttpGet("{id:guid}/relics")]
     public async Task<IActionResult> GetRelics(Guid id)
     {
@@ -163,11 +302,13 @@ public class CharactersController : ControllerBase
                 gi.ItemLevel,
                 gi.Level,
                 gi.Damage,
-                gi.Delay
+                gi.Delay,
+                gi.Description
             })
             .ToListAsync();
 
-        // Build response: for each weapon def, find matching items the player has held
+        // Build response: for each weapon def, find matching items the player has held,
+        // collapse duplicate ItemIds at the same stage, and order by canonical progression.
         var results = new List<object>();
 
         foreach (var def in weaponDefs.DistinctBy(d => d.BaseName))
@@ -183,9 +324,41 @@ public class CharactersController : ControllerBase
                     gi.Level,
                     gi.Damage,
                     gi.Delay,
+                    Stage = UltimateWeaponStage.Derive(gi.Level, gi.ItemLevel, gi.Description),
+                    Rank = UltimateWeaponStage.Rank(gi.Level, gi.ItemLevel, gi.Description),
                     CurrentlyHeld = currentItemIds.Contains(gi.ItemId)
                 })
-                .OrderByDescending(v => v.ItemLevel ?? v.Level ?? 0)
+                .GroupBy(v => v.Stage)
+                .Select(g =>
+                {
+                    var rep = g.OrderByDescending(v => v.CurrentlyHeld).First();
+                    return new
+                    {
+                        rep.ItemId,
+                        rep.Name,
+                        rep.IconPath,
+                        rep.ItemLevel,
+                        rep.Level,
+                        rep.Damage,
+                        rep.Delay,
+                        Stage = g.Key,
+                        rep.Rank,
+                        CurrentlyHeld = g.Any(v => v.CurrentlyHeld)
+                    };
+                })
+                .OrderBy(v => v.Rank)
+                .Select(v => new
+                {
+                    v.ItemId,
+                    v.Name,
+                    v.IconPath,
+                    v.ItemLevel,
+                    v.Level,
+                    v.Damage,
+                    v.Delay,
+                    v.Stage,
+                    v.CurrentlyHeld
+                })
                 .ToList();
 
             if (versions.Count > 0)
@@ -215,6 +388,128 @@ public class CharactersController : ControllerBase
             .ToList();
 
         return Ok(new { progress, weapons = results });
+    }
+
+    [HttpGet("{id:guid}/porter")]
+    public async Task<IActionResult> GetPorter(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var slips = await _db.CharacterPorterSlips
+            .Where(s => s.CharacterId == id)
+            .Join(_db.GameItems,
+                s => s.SlipItemId,
+                gi => gi.ItemId,
+                (s, gi) => new
+                {
+                    s.SlipItemId,
+                    s.SlipNumber,
+                    s.SyncedAt,
+                    s.UserHidden,
+                    SlipName = gi.Name ?? gi.NameJa ?? "Unknown",
+                    gi.IconPath
+                })
+            .ToListAsync();
+
+        var items = await _db.CharacterPorterItems
+            .Where(p => p.CharacterId == id)
+            .Join(_db.GameItems,
+                p => p.ItemId,
+                gi => gi.ItemId,
+                (p, gi) => new
+                {
+                    p.SlipItemId,
+                    p.ItemId,
+                    ItemName = gi.Name ?? gi.NameJa ?? "Unknown",
+                    gi.IconPath,
+                    gi.Category,
+                    gi.StackSize,
+                    gi.BaseSell,
+                    IsRare = (gi.Flags & 0x8000) != 0,
+                    IsExclusive = (gi.Flags & 0x4000) != 0
+                })
+            .ToListAsync();
+
+        var itemsBySlip = items
+            .GroupBy(i => i.SlipItemId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var response = slips
+            .OrderBy(s => s.SlipNumber)
+            .Select(s => new PorterSlipResponse
+            {
+                SlipItemId = s.SlipItemId,
+                SlipNumber = s.SlipNumber,
+                SlipName = s.SlipName,
+                SlipIconPath = s.IconPath,
+                SyncedAt = s.SyncedAt,
+                UserHidden = s.UserHidden,
+                Items = itemsBySlip.TryGetValue(s.SlipItemId, out var slipItems)
+                    ? slipItems.OrderBy(i => i.ItemName).Select(i => new PorterItemResponse
+                    {
+                        ItemId = i.ItemId,
+                        ItemName = i.ItemName,
+                        IconPath = i.IconPath,
+                        Category = i.Category,
+                        BaseSell = i.BaseSell,
+                        StackSize = i.StackSize,
+                        IsRare = i.IsRare,
+                        IsExclusive = i.IsExclusive
+                    }).ToList()
+                    : []
+            })
+            .ToList();
+
+        return Ok(response);
+    }
+
+    [HttpPatch("{id:guid}/porter/{slipItemId:int}")]
+    public async Task<IActionResult> UpdatePorterSlip(Guid id, int slipItemId, [FromBody] UpdatePorterSlipRequest request)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var slip = await _db.CharacterPorterSlips
+            .FirstOrDefaultAsync(s => s.CharacterId == id && s.SlipItemId == slipItemId);
+
+        if (slip is null) return NotFound();
+
+        slip.UserHidden = request.UserHidden;
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id:guid}/porter/{slipItemId:int}")]
+    public async Task<IActionResult> ForgetPorterSlip(Guid id, int slipItemId)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var slip = await _db.CharacterPorterSlips
+            .FirstOrDefaultAsync(s => s.CharacterId == id && s.SlipItemId == slipItemId);
+
+        if (slip is null) return NotFound();
+
+        var items = await _db.CharacterPorterItems
+            .Where(p => p.CharacterId == id && p.SlipItemId == slipItemId)
+            .ToListAsync();
+
+        _db.CharacterPorterItems.RemoveRange(items);
+        _db.CharacterPorterSlips.Remove(slip);
+        await _db.SaveChangesAsync();
+
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]

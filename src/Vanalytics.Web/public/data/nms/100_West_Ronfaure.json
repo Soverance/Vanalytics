@@ -1,0 +1,51 @@
+{
+  "zoneId": 100,
+  "zoneName": "West Ronfaure",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/West_Ronfaure",
+  "nms": [
+    {
+      "name": "Amanita",
+      "genus": "Funguar",
+      "spawnType": "timed",
+      "respawnTime": 4200,
+      "placeholders": [],
+      "notes": "60-70 minute respawn at H-7."
+    },
+    {
+      "name": "Fungus Beetle",
+      "genus": "Beetle",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Scarab Beetle", "mobIndex": null }
+      ],
+      "notes": "Lottery at H-8/9."
+    },
+    {
+      "name": "Jaggedy-Eared Jack",
+      "genus": "Rabbit",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Forest Hare", "mobIndex": null }
+      ],
+      "notes": "Lottery at G-9/10 to H-9/10."
+    },
+    {
+      "name": "Marauder Dvogzog",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM at E-8."
+    },
+    {
+      "name": "Lancing Lamorak",
+      "genus": "Beetle",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM at G/H-6, H-8, H-10."
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "zoneId": 121,
+  "zoneName": "The Sanctuary of ZiTah",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/The_Sanctuary_of_ZiTah",
+  "nms": [
+    {
+      "name": "Keeper of Halidom",
+      "genus": "Goobbue",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Goobbue Gardener", "mobIndex": null }
+      ],
+      "notes": "Lottery from Goobbue Gardener; sound aggro; drops Daihannya."
+    },
+    {
+      "name": "Noble Mold",
+      "genus": "Funguar",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Changes from Myxomycete left undisturbed during water weather; sound aggro; drops Rain Hat."
+    },
+    {
+      "name": "Bastet",
+      "genus": "Coeurl",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive, sight aggro; drops Bastet Fang."
+    },
+    {
+      "name": "Elusive Edwin",
+      "genus": "Fly",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive; drops Forte Earring."
+    },
+    {
+      "name": "Huwasi",
+      "genus": "Golem",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed 2h respawn; sight/magic aggro; drops Imperial Topaz."
+    },
+    {
+      "name": "Blest Bones",
+      "genus": "Skeleton",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Nighttime spawn (17:00-7:00); passive; drops Luminous beige fragment."
+    },
+    {
+      "name": "Doomed Pilgrims",
+      "genus": "Doomed",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zilart Mission 5 encounter; sound aggro."
+    },
+    {
+      "name": "Greenman",
+      "genus": "Treant",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'The Weight of Your Limits'; sound aggro."
+    },
+    {
+      "name": "Guardian Treant",
+      "genus": "Treant",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'Forge Your Destiny'; sound aggro."
+    },
+    {
+      "name": "Holey Horror",
+      "genus": "Ghost",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Nighttime spawn (17:00-7:00); passive; drops Luminous green fragment."
+    },
+    {
+      "name": "Isonade",
+      "genus": "Pugil",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM from 'The Sacred Katana'; sound aggro."
+    },
+    {
+      "name": "Skeleton Scuffler",
+      "genus": "Skeleton",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Nighttime spawn (17:00-7:00); passive; drops Luminous red fragment."
+    },
+    {
+      "name": "Keeper of Heiligtum",
+      "genus": "Goobbue",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 1,800 Unity Accolades to trigger; level 122."
+    },
+    {
+      "name": "Cath Palug",
+      "genus": "Coeurl",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires Ashen stratum abyssite II and Voidstone."
+    }
+  ]
+}

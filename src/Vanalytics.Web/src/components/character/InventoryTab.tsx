@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { InventoryByBag, InventoryItem, GameItemDetail, AnomalyResponse, CraftingEntry } from '../../types/api'
+import { useCharacterPorter } from '../../hooks/useCharacterPorter'
 import ItemPreviewBox from '../economy/ItemPreviewBox'
 import InventoryAnomalyBanner from './InventoryAnomalyBanner'
 import BulkMoveTray from './BulkMoveTray'
@@ -45,6 +46,7 @@ interface Props {
 }
 
 export default function InventoryTab({ characterId, craftingSkills = [] }: Props) {
+  const { slips: porterSlips, byItemId: porterByItemId } = useCharacterPorter(characterId)
   const [inventory, setInventory] = useState<InventoryByBag | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeBag, setActiveBag] = useState<string>('')
@@ -91,11 +93,11 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
     })
   }, [])
 
-  const toggleAllSearchVisible = useCallback((items: (InventoryItem & { bag: string })[]) => {
+  const toggleAllSearchVisible = useCallback((items: (InventoryItem & { bag: string; isPorter?: boolean })[]) => {
     setSelection(prev => {
       const next = new Set(prev)
-      const keys = items.map(i => `${i.bag}:${i.slotIndex}`)
-      const allSelected = keys.every(k => next.has(k))
+      const keys = items.filter(i => !i.isPorter).map(i => `${i.bag}:${i.slotIndex}`)
+      const allSelected = keys.length > 0 && keys.every(k => next.has(k))
       if (allSelected) {
         keys.forEach(k => next.delete(k))
       } else {
@@ -235,7 +237,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
   const searchResults = useMemo(() => {
     if (!inventory || !isSearching) return []
     const q = search.toLowerCase()
-    const results: (InventoryItem & { bag: string })[] = []
+    const results: (InventoryItem & { bag: string; isPorter?: boolean })[] = []
     for (const bag of BAG_ORDER) {
       const items = inventory[bag]
       if (!items) continue
@@ -245,8 +247,33 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
         }
       }
     }
+    // Append porter matches (visible slips only) as synthetic rows. slotIndex=-1
+    // is a sentinel that renderRow uses to suppress the bulk-move checkbox since
+    // porter items aren't movable.
+    for (const slip of porterSlips) {
+      if (slip.userHidden) continue
+      for (const item of slip.items) {
+        if (item.itemName.toLowerCase().includes(q) || String(item.itemId).includes(q)) {
+          results.push({
+            itemId: item.itemId,
+            itemName: item.itemName,
+            iconPath: item.iconPath,
+            category: item.category,
+            baseSell: item.baseSell,
+            stackSize: item.stackSize,
+            isRare: item.isRare,
+            isExclusive: item.isExclusive,
+            quantity: 1,
+            slotIndex: -1,
+            lastSeenAt: slip.syncedAt,
+            bag: `Porter · Slip ${String(slip.slipNumber).padStart(2, '0')}`,
+            isPorter: true,
+          })
+        }
+      }
+    }
     return results
-  }, [inventory, search, isSearching])
+  }, [inventory, search, isSearching, porterSlips])
 
   const activeItems = useMemo(() => {
     if (!inventory || !activeBag || !inventory[activeBag]) return []
@@ -346,33 +373,36 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
     )
   }
 
-  const renderRow = (item: InventoryItem & { bag?: string }, key: string, showBag?: boolean) => {
+  const renderRow = (item: InventoryItem & { bag?: string; isPorter?: boolean }, key: string, showBag?: boolean) => {
     const itemBag = showBag ? item.bag! : activeBag
     const selKey = `${itemBag}:${item.slotIndex}`
-    const isSelected = selection.has(selKey)
+    const isSelected = !item.isPorter && selection.has(selKey)
+    const porterSlipNumbers = porterByItemId.get(item.itemId)
 
     return (
       <tr
         key={key}
-        className={`border-t border-gray-700/50 cursor-pointer ${
+        className={`border-t border-gray-700/50 ${item.isPorter ? '' : 'cursor-pointer'} ${
           isSelected
             ? 'bg-blue-500/[0.08] border-l-3 border-l-blue-500'
             : 'hover:bg-gray-800/50'
         }`}
         onClick={() => {
-          toggleSelection(itemBag, item.slotIndex)
+          if (!item.isPorter) toggleSelection(itemBag, item.slotIndex)
         }}
         onMouseEnter={() => handleRowEnter(item.itemId)}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleRowLeave}
       >
         <td className="px-2 py-1.5 w-8 text-center" onClick={e => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => toggleSelection(itemBag, item.slotIndex)}
-            className="styled-checkbox"
-          />
+          {!item.isPorter && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => toggleSelection(itemBag, item.slotIndex)}
+              className="styled-checkbox"
+            />
+          )}
         </td>
         <td className="px-4 py-1.5">
           {item.iconPath && (
@@ -382,14 +412,20 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
         <td className="px-4 py-1.5 text-gray-100">
           {item.itemName}
           <span className="ml-2 text-gray-600 text-xs">#{item.itemId}</span>
+          {!item.isPorter && porterSlipNumbers && porterSlipNumbers.length > 0 && (
+            <span
+              className="ml-2 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-amber-900/40 text-amber-300 border border-amber-700/40 rounded"
+              title={`Also stored at Porter slip${porterSlipNumbers.length > 1 ? 's' : ''} ${porterSlipNumbers.map(n => String(n).padStart(2, '0')).join(', ')}`}
+            >P</span>
+          )}
         </td>
         <td className="px-4 py-1.5 text-gray-400">{item.category ?? '\u2014'}</td>
         {showBag && <td className="px-4 py-1.5 text-gray-400">{BAG_LABELS[item.bag!] ?? item.bag}</td>}
         <td className="px-4 py-1.5 text-right text-gray-300">
-          {item.quantity}{item.stackSize > 1 ? `/${item.stackSize}` : ''}
+          {item.isPorter ? '\u2014' : `${item.quantity}${item.stackSize > 1 ? `/${item.stackSize}` : ''}`}
         </td>
         <td className="px-4 py-1.5 text-right text-gray-400">
-          {item.baseSell && item.baseSell > 0
+          {!item.isPorter && item.baseSell && item.baseSell > 0
             ? formatGil(item.quantity * item.baseSell)
             : '\u2014'}
         </td>
@@ -435,12 +471,17 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
                     <th className="px-2 py-2 w-8 text-center">
-                      <input
-                        type="checkbox"
-                        checked={searchResults.length > 0 && searchResults.every(i => selection.has(`${i.bag}:${i.slotIndex}`))}
-                        onChange={() => toggleAllSearchVisible(searchResults)}
-                        className="styled-checkbox"
-                      />
+                      {(() => {
+                        const movable = searchResults.filter(i => !i.isPorter)
+                        return (
+                          <input
+                            type="checkbox"
+                            checked={movable.length > 0 && movable.every(i => selection.has(`${i.bag}:${i.slotIndex}`))}
+                            onChange={() => toggleAllSearchVisible(searchResults)}
+                            className="styled-checkbox"
+                          />
+                        )
+                      })()}
                     </th>
                     <th className="px-4 py-2 text-left w-12"></th>
                     <th className="px-4 py-2 text-left">Item</th>

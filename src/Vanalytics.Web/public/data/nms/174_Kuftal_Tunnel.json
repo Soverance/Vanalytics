@@ -1,0 +1,139 @@
+{
+  "zoneId": 174,
+  "zoneName": "Kuftal Tunnel",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Kuftal_Tunnel",
+  "nms": [
+    {
+      "name": "Amemet",
+      "genus": "Hill Lizard",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Sand Lizard", "mobIndex": null }
+      ],
+      "notes": "Lottery from Sand Lizard; sound aggro."
+    },
+    {
+      "name": "Arachne",
+      "genus": "Spider",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Recluse Spider", "mobIndex": null }
+      ],
+      "notes": "Lottery from Recluse Spider; sound aggro."
+    },
+    {
+      "name": "Bloodthirster Madkix",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Goblin Mercenary", "mobIndex": null }
+      ],
+      "notes": "Lottery from Goblin Mercenary; sight aggro."
+    },
+    {
+      "name": "Cancer",
+      "genus": "Crab",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Quus to ???; sound aggro."
+    },
+    {
+      "name": "Guivre",
+      "genus": "Wyvern",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn; sight aggro."
+    },
+    {
+      "name": "Pelican",
+      "genus": "Cockatrice",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Greater Cockatrice", "mobIndex": null }
+      ],
+      "notes": "Lottery from Greater Cockatrice; sight aggro."
+    },
+    {
+      "name": "Phantom Worm",
+      "genus": "Worm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Darksteel Ore to ???; sound aggro."
+    },
+    {
+      "name": "Sabotender Mariachi",
+      "genus": "Sabotender",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Sabotender Sediendo", "mobIndex": null }
+      ],
+      "notes": "Lottery from Sabotender Sediendo; sound aggro."
+    },
+    {
+      "name": "Yowie",
+      "genus": "Raptor",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Deinonychus", "mobIndex": null }
+      ],
+      "notes": "Lottery from Deinonychus; sound aggro."
+    },
+    {
+      "name": "Dervo's Ghost",
+      "genus": "Ghost",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for Bastok Mission 8-2; sound aggro."
+    },
+    {
+      "name": "Gizerl's Ghost",
+      "genus": "Ghost",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for Bastok Mission 8-2; sound aggro."
+    },
+    {
+      "name": "Gordov's Ghost",
+      "genus": "Ghost",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mission NM for Bastok Mission 8-2; sound aggro."
+    },
+    {
+      "name": "Kettenkaefer",
+      "genus": "Beetle",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The Potential Within\"; sight aggro."
+    },
+    {
+      "name": "Specter Worm",
+      "genus": "Worm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM requiring 2,100 Unity Accolades; level 125."
+    },
+    {
+      "name": "Tangaroa",
+      "genus": "Uragnite",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM; aggressive."
+    }
+  ]
+}

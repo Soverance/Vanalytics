@@ -1,0 +1,145 @@
+{
+  "zoneId": 195,
+  "zoneName": "The Eldieme Necropolis",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/The_Eldieme_Necropolis",
+  "nms": [
+    {
+      "name": "Cwn Cyrff",
+      "genus": "Hound",
+      "spawnType": "lottery",
+      "respawnTime": 3600,
+      "placeholders": [
+        { "name": "Tomb Wolf", "mobIndex": "0x075" }
+      ],
+      "notes": "Lottery from Tomb Wolf at (D-5/6) Map 2; window opens 1h after PH ToD; drops Swan Bilbo."
+    },
+    {
+      "name": "Skull of Envy",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "7 Deadly Sins spawn — trade Flint Stone to all 7 tallow candles simultaneously; drops Envy Spear."
+    },
+    {
+      "name": "Skull of Gluttony",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "7 Deadly Sins spawn — trade Flint Stone to all 7 tallow candles simultaneously; drops Gluttony Sword."
+    },
+    {
+      "name": "Skull of Greed",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "7 Deadly Sins spawn — trade Flint Stone to all 7 tallow candles simultaneously; drops Greed Scimitar."
+    },
+    {
+      "name": "Skull of Lust",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "7 Deadly Sins spawn — trade Flint Stone to all 7 tallow candles simultaneously; drops Lust Dagger."
+    },
+    {
+      "name": "Skull of Pride",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "7 Deadly Sins spawn — trade Flint Stone to all 7 tallow candles simultaneously; drops Pride Staff."
+    },
+    {
+      "name": "Skull of Sloth",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "7 Deadly Sins spawn — trade Flint Stone to all 7 tallow candles simultaneously; drops Sloth Wand."
+    },
+    {
+      "name": "Skull of Wrath",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "7 Deadly Sins spawn — trade Flint Stone to all 7 tallow candles simultaneously; drops Wrath Tabar."
+    },
+    {
+      "name": "Namorodo",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Girl in the Looking Glass; Black Mage type."
+    },
+    {
+      "name": "Dog Guardian",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Requiem; spawned as part of quest encounter."
+    },
+    {
+      "name": "Owl Guardian",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Requiem; spawned as part of quest encounter."
+    },
+    {
+      "name": "Yum Kimil",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: The Requiem; spawned as part of quest encounter."
+    },
+    {
+      "name": "Lich C Magnus",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Blue Ribbon Blues; Black Mage type."
+    },
+    {
+      "name": "Sturm",
+      "genus": "Hound",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A New Dawn; Thief job."
+    },
+    {
+      "name": "Taifun",
+      "genus": "Tiger",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A New Dawn; Warrior job."
+    },
+    {
+      "name": "Trombe",
+      "genus": "Tiger",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A New Dawn; Warrior job."
+    },
+    {
+      "name": "Gasha",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch (White II) — White stratum abyssite II + Voidstone."
+    }
+  ]
+}

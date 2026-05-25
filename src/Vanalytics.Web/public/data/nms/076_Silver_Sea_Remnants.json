@@ -1,0 +1,71 @@
+{
+  "zoneId": 76,
+  "zoneName": "Silver Sea Remnants",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Silver_Sea_Remnants",
+  "nms": [
+    {
+      "name": "Hammerblow Majanun",
+      "genus": "Majanun",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on 1F West Path; pop by defeating all 6 Ashu Talif Crew in the large room."
+    },
+    {
+      "name": "Dekka",
+      "genus": "Devilfish",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on 2F Northwest Path; pop by defeating Deadpan Devilet."
+    },
+    {
+      "name": "Powderkeg Yanadahn",
+      "genus": "Yanadahn",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on 2F Southeast Path; pop by defeating all enemies in the path."
+    },
+    {
+      "name": "Gyroscopic Gear",
+      "genus": "Gear",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on 3F North Path; pop by defeating 8 Archaic Gear."
+    },
+    {
+      "name": "Gyroscopic Gears",
+      "genus": "Gear",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on 3F East Path; pop by defeating 4 Archaic Gear and 4 Archaic Gears."
+    },
+    {
+      "name": "Don Poroggo",
+      "genus": "Poroggo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on 3F North Path; trade a Zhayolm Card to the Slot to spawn."
+    },
+    {
+      "name": "Citadel Chelonian",
+      "genus": "Adamantoise",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on 4F East Path; pop by defeating 4 Archaic Ramparts."
+    },
+    {
+      "name": "Long-Armed Chariot",
+      "genus": "Chariot",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage boss on 5F behind Gilded Doors; drops exactly two level-25 salvage pieces."
+    }
+  ]
+}

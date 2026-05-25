@@ -1,0 +1,31 @@
+{
+  "zoneId": 1,
+  "zoneName": "Phanauet Channel",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Phanauet_Channel",
+  "nms": [
+    {
+      "name": "Aipaloovik",
+      "genus": "Pugil",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up. Sound-aggro."
+    },
+    {
+      "name": "Stubborn Dredvodd",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn on barge; sight-aggro."
+    },
+    {
+      "name": "Vodyanoi",
+      "genus": "Doomed",
+      "spawnType": "timed",
+      "respawnTime": 50400,
+      "placeholders": [],
+      "notes": "12-15h from 20:00-4:00 on barges. Sound and HP aggro."
+    }
+  ]
+}

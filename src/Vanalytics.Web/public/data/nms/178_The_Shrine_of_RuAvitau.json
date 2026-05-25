@@ -1,0 +1,55 @@
+{
+  "zoneId": 178,
+  "zoneName": "The Shrine of RuAvitau",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/The_Shrine_of_Ru%27Avitau",
+  "nms": [
+    {
+      "name": "Faust",
+      "genus": "Doll",
+      "spawnType": "timed",
+      "respawnTime": 10800,
+      "placeholders": [],
+      "notes": "Timed 3-4 hour respawn; level 83-85."
+    },
+    {
+      "name": "Kirin",
+      "genus": "Manticore",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade four HNM seals (Genbu, Byakko, Seiryu, Suzaku) to ???; level 92."
+    },
+    {
+      "name": "Mother Globe",
+      "genus": "Magic Pot",
+      "spawnType": "timed",
+      "respawnTime": 10800,
+      "placeholders": [],
+      "notes": "Timed 3-6 hour respawn; level 83-85."
+    },
+    {
+      "name": "Olla Grande",
+      "genus": "Magic Pot",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Triggered by trading Ro'Maeve Water to ???; spawns after defeating Olla Pequena and Olla Media."
+    },
+    {
+      "name": "Ullikummi",
+      "genus": "Golem",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced pop — trade Diorite to ???; level 85-87."
+    },
+    {
+      "name": "Qilin",
+      "genus": "Manticore",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch NM requiring specific abyssite and Voidstone."
+    }
+  ]
+}

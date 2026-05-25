@@ -1,0 +1,97 @@
+{
+  "zoneId": 198,
+  "zoneName": "Maze of Shakhrami",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Maze_of_Shakhrami",
+  "nms": [
+    {
+      "name": "Leech King",
+      "genus": "Leech",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 1-2 h shared spawn with Argus; sound-aggro and scent-aggro."
+    },
+    {
+      "name": "Argus",
+      "genus": "Hecteyes",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed 1-2 h shared spawn with Leech King; Black Mage job; sound-aggro."
+    },
+    {
+      "name": "Trembler Tabitha",
+      "genus": "Worm",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Maze Maker", "mobIndex": null }
+      ],
+      "notes": "Lottery from Maze Maker; Black Mage job; sound-aggro."
+    },
+    {
+      "name": "Gloombound Lurker",
+      "genus": "Fomor",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive; drops Penumbral Brass Ingot."
+    },
+    {
+      "name": "Lesath",
+      "genus": "Scorpion",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; passive; drops Esse Earring."
+    },
+    {
+      "name": "Ichorous Ire",
+      "genus": "Slime",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Blast from the Past; sound-aggro and scent-aggro."
+    },
+    {
+      "name": "Aroma Crawler",
+      "genus": "Crawler",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn during player's race RSE week; Warrior job; passive."
+    },
+    {
+      "name": "Dark Elemental",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawned by failed use of Strange Apparatus; Dark Knight job; magic-aggro."
+    },
+    {
+      "name": "Lost Soul",
+      "genus": "Skeleton",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Equipped for All Occasions; aggressive sound and HP aggro."
+    },
+    {
+      "name": "Wyrmfly",
+      "genus": "Fly",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Eco-Warrior (Windurst); Warrior job; passive."
+    },
+    {
+      "name": "Ogbunabali",
+      "genus": "Antlion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch (Jade II) — Jade stratum abyssite II + Voidstone."
+    }
+  ]
+}

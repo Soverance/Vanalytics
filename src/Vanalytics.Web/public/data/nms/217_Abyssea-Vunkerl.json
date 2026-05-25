@@ -1,0 +1,199 @@
+{
+  "zoneId": 217,
+  "zoneName": "Abyssea-Vunkerl",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Abyssea-Vunkerl",
+  "nms": [
+    {
+      "name": "Armillaria",
+      "genus": "Funguar",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Shockshroom to ???."
+    },
+    {
+      "name": "Ayravata",
+      "genus": "Marid",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Vunkerl."
+    },
+    {
+      "name": "Bukhis",
+      "genus": "Taurus",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with 3 key items."
+    },
+    {
+      "name": "Chhir Batti",
+      "genus": "Bomb",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Djinn Ashes to ???."
+    },
+    {
+      "name": "Div-e Sepid",
+      "genus": "Imp",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Vunkerl."
+    },
+    {
+      "name": "Durinn",
+      "genus": "Dvergr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with 3 key items."
+    },
+    {
+      "name": "Dvalinn",
+      "genus": "Dvergr",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Dented Skull to ???."
+    },
+    {
+      "name": "Fulmotondro",
+      "genus": "Avatar",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed spawn every 20 min with 5 spawns in Abyssea - Vunkerl."
+    },
+    {
+      "name": "Gnawtooth Gary",
+      "genus": "Rabbit",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade High-Quality Rabbit Hide to ???."
+    },
+    {
+      "name": "Hanuman",
+      "genus": "Opo-opo",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Vunkerl."
+    },
+    {
+      "name": "Hrosshvalur",
+      "genus": "Pugil",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Vunkerl."
+    },
+    {
+      "name": "Iktomi",
+      "genus": "Spider",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Vunkerl."
+    },
+    {
+      "name": "Iku-Turso",
+      "genus": "Sea Monk",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Moonbeam Clam to ???."
+    },
+    {
+      "name": "Ironclad Executioner",
+      "genus": "Iron Giant",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Vunkerl."
+    },
+    {
+      "name": "Kadraeth the Hatespawn",
+      "genus": "Soulflayer",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Stiffened Tentacle to ???."
+    },
+    {
+      "name": "Karkadann",
+      "genus": "Avatar",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with 2 key items."
+    },
+    {
+      "name": "Khalkotaur",
+      "genus": "Taurus",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Gnarled Taurus Horn to ???."
+    },
+    {
+      "name": "Lord Varney",
+      "genus": "Vampyr",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Vunkerl."
+    },
+    {
+      "name": "Pascerpot",
+      "genus": "Crawler",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Crawler Floatstone to ???."
+    },
+    {
+      "name": "Quasimodo",
+      "genus": "Gargouille",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Gargouille Stone to ???."
+    },
+    {
+      "name": "Rakshas",
+      "genus": "Tiger",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Black Whisker to ???."
+    },
+    {
+      "name": "Sedna",
+      "genus": "Ruszor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with 2 key items."
+    },
+    {
+      "name": "Seps",
+      "genus": "Puk",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Opaque Wing to ???."
+    },
+    {
+      "name": "Sippoy",
+      "genus": "Caturae",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed NM spawn in Abyssea - Vunkerl."
+    }
+  ]
+}

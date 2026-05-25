@@ -1,0 +1,31 @@
+{
+  "zoneId": 3,
+  "zoneName": "Manaclipper",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Manaclipper",
+  "nms": [
+    {
+      "name": "Cyclopean Conch",
+      "genus": "Uragnite",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up."
+    },
+    {
+      "name": "Harajnite",
+      "genus": "Uragnite",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Fished up."
+    },
+    {
+      "name": "Zoredonite",
+      "genus": "Uragnite",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Appears randomly every few hours."
+    }
+  ]
+}

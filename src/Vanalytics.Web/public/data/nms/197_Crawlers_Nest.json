@@ -1,0 +1,97 @@
+{
+  "zoneId": 197,
+  "zoneName": "Crawlers Nest",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Crawlers_Nest",
+  "nms": [
+    {
+      "name": "Guardian Crawler",
+      "genus": "Crawler",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn (30%) by trading Rolanberry to basket."
+    },
+    {
+      "name": "Drone Crawler",
+      "genus": "Crawler",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn (50%) by trading Rolanberry 881 to basket."
+    },
+    {
+      "name": "Mimic",
+      "genus": "Mimic",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Spawned by a failed lockpicking attempt; drops Nest Coffer Key."
+    },
+    {
+      "name": "Demonic Tiphia",
+      "genus": "Bee",
+      "spawnType": "lottery",
+      "respawnTime": 7200,
+      "placeholders": [
+        { "name": "Wespe", "mobIndex": "0x10d" }
+      ],
+      "notes": "Lottery from Wespe at (G-6/7) Map 2; minimum 2h respawn; drops Royal Jelly and Tiphia Sting."
+    },
+    {
+      "name": "Matron Crawler",
+      "genus": "Crawler",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn (50%) by trading Rolanberry 874 to basket."
+    },
+    {
+      "name": "Queen Crawler",
+      "genus": "Crawler",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn (50%) by trading Rolanberry 874 to basket."
+    },
+    {
+      "name": "Awd Goggie",
+      "genus": "Crawler",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn (50%) by trading Rolanberry 864 to basket."
+    },
+    {
+      "name": "Aqrabuamelu",
+      "genus": "Scorpion",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed aggressive spawn; drops Aptant: Ishis and Aptant: Pera."
+    },
+    {
+      "name": "Dynast Beetle",
+      "genus": "Beetle",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed spawn every 90-120 min at (E-8) Map 3; drops Dasra's Ring."
+    },
+    {
+      "name": "Dreadbug",
+      "genus": "Crawler",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: A Boy's Dream; drops 1-4 Giant Shell Bug."
+    },
+    {
+      "name": "Mellonia",
+      "genus": "Gnat",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch (White II) — White stratum abyssite II + Voidstone."
+    }
+  ]
+}

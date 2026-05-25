@@ -1,0 +1,199 @@
+{
+  "zoneId": 215,
+  "zoneName": "Abyssea-Attohwa",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Abyssea-Attohwa",
+  "nms": [
+    {
+      "name": "Aggressor Antlion",
+      "genus": "Antlion",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Attohwa."
+    },
+    {
+      "name": "Amun",
+      "genus": "Hecteyes",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Attohwa."
+    },
+    {
+      "name": "Berstuk",
+      "genus": "Slug",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Extended Eyestalk to ???."
+    },
+    {
+      "name": "Blazing Eruca",
+      "genus": "Crawler",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Eruca Egg to ???."
+    },
+    {
+      "name": "Drekavac",
+      "genus": "Ghost",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Wailing Rags to ???."
+    },
+    {
+      "name": "Gaizkin",
+      "genus": "Doomed",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Undying Ooze to ???."
+    },
+    {
+      "name": "Gieremund",
+      "genus": "Hound",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Attohwa."
+    },
+    {
+      "name": "Granite Borer",
+      "genus": "Wamouracampa",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Withered Cocoon to ???."
+    },
+    {
+      "name": "Ironclad Cleaver",
+      "genus": "Iron Giant",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Attohwa."
+    },
+    {
+      "name": "Itzpapalotl",
+      "genus": "Wamoura",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with required key items."
+    },
+    {
+      "name": "Kampe",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Gory Pincer to ???."
+    },
+    {
+      "name": "Kharon",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Bone Chips to ???."
+    },
+    {
+      "name": "Maahes",
+      "genus": "Coeurl",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Coeurl Round to ???."
+    },
+    {
+      "name": "Mielikki",
+      "genus": "Treant",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Great Root to ???."
+    },
+    {
+      "name": "Nightshade",
+      "genus": "Mandragora",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Withered Bud to ???."
+    },
+    {
+      "name": "Pallid Percy",
+      "genus": "Worm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Blanched Silver to ???."
+    },
+    {
+      "name": "Smok",
+      "genus": "Wyrm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with Hollow dragon eye."
+    },
+    {
+      "name": "Svarbhanu",
+      "genus": "Dragon",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Cracked Dragonscale to ???."
+    },
+    {
+      "name": "Tejas",
+      "genus": "Avatar",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed spawn every 20 min with 5 spawns in Abyssea - Attohwa."
+    },
+    {
+      "name": "Titlacauan",
+      "genus": "Corse",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with 4 key items."
+    },
+    {
+      "name": "Tunga",
+      "genus": "Chigoe",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Attohwa."
+    },
+    {
+      "name": "Ulhuadshi",
+      "genus": "Sandworm",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — examine ??? with 2 key items."
+    },
+    {
+      "name": "Warbler",
+      "genus": "Gnat",
+      "spawnType": "timed",
+      "respawnTime": 600,
+      "placeholders": [],
+      "notes": "Timed spawn every 10-15 min in Abyssea - Attohwa."
+    },
+    {
+      "name": "Wherwetrice",
+      "genus": "Cockatrice",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Mangled Cockatrice Skin to ???."
+    }
+  ]
+}

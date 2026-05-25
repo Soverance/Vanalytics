@@ -1,0 +1,63 @@
+{
+  "zoneId": 152,
+  "zoneName": "Altar Room",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Altar_Room",
+  "nms": [
+    {
+      "name": "Duu Masa the Onecut",
+      "genus": "Yagudo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"A Moral Manifest?\"; SAM job, true sight aggro."
+    },
+    {
+      "name": "Fee Jugu the Ramfist",
+      "genus": "Yagudo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"A Moral Manifest?\"; MNK job, true sight aggro."
+    },
+    {
+      "name": "Goo Pake the Bloodhound",
+      "genus": "Yagudo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"A Moral Manifest?\"; NIN job, true sight aggro."
+    },
+    {
+      "name": "Kee Taw the Nightingale",
+      "genus": "Yagudo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"A Moral Manifest?\"; BRD job, true sight aggro."
+    },
+    {
+      "name": "Laa Yaku the Austere",
+      "genus": "Yagudo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"A Moral Manifest?\"; WHM job, sight aggro."
+    },
+    {
+      "name": "Poo Yozo the Babbler",
+      "genus": "Yagudo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"A Moral Manifest?\"; BLM job, sight aggro."
+    },
+    {
+      "name": "Yagudo Avatar",
+      "genus": "Yagudo",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"A Moral Manifest?\"; SMN job, true sight aggro."
+    }
+  ]
+}

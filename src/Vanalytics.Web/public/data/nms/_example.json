@@ -1,0 +1,34 @@
+{
+  "_comment": "Reference example only — files starting with '_' are skipped by the loader. mobIndex is a 3-digit hex string matching BG-wiki convention (e.g. '0x157'); use null when unknown so the relationship is preserved but the slot is unset. respawnTime is in seconds — for lottery NMs it's the window-open delay after PH ToD; for timed NMs it's the respawn timer; use null for popped/quest NMs that have no timer.",
+  "zoneId": 125,
+  "zoneName": "Western Altepa Desert",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Western_Altepa_Desert",
+  "nms": [
+    {
+      "name": "Cactuar Cantautor",
+      "genus": "Sabotender",
+      "spawnType": "lottery",
+      "respawnTime": 3600,
+      "placeholders": [
+        { "name": "Cactuar", "mobIndex": "0x157" }
+      ],
+      "notes": "Window opens 1h after PH ToD; sound-aggro, sleepga."
+    },
+    {
+      "name": "King Vinegarroon",
+      "genus": "Scorpion",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "21-24h during earth weather (double earth is guaranteed in that window)."
+    },
+    {
+      "name": "Sabotender Campeador",
+      "genus": "Sabotender",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — Ashen stratum abyssite + Voidstone."
+    }
+  ]
+}

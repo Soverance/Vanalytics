@@ -1,0 +1,101 @@
+{
+  "zoneId": 85,
+  "zoneName": "La Vaule [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/La_Vaule_[S]",
+  "nms": [
+    {
+      "name": "All-seeing Onyx Eye",
+      "genus": "Ahriman",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2-4h."
+    },
+    {
+      "name": "Agrios",
+      "genus": "Gigas",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2-4h."
+    },
+    {
+      "name": "Ashmaker Gotblut",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Orcish Augur", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Orcish Augur."
+    },
+    {
+      "name": "Cogtooth Skagnogg",
+      "genus": "Orcish Warmachine",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2-4h."
+    },
+    {
+      "name": "Coinbiter Cjaknokk",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2-4h."
+    },
+    {
+      "name": "Draketrader Zlodgodd",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2-4h."
+    },
+    {
+      "name": "Falsespinner Bhudbrodd",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2-4h."
+    },
+    {
+      "name": "Feeblescheme Bhogbigg",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2-4h."
+    },
+    {
+      "name": "Hawkeyed Dnatbat",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Orcish Bowshooter", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Orcish Bowshooter."
+    },
+    {
+      "name": "Rugaroo",
+      "genus": "Gnole",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn 2-5h."
+    },
+    {
+      "name": "Shatterskull Mippdapp",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Orc", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from various Orc mobs."
+    }
+  ]
+}

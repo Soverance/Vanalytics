@@ -1,0 +1,39 @@
+{
+  "zoneId": 73,
+  "zoneName": "Zhayolm Remnants",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Zhayolm_Remnants",
+  "nms": [
+    {
+      "name": "Poroggo Madame",
+      "genus": "Poroggo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM; popped by completing floor objectives on floors 1, 3, 4, 5, or 6."
+    },
+    {
+      "name": "Jakko",
+      "genus": "Poroggo",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM; trade Silver Sea Card to the Slot on Floor 2 northwest area."
+    },
+    {
+      "name": "Battleclad Chariot",
+      "genus": "Chariot",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage boss on Floor 7; located behind Gilded Doors in the center room."
+    },
+    {
+      "name": "Archaic Chariot",
+      "genus": "Chariot",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Salvage NM on Floor 6; non-aggressive until engaged."
+    }
+  ]
+}

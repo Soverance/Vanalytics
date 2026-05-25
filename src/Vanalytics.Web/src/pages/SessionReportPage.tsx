@@ -5,6 +5,7 @@ import type { SessionDetail, SessionEvent, SessionTimelineEntry, SessionEventsRe
 import OverviewTab from '../components/session/OverviewTab'
 import CombatTab from '../components/session/CombatTab'
 import FarmingTab from '../components/session/FarmingTab'
+import Tabs from '../components/Tabs'
 
 const TABS = ['Overview', 'Combat', 'Farming'] as const
 type Tab = typeof TABS[number]
@@ -104,22 +105,7 @@ export default function SessionReportPage() {
         ))}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-800">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              tab === t
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+      <Tabs items={TABS} value={tab} onChange={setTab} />
 
       {/* Tab content */}
       {tab === 'Overview' && (

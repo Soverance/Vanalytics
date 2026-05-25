@@ -1,0 +1,37 @@
+{
+  "zoneId": 192,
+  "zoneName": "Inner Horutoto Ruins",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Inner_Horutoto_Ruins",
+  "nms": [
+    {
+      "name": "Maltha",
+      "genus": "Slime",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed spawn every 60-90 min at (F-9) Map 2; sound-aggro, drops Trailer's Tunica."
+    },
+    {
+      "name": "Nocuous Weapon",
+      "genus": "Evil Weapon",
+      "spawnType": "lottery",
+      "respawnTime": 300,
+      "placeholders": [
+        { "name": "Boggart", "mobIndex": "0x095" },
+        { "name": "Boggart", "mobIndex": "0x097" }
+      ],
+      "notes": "Lottery from Boggart; PH respawns ~5 min; drops Disciple Grip."
+    },
+    {
+      "name": "Slendlix Spindlethumb",
+      "genus": "Goblin",
+      "spawnType": "lottery",
+      "respawnTime": 1200,
+      "placeholders": [
+        { "name": "Goblin Leecher", "mobIndex": "0x087" },
+        { "name": "Goblin Leecher", "mobIndex": "0x06e" }
+      ],
+      "notes": "Lottery from Goblin Leecher; 20-30 min window; drops Circe's Hat."
+    }
+  ]
+}

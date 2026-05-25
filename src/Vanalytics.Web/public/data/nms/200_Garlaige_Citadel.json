@@ -1,0 +1,92 @@
+{
+  "zoneId": 200,
+  "zoneName": "Garlaige Citadel",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Garlaige_Citadel",
+  "nms": [
+    {
+      "name": "Frogamander",
+      "genus": "Doomed",
+      "spawnType": "timed",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Timed spawn 1-2 h behind Banishing Gate #2 at (H-8) Map 3; drops Selemnus Belt."
+    },
+    {
+      "name": "Old Two-Wings",
+      "genus": "Bat",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed spawn 21-24 h; drops Bat Cape and Fiend Blood."
+    },
+    {
+      "name": "Serket",
+      "genus": "Scorpion",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed spawn 21-24 h; drops Serket Ring and Serket Shield."
+    },
+    {
+      "name": "Skewer Sam",
+      "genus": "Cockatrice",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed spawn 21-24 h; drops Cockatrice Skin and Wind Spear."
+    },
+    {
+      "name": "Hazmat",
+      "genus": "Bomb",
+      "spawnType": "lottery",
+      "respawnTime": 3600,
+      "placeholders": [
+        { "name": "Explosure", "mobIndex": null }
+      ],
+      "notes": "Lottery from Explosure at (I-8) behind Banishing Gate #1; window opens 60 min after PH ToD; drops Promptitude Solea."
+    },
+    {
+      "name": "Hovering Hotpot",
+      "genus": "Magic Pot",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Fallen Mage", "mobIndex": "0x0d2" },
+        { "name": "Fallen Major", "mobIndex": "0x0d0" }
+      ],
+      "notes": "Lottery from Fallen Mage and Fallen Major at (J-8) Map 3; true lottery (no minimum respawn); drops Sleight Kukri."
+    },
+    {
+      "name": "Chandelier",
+      "genus": "Bomb",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Hitting the Marquisate; guaranteed Chandelier Coal drop."
+    },
+    {
+      "name": "Guardian Statue",
+      "genus": "Doll",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Peace for the Spirit; guaranteed Nail Puller drop."
+    },
+    {
+      "name": "Mephitas",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity Concord NM (level 125); requires 2,100+ Unity Accolades; drops Mephitas's Ring variants."
+    },
+    {
+      "name": "Roly-Poly",
+      "genus": "Flan",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch (White II) — White stratum abyssite II + Voidstone; drops Wiglen Gorget."
+    }
+  ]
+}

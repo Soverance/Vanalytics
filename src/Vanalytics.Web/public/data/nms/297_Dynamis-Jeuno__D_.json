@@ -1,0 +1,39 @@
+{
+  "zoneId": 297,
+  "zoneName": "Dynamis - Jeuno (D)",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Dynamis_-_Jeuno_(D)",
+  "nms": [
+    {
+      "name": "Aurix",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Aggro colorless (grey-eye) statues to pop. Appears across waves with phase-dependent drops."
+    },
+    {
+      "name": "Impish Golem",
+      "genus": "Replica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Mid-boss atop the palace stairs. +30min time on defeat."
+    },
+    {
+      "name": "Obstatrix",
+      "genus": "Goblin",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zone boss near Mog House; spawns after Impish Golem. +30min on defeat."
+    },
+    {
+      "name": "Disjoined Mithra",
+      "genus": "Fomor",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Disjoined Boss near zone to Upper Jeuno (H-10); spawns after Obstatrix. 'Judge, Jury and Executioner' title."
+    }
+  ]
+}

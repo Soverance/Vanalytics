@@ -1,0 +1,235 @@
+{
+  "zoneId": 208,
+  "zoneName": "Quicksand Caves",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Quicksand_Caves",
+  "nms": [
+    {
+      "name": "Antican Consul",
+      "genus": "Antica",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed spawn 21-24 h; sound-aggro."
+    },
+    {
+      "name": "Antican Legatus",
+      "genus": "Antica",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed spawn every 20 min; Paladin type."
+    },
+    {
+      "name": "Antican Magister",
+      "genus": "Antica",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Antican Hastatus", "mobIndex": null }
+      ],
+      "notes": "Lottery from Antican Hastatus; sound-aggro."
+    },
+    {
+      "name": "Antican Praefectus",
+      "genus": "Antica",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Antican Princeps", "mobIndex": null }
+      ],
+      "notes": "Lottery from Antican Princeps; Paladin type."
+    },
+    {
+      "name": "Antican Praetor",
+      "genus": "Antica",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed spawn every 20 min; Black Mage type; magic-aggro."
+    },
+    {
+      "name": "Antican Proconsul",
+      "genus": "Antica",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Antican Signifer", "mobIndex": null }
+      ],
+      "notes": "Lottery from Antican Signifer; Black Mage variant."
+    },
+    {
+      "name": "Antican Tribunus",
+      "genus": "Antica",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Antican Aedilis", "mobIndex": null }
+      ],
+      "notes": "Lottery from Antican Aedilis; Ranger type; sound-aggro."
+    },
+    {
+      "name": "Centurio X-I",
+      "genus": "Antica",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Lottery spawn; Black Mage variant; drops multiple stone scrolls."
+    },
+    {
+      "name": "Diamond Daig",
+      "genus": "Beetle",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Helm Beetle", "mobIndex": null }
+      ],
+      "notes": "Lottery from Helm Beetle during Earth weather; sight-aggro."
+    },
+    {
+      "name": "Hastatus XI-XII",
+      "genus": "Antica",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Antican Triarius", "mobIndex": null }
+      ],
+      "notes": "Lottery from Antican Triarius."
+    },
+    {
+      "name": "Nussknacker",
+      "genus": "Lizard",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Sand Lizard", "mobIndex": null }
+      ],
+      "notes": "Lottery from Sand Lizard during Earth weather."
+    },
+    {
+      "name": "Proconsul XII",
+      "genus": "Antica",
+      "spawnType": "timed",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Timed spawn every 2 h."
+    },
+    {
+      "name": "Sabotender Bailarin",
+      "genus": "Sabotender",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Sabotender Bailaor", "mobIndex": null }
+      ],
+      "notes": "Lottery from Sabotender Bailaor."
+    },
+    {
+      "name": "Sabotender Bailarina",
+      "genus": "Sabotender",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; guaranteed Dune Boots drop."
+    },
+    {
+      "name": "Sagittarius X-XIII",
+      "genus": "Antica",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Antican Princeps", "mobIndex": null }
+      ],
+      "notes": "Lottery from Antican Princeps."
+    },
+    {
+      "name": "Triarius X-XV",
+      "genus": "Antica",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Antican Triarius", "mobIndex": null }
+      ],
+      "notes": "Lottery from Antican Triarius."
+    },
+    {
+      "name": "Tribunus VII-I",
+      "genus": "Antica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Forced spawn — trade Antican Tag to ???."
+    },
+    {
+      "name": "Ancient Vessel",
+      "genus": "Magic Pot",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Zilart Mission 12; mission encounter."
+    },
+    {
+      "name": "Centurio IV-VII",
+      "genus": "Antica",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 8-1; mission encounter."
+    },
+    {
+      "name": "Girtablulu",
+      "genus": "Scorpion",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest: Old Wounds."
+    },
+    {
+      "name": "Honor",
+      "genus": "Sea Monk",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "San d'Oria Mission 8-1; mission encounter."
+    },
+    {
+      "name": "Princeps IV-XLV",
+      "genus": "Antica",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 8-1; mission encounter."
+    },
+    {
+      "name": "Triarius IV-XIV",
+      "genus": "Antica",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Bastok Mission 8-1; mission encounter."
+    },
+    {
+      "name": "Valor",
+      "genus": "Sea Monk",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "San d'Oria Mission 8-1; mission encounter."
+    },
+    {
+      "name": "Centurio XX-I",
+      "genus": "Antica",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM (level 125); requires 2,100 Unity Accolades."
+    },
+    {
+      "name": "Malleator Maurok",
+      "genus": "Scorpion",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch operation — requires specific abyssite and Voidstone."
+    }
+  ]
+}

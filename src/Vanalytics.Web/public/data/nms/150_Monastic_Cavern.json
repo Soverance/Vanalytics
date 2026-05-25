@@ -1,0 +1,97 @@
+{
+  "zoneId": 150,
+  "zoneName": "Monastic Cavern",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Monastic_Cavern",
+  "nms": [
+    {
+      "name": "Orcish Hexspinner",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed 20-minute respawn; drops stone and quake scrolls."
+    },
+    {
+      "name": "Orcish Overlord",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": 75600,
+      "placeholders": [],
+      "notes": "Timed 21-24 hour respawn; drops Glorious Sword and Gold Orcmask."
+    },
+    {
+      "name": "Orcish Warlord",
+      "genus": "Orc",
+      "spawnType": "timed",
+      "respawnTime": 1200,
+      "placeholders": [],
+      "notes": "Timed 20-minute respawn; drops stone, quake, and Stun scrolls."
+    },
+    {
+      "name": "Overlord Bakgodek",
+      "genus": "Orc",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Orcish Overlord", "mobIndex": null }
+      ],
+      "notes": "Lottery pop from Orcish Overlord; drops Juggernaut and Highlander's Targe."
+    },
+    {
+      "name": "Bugaboo",
+      "genus": "Ghost",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"The Circle of Time\"; BLM, level 63."
+    },
+    {
+      "name": "Chillgaze Foddrud",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Understanding Overlord?\"; BLM job."
+    },
+    {
+      "name": "Grimbolt Onkzok",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Understanding Overlord?\"; RNG job."
+    },
+    {
+      "name": "Rictusgrin Prakpok",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Understanding Overlord?\"; DRK job."
+    },
+    {
+      "name": "Sevenskewer Krugglug",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Understanding Overlord?\"; DRG job."
+    },
+    {
+      "name": "Shatterskull Mippdapp",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Understanding Overlord?\"; MNK job."
+    },
+    {
+      "name": "Siegebreaker Wujroj",
+      "genus": "Orc",
+      "spawnType": "quest",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Quest NM for \"An Understanding Overlord?\"; WAR job."
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "zoneId": 111,
+  "zoneName": "Beaucedine Glacier",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Beaucedine_Glacier",
+  "nms": [
+    {
+      "name": "Calcabrina",
+      "genus": "Doll",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Timed spawn; Dark Knight job."
+    },
+    {
+      "name": "Gargantua",
+      "genus": "Golem",
+      "spawnType": "lottery",
+      "respawnTime": 1200,
+      "placeholders": [
+        { "name": "Stone Golem", "mobIndex": null }
+      ],
+      "notes": "Lottery from Stone Golem; PH repops every 20 min; passive/sight/magic aggro."
+    },
+    {
+      "name": "Humbaba",
+      "genus": "Gigas",
+      "spawnType": "timed",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Warrior job; passive; timed spawn."
+    },
+    {
+      "name": "Kirata",
+      "genus": "Tiger",
+      "spawnType": "lottery",
+      "respawnTime": 1200,
+      "placeholders": [
+        { "name": "Tundra Tiger", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tundra Tiger; PH repops every 20 min; sight aggro."
+    },
+    {
+      "name": "Nue",
+      "genus": "Tiger",
+      "spawnType": "lottery",
+      "respawnTime": 3600,
+      "placeholders": [
+        { "name": "Tundra Tiger", "mobIndex": null }
+      ],
+      "notes": "Lottery from Tundra Tiger; PH window 1h; Warrior job; level 125."
+    },
+    {
+      "name": "Largantua",
+      "genus": "Golem",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Unity NM — 2,100 Unity Accolades to trigger."
+    },
+    {
+      "name": "Gjenganger",
+      "genus": "Ghost",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Gorehound",
+      "genus": "Hound",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Erebus",
+      "genus": "Skeleton",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn; Dark Knight job."
+    },
+    {
+      "name": "Feuerunke",
+      "genus": "Doomed",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Lord Ruthven",
+      "genus": "Vampyr",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Purple abyssite; 2-4h respawn."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}

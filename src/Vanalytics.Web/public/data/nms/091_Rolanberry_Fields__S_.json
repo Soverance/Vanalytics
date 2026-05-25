@@ -1,0 +1,165 @@
+{
+  "zoneId": 91,
+  "zoneName": "Rolanberry Fields [S]",
+  "wikiUrl": "https://www.bg-wiki.com/ffxi/Rolanberry_Fields_[S]",
+  "nms": [
+    {
+      "name": "Dyinyinga",
+      "genus": "Slug",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Scabrous Slug", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Scabrous Slug."
+    },
+    {
+      "name": "Dark Ixion",
+      "genus": "Monoceros",
+      "spawnType": "timed",
+      "respawnTime": 72000,
+      "placeholders": [],
+      "notes": "Timed spawn 20-25h; roaming."
+    },
+    {
+      "name": "Sandworm",
+      "genus": "Sandworm",
+      "spawnType": "timed",
+      "respawnTime": 72000,
+      "placeholders": [],
+      "notes": "Timed spawn 20-25h; sound aggro."
+    },
+    {
+      "name": "Delicieuse Delphine",
+      "genus": "Morbol",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Ochu", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Ochu."
+    },
+    {
+      "name": "Erle",
+      "genus": "Bee",
+      "spawnType": "lottery",
+      "respawnTime": null,
+      "placeholders": [
+        { "name": "Death Jacket", "mobIndex": null }
+      ],
+      "notes": "Lottery spawn from Death Jacket; links."
+    },
+    {
+      "name": "Lamina",
+      "genus": "Mandragora",
+      "spawnType": "timed",
+      "respawnTime": 5400,
+      "placeholders": [],
+      "notes": "Timed spawn 1.5-2h."
+    },
+    {
+      "name": "Agathos",
+      "genus": "Amphiptere",
+      "spawnType": "popped",
+      "respawnTime": null,
+      "placeholders": [],
+      "notes": "Voidwatch — requires White stratum abyssite and Voidstone."
+    },
+    {
+      "name": "Aither",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Deorc",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Eorthe",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Puretos",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Pruina",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Beorht",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Thunor",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Lacus",
+      "genus": "Elemental",
+      "spawnType": "popped",
+      "respawnTime": 180,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Clear abyssite; 1-3 min respawn."
+    },
+    {
+      "name": "Urd",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Skuld",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Colorful abyssite; 1h respawn."
+    },
+    {
+      "name": "Verthandi",
+      "genus": "Pixie",
+      "spawnType": "popped",
+      "respawnTime": 7200,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Yellow abyssite; 2-4h respawn."
+    },
+    {
+      "name": "Yilbegan",
+      "genus": "Zilant",
+      "spawnType": "popped",
+      "respawnTime": 3600,
+      "placeholders": [],
+      "notes": "Voidwalker — rest with Black abyssite; 1h respawn."
+    }
+  ]
+}
