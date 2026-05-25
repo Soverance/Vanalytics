@@ -70,27 +70,26 @@ local function jsonl_to_api_event(raw_line)
 end
 
 -----------------------------------------------------------------------
--- Internal: POST helper following the ltn12 source/sink pattern
+-- Internal: async POST helper. callback(result, status_code, body)
+-- where result is true on response received, nil on connection failure.
+-- Session endpoints take characterName + server in the body, so no
+-- per-character headers are needed beyond the API key.
 -----------------------------------------------------------------------
-local function api_post(endpoint, body_table)
+local function api_post_async(endpoint, body_table, callback)
+    callback = callback or function() end
     local payload = json_encode_fn(body_table)
-    local url = settings.ApiUrl .. endpoint
-    local ltn12 = require('ltn12')
-
-    local response_body = {}
-    local result, status_code, headers = http_request_fn({
-        url = url,
+    http_request_fn({
+        url = settings.ApiUrl .. endpoint,
         method = 'POST',
         headers = {
             ['Content-Type'] = 'application/json',
-            ['Content-Length'] = tostring(#payload),
             ['X-Api-Key'] = settings.ApiKey,
         },
-        source = ltn12.source.string(payload),
-        sink = ltn12.sink.table(response_body),
-    })
-
-    return result, status_code, table.concat(response_body)
+        body = payload,
+        label = 'session-' .. endpoint:gsub('^.*/', ''),
+    }, function(result, status_code, _, response_body)
+        callback(result, status_code, response_body or '')
+    end)
 end
 
 -----------------------------------------------------------------------
@@ -334,11 +333,9 @@ function session.start(character_name, server, zone)
     player_name = character_name
     server_name = server
 
-    -- Create sessions/ subdirectory if it doesn't exist
     local sessions_dir = windower.addon_path .. 'sessions/'
     os.execute('mkdir "' .. sessions_dir:gsub('/', '\\') .. '" 2>NUL')
 
-    -- Open JSONL file for writing
     local date_stamp = os.date('%Y-%m-%d_%H-%M-%S')
     file_path = sessions_dir .. character_name .. '_' .. date_stamp .. '.jsonl'
     file_handle = io.open(file_path, 'a')
@@ -347,37 +344,38 @@ function session.start(character_name, server, zone)
         return
     end
 
-    -- POST to API to start session
-    local result, status_code, response = api_post('/api/session/start', {
-        characterName = character_name,
-        server = server,
-        zone = zone,
-    })
-
-    if result and status_code == 200 then
-        -- Try to parse session_id from response
-        -- Simple pattern match for {"sessionId":"..."}  or {"sessionId":N}
-        local sid = response:match('"sessionId"%s*:%s*"([^"]+)"')
-        if not sid then
-            sid = response:match('"sessionId"%s*:%s*(%d+)')
-        end
-        session_id = sid
-    else
-        log_fn('Warning: Could not register session with API (status: ' .. tostring(status_code) .. '). Recording locally.')
-    end
-
+    -- Local state goes active immediately so chat events get captured to the
+    -- JSONL file even if the server registration is still in flight.
     active = true
     start_time = os.time()
     event_count = 0
     uploaded_count = 0
 
-    -- Open debug log if debug mode is on
     if debug_mode then
         local debug_path = sessions_dir .. character_name .. '_' .. date_stamp .. '_debug.log'
         debug_handle = io.open(debug_path, 'a')
     end
 
     log_success_fn('Session started for ' .. character_name .. ' @ ' .. server .. ' (' .. zone .. ')' .. (debug_mode and ' [DEBUG]' or ''))
+
+    -- Register with the API in the background. Failure doesn't prevent local
+    -- recording; we just won't have a server-side session_id to attach to
+    -- future events (currently unused but reserved for future correlation).
+    api_post_async('/api/session/start', {
+        characterName = character_name,
+        server = server,
+        zone = zone,
+    }, function(result, status_code, response_body)
+        if result and status_code == 200 then
+            local sid = response_body:match('"sessionId"%s*:%s*"([^"]+)"')
+            if not sid then
+                sid = response_body:match('"sessionId"%s*:%s*(%d+)')
+            end
+            session_id = sid
+        else
+            log_fn('Warning: Could not register session with API (status: ' .. tostring(status_code) .. '). Recording locally.')
+        end
+    end)
 end
 
 function session.stop()
@@ -386,46 +384,48 @@ function session.stop()
         return
     end
 
-    -- Flush any remaining events before stopping
-    session.flush()
-
-    -- Close file handles
-    if file_handle then
-        file_handle:close()
-        file_handle = nil
-    end
-    if debug_handle then
-        debug_handle:close()
-        debug_handle = nil
-    end
-
-    -- POST to API to stop session
-    local result, status_code = api_post('/api/session/stop', {
-        characterName = player_name,
-        server = server_name,
-    })
-
-    -- Calculate duration
-    local duration = os.time() - start_time
-    local minutes = math.floor(duration / 60)
-    local seconds = math.floor(duration % 60)
+    -- Capture state BEFORE resetting locals so the async stop POST gets the
+    -- correct values even if other code mutates module state between now
+    -- and when the request actually fires.
+    local stop_character = player_name
+    local stop_server = server_name
+    local start_t = start_time
     local final_count = event_count
 
-    -- Reset all state
-    active = false
-    session_id = nil
-    file_path = nil
-    event_count = 0
-    uploaded_count = 0
-    start_time = nil
-    player_name = nil
-    server_name = nil
+    -- Flush remaining events first; the stop POST and cleanup happen in the
+    -- flush callback so we don't tear down state with pending uploads still
+    -- in flight.
+    session.flush(function()
+        if file_handle then file_handle:close(); file_handle = nil end
+        if debug_handle then debug_handle:close(); debug_handle = nil end
 
-    log_success_fn('Session stopped. ' .. final_count .. ' events recorded over ' .. minutes .. 'm ' .. seconds .. 's.')
+        api_post_async('/api/session/stop', {
+            characterName = stop_character,
+            server = stop_server,
+        }, function(_, _, _) end)
+
+        local duration = os.time() - start_t
+        local minutes = math.floor(duration / 60)
+        local seconds = math.floor(duration % 60)
+
+        active = false
+        session_id = nil
+        file_path = nil
+        event_count = 0
+        uploaded_count = 0
+        start_time = nil
+        player_name = nil
+        server_name = nil
+
+        log_success_fn('Session stopped. ' .. final_count .. ' events recorded over ' .. minutes .. 'm ' .. seconds .. 's.')
+    end)
 end
 
-function session.flush()
+function session.flush(on_complete)
+    on_complete = on_complete or function() end
+
     if not active or event_count <= uploaded_count then
+        on_complete()
         return
     end
 
@@ -433,10 +433,10 @@ function session.flush()
     local read_handle = io.open(file_path, 'r')
     if not read_handle then
         log_error_fn('Failed to open session file for reading.')
+        on_complete()
         return
     end
 
-    -- Skip already-uploaded lines
     local line_num = 0
     local pending_lines = {}
     for line in read_handle:lines() do
@@ -448,10 +448,10 @@ function session.flush()
     read_handle:close()
 
     if #pending_lines == 0 then
+        on_complete()
         return
     end
 
-    -- Decode JSONL lines into structured API event objects
     local api_events = {}
     for _, raw_line in ipairs(pending_lines) do
         local event = jsonl_to_api_event(raw_line)
@@ -461,40 +461,52 @@ function session.flush()
     end
 
     if #api_events == 0 then
+        on_complete()
         return
     end
 
-    -- Batch into groups of 500
+    -- Upload batches sequentially via callback chain — never parallel, so
+    -- the server sees events in order and we can report partial-success
+    -- accurately if a batch midway through fails.
     local batch_size = 500
     local total_uploaded = 0
 
-    for batch_start = 1, #api_events, batch_size do
+    local function upload_batch(batch_start)
+        if batch_start > #api_events then
+            if total_uploaded > 0 then
+                log_fn('Flushed ' .. total_uploaded .. ' events to API (' .. uploaded_count .. '/' .. event_count .. ' total).')
+            end
+            on_complete()
+            return
+        end
+
         local batch_end = math.min(batch_start + batch_size - 1, #api_events)
         local batch = {}
         for i = batch_start, batch_end do
             table.insert(batch, api_events[i])
         end
 
-        -- POST batch to API as structured event objects
-        local result, status_code = api_post('/api/session/events', {
+        api_post_async('/api/session/events', {
             characterName = player_name,
             server = server_name,
             events = batch,
-        })
-
-        if result and status_code == 200 then
-            total_uploaded = total_uploaded + #batch
-            uploaded_count = uploaded_count + #batch
-        else
-            log_error_fn('Flush failed at batch starting line ' .. (uploaded_count + batch_start) ..
-                ' (status: ' .. tostring(status_code) .. ')')
-            break
-        end
+        }, function(result, status_code, _)
+            if result and status_code == 200 then
+                total_uploaded = total_uploaded + #batch
+                uploaded_count = uploaded_count + #batch
+                upload_batch(batch_end + 1)
+            else
+                log_error_fn('Flush failed at batch starting line ' .. (uploaded_count + batch_start) ..
+                    ' (status: ' .. tostring(status_code) .. ')')
+                if total_uploaded > 0 then
+                    log_fn('Flushed ' .. total_uploaded .. ' events to API (' .. uploaded_count .. '/' .. event_count .. ' total).')
+                end
+                on_complete()
+            end
+        end)
     end
 
-    if total_uploaded > 0 then
-        log_fn('Flushed ' .. total_uploaded .. ' events to API (' .. uploaded_count .. '/' .. event_count .. ' total).')
-    end
+    upload_batch(1)
 end
 
 function session.on_text(original, modified, original_mode, modified_mode, blocked)

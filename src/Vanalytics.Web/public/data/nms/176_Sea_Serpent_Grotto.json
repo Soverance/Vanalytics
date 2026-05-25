@@ -41,7 +41,8 @@
       "spawnType": "lottery",
       "respawnTime": 28800,
       "placeholders": [
-        { "name": "Devil Manta", "mobIndex": null }
+        { "name": "Devil Manta", "mobIndex": "0x196" },
+        { "name": "Devil Manta", "mobIndex": "0x199" }
       ],
       "notes": "Lottery from Devil Manta every 8 hours; WAR job."
     },

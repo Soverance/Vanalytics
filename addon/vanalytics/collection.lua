@@ -42,6 +42,16 @@ function collection.init(deps)
     log_error_fn = deps.log_error
 end
 
+-- Reset cached state so the next sync starts clean. Called on logout to
+-- prevent the previous character's hash/state from suppressing the new
+-- character's first POST.
+function collection.reset()
+    state = { spellIds = nil, keyItemIds = nil }
+    dirty = false
+    loaded_for = nil
+    last_payload_hash = nil
+end
+
 -----------------------------------------------------------------------
 -- Disk persistence (per character)
 -----------------------------------------------------------------------
