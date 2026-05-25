@@ -126,57 +126,50 @@ end
 -----------------------------------------------------------------------
 -- Sync to API
 -----------------------------------------------------------------------
-function collection.sync(character_name, server)
+function collection.sync(character_name, server, on_complete)
+    on_complete = on_complete or function() end
+
     load_from_disk(character_name, server)
     read_player_state()
 
     if state.spellIds == nil and state.keyItemIds == nil then
-        return  -- nothing to ship
+        on_complete()
+        return
     end
 
-    local body = {
+    local payload = json_encode_fn({
         characterName = character_name,
         server = server,
         spellIds = state.spellIds,
         keyItemIds = state.keyItemIds,
-    }
-    local payload = json_encode_fn(body)
-
-    if not dirty and payload == last_payload_hash then return end
-
-    local url = settings.ApiUrl .. '/api/sync/collection'
-    local ltn12 = require('ltn12')
-
-    local response_body = {}
-    local result, status_code = http_request_fn({
-        url = url,
-        method = 'POST',
-        headers = {
-            ['Content-Type'] = 'application/json',
-            ['Content-Length'] = tostring(#payload),
-            ['X-Api-Key'] = settings.ApiKey,
-        },
-        source = ltn12.source.string(payload),
-        sink = ltn12.sink.table(response_body),
     })
 
-    if not result then
-        log_error_fn('Collection sync connection failed: ' .. tostring(status_code))
+    if not dirty and payload == last_payload_hash then
+        on_complete()
         return
     end
 
-    if status_code == 200 then
-        dirty = false
-        last_payload_hash = payload
-        save_to_disk(character_name, server)
-        if settings.NotifyOnSync then
-            -- log_fn(string.format('Collection synced: %d spells, %d key items',
-            --     state.spellIds and #state.spellIds or 0,
-            --     state.keyItemIds and #state.keyItemIds or 0))
+    http_request_fn({
+        url = settings.ApiUrl .. '/api/sync/collection',
+        method = 'POST',
+        headers = {
+            ['Content-Type'] = 'application/json',
+            ['X-Api-Key'] = settings.ApiKey,
+        },
+        body = payload,
+        label = 'collection-sync',
+    }, function(result, status_code, _, _)
+        if not result then
+            log_error_fn('Collection sync connection failed: ' .. tostring(status_code))
+        elseif status_code == 200 then
+            dirty = false
+            last_payload_hash = payload
+            save_to_disk(character_name, server)
+        else
+            log_error_fn('Collection sync failed with status ' .. tostring(status_code))
         end
-    else
-        log_error_fn('Collection sync failed with status ' .. tostring(status_code))
-    end
+        on_complete()
+    end)
 end
 
 return collection

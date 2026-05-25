@@ -219,16 +219,17 @@ end
 -----------------------------------------------------------------------
 -- Sync to API
 -----------------------------------------------------------------------
-function missions.sync(character_name, server)
+function missions.sync(character_name, server, on_complete)
+    on_complete = on_complete or function() end
+
     load_from_disk(character_name, server)
 
     if next(state) == nil then
-        return  -- nothing captured yet
+        on_complete()
+        return
     end
 
-    -- Body shape matches MissionsSyncRequest DTO. The dictionary lookups
-    -- below map our internal line_key strings to the explicit DTO fields.
-    local body = {
+    local payload = json_encode_fn({
         characterName = character_name,
         server = server,
         sandoriaMissions  = state.sandoriaMissions,
@@ -245,42 +246,34 @@ function missions.sync(character_name, server)
         soaMissions       = state.soaMissions,
         rovMissions       = state.rovMissions,
         tvrMissions       = state.tvrMissions,
-    }
-    local payload = json_encode_fn(body)
-
-    if not dirty and payload == last_payload_hash then return end
-
-    local url = settings.ApiUrl .. '/api/sync/missions'
-    local ltn12 = require('ltn12')
-
-    local response_body = {}
-    local result, status_code = http_request_fn({
-        url = url,
-        method = 'POST',
-        headers = {
-            ['Content-Type'] = 'application/json',
-            ['Content-Length'] = tostring(#payload),
-            ['X-Api-Key'] = settings.ApiKey,
-        },
-        source = ltn12.source.string(payload),
-        sink = ltn12.sink.table(response_body),
     })
 
-    if not result then
-        log_error_fn('Missions sync connection failed: ' .. tostring(status_code))
+    if not dirty and payload == last_payload_hash then
+        on_complete()
         return
     end
 
-    if status_code == 200 then
-        dirty = false
-        last_payload_hash = payload
-        save_to_disk(character_name, server)
-        if settings.NotifyOnSync then
-            -- log_fn('Missions synced')
+    http_request_fn({
+        url = settings.ApiUrl .. '/api/sync/missions',
+        method = 'POST',
+        headers = {
+            ['Content-Type'] = 'application/json',
+            ['X-Api-Key'] = settings.ApiKey,
+        },
+        body = payload,
+        label = 'missions-sync',
+    }, function(result, status_code, _, _)
+        if not result then
+            log_error_fn('Missions sync connection failed: ' .. tostring(status_code))
+        elseif status_code == 200 then
+            dirty = false
+            last_payload_hash = payload
+            save_to_disk(character_name, server)
+        else
+            log_error_fn('Missions sync failed with status ' .. tostring(status_code))
         end
-    else
-        log_error_fn('Missions sync failed with status ' .. tostring(status_code))
-    end
+        on_complete()
+    end)
 end
 
 return missions

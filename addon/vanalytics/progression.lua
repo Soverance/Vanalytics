@@ -265,14 +265,17 @@ end
 -- porter.sync. No-op if nothing has been captured yet, or if state
 -- is unchanged since the last successful POST.
 -----------------------------------------------------------------------
-function progression.sync(character_name, server)
+function progression.sync(character_name, server, on_complete)
+    on_complete = on_complete or function() end
+
     load_from_disk(character_name, server)
 
     if not state.limitPoints and not state.jobPoints and not state.warps then
-        return  -- nothing captured yet; addon hasn't seen the relevant packets
+        on_complete()
+        return
     end
 
-    local body = {
+    local payload = json_encode_fn({
         characterName = character_name,
         server = server,
         limitPoints = state.limitPoints,
@@ -281,46 +284,36 @@ function progression.sync(character_name, server)
         jobPointsUnlocked = state.jobPointsUnlocked,
         jobPoints = state.jobPoints,
         warps = state.warps,
-    }
-    local payload = json_encode_fn(body)
+    })
 
     -- Skip redundant POSTs — server-side data is keyed by character and
     -- only changes when packets actually deliver new state.
     if not dirty and payload == last_payload_hash then
+        on_complete()
         return
     end
 
-    local url = settings.ApiUrl .. '/api/sync/progression'
-    local ltn12 = require('ltn12')
-
-    local response_body = {}
-    local result, status_code = http_request_fn({
-        url = url,
+    http_request_fn({
+        url = settings.ApiUrl .. '/api/sync/progression',
         method = 'POST',
         headers = {
             ['Content-Type'] = 'application/json',
-            ['Content-Length'] = tostring(#payload),
             ['X-Api-Key'] = settings.ApiKey,
         },
-        source = ltn12.source.string(payload),
-        sink = ltn12.sink.table(response_body),
-    })
-
-    if not result then
-        log_error_fn('Progression sync connection failed: ' .. tostring(status_code))
-        return
-    end
-
-    if status_code == 200 then
-        dirty = false
-        last_payload_hash = payload
-        save_to_disk(character_name, server)
-        if settings.NotifyOnSync then
-            -- log_fn('Progression synced')
+        body = payload,
+        label = 'progression-sync',
+    }, function(result, status_code, _, _)
+        if not result then
+            log_error_fn('Progression sync connection failed: ' .. tostring(status_code))
+        elseif status_code == 200 then
+            dirty = false
+            last_payload_hash = payload
+            save_to_disk(character_name, server)
+        else
+            log_error_fn('Progression sync failed with status ' .. tostring(status_code))
         end
-    else
-        log_error_fn('Progression sync failed with status ' .. tostring(status_code))
-    end
+        on_complete()
+    end)
 end
 
 return progression

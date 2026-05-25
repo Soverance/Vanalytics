@@ -124,46 +124,47 @@ end
 -- Poll for pending moves (called during sync cycle)
 -- Does NOT execute — just checks and notifies the user.
 -----------------------------------------------------------------------
-function moves.check_pending(silent)
-    if settings.ApiKey == '' then return end
+function moves.check_pending(silent, on_complete)
+    on_complete = on_complete or function() end
+
+    if settings.ApiKey == '' then on_complete() return end
 
     local player = windower.ffxi.get_player()
-    if not player then return end
+    if not player then on_complete() return end
 
-    local ltn12 = require('ltn12')
-    local response_body = {}
-
-    local url = settings.ApiUrl .. '/api/sync/inventory/moves/pending'
-    local result, status_code = http_request_fn({
-        url = url,
+    http_request_fn({
+        url = settings.ApiUrl .. '/api/sync/inventory/moves/pending',
         method = 'GET',
         headers = {
             ['X-Api-Key'] = settings.ApiKey,
         },
-        sink = ltn12.sink.table(response_body),
-    })
+        label = 'moves-check',
+    }, function(result, status_code, _, body)
+        if not result then
+            log_error_fn('Moves check: connection failed (' .. tostring(status_code) .. ')')
+            on_complete()
+            return
+        end
 
-    if not result then
-        log_error_fn('Moves check: connection failed (' .. tostring(status_code) .. ')')
-        return
-    end
+        if status_code ~= 200 then
+            log_error_fn('Moves check: HTTP ' .. tostring(status_code))
+            on_complete()
+            return
+        end
 
-    if status_code ~= 200 then
-        log_error_fn('Moves check: HTTP ' .. tostring(status_code))
-        return
-    end
+        local data = body and json_decode_fn(body)
+        if not data or not data.moves or #data.moves == 0 then
+            pending_moves = nil
+            on_complete()
+            return
+        end
 
-    local body = table.concat(response_body)
-    local data = json_decode_fn(body)
-    if not data or not data.moves or #data.moves == 0 then
-        pending_moves = nil
-        return
-    end
-
-    pending_moves = data.moves
-    if not silent then
-        log_fn(#pending_moves .. ' pending inventory move(s). Type //va moves execute to run them.')
-    end
+        pending_moves = data.moves
+        if not silent then
+            log_fn(#pending_moves .. ' pending inventory move(s). Type //va moves execute to run them.')
+        end
+        on_complete()
+    end)
 end
 
 -----------------------------------------------------------------------
@@ -593,21 +594,18 @@ function moves.execute()
         enqueue_fn(function()
             if #succeeded_ids > 0 then
                 mlog('ACKNOWLEDGE: posting ' .. #succeeded_ids .. ' move IDs')
-                local ltn12 = require('ltn12')
                 local payload = json_encode_fn({ moveIds = succeeded_ids })
-                local response_body = {}
 
                 http_request_fn({
                     url = settings.ApiUrl .. '/api/sync/inventory/moves/acknowledge',
                     method = 'POST',
                     headers = {
                         ['Content-Type'] = 'application/json',
-                        ['Content-Length'] = tostring(#payload),
                         ['X-Api-Key'] = settings.ApiKey,
                     },
-                    source = ltn12.source.string(payload),
-                    sink = ltn12.sink.table(response_body),
-                })
+                    body = payload,
+                    label = 'moves-acknowledge',
+                }, function(_, _, _, _) end)
             end
 
             if inventory_sync_fn then
