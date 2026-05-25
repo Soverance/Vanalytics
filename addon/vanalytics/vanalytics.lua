@@ -66,9 +66,9 @@ local function log_success(msg)
 end
 
 -----------------------------------------------------------------------
--- HTTP helper: non-blocking via async_http. Callers MUST pass a callback;
--- the request fires asynchronously and the callback runs on a future frame
--- when the response (or error) is available. Game thread never blocks.
+-- HTTP helper. Non-blocking via async_http; the callback fires on a future
+-- frame when the response (or error) is available. The game thread is
+-- never blocked by network I/O.
 --
 -- params shape:
 --   url, method, headers, body (string), timeout, label
@@ -2059,7 +2059,19 @@ local function run_steps(steps)
     next_step(1)
 end
 
+-- Mutex flag: prevents auto-timer and manual //va sync from running two
+-- chains in parallel. Without this, two concurrent chains could fire
+-- duplicate POSTs and race on shared module state (e.g. inventory diff
+-- snapshot, progression last_payload_hash).
+local sync_in_progress = false
+
 local function enqueue_sync_work()
+    if sync_in_progress then
+        log('Sync already in progress — skipping duplicate trigger.')
+        return
+    end
+    sync_in_progress = true
+
     -- All HTTPS work is non-blocking via async_http. Each step's callback
     -- triggers the next one, so the chain runs strictly in sequence but
     -- never blocks a game frame. Macros are intentionally excluded —
@@ -2084,6 +2096,7 @@ local function enqueue_sync_work()
         with_player(collection_lib.sync),
         function(done) scan_bazaars(); done() end,
         function(done) moves_lib.check_pending(false, done) end,
+        function(done) sync_in_progress = false; done() end,
     })
 end
 
@@ -2996,8 +3009,9 @@ windower.register_event('addon command', function(command, ...)
         end
 
         if sub == 'push' then
-            macro_lib.push(macro_path, settings, http_request, json_encode, json_decode, settings.ApiUrl, settings.ApiKey, force, log_fn)
-            config.save(settings)
+            macro_lib.push(macro_path, settings, http_request, json_encode, json_decode, settings.ApiUrl, settings.ApiKey, force, log_fn, function(_)
+                config.save(settings)
+            end)
 
         elseif sub == 'pull' then
             -- Determine the player's currently active macro book so pull can avoid
@@ -3008,13 +3022,14 @@ windower.register_event('addon command', function(command, ...)
                 active_book = info.macro_book
             end
 
-            local pulled = macro_lib.pull(macro_path, settings, http_request, json_encode, json_decode, settings.ApiUrl, settings.ApiKey, force, log_fn, active_book)
-            config.save(settings)
-            if #pulled > 0 then
-                windower.send_command('input /reloadmacros')
-                windower.add_to_chat(207, '[Vanalytics] DAT files updated. Zone or relogin to load the new macros in-game.')
-                windower.add_to_chat(207, '[Vanalytics] Tip: do NOT switch to the pulled book(s) until after you zone/relogin, or FFXI will overwrite the DAT with its cached copy.')
-            end
+            macro_lib.pull(macro_path, settings, http_request, json_encode, json_decode, settings.ApiUrl, settings.ApiKey, force, log_fn, active_book, function(pulled)
+                config.save(settings)
+                if pulled and #pulled > 0 then
+                    windower.send_command('input /reloadmacros')
+                    windower.add_to_chat(207, '[Vanalytics] DAT files updated. Zone or relogin to load the new macros in-game.')
+                    windower.add_to_chat(207, '[Vanalytics] Tip: do NOT switch to the pulled book(s) until after you zone/relogin, or FFXI will overwrite the DAT with its cached copy.')
+                end
+            end)
 
         elseif sub == 'status' then
             local count = 0
@@ -3110,6 +3125,17 @@ windower.register_event('logout', function()
     stop_timer()
     last_sync_time = nil
     last_sync_status = 'Never synced'
+
+    -- Cancel in-flight HTTP requests and reset per-character module state
+    -- so the next login (which may be a different character on the same
+    -- account) doesn't diff against the previous character's data.
+    async_http.cancel_all()
+    sync_in_progress = false
+    inventory.reset()
+    progression.reset()
+    missions_lib.reset()
+    collection_lib.reset()
+    moves_lib.reset()
 end)
 
 windower.register_event('load', function()
@@ -3165,4 +3191,7 @@ windower.register_event('unload', function()
     if session.is_active() then
         session.stop()
     end
+    -- Drop any in-flight HTTP coroutines so their sockets/closures don't
+    -- outlive the addon and try to fire callbacks against torn-down state.
+    async_http.cancel_all()
 end)

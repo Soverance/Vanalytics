@@ -7,6 +7,13 @@ local res = require('resources')
 -- State
 local previous_snapshot = nil
 
+-- Drop the cached snapshot so the next sync runs as a full sync. Called on
+-- logout to prevent diffing the new character's inventory against the
+-- previous character's snapshot.
+function inventory.reset()
+    previous_snapshot = nil
+end
+
 -- Dependencies (set via init)
 local settings = nil
 local http_request_fn = nil

@@ -1,7 +1,7 @@
 import { createContext, useContext, useRef, useState, useCallback, type ReactNode } from 'react'
 import { getStoredTokens } from '../api/client'
 
-interface SyncProgress {
+export interface SyncProgress {
   providerId: string
   type: string
   message?: string
@@ -13,6 +13,10 @@ interface SyncProgress {
   updated: number
   skipped: number
   failed: number
+  phase?: number
+  phaseTotal?: number
+  phaseLabel?: string
+  startedAt?: string
 }
 
 interface SyncContextValue {

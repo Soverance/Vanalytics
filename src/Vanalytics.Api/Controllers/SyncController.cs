@@ -28,6 +28,26 @@ public class SyncController : ControllerBase
         _macroLimiter = macroLimiter;
     }
 
+    // Resolve the character the addon is acting on. The addon MUST send
+    // X-Character-Name and X-Server headers so the backend knows exactly
+    // which character to read/write — falling back to "most recently synced
+    // character" silently picks the wrong row for multi-character accounts.
+    // Returns null if headers are missing or the character doesn't belong
+    // to the authenticated user.
+    private async Task<Character?> ResolveAddonCharacterAsync()
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var name = Request.Headers["X-Character-Name"].ToString();
+        var server = Request.Headers["X-Server"].ToString();
+        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(server))
+            return null;
+        return await _db.Characters
+            .FirstOrDefaultAsync(c => c.UserId == userId && c.Name == name && c.Server == server);
+    }
+
+    private const string MissingCharacterMessage =
+        "Addon character context missing. The addon must send X-Character-Name and X-Server headers matching a character owned by this account. Update your Vanalytics addon if you're seeing this on a recent build.";
+
     [HttpPost]
     public async Task<IActionResult> Sync([FromBody] SyncRequest request)
     {
@@ -307,18 +327,13 @@ public class SyncController : ControllerBase
     [HttpPost("macros")]
     public async Task<IActionResult> SyncMacros([FromBody] MacroSyncRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
         var apiKey = Request.Headers["X-Api-Key"].ToString();
         if (!_macroLimiter.IsAllowed(apiKey))
             return StatusCode(429, new { message = "Macro rate limit exceeded. Max 120 requests per hour." });
 
-        // Find the character owned by this user (most recently synced)
-        var character = await _db.Characters
-            .OrderByDescending(c => c.LastSyncAt)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var character = await ResolveAddonCharacterAsync();
         if (character is null)
-            return NotFound(new { message = "No character found. Sync character data first." });
+            return BadRequest(new { message = MissingCharacterMessage });
 
         var booksUpdated = 0;
         var conflicts = new List<int>();
@@ -418,13 +433,9 @@ public class SyncController : ControllerBase
     [HttpGet("macros/pending")]
     public async Task<IActionResult> GetPendingMacros()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        var character = await _db.Characters
-            .OrderByDescending(c => c.LastSyncAt)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var character = await ResolveAddonCharacterAsync();
         if (character is null)
-            return Ok(new { pendingBooks = Array.Empty<int>() });
+            return BadRequest(new { message = MissingCharacterMessage });
 
         var pending = await _db.MacroBooks
             .Where(b => b.CharacterId == character.Id && b.PendingPush)
@@ -438,13 +449,9 @@ public class SyncController : ControllerBase
     [HttpGet("macros/{bookNumber:int}")]
     public async Task<IActionResult> GetMacroBook(int bookNumber)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        var character = await _db.Characters
-            .OrderByDescending(c => c.LastSyncAt)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var character = await ResolveAddonCharacterAsync();
         if (character is null)
-            return NotFound(new { message = "No character found." });
+            return BadRequest(new { message = MissingCharacterMessage });
 
         var book = await _db.MacroBooks
             .Include(b => b.Pages).ThenInclude(p => p.Macros)
@@ -458,13 +465,9 @@ public class SyncController : ControllerBase
     [HttpGet("macros/pull")]
     public async Task<IActionResult> PullPendingMacros()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        var character = await _db.Characters
-            .OrderByDescending(c => c.LastSyncAt)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var character = await ResolveAddonCharacterAsync();
         if (character is null)
-            return Ok(new MacroPullResponse());
+            return BadRequest(new { message = MissingCharacterMessage });
 
         var pendingBooks = await _db.MacroBooks
             .Include(b => b.Pages).ThenInclude(p => p.Macros)
@@ -481,13 +484,9 @@ public class SyncController : ControllerBase
     [HttpPost("macros/acknowledge")]
     public async Task<IActionResult> AcknowledgeMacroBooks([FromBody] AcknowledgeMacrosRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        var character = await _db.Characters
-            .OrderByDescending(c => c.LastSyncAt)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var character = await ResolveAddonCharacterAsync();
         if (character is null)
-            return Ok(new { acknowledged = 0 });
+            return BadRequest(new { message = MissingCharacterMessage });
 
         var bookNumbers = request.BookNumbers ?? [];
         var books = await _db.MacroBooks
@@ -504,13 +503,9 @@ public class SyncController : ControllerBase
     [HttpDelete("macros/pending/{bookNumber:int}")]
     public async Task<IActionResult> AcknowledgeMacroBook(int bookNumber)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        var character = await _db.Characters
-            .OrderByDescending(c => c.LastSyncAt)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var character = await ResolveAddonCharacterAsync();
         if (character is null)
-            return NotFound();
+            return BadRequest(new { message = MissingCharacterMessage });
 
         var book = await _db.MacroBooks
             .FirstOrDefaultAsync(b => b.CharacterId == character.Id && b.BookNumber == bookNumber);
@@ -527,13 +522,9 @@ public class SyncController : ControllerBase
     [HttpGet("inventory/moves/pending")]
     public async Task<IActionResult> GetPendingMoves()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        var character = await _db.Characters
-            .OrderByDescending(c => c.LastSyncAt)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var character = await ResolveAddonCharacterAsync();
         if (character is null)
-            return Ok(new { moves = Array.Empty<object>() });
+            return BadRequest(new { message = MissingCharacterMessage });
 
         var moves = await _db.InventoryMoveOrders
             .Where(m => m.CharacterId == character.Id && m.Status == MoveOrderStatus.Pending)
@@ -556,13 +547,9 @@ public class SyncController : ControllerBase
     [HttpPost("inventory/moves/acknowledge")]
     public async Task<IActionResult> AcknowledgeMoves([FromBody] AcknowledgeMovesRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        var character = await _db.Characters
-            .OrderByDescending(c => c.LastSyncAt)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var character = await ResolveAddonCharacterAsync();
         if (character is null)
-            return Ok(new { acknowledged = 0 });
+            return BadRequest(new { message = MissingCharacterMessage });
 
         var now = DateTimeOffset.UtcNow;
         var moveIds = request.MoveIds ?? [];

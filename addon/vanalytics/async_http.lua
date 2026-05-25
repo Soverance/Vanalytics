@@ -378,4 +378,18 @@ function M.active_count()
     return #active
 end
 
+-- Drop all in-flight requests and discard their callbacks. Used on logout
+-- and unload so coroutines holding sockets/closures don't outlive the addon
+-- session and try to fire callbacks against torn-down state.
+function M.cancel_all()
+    -- Mark each entry so any callback that somehow fires is a no-op, then
+    -- clear the table. The coroutines and their sockets become unreachable
+    -- and Lua's GC closes the sockets via their __gc metamethod.
+    for _, r in ipairs(active) do
+        r.fired_callback = true
+        r.callback = function() end
+    end
+    active = {}
+end
+
 return M

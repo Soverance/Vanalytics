@@ -1,5 +1,7 @@
+using System.Data;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
@@ -35,12 +37,17 @@ public class ItemSyncProvider : ISyncProvider
 
     public async Task SyncAsync(IProgress<SyncProgressEvent> progress, CancellationToken ct)
     {
-        progress.Report(new SyncProgressEvent
+        SyncProgressEvent Phase1(string message, int current = 0, int total = 0, int a = 0, int u = 0, SyncEventType type = SyncEventType.Progress) => new()
         {
             ProviderId = ProviderId,
-            Type = SyncEventType.Started,
-            Message = "[Phase 1/5 — Items] Downloading item data from Windower Resources..."
-        });
+            Type = type,
+            Phase = 1, PhaseTotal = 5, PhaseLabel = "Items",
+            Message = message,
+            Current = current, Total = total,
+            Added = a, Updated = u,
+        };
+
+        progress.Report(Phase1("[Phase 1/5 — Items] Downloading item data from Windower Resources...", type: SyncEventType.Started));
 
         var client = _httpClientFactory.CreateClient();
         client.Timeout = TimeSpan.FromSeconds(60);
@@ -48,12 +55,7 @@ public class ItemSyncProvider : ISyncProvider
         var itemsLua = await client.GetStringAsync(ItemsLuaUrl, ct);
         var descriptionsLua = await client.GetStringAsync(DescriptionsLuaUrl, ct);
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = "[Phase 1/5 — Items] Parsing item data..."
-        });
+        progress.Report(Phase1("[Phase 1/5 — Items] Parsing item data..."));
 
         var items = Services.LuaResourceParser.ParseItems(itemsLua);
         var descriptions = Services.LuaResourceParser.ParseDescriptions(descriptionsLua);
@@ -72,6 +74,7 @@ public class ItemSyncProvider : ISyncProvider
 
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        db.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
 
         // Load existing items with a hash of their mutable fields for change detection.
         // This avoids loading full entities and tracking 30k+ objects.
@@ -109,13 +112,9 @@ public class ItemSyncProvider : ISyncProvider
         var updated = 0;
         var skipped = total - newItems.Count - changedItems.Count;
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 1/5 — Items] Found {newItems.Count} new, {changedItems.Count} changed, {skipped} unchanged items.",
-            Total = total
-        });
+        progress.Report(Phase1(
+            $"[Phase 1/5 — Items] Found {newItems.Count} new, {changedItems.Count} changed, {skipped} unchanged items.",
+            total: total));
 
         // Insert new items in batches
         if (newItems.Count > 0)
@@ -136,93 +135,32 @@ public class ItemSyncProvider : ISyncProvider
 
                 added += batch.Count;
 
-                progress.Report(new SyncProgressEvent
-                {
-                    ProviderId = ProviderId,
-                    Type = SyncEventType.Progress,
-                    Message = $"[Phase 1/5 — Items] Inserted {added} of {newItems.Count} new items...",
-                    Current = added,
-                    Total = total,
-                    Added = added,
-                    Updated = updated
-                });
+                progress.Report(Phase1(
+                    $"[Phase 1/5 — Items] Inserted {added} of {newItems.Count} new items...",
+                    current: added, total: total, a: added, u: updated));
             }
 
             _logger.LogInformation("Added {Count} new items", added);
         }
 
-        // Update only changed items using ExecuteUpdateAsync (no entity tracking)
+        // Update only changed items. Old path issued one ExecuteUpdateAsync per
+        // row (~30k round-trips on a schema bump). New path: bulk-copy the
+        // changed rows into a #temp table, then a single UPDATE..FROM JOIN.
         if (changedItems.Count > 0)
         {
-            for (var batchStart = 0; batchStart < changedItems.Count; batchStart += BatchSize)
-            {
-                ct.ThrowIfCancellationRequested();
+            foreach (var item in changedItems)
+                item.UpdatedAt = now;
 
-                var batch = changedItems.Skip(batchStart).Take(BatchSize).ToList();
-                foreach (var item in batch)
-                {
-                    await db.GameItems
-                        .Where(i => i.ItemId == item.ItemId)
-                        .ExecuteUpdateAsync(s => s
-                            .SetProperty(i => i.Name, item.Name)
-                            .SetProperty(i => i.NameJa, item.NameJa)
-                            .SetProperty(i => i.NameLong, item.NameLong)
-                            .SetProperty(i => i.Description, item.Description)
-                            .SetProperty(i => i.DescriptionJa, item.DescriptionJa)
-                            .SetProperty(i => i.Category, item.Category)
-                            .SetProperty(i => i.SubCategory, item.SubCategory)
-                            .SetProperty(i => i.Type, item.Type)
-                            .SetProperty(i => i.Flags, item.Flags)
-                            .SetProperty(i => i.StackSize, item.StackSize)
-                            .SetProperty(i => i.Level, item.Level)
-                            .SetProperty(i => i.Jobs, item.Jobs)
-                            .SetProperty(i => i.Races, item.Races)
-                            .SetProperty(i => i.Slots, item.Slots)
-                            .SetProperty(i => i.Skill, item.Skill)
-                            .SetProperty(i => i.ItemLevel, item.ItemLevel)
-                            .SetProperty(i => i.Damage, item.Damage)
-                            .SetProperty(i => i.Delay, item.Delay)
-                            .SetProperty(i => i.DEF, item.DEF)
-                            .SetProperty(i => i.HP, item.HP)
-                            .SetProperty(i => i.MP, item.MP)
-                            .SetProperty(i => i.STR, item.STR)
-                            .SetProperty(i => i.DEX, item.DEX)
-                            .SetProperty(i => i.VIT, item.VIT)
-                            .SetProperty(i => i.AGI, item.AGI)
-                            .SetProperty(i => i.INT, item.INT)
-                            .SetProperty(i => i.MND, item.MND)
-                            .SetProperty(i => i.CHR, item.CHR)
-                            .SetProperty(i => i.Accuracy, item.Accuracy)
-                            .SetProperty(i => i.Attack, item.Attack)
-                            .SetProperty(i => i.RangedAccuracy, item.RangedAccuracy)
-                            .SetProperty(i => i.RangedAttack, item.RangedAttack)
-                            .SetProperty(i => i.MagicAccuracy, item.MagicAccuracy)
-                            .SetProperty(i => i.MagicDamage, item.MagicDamage)
-                            .SetProperty(i => i.MagicEvasion, item.MagicEvasion)
-                            .SetProperty(i => i.Evasion, item.Evasion)
-                            .SetProperty(i => i.Enmity, item.Enmity)
-                            .SetProperty(i => i.Haste, item.Haste)
-                            .SetProperty(i => i.StoreTP, item.StoreTP)
-                            .SetProperty(i => i.TPBonus, item.TPBonus)
-                            .SetProperty(i => i.PhysicalDamageTaken, item.PhysicalDamageTaken)
-                            .SetProperty(i => i.MagicDamageTaken, item.MagicDamageTaken)
-                            .SetProperty(i => i.UpdatedAt, now),
-                        ct);
+            progress.Report(Phase1(
+                $"[Phase 1/5 — Items] Staging {changedItems.Count} changed items for bulk update...",
+                current: added, total: total, a: added, u: updated));
 
-                    updated++;
-                }
+            await BulkUpdateChangedItemsAsync(db, changedItems, progress, Phase1, added, total, ct);
+            updated = changedItems.Count;
 
-                progress.Report(new SyncProgressEvent
-                {
-                    ProviderId = ProviderId,
-                    Type = SyncEventType.Progress,
-                    Message = $"[Phase 1/5 — Items] Updated {updated} of {changedItems.Count} changed items...",
-                    Current = added + updated,
-                    Total = total,
-                    Added = added,
-                    Updated = updated
-                });
-            }
+            progress.Report(Phase1(
+                $"[Phase 1/5 — Items] Applied {updated} updates via bulk merge.",
+                current: added + updated, total: total, a: added, u: updated));
 
             _logger.LogInformation("Updated {Count} changed items (skipped {Skipped} unchanged)", updated, skipped);
         }
@@ -246,6 +184,7 @@ public class ItemSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Completed,
+            Phase = 5, PhaseTotal = 5,
             Message = $"Sync complete: {added} added, {updated} updated, {skipped} unchanged. Model mappings, NPC pools, sell prices, and crafting recipes updated.",
             Current = total,
             Total = total,
@@ -281,14 +220,18 @@ public class ItemSyncProvider : ISyncProvider
         int itemsAdded, int itemsUpdated, int itemsTotal,
         CancellationToken ct)
     {
-        progress.Report(new SyncProgressEvent
+        SyncProgressEvent Phase2(string message, int current = 0, int total = 0) => new()
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = "[Phase 2/5 — Model Mappings] Downloading from LandSandBoat...",
-            Current = itemsAdded + itemsUpdated,
-            Total = itemsTotal
-        });
+            Phase = 2, PhaseTotal = 5, PhaseLabel = "Model Mappings",
+            Message = message,
+            Current = current, Total = total,
+        };
+
+        progress.Report(Phase2(
+            "[Phase 2/5 — Model Mappings] Downloading from LandSandBoat...",
+            current: itemsAdded + itemsUpdated, total: itemsTotal));
 
         string sql;
         try
@@ -325,12 +268,7 @@ public class ItemSyncProvider : ISyncProvider
             }
         }
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 2/5 — Model Mappings] Parsed {parsed.Count} entries. Updating database..."
-        });
+        progress.Report(Phase2($"[Phase 2/5 — Model Mappings] Parsed {parsed.Count} entries. Updating database..."));
 
         // Load existing mappings for comparison
         var existing = await db.ItemModelMappings
@@ -394,12 +332,7 @@ public class ItemSyncProvider : ISyncProvider
         _logger.LogInformation("Model mapping sync: {Added} added, {Updated} updated, {Skipped} unchanged",
             modelAdded, modelUpdated, modelSkipped);
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 2/5 — Model Mappings] {modelAdded} added, {modelUpdated} updated, {modelSkipped} unchanged."
-        });
+        progress.Report(Phase2($"[Phase 2/5 — Model Mappings] {modelAdded} added, {modelUpdated} updated, {modelSkipped} unchanged."));
     }
 
     /// <summary>
@@ -413,12 +346,15 @@ public class ItemSyncProvider : ISyncProvider
         IProgress<SyncProgressEvent> progress,
         CancellationToken ct)
     {
-        progress.Report(new SyncProgressEvent
+        SyncProgressEvent Phase3(string message) => new()
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = "[Phase 3/5 — NPC Pools] Downloading mob pool data from LandSandBoat..."
-        });
+            Phase = 3, PhaseTotal = 5, PhaseLabel = "NPC Pools",
+            Message = message,
+        };
+
+        progress.Report(Phase3("[Phase 3/5 — NPC Pools] Downloading mob pool data from LandSandBoat..."));
 
         string sql;
         try
@@ -428,12 +364,7 @@ public class ItemSyncProvider : ISyncProvider
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to download mob pools — skipping");
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = "[Phase 3/5 — NPC Pools] Download failed — skipped."
-            });
+            progress.Report(Phase3("[Phase 3/5 — NPC Pools] Download failed — skipped."));
             return;
         }
 
@@ -468,12 +399,7 @@ public class ItemSyncProvider : ISyncProvider
             });
         }
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 3/5 — NPC Pools] Parsed {parsed.Count} NPC pools. Updating database..."
-        });
+        progress.Report(Phase3($"[Phase 3/5 — NPC Pools] Parsed {parsed.Count} NPC pools. Updating database..."));
 
         // Load existing pools for comparison
         var existing = await db.NpcPools
@@ -524,12 +450,7 @@ public class ItemSyncProvider : ISyncProvider
                     foreach (var entry in db.ChangeTracker.Entries().ToList())
                         entry.State = EntityState.Detached;
 
-                    progress.Report(new SyncProgressEvent
-                    {
-                        ProviderId = ProviderId,
-                        Type = SyncEventType.Progress,
-                        Message = $"[Phase 3/5 — NPC Pools] Inserted {npcAdded} pools so far..."
-                    });
+                    progress.Report(Phase3($"[Phase 3/5 — NPC Pools] Inserted {npcAdded} pools so far..."));
                 }
             }
         }
@@ -541,12 +462,7 @@ public class ItemSyncProvider : ISyncProvider
         _logger.LogInformation("NPC pool sync: {Added} added, {Updated} updated, {Skipped} unchanged",
             npcAdded, npcUpdated, npcSkipped);
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 3/5 — NPC Pools] {npcAdded} added, {npcUpdated} updated, {npcSkipped} unchanged."
-        });
+        progress.Report(Phase3($"[Phase 3/5 — NPC Pools] {npcAdded} added, {npcUpdated} updated, {npcSkipped} unchanged."));
     }
 
     /// <summary>
@@ -558,12 +474,15 @@ public class ItemSyncProvider : ISyncProvider
         IProgress<SyncProgressEvent> progress,
         CancellationToken ct)
     {
-        progress.Report(new SyncProgressEvent
+        SyncProgressEvent Phase4(string message) => new()
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = "[Phase 4/5 — Sell Prices] Downloading item_basic.sql from LandSandBoat..."
-        });
+            Phase = 4, PhaseTotal = 5, PhaseLabel = "Sell Prices",
+            Message = message,
+        };
+
+        progress.Report(Phase4("[Phase 4/5 — Sell Prices] Downloading item_basic.sql from LandSandBoat..."));
 
         string sql;
         try
@@ -573,12 +492,7 @@ public class ItemSyncProvider : ISyncProvider
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to download item_basic.sql — skipping BaseSell sync");
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = "[Phase 4/5 — Sell Prices] Download failed — skipped."
-            });
+            progress.Report(Phase4("[Phase 4/5 — Sell Prices] Download failed — skipped."));
             return;
         }
 
@@ -596,12 +510,7 @@ public class ItemSyncProvider : ISyncProvider
             parsed[itemId] = baseSell;
         }
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 4/5 — Sell Prices] Parsed {parsed.Count} entries. Checking for changes..."
-        });
+        progress.Report(Phase4($"[Phase 4/5 — Sell Prices] Parsed {parsed.Count} entries. Checking for changes..."));
 
         // Load existing BaseSell values for change detection
         var existing = await db.GameItems
@@ -638,12 +547,7 @@ public class ItemSyncProvider : ISyncProvider
 
         _logger.LogInformation("BaseSell sync: {Updated} updated, {Skipped} unchanged", sellUpdated, sellSkipped);
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 4/5 — Sell Prices] {sellUpdated} updated, {sellSkipped} unchanged."
-        });
+        progress.Report(Phase4($"[Phase 4/5 — Sell Prices] {sellUpdated} updated, {sellSkipped} unchanged."));
     }
 
     /// <summary>
@@ -656,12 +560,15 @@ public class ItemSyncProvider : ISyncProvider
         IProgress<SyncProgressEvent> progress,
         CancellationToken ct)
     {
-        progress.Report(new SyncProgressEvent
+        SyncProgressEvent Phase5(string message) => new()
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = "[Phase 5/5 — Crafting Recipes] Downloading synth_recipes.sql from LandSandBoat..."
-        });
+            Phase = 5, PhaseTotal = 5, PhaseLabel = "Crafting Recipes",
+            Message = message,
+        };
+
+        progress.Report(Phase5("[Phase 5/5 — Crafting Recipes] Downloading synth_recipes.sql from LandSandBoat..."));
 
         string sql;
         try
@@ -671,12 +578,7 @@ public class ItemSyncProvider : ISyncProvider
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to download synth_recipes.sql — skipping recipe sync");
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = "[Phase 5/5 — Crafting Recipes] Download failed — skipped."
-            });
+            progress.Report(Phase5("[Phase 5/5 — Crafting Recipes] Download failed — skipped."));
             return;
         }
 
@@ -768,23 +670,13 @@ public class ItemSyncProvider : ISyncProvider
             ingredientsByRecipeId[id] = collapsed;
         }
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 5/5 — Crafting Recipes] Parsed {recipes.Count} recipes. Clearing existing data..."
-        });
+        progress.Report(Phase5($"[Phase 5/5 — Crafting Recipes] Parsed {recipes.Count} recipes. Clearing existing data..."));
 
         // Clear-and-reinsert: delete ingredients first (FK references recipes), then recipes
         await db.RecipeIngredients.ExecuteDeleteAsync(ct);
         await db.SynthRecipes.ExecuteDeleteAsync(ct);
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 5/5 — Crafting Recipes] Inserting {recipes.Count} recipes..."
-        });
+        progress.Report(Phase5($"[Phase 5/5 — Crafting Recipes] Inserting {recipes.Count} recipes..."));
 
         // Insert all recipes in batches
         var recipeInserted = 0;
@@ -798,23 +690,13 @@ public class ItemSyncProvider : ISyncProvider
             db.ChangeTracker.Clear();
             recipeInserted += batch.Count;
 
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = $"[Phase 5/5 — Crafting Recipes] Inserted {recipeInserted} of {recipes.Count} recipes..."
-            });
+            progress.Report(Phase5($"[Phase 5/5 — Crafting Recipes] Inserted {recipeInserted} of {recipes.Count} recipes..."));
         }
 
         // Insert all ingredients in batches
         var allIngredients = ingredientsByRecipeId.Values.SelectMany(x => x).ToList();
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 5/5 — Crafting Recipes] Inserting {allIngredients.Count} ingredients..."
-        });
+        progress.Report(Phase5($"[Phase 5/5 — Crafting Recipes] Inserting {allIngredients.Count} ingredients..."));
 
         var ingredientInserted = 0;
         for (var batchStart = 0; batchStart < allIngredients.Count; batchStart += BatchSize)
@@ -831,12 +713,7 @@ public class ItemSyncProvider : ISyncProvider
         _logger.LogInformation("Recipe sync: {Recipes} recipes, {Ingredients} ingredients inserted",
             recipeInserted, ingredientInserted);
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 5/5 — Crafting Recipes] {recipeInserted} recipes and {ingredientInserted} ingredients inserted."
-        });
+        progress.Report(Phase5($"[Phase 5/5 — Crafting Recipes] {recipeInserted} recipes and {ingredientInserted} ingredients inserted."));
     }
 
     /// <summary>
@@ -876,4 +753,176 @@ public class ItemSyncProvider : ISyncProvider
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(sb.ToString()));
         return Convert.ToHexString(bytes);
     }
+
+    /// <summary>
+    /// Columns updated when a GameItem's hash changes. ItemId is the join key.
+    /// Order matches BuildChangedItemsDataTable / the UPDATE..SET clause below.
+    /// </summary>
+    private static readonly string[] ChangedItemColumns =
+    [
+        "ItemId", "Name", "NameJa", "NameLong",
+        "Description", "DescriptionJa",
+        "Category", "SubCategory", "Type", "Flags", "StackSize",
+        "Level", "Jobs", "Races", "Slots", "Skill", "ItemLevel",
+        "Damage", "Delay", "DEF", "HP", "MP",
+        "STR", "DEX", "VIT", "AGI", "INT", "MND", "CHR",
+        "Accuracy", "Attack", "RangedAccuracy", "RangedAttack",
+        "MagicAccuracy", "MagicDamage", "MagicEvasion", "Evasion",
+        "Enmity", "Haste", "StoreTP", "TPBonus",
+        "PhysicalDamageTaken", "MagicDamageTaken",
+        "UpdatedAt",
+    ];
+
+    private static async Task BulkUpdateChangedItemsAsync(
+        VanalyticsDbContext db,
+        IReadOnlyList<GameItem> changedItems,
+        IProgress<SyncProgressEvent> progress,
+        Func<string, int, int, int, int, SyncEventType, SyncProgressEvent> phaseEvent,
+        int itemsAdded,
+        int itemsTotal,
+        CancellationToken ct)
+    {
+        var conn = (SqlConnection)db.Database.GetDbConnection();
+        var wasOpen = conn.State == ConnectionState.Open;
+        if (!wasOpen) await conn.OpenAsync(ct);
+
+        try
+        {
+            // SELECT TOP 0 ... INTO clones column types from the source table —
+            // safer than hand-typing schema (no drift if GameItem changes).
+            var selectList = string.Join(", ", ChangedItemColumns.Select(QuoteIdent));
+            await using (var create = conn.CreateCommand())
+            {
+                create.CommandText = $"SELECT TOP 0 {selectList} INTO #ChangedItems FROM GameItems";
+                create.CommandTimeout = 60;
+                await create.ExecuteNonQueryAsync(ct);
+            }
+
+            using (var bulk = new SqlBulkCopy(conn)
+            {
+                DestinationTableName = "#ChangedItems",
+                BatchSize = 5000,
+                BulkCopyTimeout = 300,
+                NotifyAfter = 2500,
+            })
+            {
+                foreach (var col in ChangedItemColumns) bulk.ColumnMappings.Add(col, col);
+
+                bulk.SqlRowsCopied += (_, e) =>
+                {
+                    progress.Report(phaseEvent(
+                        $"[Phase 1/5 — Items] Staged {e.RowsCopied:N0} of {changedItems.Count:N0} changed items...",
+                        itemsAdded + (int)e.RowsCopied,
+                        itemsTotal,
+                        itemsAdded,
+                        (int)e.RowsCopied,
+                        SyncEventType.Progress));
+                };
+
+                using var table = BuildChangedItemsDataTable(changedItems);
+                await bulk.WriteToServerAsync(table, ct);
+            }
+
+            // Single set-based UPDATE — one round-trip, server-side execution.
+            var setClause = string.Join(",\n                    ",
+                ChangedItemColumns
+                    .Where(c => c != "ItemId")
+                    .Select(c => $"g.{QuoteIdent(c)} = s.{QuoteIdent(c)}"));
+
+            await using (var update = conn.CreateCommand())
+            {
+                update.CommandText = $@"
+                UPDATE g SET
+                    {setClause}
+                FROM GameItems g
+                INNER JOIN #ChangedItems s ON g.ItemId = s.ItemId";
+                update.CommandTimeout = 300;
+                await update.ExecuteNonQueryAsync(ct);
+            }
+
+            await using (var drop = conn.CreateCommand())
+            {
+                drop.CommandText = "DROP TABLE #ChangedItems";
+                await drop.ExecuteNonQueryAsync(ct);
+            }
+        }
+        finally
+        {
+            if (!wasOpen) await conn.CloseAsync();
+        }
+    }
+
+    private static DataTable BuildChangedItemsDataTable(IReadOnlyList<GameItem> items)
+    {
+        var t = new DataTable();
+        t.Columns.Add("ItemId", typeof(int));
+        t.Columns.Add("Name", typeof(string));
+        t.Columns.Add("NameJa", typeof(string)).AllowDBNull = true;
+        t.Columns.Add("NameLong", typeof(string)).AllowDBNull = true;
+        t.Columns.Add("Description", typeof(string)).AllowDBNull = true;
+        t.Columns.Add("DescriptionJa", typeof(string)).AllowDBNull = true;
+        t.Columns.Add("Category", typeof(string));
+        t.Columns.Add("SubCategory", typeof(string)).AllowDBNull = true;
+        t.Columns.Add("Type", typeof(int));
+        t.Columns.Add("Flags", typeof(int));
+        t.Columns.Add("StackSize", typeof(int));
+        t.Columns.Add("Level", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Jobs", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Races", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Slots", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Skill", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("ItemLevel", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Damage", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Delay", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("DEF", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("HP", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("MP", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("STR", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("DEX", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("VIT", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("AGI", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("INT", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("MND", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("CHR", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Accuracy", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Attack", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("RangedAccuracy", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("RangedAttack", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("MagicAccuracy", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("MagicDamage", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("MagicEvasion", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Evasion", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Enmity", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("Haste", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("StoreTP", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("TPBonus", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("PhysicalDamageTaken", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("MagicDamageTaken", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("UpdatedAt", typeof(DateTimeOffset));
+
+        static object Null(object? v) => v ?? DBNull.Value;
+
+        foreach (var i in items)
+        {
+            t.Rows.Add(
+                i.ItemId, i.Name,
+                Null(i.NameJa), Null(i.NameLong),
+                Null(i.Description), Null(i.DescriptionJa),
+                i.Category, Null(i.SubCategory),
+                i.Type, i.Flags, i.StackSize,
+                Null(i.Level), Null(i.Jobs), Null(i.Races), Null(i.Slots), Null(i.Skill), Null(i.ItemLevel),
+                Null(i.Damage), Null(i.Delay), Null(i.DEF), Null(i.HP), Null(i.MP),
+                Null(i.STR), Null(i.DEX), Null(i.VIT), Null(i.AGI), Null(i.INT), Null(i.MND), Null(i.CHR),
+                Null(i.Accuracy), Null(i.Attack), Null(i.RangedAccuracy), Null(i.RangedAttack),
+                Null(i.MagicAccuracy), Null(i.MagicDamage), Null(i.MagicEvasion), Null(i.Evasion),
+                Null(i.Enmity), Null(i.Haste), Null(i.StoreTP), Null(i.TPBonus),
+                Null(i.PhysicalDamageTaken), Null(i.MagicDamageTaken),
+                i.UpdatedAt);
+        }
+
+        return t;
+    }
+
+    // SQL identifier quoting — wraps reserved words like INT/Type in brackets.
+    private static string QuoteIdent(string ident) => $"[{ident}]";
 }

@@ -70,9 +70,10 @@ public class SyncOrchestrator
 
             var progress = new Progress<SyncProgressEvent>(evt =>
             {
-                lastEvent = evt;
-                newJob.LastEvent = evt;
-                channel.Writer.TryWrite(evt);
+                var stamped = evt.StartedAt is null ? evt with { StartedAt = newJob.StartedAt } : evt;
+                lastEvent = stamped;
+                newJob.LastEvent = stamped;
+                channel.Writer.TryWrite(stamped);
             });
 
             SyncHistory history;

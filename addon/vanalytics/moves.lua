@@ -18,6 +18,12 @@ local inventory_sync_fn = nil -- function to trigger inventory re-sync
 -- Pending moves from last poll
 local pending_moves = nil
 
+-- Drop the cached pending-moves list on logout so the new character doesn't
+-- see the previous character's queued moves before its first server poll.
+function moves.reset()
+    pending_moves = nil
+end
+
 -----------------------------------------------------------------------
 -- File logger: writes detailed move execution logs to moves.log
 -- in the addon directory. Each execution session is timestamped.
@@ -120,6 +126,25 @@ function moves.init(deps)
     inventory_sync_fn = deps.inventory_sync
 end
 
+-- Build the standard request headers (API key + character context).
+-- Returns nil if the player isn't logged in / info isn't available yet —
+-- callers should treat that as "nothing to do, try again later."
+local function character_headers(extra)
+    local player = windower.ffxi.get_player()
+    local info = windower.ffxi.get_info()
+    if not (player and info) then return nil end
+    local server_name = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
+    local h = {
+        ['X-Api-Key'] = settings.ApiKey,
+        ['X-Character-Name'] = player.name,
+        ['X-Server'] = server_name,
+    }
+    if extra then
+        for k, v in pairs(extra) do h[k] = v end
+    end
+    return h
+end
+
 -----------------------------------------------------------------------
 -- Poll for pending moves (called during sync cycle)
 -- Does NOT execute — just checks and notifies the user.
@@ -129,15 +154,13 @@ function moves.check_pending(silent, on_complete)
 
     if settings.ApiKey == '' then on_complete() return end
 
-    local player = windower.ffxi.get_player()
-    if not player then on_complete() return end
+    local headers = character_headers()
+    if not headers then on_complete() return end
 
     http_request_fn({
         url = settings.ApiUrl .. '/api/sync/inventory/moves/pending',
         method = 'GET',
-        headers = {
-            ['X-Api-Key'] = settings.ApiKey,
-        },
+        headers = headers,
         label = 'moves-check',
     }, function(result, status_code, _, body)
         if not result then
@@ -171,16 +194,20 @@ end
 -- Show status of pending moves (polls fresh from server)
 -----------------------------------------------------------------------
 function moves.status()
-    moves.check_pending(true)
-    if not pending_moves or #pending_moves == 0 then
-        log_fn('No pending inventory moves.')
-        return
-    end
+    -- Always refresh before displaying so the user sees the current server
+    -- state, not whatever was cached from a previous poll. The display logic
+    -- lives inside the callback so it runs AFTER the HTTP response arrives.
+    moves.check_pending(true, function()
+        if not pending_moves or #pending_moves == 0 then
+            log_fn('No pending inventory moves.')
+            return
+        end
 
-    log_fn(#pending_moves .. ' pending move(s):')
-    for _, m in ipairs(pending_moves) do
-        log_fn('  ' .. m.quantity .. 'x ' .. m.itemName .. ': ' .. m.fromBag .. ' -> ' .. m.toBag)
-    end
+        log_fn(#pending_moves .. ' pending move(s):')
+        for _, m in ipairs(pending_moves) do
+            log_fn('  ' .. m.quantity .. 'x ' .. m.itemName .. ': ' .. m.fromBag .. ' -> ' .. m.toBag)
+        end
+    end)
 end
 
 -----------------------------------------------------------------------
@@ -530,6 +557,16 @@ end
 -- requires a two-step process: Source -> Inventory -> Destination.
 -----------------------------------------------------------------------
 function moves.execute()
+    -- Refresh pending_moves before acting. Operating on stale module state
+    -- risks executing moves the user already cancelled in the web app, or
+    -- missing moves they just queued. The body runs inside the callback so
+    -- it sees the authoritative server-side list.
+    moves.check_pending(true, function()
+        moves._execute_internal()
+    end)
+end
+
+function moves._execute_internal()
     if not pending_moves or #pending_moves == 0 then
         log_fn('No pending inventory moves.')
         return
@@ -595,17 +632,19 @@ function moves.execute()
             if #succeeded_ids > 0 then
                 mlog('ACKNOWLEDGE: posting ' .. #succeeded_ids .. ' move IDs')
                 local payload = json_encode_fn({ moveIds = succeeded_ids })
+                local headers = character_headers({ ['Content-Type'] = 'application/json' })
 
-                http_request_fn({
-                    url = settings.ApiUrl .. '/api/sync/inventory/moves/acknowledge',
-                    method = 'POST',
-                    headers = {
-                        ['Content-Type'] = 'application/json',
-                        ['X-Api-Key'] = settings.ApiKey,
-                    },
-                    body = payload,
-                    label = 'moves-acknowledge',
-                }, function(_, _, _, _) end)
+                if headers then
+                    http_request_fn({
+                        url = settings.ApiUrl .. '/api/sync/inventory/moves/acknowledge',
+                        method = 'POST',
+                        headers = headers,
+                        body = payload,
+                        label = 'moves-acknowledge',
+                    }, function(_, _, _, _) end)
+                else
+                    mlog('ACKNOWLEDGE: skipped — player/info unavailable')
+                end
             end
 
             if inventory_sync_fn then

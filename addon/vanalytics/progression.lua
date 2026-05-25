@@ -40,6 +40,23 @@ local dirty = false           -- has anything changed since the last successful 
 local loaded_for = nil        -- 'name@server' the on-disk state was loaded for
 local last_payload_hash = nil -- avoid POSTing identical bodies repeatedly
 
+-- Drop cached state so the next sync reloads from disk for the new character.
+-- Called on logout to prevent the previous character's hash/state from
+-- bleeding into the new character's sync flow.
+function progression.reset()
+    state = {
+        limitPoints = nil,
+        meritPoints = nil,
+        meritPointsMax = nil,
+        jobPointsUnlocked = nil,
+        jobPoints = nil,
+        warps = nil,
+    }
+    dirty = false
+    loaded_for = nil
+    last_payload_hash = nil
+end
+
 function progression.init(deps)
     settings = deps.settings
     http_request_fn = deps.http_request

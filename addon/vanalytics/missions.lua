@@ -46,6 +46,15 @@ local dirty = false
 local loaded_for = nil
 local last_payload_hash = nil
 
+-- Drop cached state so the next sync reloads from disk for the new
+-- character. Called on logout.
+function missions.reset()
+    state = {}
+    dirty = false
+    loaded_for = nil
+    last_payload_hash = nil
+end
+
 function missions.init(deps)
     settings = deps.settings
     http_request_fn = deps.http_request

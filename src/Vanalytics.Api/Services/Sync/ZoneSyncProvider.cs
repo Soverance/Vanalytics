@@ -1,5 +1,7 @@
+using System.Data;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
@@ -43,11 +45,13 @@ public class ZoneSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Started,
-            Message = "[Phase 1/2 — CSV Import] Loading zone seed data..."
+            Phase = 1, PhaseTotal = 3, PhaseLabel = "CSV Import",
+            Message = "[Phase 1/3 — CSV Import] Loading zone seed data..."
         });
 
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        db.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
 
         // Phase 1: CSV Import
         var (added, updated, skipped) = await RunCsvImportAsync(db, progress, ct);
@@ -56,12 +60,13 @@ public class ZoneSyncProvider : ISyncProvider
         await RunLsbEnrichmentAsync(db, progress, ct);
 
         // Phase 3: Spawn Data Sync
-        await RunSpawnSyncAsync(progress, ct);
+        await RunSpawnSyncAsync(db, progress, ct);
 
         progress.Report(new SyncProgressEvent
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Completed,
+            Phase = 3, PhaseTotal = 3,
             Message = $"Sync complete: {added} added, {updated} updated, {skipped} unchanged.",
             Added = added,
             Updated = updated,
@@ -78,35 +83,31 @@ public class ZoneSyncProvider : ISyncProvider
         IProgress<SyncProgressEvent> progress,
         CancellationToken ct)
     {
+        SyncProgressEvent PhaseEvent(string message, int current = 0, int total = 0, int a = 0, int u = 0, int s = 0) => new()
+        {
+            ProviderId = ProviderId,
+            Type = SyncEventType.Progress,
+            Phase = 1, PhaseTotal = 3, PhaseLabel = "CSV Import",
+            Message = message,
+            Current = current, Total = total,
+            Added = a, Updated = u, Skipped = s,
+        };
+
         var csvPath = ResolveCsvPath();
         if (csvPath is null)
         {
             _logger.LogWarning("zone-seed-data.csv not found — skipping CSV import");
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = "[Phase 1/2 — CSV Import] CSV file not found — skipped."
-            });
+            progress.Report(PhaseEvent("[Phase 1/3 — CSV Import] CSV file not found — skipped."));
             return (0, 0, 0);
         }
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 1/2 — CSV Import] Reading {Path.GetFileName(csvPath)}..."
-        });
+        progress.Report(PhaseEvent($"[Phase 1/3 — CSV Import] Reading {Path.GetFileName(csvPath)}..."));
 
         var rows = ParseCsv(csvPath);
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 1/2 — CSV Import] Parsed {rows.Count} rows. Upserting into database...",
-            Total = rows.Count
-        });
+        progress.Report(PhaseEvent(
+            $"[Phase 1/3 — CSV Import] Parsed {rows.Count} rows. Upserting into database...",
+            total: rows.Count));
 
         // Load existing seed zones (IsDiscovered == false) keyed by Id
         var existing = await db.Zones
@@ -181,17 +182,10 @@ public class ZoneSyncProvider : ISyncProvider
         _logger.LogInformation("Zone CSV import: {Added} added, {Updated} updated, {Skipped} unchanged",
             added, updated, skipped);
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 1/2 — CSV Import] {added} added, {updated} updated, {skipped} unchanged.",
-            Total = rows.Count,
-            Current = rows.Count,
-            Added = added,
-            Updated = updated,
-            Skipped = skipped
-        });
+        progress.Report(PhaseEvent(
+            $"[Phase 1/3 — CSV Import] {added} added, {updated} updated, {skipped} unchanged.",
+            current: rows.Count, total: rows.Count,
+            a: added, u: updated, s: skipped));
 
         return (added, updated, skipped);
     }
@@ -205,12 +199,15 @@ public class ZoneSyncProvider : ISyncProvider
         IProgress<SyncProgressEvent> progress,
         CancellationToken ct)
     {
-        progress.Report(new SyncProgressEvent
+        SyncProgressEvent PhaseEvent(string message) => new()
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = "[Phase 2/2 — LSB Enrichment] Downloading zone_settings.sql from LandSandBoat..."
-        });
+            Phase = 2, PhaseTotal = 3, PhaseLabel = "LSB Enrichment",
+            Message = message,
+        };
+
+        progress.Report(PhaseEvent("[Phase 2/3 — LSB Enrichment] Downloading zone_settings.sql from LandSandBoat..."));
 
         string sql;
         try
@@ -222,12 +219,7 @@ public class ZoneSyncProvider : ISyncProvider
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to download zone_settings.sql — skipping LSB enrichment");
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = "[Phase 2/2 — LSB Enrichment] Download failed — skipped."
-            });
+            progress.Report(PhaseEvent("[Phase 2/3 — LSB Enrichment] Download failed — skipped."));
             return;
         }
 
@@ -244,12 +236,7 @@ public class ZoneSyncProvider : ISyncProvider
             lsbZones[zoneId] = (name, regionId);
         }
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 2/2 — LSB Enrichment] Parsed {lsbZones.Count} zone entries. Enriching database..."
-        });
+        progress.Report(PhaseEvent($"[Phase 2/3 — LSB Enrichment] Parsed {lsbZones.Count} zone entries. Enriching database..."));
 
         var regionMap = BuildRegionMap();
         var now = DateTimeOffset.UtcNow;
@@ -294,49 +281,55 @@ public class ZoneSyncProvider : ISyncProvider
 
         _logger.LogInformation("LSB enrichment: {Count} zones enriched", enriched);
 
-        progress.Report(new SyncProgressEvent
-        {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"[Phase 2/2 — LSB Enrichment] {enriched} zones enriched with names and regions."
-        });
+        progress.Report(PhaseEvent($"[Phase 2/3 — LSB Enrichment] {enriched} zones enriched with names and regions."));
     }
 
     // -------------------------------------------------------------------------
     // Phase 3: Spawn Data Sync
     // -------------------------------------------------------------------------
 
-    private async Task RunSpawnSyncAsync(IProgress<SyncProgressEvent> progress, CancellationToken ct)
+    private async Task RunSpawnSyncAsync(
+        VanalyticsDbContext db,
+        IProgress<SyncProgressEvent> progress,
+        CancellationToken ct)
     {
-        progress.Report(new SyncProgressEvent
+        SyncProgressEvent PhaseEvent(string message, int current = 0, int total = 0, int added = 0) => new()
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = "Phase 3: Syncing spawn points from LandSandBoat..."
-        });
+            Phase = 3,
+            PhaseTotal = 3,
+            PhaseLabel = "Spawn Sync",
+            Message = message,
+            Current = current,
+            Total = total,
+            Added = added,
+        };
 
-        using var scope = _scopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        progress.Report(PhaseEvent("[Phase 3/3 — Spawn Sync] Downloading mob_groups + mob_spawn_points..."));
+
         var http = _httpClientFactory.CreateClient();
         http.Timeout = TimeSpan.FromSeconds(60);
 
         string groupsSql, spawnsSql;
         try
         {
-            groupsSql = await http.GetStringAsync(LsbMobGroupsUrl, ct);
-            spawnsSql = await http.GetStringAsync(LsbMobSpawnPointsUrl, ct);
+            // Parallel downloads — both files come from the same host but on
+            // separate connections, so we get roughly 2x throughput for free.
+            var groupsTask = http.GetStringAsync(LsbMobGroupsUrl, ct);
+            var spawnsTask = http.GetStringAsync(LsbMobSpawnPointsUrl, ct);
+            await Task.WhenAll(groupsTask, spawnsTask);
+            groupsSql = await groupsTask;
+            spawnsSql = await spawnsTask;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to download spawn SQL files from LandSandBoat");
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = "Phase 3: Skipped — could not download spawn data."
-            });
+            progress.Report(PhaseEvent("[Phase 3/3 — Spawn Sync] Skipped — could not download spawn data."));
             return;
         }
+
+        progress.Report(PhaseEvent("[Phase 3/3 — Spawn Sync] Parsing SQL files..."));
 
         // Parse mob_groups: (groupid, poolid, zoneid, name, respawntime, spawntype, ...)
         // - spawntype: bitmask. 0=normal; non-zero (timed/script/day/moon/fog)
@@ -403,12 +396,19 @@ public class ZoneSyncProvider : ISyncProvider
         var validSet = new HashSet<int>(validZoneIds);
         parsed = parsed.Where(s => validSet.Contains(s.ZoneId)).ToList();
 
-        // Full replace strategy. ExecuteDeleteAsync issues a single bulk
-        // `DELETE FROM ZoneSpawns` statement — without this, EF Core's
-        // RemoveRange would materialize ~30k rows into the change tracker
-        // and issue ~30k per-row DELETE round-trips, taking many minutes
-        // and saturating the SQL log.
-        await db.ZoneSpawns.ExecuteDeleteAsync(ct);
+        var total = parsed.Count;
+        progress.Report(PhaseEvent(
+            $"[Phase 3/3 — Spawn Sync] Parsed {total:N0} spawn points. Truncating existing table...",
+            total: total));
+
+        // TRUNCATE is non-logged page deallocation — orders of magnitude faster
+        // than DELETE on a 30k-row table with three indexes. Safe here because
+        // no other table has a FK pointing at ZoneSpawns (see ZoneSpawnConfiguration).
+        await db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE ZoneSpawns", ct);
+
+        progress.Report(PhaseEvent(
+            $"[Phase 3/3 — Spawn Sync] Inserting {total:N0} spawn points via bulk copy...",
+            total: total));
 
         var now = DateTimeOffset.UtcNow;
         foreach (var spawn in parsed)
@@ -417,29 +417,102 @@ public class ZoneSyncProvider : ISyncProvider
             spawn.UpdatedAt = now;
         }
 
-        // Batch insert. ChangeTracker.Clear() after each batch prevents the
-        // tracker from accumulating every previously-saved entity across
-        // batches — without it, each SaveChangesAsync walks an ever-growing
-        // tracker and the whole insert phase slows to a crawl by the end.
-        const int batchSize = 1000;
-        for (var i = 0; i < parsed.Count; i += batchSize)
-        {
-            var batch = parsed.Skip(i).Take(batchSize);
-            db.ZoneSpawns.AddRange(batch);
-            await db.SaveChangesAsync(ct);
-            db.ChangeTracker.Clear();
-        }
+        await BulkCopySpawnsAsync(db, parsed, progress, PhaseEvent, ct);
 
         _logger.LogInformation("Spawn sync: {Count} spawns across {Zones} zones (from {Groups} group mappings)",
-            parsed.Count, parsed.Select(s => s.ZoneId).Distinct().Count(), groupInfoMap.Count);
+            total, parsed.Select(s => s.ZoneId).Distinct().Count(), groupInfoMap.Count);
 
-        progress.Report(new SyncProgressEvent
+        progress.Report(PhaseEvent(
+            $"[Phase 3/3 — Spawn Sync] Synced {total:N0} spawn points.",
+            current: total,
+            total: total,
+            added: total));
+    }
+
+    private static async Task BulkCopySpawnsAsync(
+        VanalyticsDbContext db,
+        IReadOnlyList<ZoneSpawn> spawns,
+        IProgress<SyncProgressEvent> progress,
+        Func<string, int, int, int, SyncProgressEvent> phaseEvent,
+        CancellationToken ct)
+    {
+        var conn = (SqlConnection)db.Database.GetDbConnection();
+        var wasOpen = conn.State == ConnectionState.Open;
+        if (!wasOpen) await conn.OpenAsync(ct);
+
+        try
         {
-            ProviderId = ProviderId,
-            Type = SyncEventType.Progress,
-            Message = $"Phase 3: Synced {parsed.Count} spawn points.",
-            Added = parsed.Count,
-        });
+            using var bulk = new SqlBulkCopy(conn)
+            {
+                DestinationTableName = "ZoneSpawns",
+                BatchSize = 5000,
+                BulkCopyTimeout = 300,
+                NotifyAfter = 2500,
+            };
+
+            // Explicit mappings so column order in BuildSpawnDataTable doesn't
+            // have to match the table definition. Identity column (Id) is
+            // intentionally omitted — server assigns.
+            string[] columns =
+            [
+                "ZoneId", "GroupId", "PoolId", "MobName",
+                "X", "Y", "Z", "Rotation",
+                "MinLevel", "MaxLevel",
+                "SpawnType", "RespawnTime", "MobIndex",
+                "CreatedAt", "UpdatedAt",
+            ];
+            foreach (var col in columns) bulk.ColumnMappings.Add(col, col);
+
+            bulk.SqlRowsCopied += (_, e) =>
+            {
+                progress.Report(phaseEvent(
+                    $"[Phase 3/3 — Spawn Sync] Copied {e.RowsCopied:N0} of {spawns.Count:N0}...",
+                    (int)e.RowsCopied,
+                    spawns.Count,
+                    (int)e.RowsCopied));
+            };
+
+            using var table = BuildSpawnDataTable(spawns);
+            await bulk.WriteToServerAsync(table, ct);
+        }
+        finally
+        {
+            if (!wasOpen) await conn.CloseAsync();
+        }
+    }
+
+    private static DataTable BuildSpawnDataTable(IReadOnlyList<ZoneSpawn> spawns)
+    {
+        var t = new DataTable();
+        t.Columns.Add("ZoneId", typeof(int));
+        t.Columns.Add("GroupId", typeof(int));
+        t.Columns.Add("PoolId", typeof(int)).AllowDBNull = true;
+        t.Columns.Add("MobName", typeof(string));
+        t.Columns.Add("X", typeof(float));
+        t.Columns.Add("Y", typeof(float));
+        t.Columns.Add("Z", typeof(float));
+        t.Columns.Add("Rotation", typeof(float));
+        t.Columns.Add("MinLevel", typeof(int));
+        t.Columns.Add("MaxLevel", typeof(int));
+        t.Columns.Add("SpawnType", typeof(int));
+        t.Columns.Add("RespawnTime", typeof(int));
+        t.Columns.Add("MobIndex", typeof(int));
+        t.Columns.Add("CreatedAt", typeof(DateTimeOffset));
+        t.Columns.Add("UpdatedAt", typeof(DateTimeOffset));
+
+        foreach (var s in spawns)
+        {
+            t.Rows.Add(
+                s.ZoneId, s.GroupId,
+                (object?)s.PoolId ?? DBNull.Value,
+                s.MobName,
+                s.X, s.Y, s.Z, s.Rotation,
+                s.MinLevel, s.MaxLevel,
+                s.SpawnType, s.RespawnTime, s.MobIndex,
+                s.CreatedAt, s.UpdatedAt);
+        }
+
+        return t;
     }
 
     // -------------------------------------------------------------------------

@@ -33,6 +33,7 @@ public class IconSyncProvider : ISyncProvider
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        db.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
 
         await SyncIconsAsync(db, progress, ct);
 
@@ -40,6 +41,7 @@ public class IconSyncProvider : ISyncProvider
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Completed,
+            Phase = 1, PhaseTotal = 1, PhaseLabel = "Icons",
             Message = "Icon sync complete."
         });
     }
@@ -49,12 +51,18 @@ public class IconSyncProvider : ISyncProvider
     private async Task SyncIconsAsync(
         VanalyticsDbContext db, IProgress<SyncProgressEvent> progress, CancellationToken ct)
     {
-        progress.Report(new SyncProgressEvent
+        SyncProgressEvent IconEvent(string message, int current = 0, int total = 0, int added = 0, int failed = 0, string? currentItem = null, int? currentItemId = null) => new()
         {
             ProviderId = ProviderId,
             Type = SyncEventType.Progress,
-            Message = "Checking which items need icons..."
-        });
+            Phase = 1, PhaseTotal = 1, PhaseLabel = "Icons",
+            Message = message,
+            Current = current, Total = total,
+            Added = added, Failed = failed,
+            CurrentItem = currentItem, CurrentItemId = currentItemId,
+        };
+
+        progress.Report(IconEvent("Checking which items need icons..."));
 
         var allItems = await db.GameItems
             .Select(i => new { i.ItemId, i.Name, i.IconPath })
@@ -96,12 +104,7 @@ public class IconSyncProvider : ISyncProvider
                         i => "icons/" + i.ItemId + ".png"), ct);
             }
 
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = $"Backfilled {missingPaths.Count} icon paths from existing storage."
-            });
+            progress.Report(IconEvent($"Backfilled {missingPaths.Count} icon paths from existing storage."));
         }
 
         var needingIcons = allItems
@@ -110,12 +113,7 @@ public class IconSyncProvider : ISyncProvider
 
         if (needingIcons.Count == 0)
         {
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = $"All {allItems.Count} icons present. Skipping icon phase."
-            });
+            progress.Report(IconEvent($"All {allItems.Count} icons present. Skipping icon phase."));
             return;
         }
 
@@ -171,18 +169,11 @@ public class IconSyncProvider : ISyncProvider
             failed += batchFailed;
 
             var last = batch.Last();
-            progress.Report(new SyncProgressEvent
-            {
-                ProviderId = ProviderId,
-                Type = SyncEventType.Progress,
-                Message = $"Icons: {downloaded}/{total} downloaded ({failed} failed)",
-                CurrentItem = last.Name,
-                CurrentItemId = last.ItemId,
-                Current = downloaded + failed,
-                Total = total,
-                Added = downloaded,
-                Failed = failed
-            });
+            progress.Report(IconEvent(
+                $"Icons: {downloaded}/{total} downloaded ({failed} failed)",
+                current: downloaded + failed, total: total,
+                added: downloaded, failed: failed,
+                currentItem: last.Name, currentItemId: last.ItemId));
         }
 
         _logger.LogInformation("Icon sync: {Downloaded} downloaded, {Failed} failed", downloaded, failed);
