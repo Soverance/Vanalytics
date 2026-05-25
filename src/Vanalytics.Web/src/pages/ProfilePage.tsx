@@ -7,6 +7,7 @@ import type { ApiKeyResponse, GameServer } from '../types/api'
 import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
 import { Copy, Check } from 'lucide-react'
 import ConfirmModal from '../components/ConfirmModal'
+import Tabs from '../components/Tabs'
 
 type Tab = 'session' | 'preferences' | 'apikeys'
 
@@ -189,24 +190,11 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-800 mb-6">
-        <div className="flex gap-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Tabs
+        items={tabs.map(t => ({ value: t.id, label: t.label }))}
+        value={activeTab}
+        onChange={handleTabChange}
+      />
 
       {/* Session tab */}
       {activeTab === 'session' && (

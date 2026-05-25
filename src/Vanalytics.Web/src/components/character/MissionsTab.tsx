@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import type { MissionsResponse, MissionLineState } from '../../types/api'
 import LoadingSpinner from '../LoadingSpinner'
+import Tabs from '../Tabs'
 import {
     MISSION_LINE_LABELS,
     MISSION_CATALOGS,
@@ -13,6 +14,9 @@ import {
     type PointerLineKey,
     type MissionLineKey,
 } from '../../lib/missions'
+
+const MISSIONS_TABS = ['Main', 'Expansion'] as const
+type MissionsSubTab = typeof MISSIONS_TABS[number]
 
 function BitfieldLineSection({ line, state }: { line: BitfieldLineKey; state: MissionLineState | null }) {
     const [expanded, setExpanded] = useState(false)
@@ -123,6 +127,7 @@ interface Props {
 export default function MissionsTab({ characterId }: Props) {
     const [data, setData] = useState<MissionsResponse | null>(null)
     const [loading, setLoading] = useState(true)
+    const [subTab, setSubTab] = useState<MissionsSubTab>('Main')
 
     useEffect(() => {
         setLoading(true)
@@ -149,24 +154,21 @@ export default function MissionsTab({ characterId }: Props) {
     }
 
     return (
-        <div className="space-y-4 pr-2">
-            <section>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Story Lines (Completion Grids)</h3>
+        <div className="pr-2">
+            <Tabs items={MISSIONS_TABS} value={subTab} onChange={setSubTab} />
+            {subTab === 'Main' ? (
                 <div className="space-y-1.5">
                     {BITFIELD_LINES.map(line => (
                         <BitfieldLineSection key={line} line={line} state={data![line]} />
                     ))}
                 </div>
-            </section>
-
-            <section>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Expansion Storylines (Current Mission)</h3>
+            ) : (
                 <div className="space-y-1.5">
                     {POINTER_LINES.map(line => (
                         <PointerLineSection key={line} line={line} state={data![line]} />
                     ))}
                 </div>
-            </section>
+            )}
         </div>
     )
 }

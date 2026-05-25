@@ -216,7 +216,7 @@ function inventory.sync(character_name, server)
 
     if status_code == 200 then
         if settings.NotifyOnSync then
-            log_fn('Inventory synced: ' .. #changes .. ' change(s)')
+            -- log_fn('Inventory synced: ' .. #changes .. ' change(s)')
         end
     else
         log_error_fn('Inventory sync failed with status ' .. tostring(status_code))

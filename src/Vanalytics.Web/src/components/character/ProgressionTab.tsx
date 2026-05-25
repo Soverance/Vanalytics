@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import type { ProgressionResponse, JobPointEntry } from '../../types/api'
 import LoadingSpinner from '../LoadingSpinner'
+import Tabs from '../Tabs'
 import { WARP_CATEGORY_LABELS, WARP_CATEGORY_CAPACITY, lookupWarp, type WarpCategory } from '../../lib/warps'
+
+const PROGRESSION_TABS = ['Job Points', 'Travel'] as const
+type ProgressionSubTab = typeof PROGRESSION_TABS[number]
 
 // Job IDs in packet 0x063 Order 0x05 are 0-indexed; slot 0 is NONE.
 // Slots 1–22 match the standard FFXI job IDs (WAR..RUN). Slots 23 is
@@ -139,6 +143,7 @@ interface Props {
 export default function ProgressionTab({ characterId }: Props) {
     const [data, setData] = useState<ProgressionResponse | null>(null)
     const [loading, setLoading] = useState(true)
+    const [subTab, setSubTab] = useState<ProgressionSubTab>('Job Points')
 
     useEffect(() => {
         setLoading(true)
@@ -168,9 +173,9 @@ export default function ProgressionTab({ characterId }: Props) {
     }
 
     return (
-        <div className="space-y-4 pr-2">
-            {/* Top row: scalar stats */}
-            <div className="grid grid-cols-2 gap-3">
+        <div className="pr-2">
+            {/* Header strip: scalar stats stay always-visible above the sub-tabs */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
                 <StatCard
                     label="Limit Points"
                     value={data!.limitPoints !== null ? `${data!.limitPoints.toLocaleString()} / 10,000` : '—'}
@@ -189,19 +194,14 @@ export default function ProgressionTab({ characterId }: Props) {
                 />
             </div>
 
-            {/* Job Points */}
-            <section>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Job Points</h3>
-                {data!.jobPoints && data!.jobPoints.length > 0
+            <Tabs items={PROGRESSION_TABS} value={subTab} onChange={setSubTab} />
+
+            {subTab === 'Job Points' ? (
+                data!.jobPoints && data!.jobPoints.length > 0
                     ? <JobPointsTable entries={data!.jobPoints} unlocked={data!.jobPointsUnlocked} />
                     : <p className="text-gray-500 text-sm">No job point data captured yet.</p>
-                }
-            </section>
-
-            {/* Warps */}
-            <section>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Travel</h3>
-                {data!.warps ? (
+            ) : (
+                data!.warps ? (
                     <div className="space-y-1.5">
                         {WARP_CATEGORIES.map(cat => (
                             <WarpSection
@@ -213,8 +213,8 @@ export default function ProgressionTab({ characterId }: Props) {
                     </div>
                 ) : (
                     <p className="text-gray-500 text-sm">No warp data captured yet.</p>
-                )}
-            </section>
+                )
+            )}
         </div>
     )
 }

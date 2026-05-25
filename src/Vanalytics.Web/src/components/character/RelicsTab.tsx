@@ -3,6 +3,8 @@ import { api } from '../../api/client'
 import type { RelicsResponse, GameItemDetail } from '../../types/api'
 import LoadingSpinner from '../LoadingSpinner'
 import ItemPreviewBox from '../economy/ItemPreviewBox'
+import RelicCurrencyProgress from './RelicCurrencyProgress'
+import Tabs from '../Tabs'
 
 const CATEGORY_COLORS: Record<string, string> = {
   Relic: 'bg-amber-500',
@@ -13,6 +15,9 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 const CATEGORY_ORDER = ['Relic', 'Mythic', 'Empyrean', 'Aeonic', 'Ergon']
+
+const INNER_TABS = ['Overview', 'Relics'] as const
+type InnerTab = typeof INNER_TABS[number]
 
 function stageBadgeClass(stage: string): string {
   if (stage === 'Afterglow') return 'bg-yellow-400 text-yellow-950'
@@ -30,6 +35,7 @@ export default function RelicsTab({ characterId }: Props) {
   const [data, setData] = useState<RelicsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [categoryFilter, setCategoryFilter] = useState<string>('')
+  const [innerTab, setInnerTab] = useState<InnerTab>('Overview')
 
   // Tooltip state
   const [hoveredItemId, setHoveredItemId] = useState<number | null>(null)
@@ -103,6 +109,57 @@ export default function RelicsTab({ characterId }: Props) {
     return a.baseName.localeCompare(b.baseName)
   })
 
+  return (
+    <div>
+      <Tabs items={INNER_TABS} value={innerTab} onChange={setInnerTab} />
+
+      {innerTab === 'Relics' ? (
+        <RelicCurrencyProgress characterId={characterId} relics={data} />
+      ) : (
+        <OverviewContent
+          sortedProgress={sortedProgress}
+          sortedWeapons={sortedWeapons}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          handleRowEnter={handleRowEnter}
+          handleMouseMove={handleMouseMove}
+          handleRowLeave={handleRowLeave}
+        />
+      )}
+
+      {/* Item preview tooltip */}
+      {hoveredDetail && tooltipPos && (
+        <div
+          ref={tooltipRef}
+          className="fixed z-50 pointer-events-none"
+          style={{ top: tooltipPos.top, left: tooltipPos.left }}
+        >
+          <ItemPreviewBox item={hoveredDetail} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface OverviewProps {
+  sortedProgress: RelicsResponse['progress']
+  sortedWeapons: RelicsResponse['weapons']
+  categoryFilter: string
+  setCategoryFilter: React.Dispatch<React.SetStateAction<string>>
+  handleRowEnter: (itemId: number) => void
+  handleMouseMove: (e: React.MouseEvent) => void
+  handleRowLeave: () => void
+}
+
+function OverviewContent({
+  sortedProgress,
+  sortedWeapons,
+  categoryFilter,
+  setCategoryFilter,
+  handleRowEnter,
+  handleMouseMove,
+  handleRowLeave,
+}: OverviewProps) {
   return (
     <div>
       {/* Compact progress row */}
@@ -204,17 +261,6 @@ export default function RelicsTab({ characterId }: Props) {
               )}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Item preview tooltip */}
-      {hoveredDetail && tooltipPos && (
-        <div
-          ref={tooltipRef}
-          className="fixed z-50 pointer-events-none"
-          style={{ top: tooltipPos.top, left: tooltipPos.left }}
-        >
-          <ItemPreviewBox item={hoveredDetail} />
         </div>
       )}
     </div>

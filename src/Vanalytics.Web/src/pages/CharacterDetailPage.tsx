@@ -27,6 +27,7 @@ import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
 import SessionsTab from '../components/session/SessionsTab'
 import { ApiError } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
+import Tabs from '../components/Tabs'
 
 const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items'] as const
 type StatTab = typeof STAT_TABS[number]
@@ -179,21 +180,7 @@ export default function CharacterDetailPage() {
         <div className="flex gap-8">
           {/* Left column: Jobs / Crafting */}
           <div className="flex-1 min-w-0">
-            <div className="flex gap-1 border-b border-gray-700 mb-4">
-              {STAT_TABS.map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    activeTab === tab
-                      ? 'text-blue-400 border-b-2 border-blue-400 -mb-px'
-                      : 'text-gray-500 hover:text-gray-300'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+            <Tabs items={STAT_TABS} value={activeTab} onChange={setActiveTab} />
             <div className="h-[400px] overflow-y-auto styled-scrollbar">
               {activeTab === 'Jobs' && <JobsGrid jobs={character.jobs} />}
               {activeTab === 'Crafting' && <CraftingTable skills={character.craftingSkills} />}
@@ -217,21 +204,7 @@ export default function CharacterDetailPage() {
 
       {/* Equipment / Inventory / Macros tabbed panel */}
       <section className="mb-8">
-        <div className="flex gap-1 border-b border-gray-700 mb-4">
-          {GEAR_TABS.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setGearTab(tab)}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                gearTab === tab
-                  ? 'text-blue-400 border-b-2 border-blue-400 -mb-px'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <Tabs items={GEAR_TABS} value={gearTab} onChange={setGearTab} />
 
         {/* Equipment tab: hidden instead of unmounted to preserve ModelViewer state */}
         <div className={gearTab === 'Equipment' ? '' : 'hidden'}>

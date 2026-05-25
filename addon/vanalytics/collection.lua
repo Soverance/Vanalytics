@@ -170,9 +170,9 @@ function collection.sync(character_name, server)
         last_payload_hash = payload
         save_to_disk(character_name, server)
         if settings.NotifyOnSync then
-            log_fn(string.format('Collection synced: %d spells, %d key items',
-                state.spellIds and #state.spellIds or 0,
-                state.keyItemIds and #state.keyItemIds or 0))
+            -- log_fn(string.format('Collection synced: %d spells, %d key items',
+            --     state.spellIds and #state.spellIds or 0,
+            --     state.keyItemIds and #state.keyItemIds or 0))
         end
     else
         log_error_fn('Collection sync failed with status ' .. tostring(status_code))

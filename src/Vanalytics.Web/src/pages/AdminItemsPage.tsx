@@ -7,6 +7,7 @@ import { FileTableResolver } from '../lib/ffxi-dat/FileTableResolver'
 import { scanForZoneDats } from '../lib/ffxi-dat/ZoneScanner'
 import type { ScanProgress } from '../lib/ffxi-dat/ZoneScanner'
 import { Map, FolderSearch } from 'lucide-react'
+import Tabs from '../components/Tabs'
 
 type Tab = 'sync' | 'health'
 
@@ -587,24 +588,11 @@ export default function AdminItemsPage() {
 
   return (
     <div>
-      {/* ── Tabs ── */}
-      <div className="border-b border-gray-800 mb-6">
-        <div className="flex gap-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Tabs
+        items={tabs.map(t => ({ value: t.id, label: t.label }))}
+        value={activeTab}
+        onChange={handleTabChange}
+      />
 
       {/* ── Sync tab ── */}
       {activeTab === 'sync' && (
