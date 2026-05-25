@@ -69,13 +69,16 @@ end
 -----------------------------------------------------------------------
 local function http_request(params)
     local ltn12 = require('ltn12')
+    -- 30s budget — long enough for cold-start + initial full-inventory uploads
+    -- on slower connections. The call is still synchronous and freezes the
+    -- game for its duration, so don't raise this without a good reason.
     if params.url and params.url:sub(1, 5) == 'https' then
         local https = require('ssl.https')
-        https.TIMEOUT = 5
+        https.TIMEOUT = 30
         return https.request(params)
     else
         local http = require('socket.http')
-        http.TIMEOUT = 5
+        http.TIMEOUT = 30
         return http.request(params)
     end
 end
