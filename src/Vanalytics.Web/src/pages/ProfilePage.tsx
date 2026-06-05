@@ -270,6 +270,38 @@ export default function ProfilePage() {
               Logout
             </button>
           </section>
+
+          <section className="rounded-lg border border-gray-800 bg-gray-900 p-6">
+            <h2 className="text-lg font-semibold mb-4">Delete Account</h2>
+            <p className="text-sm text-gray-400 mb-4">
+              Per our{' '}
+              <a
+                href="https://soverance.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline"
+              >
+                privacy policy
+              </a>
+              , account deletion is handled manually. The button below opens your email client with a pre-filled
+              request. Once received, your account and all associated character data are permanently removed.
+            </p>
+            <a
+              href={`mailto:scott@soverance.com?subject=${encodeURIComponent('Vanalytics account deletion request')}&body=${encodeURIComponent(
+                [
+                  'Hello,',
+                  '',
+                  'Please delete my Vanalytics account and all associated data.',
+                  '',
+                  `Username: ${user.username}`,
+                  `Email: ${user.email}`,
+                ].join('\n')
+              )}`}
+              className="inline-block rounded border border-red-700 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-900/30"
+            >
+              Request Account Deletion
+            </a>
+          </section>
         </div>
       )}
 

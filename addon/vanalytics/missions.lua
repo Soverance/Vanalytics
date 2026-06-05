@@ -94,7 +94,7 @@ end
 local function cache_path(character_name, server)
     if not character_name or not server then return nil end
     local dir = windower.addon_path .. 'missions/'
-    os.execute('mkdir "' .. dir:gsub('/', '\\') .. '" 2>NUL')
+    windower.create_dir(dir)
     return dir .. character_name:lower() .. '_' .. server:lower() .. '.json'
 end
 
@@ -159,7 +159,7 @@ local function debug_dump(label, data)
     if debug_dumped[label] then return end
     debug_dumped[label] = true
     local dir = windower.addon_path .. 'missions/'
-    os.execute('mkdir "' .. dir:gsub('/', '\\') .. '" 2>NUL')
+    windower.create_dir(dir)
     local f = io.open(dir .. 'debug.log', 'a')
     if not f then return end
     local hex = {}

@@ -418,15 +418,34 @@ end
 -----------------------------------------------------------------------
 local function find_macro_path()
     local user_dir = windower.ffxi_path .. 'USER'
-    -- Find the most recently modified content ID directory
+    -- Find the most recently modified content ID directory.
     local best_dir = nil
-    local best_time = 0
-    local handle = io.popen('dir "' .. user_dir .. '" /b /ad /o-d 2>nul')
-    if handle then
-        -- First line is the most recently modified directory
-        best_dir = handle:read('*l')
-        handle:close()
+
+    local ok_lfs, lfs = pcall(require, 'lfs')
+    if ok_lfs then
+        local best_time = 0
+        local entries = windower.get_dir(user_dir)
+        if entries then
+            for _, name in ipairs(entries) do
+                local full = user_dir .. '\\' .. name
+                local attr = lfs.attributes(full)
+                if attr and attr.mode == 'directory' and (attr.modification or 0) > best_time then
+                    best_time = attr.modification
+                    best_dir = name
+                end
+            end
+        end
+    else
+        -- Fallback for installs without LuaFileSystem. Spawns a brief
+        -- cmd.exe window; acceptable in the rare-fallback case.
+        local handle = io.popen('dir "' .. user_dir .. '" /b /ad /o-d 2>nul')
+        if handle then
+            -- First line is the most recently modified directory.
+            best_dir = handle:read('*l')
+            handle:close()
+        end
     end
+
     if not best_dir then return nil end
     return user_dir .. '\\' .. best_dir
 end
