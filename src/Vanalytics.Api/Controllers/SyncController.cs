@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -223,7 +222,7 @@ public class SyncController : ControllerBase
                 ItemId = gearEntry.ItemId,
                 ItemName = gearEntry.ItemName,
                 AugmentsJson = gearEntry.Augments is { Count: > 0 }
-                    ? JsonSerializer.Serialize(gearEntry.Augments, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping })
+                    ? JsonSerializer.Serialize(gearEntry.Augments)
                     : null
             });
         }

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -232,7 +233,8 @@ public class SyncControllerTests : IAsyncLifetime
             .ToListAsync();
 
         var cape = gear.Single(g => g.ItemName == "Toutatis's Cape");
-        Assert.Equal("[\"DEX+9\",\"DEX+2\",\"Weapon skill damage +8%\"]", cape.AugmentsJson);
+        var capeAugments = JsonSerializer.Deserialize<List<string>>(cape.AugmentsJson!);
+        Assert.Equal(new[] { "DEX+9", "DEX+2", "Weapon skill damage +8%" }, capeAugments);
         var main = gear.Single(g => g.ItemName == "Mandau");
         Assert.Null(main.AugmentsJson);
     }
