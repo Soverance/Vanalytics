@@ -1,18 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import type { CategoryResponse, ThreadDetailResponse } from '../types/api'
 import ForumEditor from '../components/forum/ForumEditor'
+import DraftStatus from '../components/forum/DraftStatus'
+import { useDraft } from '../hooks/useDraft'
+import { useAuth } from '../context/AuthContext'
 
 export default function ForumNewThreadPage() {
   const { categorySlug } = useParams<{ categorySlug: string }>()
   const navigate = useNavigate()
 
+  const { user } = useAuth()
   const [category, setCategory] = useState<CategoryResponse | null>(null)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  const draftKey = user && categorySlug ? `forum-draft:new:${user.id}:${categorySlug}` : null
+  const { draft, savedAt, saving, save, clear } = useDraft<{ title: string; body: string }>(draftKey)
+  const [restored, setRestored] = useState(false)
+  const restoredOnce = useRef(false)
 
   useEffect(() => {
     if (!categorySlug) return
@@ -20,6 +29,41 @@ export default function ForumNewThreadPage() {
       .then(setCategory)
       .catch(() => {/* category name is optional for breadcrumb */})
   }, [categorySlug])
+
+  // Restore a saved draft once it (and the user) are available — runs once.
+  useEffect(() => {
+    if (restoredOnce.current) return
+    if (draft && (draft.title || draft.body) && !title && !body) {
+      setTitle(draft.title ?? '')
+      setBody(draft.body ?? '')
+      setRestored(true)
+      restoredOnce.current = true
+    }
+  }, [draft, title, body])
+
+  const persistDraft = (t: string, b: string) => {
+    if (t.trim() || b) save({ title: t, body: b })
+    else clear()
+  }
+
+  const onTitleChange = (v: string) => {
+    setTitle(v)
+    setRestored(false)
+    persistDraft(v, body)
+  }
+
+  const onBodyChange = (v: string) => {
+    setBody(v)
+    setRestored(false)
+    persistDraft(title, v)
+  }
+
+  const discardDraft = () => {
+    clear()
+    setTitle('')
+    setBody('')
+    setRestored(false)
+  }
 
   const handleSubmit = async () => {
     if (!title.trim() || !body.trim() || !categorySlug) return
@@ -30,6 +74,7 @@ export default function ForumNewThreadPage() {
         method: 'POST',
         body: JSON.stringify({ title: title.trim(), body }),
       })
+      clear()
       navigate(`/forum/${categorySlug}/${result.slug}`)
     } catch (err) {
       if (err instanceof ApiError) setError(`Failed to create thread (${err.status})`)
@@ -63,7 +108,7 @@ export default function ForumNewThreadPage() {
           <input
             type="text"
             value={title}
-            onChange={e => setTitle(e.target.value)}
+            onChange={e => onTitleChange(e.target.value)}
             maxLength={200}
             placeholder="Thread title"
             className="w-full rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-600 focus:border-blue-500 focus:outline-none"
@@ -74,7 +119,8 @@ export default function ForumNewThreadPage() {
         {/* Body */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-gray-400">Body</label>
-          <ForumEditor content={body} onChange={setBody} placeholder="What's on your mind?" />
+          <ForumEditor content={body} onChange={onBodyChange} placeholder="What's on your mind?" />
+          <DraftStatus saving={saving} savedAt={savedAt} restored={restored} onDiscard={discardDraft} />
         </div>
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
