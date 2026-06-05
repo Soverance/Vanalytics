@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 using Soverance.Auth.DTOs;
+using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.Keys;
 using Vanalytics.Core.DTOs.Sync;
 using Vanalytics.Core.Enums;
@@ -197,6 +198,79 @@ public class SyncControllerTests : IAsyncLifetime
         // 21st request should be rate limited
         var limitedResp = await _client.SendAsync(CreateSyncRequest(apiKey, payload));
         Assert.Equal((HttpStatusCode)429, limitedResp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_GearWithAugments_PersistsAugmentsJson()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("syncaug@test.com", "syncauguser");
+
+        var payload = new SyncRequest
+        {
+            CharacterName = "AugChar",
+            Server = "Asura",
+            ActiveJob = "THF",
+            ActiveJobLevel = 99,
+            Gear =
+            [
+                new SyncGearEntry
+                {
+                    Slot = "Back", ItemName = "Toutatis's Cape", ItemId = 26252,
+                    Augments = ["DEX+9", "DEX+2", "Weapon skill damage +8%"]
+                },
+                new SyncGearEntry { Slot = "Main", ItemName = "Mandau", ItemId = 21003 }
+            ]
+        };
+
+        var resp = await _client.SendAsync(CreateSyncRequest(apiKey, payload));
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var gear = await db.EquippedGear
+            .Where(g => g.Character.Name == "AugChar")
+            .ToListAsync();
+
+        var cape = gear.Single(g => g.ItemName == "Toutatis's Cape");
+        Assert.Equal("[\"DEX+9\",\"DEX+2\",\"Weapon skill damage +8%\"]", cape.AugmentsJson);
+        var main = gear.Single(g => g.ItemName == "Mandau");
+        Assert.Null(main.AugmentsJson);
+    }
+
+    [Fact]
+    public async Task CharacterDetail_ExposesGearAugments()
+    {
+        var (jwt, apiKey) = await SetupSyncUserAsync("syncaug2@test.com", "syncaug2user");
+
+        await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
+        {
+            CharacterName = "AugChar2",
+            Server = "Asura",
+            ActiveJob = "THF",
+            ActiveJobLevel = 99,
+            Gear = [new SyncGearEntry
+            {
+                Slot = "Back", ItemName = "Toutatis's Cape", ItemId = 26252,
+                Augments = ["DEX+20", "Accuracy+20 Attack+20", "Weapon skill damage +10%"]
+            }]
+        }));
+
+        Guid charId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            charId = (await db.Characters.FirstAsync(c => c.Name == "AugChar2")).Id;
+        }
+
+        var req = new HttpRequestMessage(HttpMethod.Get, $"/api/characters/{charId}");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        var detail = (await resp.Content.ReadFromJsonAsync<CharacterDetailResponse>())!;
+        var cape = detail.Gear.Single(g => g.ItemName == "Toutatis's Cape");
+        Assert.Equal(3, cape.Augments.Count);
+        Assert.Equal("Weapon skill damage +10%", cape.Augments[2]);
     }
 
     [Fact]

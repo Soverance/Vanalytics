@@ -598,7 +598,10 @@ public class CharactersController : ControllerBase
         {
             Slot = g.Slot.ToString(),
             ItemId = g.ItemId,
-            ItemName = g.ItemName
+            ItemName = g.ItemName,
+            Augments = g.AugmentsJson != null
+                ? JsonSerializer.Deserialize<List<string>>(g.AugmentsJson) ?? []
+                : []
         }).ToList(),
         CraftingSkills = c.CraftingSkills.Select(s => new CraftingEntry
         {

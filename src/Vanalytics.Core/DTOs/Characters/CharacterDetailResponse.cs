@@ -82,6 +82,7 @@ public class GearEntry
     public string Slot { get; set; } = string.Empty;
     public int ItemId { get; set; }
     public string ItemName { get; set; } = string.Empty;
+    public List<string> Augments { get; set; } = [];
 }
 
 public class CraftingEntry
