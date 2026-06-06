@@ -16,6 +16,7 @@ local packets = require('packets')
 local session = require('session')
 local inventory = require('inventory')
 local porter = require('porter')
+local extdata_util = require('extdata_util')
 local progression = require('progression')
 local missions_lib = require('missions')
 local collection_lib = require('collection')
@@ -1716,6 +1717,7 @@ local function read_character_state()
                                 slot = slot_name,
                                 itemId = item.id,
                                 itemName = item_name,
+                                augments = extdata_util.decode_augments(item),
                             })
                         end
                     end
