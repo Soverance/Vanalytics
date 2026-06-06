@@ -379,7 +379,12 @@ export default function CharacterDetailPage() {
         )}
 
         {gearTab === 'Gear Sets' && (
-          <GearSetsTab characterId={character.id} gear={localGear} itemCache={itemCache} />
+          <GearSetsTab
+            character={character}
+            gear={localGear}
+            itemCache={itemCache}
+            onSaveFavorite={handleSaveFavorite}
+          />
         )}
       </section>
 

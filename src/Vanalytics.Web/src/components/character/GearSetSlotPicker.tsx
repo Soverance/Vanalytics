@@ -29,9 +29,10 @@ interface Props {
   ownedItems: OwnedEquipmentItem[]   // fetched once by the parent
   onSelect: (slot: GearSetSlot) => void
   onClose: () => void
+  onClear?: () => void
 }
 
-export default function GearSetSlotPicker({ slotName, ownedItems, onSelect, onClose }: Props) {
+export default function GearSetSlotPicker({ slotName, ownedItems, onSelect, onClose, onClear }: Props) {
   const [mode, setMode] = useState<'owned' | 'catalog'>('owned')
   const [query, setQuery] = useState('')
   const [catalog, setCatalog] = useState<GameItemSummary[]>([])
@@ -113,6 +114,15 @@ export default function GearSetSlotPicker({ slotName, ownedItems, onSelect, onCl
           </div>
         ) : (
           <CatalogSearch query={query} setQuery={setQuery} results={catalog} loading={loading} onPick={pick} />
+        )}
+
+        {onClear && (
+          <div className="px-3 pb-3">
+            <button onClick={onClear}
+              className="w-full text-xs px-3 py-1.5 rounded bg-rose-950/40 text-rose-300 border border-rose-800/40 hover:bg-rose-900/40">
+              Remove from slot
+            </button>
+          </div>
         )}
       </div>
     </div>

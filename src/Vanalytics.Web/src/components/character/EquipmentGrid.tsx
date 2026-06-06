@@ -14,9 +14,10 @@ interface EquipmentGridProps {
   gear: GearEntry[]
   onSlotClick: (slotName: string) => void
   itemCache: Map<number, GameItemDetail>
+  unavailableSlots?: Set<string>
 }
 
-export default function EquipmentGrid({ gear, onSlotClick, itemCache }: EquipmentGridProps) {
+export default function EquipmentGrid({ gear, onSlotClick, itemCache, unavailableSlots }: EquipmentGridProps) {
   const gearBySlot = new Map(gear.map(g => [g.slot, g]))
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null)
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null)
@@ -60,6 +61,7 @@ export default function EquipmentGrid({ gear, onSlotClick, itemCache }: Equipmen
               gear={gearBySlot.get(slotName)}
               onClick={() => onSlotClick(slotName)}
               onHoverElement={(el) => handleSlotHover(slotName, el)}
+              isUnavailable={unavailableSlots?.has(slotName)}
             />
           ))}
         </div>
