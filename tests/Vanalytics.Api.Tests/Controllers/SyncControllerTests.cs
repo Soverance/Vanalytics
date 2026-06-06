@@ -244,7 +244,7 @@ public class SyncControllerTests : IAsyncLifetime
     {
         var (jwt, apiKey) = await SetupSyncUserAsync("syncaug2@test.com", "syncaug2user");
 
-        await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
+        var syncResp = await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
         {
             CharacterName = "AugChar2",
             Server = "Asura",
@@ -256,6 +256,7 @@ public class SyncControllerTests : IAsyncLifetime
                 Augments = ["DEX+20", "Accuracy+20 Attack+20", "Weapon skill damage +10%"]
             }]
         }));
+        Assert.Equal(HttpStatusCode.OK, syncResp.StatusCode);
 
         Guid charId;
         using (var scope = _factory.Services.CreateScope())
@@ -271,8 +272,7 @@ public class SyncControllerTests : IAsyncLifetime
 
         var detail = (await resp.Content.ReadFromJsonAsync<CharacterDetailResponse>())!;
         var cape = detail.Gear.Single(g => g.ItemName == "Toutatis's Cape");
-        Assert.Equal(3, cape.Augments.Count);
-        Assert.Equal("Weapon skill damage +10%", cape.Augments[2]);
+        Assert.Equal(new[] { "DEX+20", "Accuracy+20 Attack+20", "Weapon skill damage +10%" }, cape.Augments);
     }
 
     [Fact]
