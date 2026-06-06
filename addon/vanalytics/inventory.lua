@@ -3,6 +3,7 @@
 
 local inventory = {}
 local res = require('resources')
+local extdata_util = require('extdata_util')
 
 -- State
 local previous_snapshot = nil
@@ -54,6 +55,17 @@ function inventory.init(deps)
     log_error_fn = deps.log_error
 end
 
+-- Order-sensitive equality for two augment arrays (either may be nil).
+local function augments_equal(a, b)
+    if a == nil and b == nil then return true end
+    if a == nil or b == nil then return false end
+    if #a ~= #b then return false end
+    for i = 1, #a do
+        if a[i] ~= b[i] then return false end
+    end
+    return true
+end
+
 -----------------------------------------------------------------------
 -- Read a full inventory snapshot from Windower
 -- Returns a table keyed by "BagName:SlotIndex"
@@ -75,6 +87,7 @@ function inventory.read_snapshot()
                         quantity = item.count,
                         bag = bag_entry.name,
                         slot_index = slot_index,
+                        augments = extdata_util.decode_augments(item),
                     }
                 end
             end
@@ -103,6 +116,7 @@ function inventory.compute_diff(old_snap, new_snap)
                 slot_index = new_item.slot_index,
                 quantityBefore = 0,
                 quantityAfter = new_item.quantity,
+                augments = new_item.augments,
             })
         else
             -- Slot exists in both snapshots
@@ -123,6 +137,7 @@ function inventory.compute_diff(old_snap, new_snap)
                     slot_index = new_item.slot_index,
                     quantityBefore = 0,
                     quantityAfter = new_item.quantity,
+                    augments = new_item.augments,
                 })
             elseif old_item.quantity ~= new_item.quantity then
                 -- Same item, quantity changed
@@ -133,6 +148,17 @@ function inventory.compute_diff(old_snap, new_snap)
                     slot_index = new_item.slot_index,
                     quantityBefore = old_item.quantity,
                     quantityAfter = new_item.quantity,
+                })
+            elseif not augments_equal(old_item.augments, new_item.augments) then
+                -- Same item and quantity, augments re-rolled in place
+                table.insert(changes, {
+                    changeType = 'AugmentsChanged',
+                    item_id = new_item.item_id,
+                    bag = new_item.bag,
+                    slot_index = new_item.slot_index,
+                    quantityBefore = old_item.quantity,
+                    quantityAfter = new_item.quantity,
+                    augments = new_item.augments,
                 })
             end
         end
@@ -188,6 +214,7 @@ function inventory.sync(character_name, server, on_complete)
             changeType = change.changeType,
             quantityBefore = change.quantityBefore,
             quantityAfter = change.quantityAfter,
+            augments = change.augments,
         })
     end
 
