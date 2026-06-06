@@ -149,6 +149,10 @@ function inventory.compute_diff(old_snap, new_snap)
                     quantityBefore = old_item.quantity,
                     quantityAfter = new_item.quantity,
                 })
+            -- Augment-only change. This is an elseif after the quantity check, so a
+            -- simultaneous quantity+augment change would report only QuantityChanged.
+            -- Safe in practice: augmented gear is non-stackable (count always 1), so an
+            -- augmented item's quantity never changes.
             elseif not augments_equal(old_item.augments, new_item.augments) then
                 -- Same item and quantity, augments re-rolled in place
                 table.insert(changes, {

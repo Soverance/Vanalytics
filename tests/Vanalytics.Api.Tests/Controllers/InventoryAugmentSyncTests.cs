@@ -256,6 +256,54 @@ public class InventoryAugmentSyncTests : IAsyncLifetime
         Assert.Empty(item.Augments);
     }
 
+    [Fact]
+    public async Task GetInventory_AugmentWithEmbeddedQuotes_RoundTrips()
+    {
+        var (jwt, apiKey) = await SetupSyncUserAsync("invquote@test.com", "invquoteuser");
+
+        await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
+        {
+            CharacterName = "InvQuoteChar", Server = "Asura",
+            ActiveJob = "THF", ActiveJobLevel = 99
+        }));
+
+        Guid charId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            db.GameItems.Add(new Vanalytics.Core.Models.GameItem
+            {
+                ItemId = 27000, Name = "Herculean Trousers", Category = "Armor",
+                CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+            });
+            await db.SaveChangesAsync();
+            charId = (await db.Characters.FirstAsync(c => c.Name == "InvQuoteChar")).Id;
+        }
+
+        await _client.SendAsync(CreateInventorySyncRequest(apiKey, new InventorySyncRequest
+        {
+            CharacterName = "InvQuoteChar", Server = "Asura", FullSync = true,
+            Changes =
+            [
+                new InventoryChangeEntry
+                {
+                    ItemId = 27000, Bag = "Wardrobe", SlotIndex = 5,
+                    ChangeType = "Added", QuantityBefore = 0, QuantityAfter = 1,
+                    Augments = ["\"Dual Wield\"+3", "Accuracy+25 Attack+25", "\"Store TP\"+10"]
+                }
+            ]
+        }));
+
+        var req = new HttpRequestMessage(HttpMethod.Get, $"/api/characters/{charId}/inventory");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        var byBag = (await resp.Content.ReadFromJsonAsync<Dictionary<string, List<InventoryAugDto>>>())!;
+        var item = byBag["Wardrobe"].Single(i => i.ItemId == 27000);
+        Assert.Equal(new[] { "\"Dual Wield\"+3", "Accuracy+25 Attack+25", "\"Store TP\"+10" }, item.Augments);
+    }
+
     private class InventoryAugDto
     {
         public int ItemId { get; set; }
