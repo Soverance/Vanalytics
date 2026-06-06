@@ -204,6 +204,58 @@ public class InventoryAugmentSyncTests : IAsyncLifetime
         Assert.Equal(new[] { "DEX+9", "Weapon skill damage +8%" }, item.Augments);
     }
 
+    [Fact]
+    public async Task GetInventory_ItemWithoutAugments_ReturnsEmptyArray()
+    {
+        var (jwt, apiKey) = await SetupSyncUserAsync("invaug3@test.com", "invaug3user");
+
+        await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
+        {
+            CharacterName = "InvAugChar3", Server = "Asura",
+            ActiveJob = "THF", ActiveJobLevel = 99
+        }));
+
+        Guid charId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            db.GameItems.Add(new Vanalytics.Core.Models.GameItem
+            {
+                ItemId = 4096,
+                Name = "Vile Elixir",
+                Category = "Usable",
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            });
+            await db.SaveChangesAsync();
+            charId = (await db.Characters.FirstAsync(c => c.Name == "InvAugChar3")).Id;
+        }
+
+        await _client.SendAsync(CreateInventorySyncRequest(apiKey, new InventorySyncRequest
+        {
+            CharacterName = "InvAugChar3", Server = "Asura", FullSync = true,
+            Changes =
+            [
+                new InventoryChangeEntry
+                {
+                    ItemId = 4096, Bag = "Inventory", SlotIndex = 1,
+                    ChangeType = "Added", QuantityBefore = 0, QuantityAfter = 12
+                    // no Augments
+                }
+            ]
+        }));
+
+        var req = new HttpRequestMessage(HttpMethod.Get, $"/api/characters/{charId}/inventory");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        var byBag = (await resp.Content.ReadFromJsonAsync<Dictionary<string, List<InventoryAugDto>>>())!;
+        var item = byBag["Inventory"].Single(i => i.ItemId == 4096);
+        Assert.NotNull(item.Augments);
+        Assert.Empty(item.Augments);
+    }
+
     private class InventoryAugDto
     {
         public int ItemId { get; set; }

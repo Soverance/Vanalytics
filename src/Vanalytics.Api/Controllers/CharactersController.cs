@@ -135,8 +135,8 @@ public class CharactersController : ControllerBase
             i.IsRare,
             i.IsExclusive,
             Augments = i.AugmentsJson != null
-                ? JsonSerializer.Deserialize<List<string>>(i.AugmentsJson) ?? new List<string>()
-                : new List<string>()
+                ? JsonSerializer.Deserialize<List<string>>(i.AugmentsJson) ?? []
+                : []
         }).ToList();
 
         var grouped = items
