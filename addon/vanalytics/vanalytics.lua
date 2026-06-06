@@ -38,6 +38,9 @@ local defaults = {
     HuntSoundEnabled = true,
     HuntNmPos = { x = 1200, y = 50 },
     HuntNmPinned = false,
+    -- One-time flag: forces a full inventory re-sync after upgrading to the
+    -- augment-capture build so existing (unchanged) items backfill their augments.
+    AugmentBackfillDone = false,
 }
 
 local settings = config.load(defaults)
@@ -3160,6 +3163,18 @@ windower.register_event('logout', function()
 end)
 
 windower.register_event('load', function()
+    -- One-time inventory backfill for the augment-capture feature. Existing
+    -- characters already have inventory rows on the server with no augment data,
+    -- and a normal diff sync won't re-send unchanged items. Forcing the next
+    -- inventory sync to be a full re-sync re-sends every item WITH augments.
+    -- Gated by a persisted flag so it runs only once per install.
+    if not settings.AugmentBackfillDone then
+        inventory.reset()
+        settings.AugmentBackfillDone = true
+        config.save(settings)
+        log('Augment backfill: next sync will be a full inventory re-sync.')
+    end
+
     -- If already logged in when addon loads, start timer
     local player = windower.ffxi.get_player()
     if player then
