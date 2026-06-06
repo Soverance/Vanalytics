@@ -66,7 +66,7 @@ function decodeRaces(bitmask: number | null): string {
   return RACE_BITS.filter(([bit]) => (bitmask & bit) !== 0).map(([, n]) => n).join(' ')
 }
 
-export default function ItemPreviewBox({ item }: { item: GameItemDetail }) {
+export default function ItemPreviewBox({ item, augments }: { item: GameItemDetail; augments?: string[] }) {
   const jobs = decodeJobs(item.jobs)
   const races = decodeRaces(item.races)
   const weaponType = item.skill ? WEAPON_SKILLS[item.skill] : null
@@ -173,6 +173,18 @@ export default function ItemPreviewBox({ item }: { item: GameItemDetail }) {
         {/* Level + Jobs */}
         {lvJobs && (
           <div style={{ color: '#E0E0E0', marginTop: 2 }}>{lvJobs}</div>
+        )}
+
+        {/* Augments — instance-specific rolls, highlighted yellow like in-game */}
+        {augments && augments.length > 0 && (
+          <div style={{ color: '#FFE066', marginTop: 2 }}>
+            {augments.map((aug, i) => (
+              <span key={i}>
+                {aug}
+                {i < augments.length - 1 && <br />}
+              </span>
+            ))}
+          </div>
         )}
       </div>
 

@@ -61,6 +61,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
 
   // Tooltip state
   const [hoveredItemId, setHoveredItemId] = useState<number | null>(null)
+  const [hoveredAugments, setHoveredAugments] = useState<string[] | null>(null)
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null)
   const [itemDetailCache, setItemDetailCache] = useState<Map<number, GameItemDetail>>(new Map())
   const containerRef = useRef<HTMLDivElement>(null)
@@ -320,8 +321,9 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
   }
 
   // Tooltip hover handlers
-  const handleRowEnter = useCallback((itemId: number) => {
+  const handleRowEnter = useCallback((itemId: number, augments?: string[]) => {
     setHoveredItemId(itemId)
+    setHoveredAugments(augments ?? null)
     if (!itemDetailCache.has(itemId)) {
       api<GameItemDetail>(`/api/items/${itemId}`)
         .then(detail => {
@@ -359,6 +361,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
 
   const handleRowLeave = useCallback(() => {
     setHoveredItemId(null)
+    setHoveredAugments(null)
     setTooltipPos(null)
   }, [])
 
@@ -391,7 +394,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
         onClick={() => {
           if (!item.isPorter) toggleSelection(itemBag, item.slotIndex)
         }}
-        onMouseEnter={() => handleRowEnter(item.itemId)}
+        onMouseEnter={() => handleRowEnter(item.itemId, item.augments)}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleRowLeave}
       >
@@ -418,11 +421,6 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
               className="ml-2 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-amber-900/40 text-amber-300 border border-amber-700/40 rounded"
               title={`Also stored at Porter slip${porterSlipNumbers.length > 1 ? 's' : ''} ${porterSlipNumbers.map(n => String(n).padStart(2, '0')).join(', ')}`}
             >P</span>
-          )}
-          {item.augments && item.augments.length > 0 && (
-            <div className="mt-0.5 text-[11px] text-amber-200/60 leading-tight">
-              {item.augments.join(' · ')}
-            </div>
           )}
         </td>
         <td className="px-4 py-1.5 text-gray-400">{item.category ?? '\u2014'}</td>
@@ -736,7 +734,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
           className="fixed z-50 pointer-events-none"
           style={{ top: tooltipPos.top, left: tooltipPos.left }}
         >
-          <ItemPreviewBox item={hoveredDetail} />
+          <ItemPreviewBox item={hoveredDetail} augments={hoveredAugments ?? undefined} />
         </div>
       )}
     </div>
