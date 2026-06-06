@@ -263,6 +263,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
             stackSize: item.stackSize,
             isRare: item.isRare,
             isExclusive: item.isExclusive,
+            augments: [],
             quantity: 1,
             slotIndex: -1,
             lastSeenAt: slip.syncedAt,
@@ -417,6 +418,11 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
               className="ml-2 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-amber-900/40 text-amber-300 border border-amber-700/40 rounded"
               title={`Also stored at Porter slip${porterSlipNumbers.length > 1 ? 's' : ''} ${porterSlipNumbers.map(n => String(n).padStart(2, '0')).join(', ')}`}
             >P</span>
+          )}
+          {item.augments && item.augments.length > 0 && (
+            <div className="mt-0.5 text-[11px] text-amber-200/60 leading-tight">
+              {item.augments.join(' · ')}
+            </div>
           )}
         </td>
         <td className="px-4 py-1.5 text-gray-400">{item.category ?? '\u2014'}</td>
