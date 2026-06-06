@@ -108,6 +108,7 @@ export interface GearEntry {
   slot: string
   itemId: number
   itemName: string
+  augments: string[]
 }
 
 export interface SkillEntry {

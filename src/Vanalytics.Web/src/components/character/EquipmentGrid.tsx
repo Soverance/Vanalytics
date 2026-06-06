@@ -75,6 +75,13 @@ export default function EquipmentGrid({ gear, onSlotClick, itemCache }: Equipmen
           style={{ top: tooltipPos.top, left: tooltipPos.left }}
         >
           <ItemPreviewBox item={hoveredItem} />
+          {hoveredGear && hoveredGear.augments.length > 0 && (
+            <div className="mt-1 rounded border border-amber-800/30 bg-gray-950/95 px-2 py-1.5">
+              {hoveredGear.augments.map((aug, i) => (
+                <div key={i} className="text-[11px] text-amber-200/70 leading-tight">{aug}</div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
