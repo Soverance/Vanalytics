@@ -25,6 +25,7 @@ import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
 import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
 import SessionsTab from '../components/session/SessionsTab'
+import GearSetsTab from '../components/character/GearSetsTab'
 import { ApiError } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
 import Tabs from '../components/Tabs'
@@ -32,7 +33,7 @@ import Tabs from '../components/Tabs'
 const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items'] as const
 type StatTab = typeof STAT_TABS[number]
 
-const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Spells', 'Macros', 'Sessions'] as const
+const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Spells', 'Macros', 'Sessions', 'Gear Sets'] as const
 type GearTab = typeof GEAR_TABS[number]
 
 export default function CharacterDetailPage() {
@@ -375,6 +376,10 @@ export default function CharacterDetailPage() {
 
         {gearTab === 'Sessions' && (
           <SessionsTab characterId={character.id} />
+        )}
+
+        {gearTab === 'Gear Sets' && (
+          <GearSetsTab characterId={character.id} gear={localGear} itemCache={itemCache} />
         )}
       </section>
 

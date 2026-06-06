@@ -991,3 +991,36 @@ export interface ItemRecipeInfo {
     quantity: number
   }[]
 }
+
+// Gear Sets
+export interface GearSetSummary {
+  id: number
+  name: string
+  job: string | null
+  slotCount: number
+  updatedAt: string
+}
+
+export interface GearSetSlot {
+  slot: string
+  itemId: number
+  itemName: string
+  augments: string[]
+}
+
+export interface GearSetDetail {
+  id: number
+  name: string
+  job: string | null
+  slots: GearSetSlot[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OwnedEquipmentItem {
+  itemId: number
+  itemName: string
+  iconPath: string | null
+  slots: number | null
+  augments: string[]
+}

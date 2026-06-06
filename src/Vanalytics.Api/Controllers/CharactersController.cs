@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Core.Data;
 using Vanalytics.Core.DTOs.Characters;
+using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Core.DTOs.Porter;
 using Vanalytics.Core.DTOs.Sync;
 using Vanalytics.Core.Models;
@@ -532,6 +533,169 @@ public class CharactersController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id:guid}/gear-sets/owned-equipment")]
+    public async Task<IActionResult> GetOwnedEquipment(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var invRaw = await _db.CharacterInventories
+            .Where(i => i.CharacterId == id)
+            .Join(_db.GameItems, ci => ci.ItemId, gi => gi.ItemId, (ci, gi) => new
+            {
+                gi.ItemId,
+                ItemName = gi.Name ?? gi.NameJa ?? "Unknown",
+                gi.IconPath,
+                gi.Slots,
+                ci.AugmentsJson
+            })
+            .Where(x => x.Slots != null && x.Slots != 0)
+            .ToListAsync();
+
+        var gearRaw = await _db.EquippedGear
+            .Where(g => g.CharacterId == id && g.ItemId != 0)
+            .Join(_db.GameItems, g => g.ItemId, gi => gi.ItemId, (g, gi) => new
+            {
+                g.ItemId,
+                ItemName = string.IsNullOrEmpty(g.ItemName) ? (gi.Name ?? gi.NameJa ?? "Unknown") : g.ItemName,
+                gi.IconPath,
+                gi.Slots,
+                g.AugmentsJson
+            })
+            .Where(x => x.Slots != null && x.Slots != 0)
+            .ToListAsync();
+
+        static List<string> ParseAug(string? json) => json != null
+            ? JsonSerializer.Deserialize<List<string>>(json) ?? []
+            : [];
+
+        var combined = invRaw
+            .Select(x => new OwnedEquipmentItem
+            {
+                ItemId = x.ItemId, ItemName = x.ItemName, IconPath = x.IconPath,
+                Slots = x.Slots, Augments = ParseAug(x.AugmentsJson)
+            })
+            .Concat(gearRaw.Select(x => new OwnedEquipmentItem
+            {
+                ItemId = x.ItemId, ItemName = x.ItemName, IconPath = x.IconPath,
+                Slots = x.Slots, Augments = ParseAug(x.AugmentsJson)
+            }))
+            .GroupBy(x => $"{x.ItemId}|{string.Join("|", x.Augments)}")
+            .Select(g => g.First())
+            .OrderBy(x => x.ItemName)
+            .ToList();
+
+        return Ok(combined);
+    }
+
+    [HttpGet("{id:guid}/gear-sets")]
+    public async Task<IActionResult> GetGearSets(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var sets = await _db.CharacterGearSets
+            .Where(s => s.CharacterId == id)
+            .OrderByDescending(s => s.UpdatedAt)
+            .ToListAsync();
+
+        var result = sets.Select(s => new GearSetSummaryResponse
+        {
+            Id = s.Id,
+            Name = s.Name,
+            Job = s.Job,
+            SlotCount = CountSlots(s.SlotsJson),
+            UpdatedAt = s.UpdatedAt
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/gear-sets/{setId:long}")]
+    public async Task<IActionResult> GetGearSet(Guid id, long setId)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var set = await _db.CharacterGearSets
+            .FirstOrDefaultAsync(s => s.Id == setId && s.CharacterId == id);
+        if (set is null) return NotFound();
+
+        return Ok(ToDetail(set));
+    }
+
+    [HttpPost("{id:guid}/gear-sets")]
+    public async Task<IActionResult> CreateGearSet(Guid id, [FromBody] SaveGearSetRequest request)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { message = "Name is required." });
+
+        var now = DateTimeOffset.UtcNow;
+        var set = new CharacterGearSet
+        {
+            CharacterId = id,
+            Name = request.Name.Trim(),
+            Job = string.IsNullOrWhiteSpace(request.Job) ? null : request.Job.Trim(),
+            SlotsJson = JsonSerializer.Serialize(request.Slots ?? []),
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        _db.CharacterGearSets.Add(set);
+        await _db.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetGearSet), new { id, setId = set.Id }, ToDetail(set));
+    }
+
+    [HttpPut("{id:guid}/gear-sets/{setId:long}")]
+    public async Task<IActionResult> UpdateGearSet(Guid id, long setId, [FromBody] SaveGearSetRequest request)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { message = "Name is required." });
+
+        var set = await _db.CharacterGearSets
+            .FirstOrDefaultAsync(s => s.Id == setId && s.CharacterId == id);
+        if (set is null) return NotFound();
+
+        set.Name = request.Name.Trim();
+        set.Job = string.IsNullOrWhiteSpace(request.Job) ? null : request.Job.Trim();
+        set.SlotsJson = JsonSerializer.Serialize(request.Slots ?? []);
+        set.UpdatedAt = DateTimeOffset.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(ToDetail(set));
+    }
+
+    [HttpDelete("{id:guid}/gear-sets/{setId:long}")]
+    public async Task<IActionResult> DeleteGearSet(Guid id, long setId)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        var set = await _db.CharacterGearSets
+            .FirstOrDefaultAsync(s => s.Id == setId && s.CharacterId == id);
+        if (set is null) return NotFound();
+
+        _db.CharacterGearSets.Remove(set);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -546,6 +710,22 @@ public class CharactersController : ControllerBase
 
         return NoContent();
     }
+
+    private static int CountSlots(string slotsJson)
+    {
+        using var doc = JsonDocument.Parse(slotsJson);
+        return doc.RootElement.ValueKind == JsonValueKind.Array ? doc.RootElement.GetArrayLength() : 0;
+    }
+
+    private static GearSetDetailResponse ToDetail(CharacterGearSet s) => new()
+    {
+        Id = s.Id,
+        Name = s.Name,
+        Job = s.Job,
+        Slots = JsonSerializer.Deserialize<List<GearSetSlotDto>>(s.SlotsJson) ?? [],
+        CreatedAt = s.CreatedAt,
+        UpdatedAt = s.UpdatedAt
+    };
 
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
