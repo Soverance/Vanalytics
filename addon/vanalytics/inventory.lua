@@ -55,17 +55,6 @@ function inventory.init(deps)
     log_error_fn = deps.log_error
 end
 
--- Order-sensitive equality for two augment arrays (either may be nil).
-local function augments_equal(a, b)
-    if a == nil and b == nil then return true end
-    if a == nil or b == nil then return false end
-    if #a ~= #b then return false end
-    for i = 1, #a do
-        if a[i] ~= b[i] then return false end
-    end
-    return true
-end
-
 -----------------------------------------------------------------------
 -- Read a full inventory snapshot from Windower
 -- Returns a table keyed by "BagName:SlotIndex"
@@ -95,6 +84,17 @@ function inventory.read_snapshot()
     end
 
     return snapshot
+end
+
+-- Order-sensitive equality for two augment arrays (either may be nil).
+local function augments_equal(a, b)
+    if a == nil and b == nil then return true end
+    if a == nil or b == nil then return false end
+    if #a ~= #b then return false end
+    for i = 1, #a do
+        if a[i] ~= b[i] then return false end
+    end
+    return true
 end
 
 -----------------------------------------------------------------------
