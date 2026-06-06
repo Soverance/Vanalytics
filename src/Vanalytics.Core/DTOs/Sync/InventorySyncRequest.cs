@@ -35,4 +35,5 @@ public class InventoryChangeEntry
 
     public int QuantityBefore { get; set; }
     public int QuantityAfter { get; set; }
+    public List<string>? Augments { get; set; }
 }

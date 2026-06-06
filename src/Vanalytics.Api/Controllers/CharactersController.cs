@@ -95,7 +95,7 @@ public class CharactersController : ControllerBase
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
 
-        var items = await _db.CharacterInventories
+        var rawItems = await _db.CharacterInventories
             .Where(i => i.CharacterId == id)
             .Join(_db.GameItems,
                 ci => ci.ItemId,
@@ -107,6 +107,7 @@ public class CharactersController : ControllerBase
                     ci.SlotIndex,
                     ci.Quantity,
                     ci.LastSeenAt,
+                    ci.AugmentsJson,
                     ItemName = gi.Name ?? gi.NameJa ?? "Unknown",
                     gi.IconPath,
                     gi.Category,
@@ -118,6 +119,25 @@ public class CharactersController : ControllerBase
             .OrderBy(i => i.Bag)
             .ThenBy(i => i.ItemName)
             .ToListAsync();
+
+        var items = rawItems.Select(i => new
+        {
+            i.ItemId,
+            i.Bag,
+            i.SlotIndex,
+            i.Quantity,
+            i.LastSeenAt,
+            i.ItemName,
+            i.IconPath,
+            i.Category,
+            i.StackSize,
+            i.BaseSell,
+            i.IsRare,
+            i.IsExclusive,
+            Augments = i.AugmentsJson != null
+                ? JsonSerializer.Deserialize<List<string>>(i.AugmentsJson) ?? new List<string>()
+                : new List<string>()
+        }).ToList();
 
         var grouped = items
             .GroupBy(i => i.Bag)

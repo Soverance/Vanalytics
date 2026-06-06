@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -86,6 +87,10 @@ public class InventoryController : ControllerBase
                 ChangedAt = now
             });
 
+            var augmentsJson = change.Augments is { Count: > 0 }
+                ? JsonSerializer.Serialize(change.Augments)
+                : null;
+
             var key = (change.ItemId, bag, change.SlotIndex);
             existingByKey.TryGetValue(key, out var existing);
 
@@ -95,6 +100,7 @@ public class InventoryController : ControllerBase
                     if (existing is not null)
                     {
                         existing.Quantity = change.QuantityAfter;
+                        existing.AugmentsJson = augmentsJson;
                         existing.LastSeenAt = now;
                     }
                     else
@@ -106,6 +112,7 @@ public class InventoryController : ControllerBase
                             Bag = bag,
                             SlotIndex = change.SlotIndex,
                             Quantity = change.QuantityAfter,
+                            AugmentsJson = augmentsJson,
                             LastSeenAt = now
                         };
                         _db.CharacterInventories.Add(added);
@@ -126,6 +133,14 @@ public class InventoryController : ControllerBase
                     {
                         _db.CharacterInventories.Remove(existing);
                         existingByKey.Remove(key);
+                    }
+                    break;
+
+                case InventoryChangeType.AugmentsChanged:
+                    if (existing is not null)
+                    {
+                        existing.AugmentsJson = augmentsJson;
+                        existing.LastSeenAt = now;
                     }
                     break;
             }
