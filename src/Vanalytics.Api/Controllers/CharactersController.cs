@@ -549,6 +549,7 @@ public class CharactersController : ControllerBase
                 ItemName = gi.Name ?? gi.NameJa ?? "Unknown",
                 gi.IconPath,
                 gi.Slots,
+                gi.Jobs,
                 ci.AugmentsJson
             })
             .Where(x => x.Slots != null && x.Slots != 0)
@@ -562,6 +563,7 @@ public class CharactersController : ControllerBase
                 ItemName = string.IsNullOrEmpty(g.ItemName) ? (gi.Name ?? gi.NameJa ?? "Unknown") : g.ItemName,
                 gi.IconPath,
                 gi.Slots,
+                gi.Jobs,
                 g.AugmentsJson
             })
             .Where(x => x.Slots != null && x.Slots != 0)
@@ -575,12 +577,12 @@ public class CharactersController : ControllerBase
             .Select(x => new OwnedEquipmentItem
             {
                 ItemId = x.ItemId, ItemName = x.ItemName, IconPath = x.IconPath,
-                Slots = x.Slots, Augments = ParseAug(x.AugmentsJson)
+                Slots = x.Slots, Jobs = x.Jobs, Augments = ParseAug(x.AugmentsJson)
             })
             .Concat(gearRaw.Select(x => new OwnedEquipmentItem
             {
                 ItemId = x.ItemId, ItemName = x.ItemName, IconPath = x.IconPath,
-                Slots = x.Slots, Augments = ParseAug(x.AugmentsJson)
+                Slots = x.Slots, Jobs = x.Jobs, Augments = ParseAug(x.AugmentsJson)
             }))
             .GroupBy(x => $"{x.ItemId}|{string.Join("|", x.Augments)}")
             .Select(g => g.First())
@@ -639,13 +641,15 @@ public class CharactersController : ControllerBase
         if (character.UserId != userId) return Forbid();
         if (string.IsNullOrWhiteSpace(request.Name))
             return BadRequest(new { message = "Name is required." });
+        if (!TryNormalizeJob(request.Job, out var job))
+            return BadRequest(new { message = "Invalid job." });
 
         var now = DateTimeOffset.UtcNow;
         var set = new CharacterGearSet
         {
             CharacterId = id,
             Name = request.Name.Trim(),
-            Job = string.IsNullOrWhiteSpace(request.Job) ? null : request.Job.Trim(),
+            Job = job,
             SlotsJson = JsonSerializer.Serialize(request.Slots ?? []),
             CreatedAt = now,
             UpdatedAt = now
@@ -665,13 +669,15 @@ public class CharactersController : ControllerBase
         if (character.UserId != userId) return Forbid();
         if (string.IsNullOrWhiteSpace(request.Name))
             return BadRequest(new { message = "Name is required." });
+        if (!TryNormalizeJob(request.Job, out var job))
+            return BadRequest(new { message = "Invalid job." });
 
         var set = await _db.CharacterGearSets
             .FirstOrDefaultAsync(s => s.Id == setId && s.CharacterId == id);
         if (set is null) return NotFound();
 
         set.Name = request.Name.Trim();
-        set.Job = string.IsNullOrWhiteSpace(request.Job) ? null : request.Job.Trim();
+        set.Job = job;
         set.SlotsJson = JsonSerializer.Serialize(request.Slots ?? []);
         set.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
@@ -709,6 +715,20 @@ public class CharactersController : ControllerBase
         await _db.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    // Validates the optional gear-set job tag against the real FFXI job list, returning the
+    // canonical uppercase code (e.g. "thf" -> "THF"). Null/blank is allowed (job is optional).
+    private static bool TryNormalizeJob(string? job, out string? normalized)
+    {
+        normalized = null;
+        if (string.IsNullOrWhiteSpace(job)) return true;
+        if (Enum.TryParse<Vanalytics.Core.Enums.JobType>(job.Trim(), ignoreCase: true, out var parsed))
+        {
+            normalized = parsed.ToString();
+            return true;
+        }
+        return false;
     }
 
     private static int CountSlots(string slotsJson)

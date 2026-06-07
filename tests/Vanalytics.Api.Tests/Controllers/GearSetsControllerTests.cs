@@ -139,6 +139,65 @@ public class GearSetsControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Create_persists_and_returns_slot_item_name()
+    {
+        var (token, _, characterId) = await SetupUserWithCharacterAsync(
+            "gs8@test.com", "gs8", "Gearseteight");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var created = await (await _client.PostAsJsonAsync(
+            $"/api/characters/{characterId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "Named",
+                Slots =
+                [
+                    new GearSetSlotDto { Slot = "Head", ItemId = 13892,
+                        ItemName = "Adhemar Bonnet +1", Augments = [] },
+                ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        // The item name the picker captured must round-trip, so the GearSwap export
+        // emits head="Adhemar Bonnet +1" rather than head="#13892".
+        var detail = await _client.GetFromJsonAsync<GearSetDetailResponse>(
+            $"/api/characters/{characterId}/gear-sets/{created!.Id}");
+        var head = detail!.Slots.Single(s => s.Slot == "Head");
+        Assert.Equal("Adhemar Bonnet +1", head.ItemName);
+    }
+
+    [Fact]
+    public async Task Create_with_invalid_job_returns_400()
+    {
+        var (token, _, characterId) = await SetupUserWithCharacterAsync(
+            "gs9@test.com", "gs9", "Gearsetnine");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var resp = await _client.PostAsJsonAsync(
+            $"/api/characters/{characterId}/gear-sets",
+            new SaveGearSetRequest { Name = "Bad", Job = "XYZ", Slots = [] });
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_normalizes_job_casing_to_canonical_form()
+    {
+        var (token, _, characterId) = await SetupUserWithCharacterAsync(
+            "gs10@test.com", "gs10", "Gearsetten");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var created = await (await _client.PostAsJsonAsync(
+            $"/api/characters/{characterId}/gear-sets",
+            new SaveGearSetRequest { Name = "Lower", Job = "thf", Slots = [] }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        var detail = await _client.GetFromJsonAsync<GearSetDetailResponse>(
+            $"/api/characters/{characterId}/gear-sets/{created!.Id}");
+        Assert.Equal("THF", detail!.Job);
+    }
+
+    [Fact]
     public async Task Update_replaces_name_job_and_slots()
     {
         var (token, _, characterId) = await SetupUserWithCharacterAsync(
@@ -230,7 +289,7 @@ public class GearSetsControllerTests : IAsyncLifetime
         {
             var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
             db.GameItems.Add(new GameItem { ItemId = 27932, Name = "Plun. Culottes +1",
-                Category = "Armor", Slots = 0x0080 /* Legs */ });
+                Category = "Armor", Slots = 0x0080 /* Legs */, Jobs = 1 << 6 /* THF */ });
             db.GameItems.Add(new GameItem { ItemId = 18264, Name = "Mandau",
                 Category = "Weapons", Slots = 0x0001 /* Main */ });
             db.CharacterInventories.Add(new CharacterInventory
@@ -253,6 +312,7 @@ public class GearSetsControllerTests : IAsyncLifetime
             $"/api/characters/{characterId}/gear-sets/owned-equipment");
 
         Assert.Contains(items!, i => i.ItemId == 27932 && i.Slots == 0x0080
+            && i.Jobs == (1 << 6) /* THF, for job-equippable filtering */
             && i.Augments.Contains("Enhances \"Feint\" effect"));
         Assert.Contains(items!, i => i.ItemId == 18264 && i.Slots == 0x0001 && i.Augments.Count == 0);
     }

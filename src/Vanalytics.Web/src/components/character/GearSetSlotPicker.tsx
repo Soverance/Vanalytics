@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { X } from 'lucide-react'
 import { api } from '../../api/client'
+import { jobBitmask } from '../../lib/jobs'
 import { itemImageUrl } from '../../utils/imageUrl'
 import type { OwnedEquipmentItem, GameItemSummary, GearSetSlot } from '../../types/api'
 
@@ -27,23 +28,34 @@ const SLOT_CATEGORY: Record<string, { category: string; subCategory?: string }> 
 interface Props {
   slotName: string
   ownedItems: OwnedEquipmentItem[]   // fetched once by the parent
+  job?: string                       // the gear set's job ('' / undefined = none)
+  jobFilter: boolean                 // restrict to job-equippable gear (persisted by parent)
+  onJobFilterChange: (v: boolean) => void
   onSelect: (slot: GearSetSlot) => void
   onClose: () => void
   onClear?: () => void
 }
 
-export default function GearSetSlotPicker({ slotName, ownedItems, onSelect, onClose, onClear }: Props) {
+export default function GearSetSlotPicker({
+  slotName, ownedItems, job, jobFilter, onJobFilterChange, onSelect, onClose, onClear,
+}: Props) {
   const [mode, setMode] = useState<'owned' | 'catalog'>('owned')
   const [query, setQuery] = useState('')
   const [catalog, setCatalog] = useState<GameItemSummary[]>([])
   const [loading, setLoading] = useState(false)
 
+  // The filter only applies when the set has a real job and the toggle is on.
+  const jobMask = job ? jobBitmask(job) : 0
+  const filterByJob = jobMask !== 0 && jobFilter
+
   const mask = SLOT_BITMASK[slotName] ?? 0
   const owned = useMemo(
-    () => ownedItems.filter(i => i.slots != null && (i.slots & mask) !== 0),
-    [ownedItems, mask])
+    () => ownedItems.filter(i =>
+      i.slots != null && (i.slots & mask) !== 0
+      && (!filterByJob || (i.jobs != null && (i.jobs & jobMask) !== 0))),
+    [ownedItems, mask, filterByJob, jobMask])
 
-  // Catalog search (debounced), constrained to the slot's category.
+  // Catalog search (debounced), constrained to the slot's category (and job when filtering).
   useEffect(() => {
     if (mode !== 'catalog') return
     let isCurrent = true
@@ -56,6 +68,7 @@ export default function GearSetSlotPicker({ slotName, ownedItems, onSelect, onCl
           q: query, limit: '20',
           ...(f?.category && { category: f.category }),
           ...(f?.subCategory && { subCategory: f.subCategory }),
+          ...(filterByJob && job && { jobs: job }),
         })
         const data = await api<{ items: GameItemSummary[] }>(`/api/items?${params}`)
         if (isCurrent) setCatalog(data?.items ?? [])
@@ -66,7 +79,7 @@ export default function GearSetSlotPicker({ slotName, ownedItems, onSelect, onCl
       }
     }, 300)
     return () => { isCurrent = false; clearTimeout(t) }
-  }, [query, slotName, mode])
+  }, [query, slotName, mode, filterByJob, job])
 
   const pick = (itemId: number, itemName: string, augments: string[]) =>
     onSelect({ slot: slotName, itemId, itemName, augments })
@@ -80,8 +93,8 @@ export default function GearSetSlotPicker({ slotName, ownedItems, onSelect, onCl
           <button onClick={onClose} className="text-gray-500 hover:text-gray-300"><X className="h-4 w-4" /></button>
         </div>
 
-        {/* Mode toggle */}
-        <div className="flex gap-2 px-3 pt-3">
+        {/* Mode toggle + optional job filter */}
+        <div className="flex items-center gap-2 px-3 pt-3">
           {(['owned', 'catalog'] as const).map(m => (
             <button key={m} onClick={() => setMode(m)}
               className={`text-xs px-3 py-1 rounded ${mode === m
@@ -90,6 +103,15 @@ export default function GearSetSlotPicker({ slotName, ownedItems, onSelect, onCl
               {m === 'owned' ? 'Owned' : 'Catalog'}
             </button>
           ))}
+          {jobMask !== 0 && (
+            <button onClick={() => onJobFilterChange(!jobFilter)}
+              title={`Show only gear ${job} can equip`}
+              className={`ml-auto text-xs px-3 py-1 rounded ${jobFilter
+                ? 'bg-emerald-900/40 text-emerald-200 border border-emerald-700/40'
+                : 'bg-gray-800/50 text-gray-400 border border-transparent'}`}>
+              {job} only
+            </button>
+          )}
         </div>
 
         {mode === 'owned' ? (

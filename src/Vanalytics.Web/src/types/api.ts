@@ -1022,5 +1022,6 @@ export interface OwnedEquipmentItem {
   itemName: string
   iconPath: string | null
   slots: number | null
+  jobs: number | null
   augments: string[]
 }

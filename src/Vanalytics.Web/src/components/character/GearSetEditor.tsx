@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { api } from '../../api/client'
+import { FFXI_JOBS } from '../../lib/jobs'
 import { toRaceId, useSlotDatPaths } from '../../lib/model-mappings'
 import ModelViewer from './ModelViewer'
 import FullscreenViewer from './FullscreenViewer'
@@ -32,9 +33,15 @@ export default function GearSetEditor({
   initial, character, owned, itemCache, onSaveFavorite, onSave, onCancel,
 }: Props) {
   const [name, setName] = useState(initial.name)
-  const [job, setJob] = useState(initial.job)
+  // Drop any legacy free-text job that isn't a real FFXI job so the select opens on "— None —".
+  const [job, setJob] = useState(
+    (FFXI_JOBS as readonly string[]).includes(initial.job) ? initial.job : '')
   const [slots, setSlots] = useState<GearSetSlot[]>(initial.slots)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [pickerSlot, setPickerSlot] = useState<string | null>(null)
+  // Persists across slot picks; only applied when the set has a job (default on).
+  const [jobFilter, setJobFilter] = useState(true)
   const [fullscreen, setFullscreen] = useState(false)
   const [extraDetails, setExtraDetails] = useState<Map<number, GameItemDetail>>(new Map())
 
@@ -79,6 +86,18 @@ export default function GearSetEditor({
   const slotHasItem = (slotName: string | null) =>
     slotName != null && slots.some(s => s.slot === slotName)
 
+  // Surface save failures inline (the parent unmounts this editor on success).
+  const handleSave = async () => {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      await onSave({ name, job: job || null, slots })
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Failed to save gear set.')
+      setSaving(false)
+    }
+  }
+
   const fullscreenSlots = Array.from(slotDatPaths.entries())
     .map(([slotName, datPath]) => ({ slotId: FULLSCREEN_SLOT_IDS[slotName] ?? 0, datPath }))
     .filter(s => s.slotId > 0)
@@ -88,12 +107,22 @@ export default function GearSetEditor({
       <div className="flex items-center gap-2">
         <input value={name} onChange={e => setName(e.target.value)}
           className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-200" />
-        <input value={job} onChange={e => setJob(e.target.value)} placeholder="Job (optional)"
-          className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-200 w-32" />
-        <button onClick={() => onSave({ name, job: job || null, slots })}
-          className="text-xs px-3 py-1.5 rounded bg-indigo-900/50 text-amber-200 border border-amber-700/40">Save</button>
+        <select value={job} onChange={e => setJob(e.target.value)}
+          className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-200 w-32">
+          <option value="">— None —</option>
+          {FFXI_JOBS.map(j => <option key={j} value={j}>{j}</option>)}
+        </select>
+        <button onClick={handleSave} disabled={saving}
+          className="text-xs px-3 py-1.5 rounded bg-indigo-900/50 text-amber-200 border border-amber-700/40 disabled:opacity-50">
+          {saving ? 'Saving…' : 'Save'}</button>
         <button onClick={onCancel} className="text-xs px-3 py-1.5 text-gray-400">Cancel</button>
       </div>
+
+      {saveError && (
+        <div className="text-xs text-rose-300 bg-rose-950/40 border border-rose-800/40 rounded px-3 py-2">
+          {saveError}
+        </div>
+      )}
 
       <div className="flex gap-4">
         <ModelViewer
@@ -119,6 +148,9 @@ export default function GearSetEditor({
         <GearSetSlotPicker
           slotName={pickerSlot}
           ownedItems={owned}
+          job={job}
+          jobFilter={jobFilter}
+          onJobFilterChange={setJobFilter}
           onSelect={upsertSlot}
           onClose={() => setPickerSlot(null)}
           onClear={slotHasItem(pickerSlot) ? () => clearSlot(pickerSlot) : undefined}
