@@ -198,6 +198,34 @@ public class GearSetsControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Create_beyond_per_character_cap_returns_409()
+    {
+        var (token, _, characterId) = await SetupUserWithCharacterAsync(
+            "gs11@test.com", "gs11", "Gearseteleven");
+
+        // Seed the character up to the cap directly (fast) so the next create is the 501st.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            for (var i = 0; i < 500; i++)
+                db.CharacterGearSets.Add(new CharacterGearSet
+                {
+                    CharacterId = characterId, Name = $"Set {i}",
+                    SlotsJson = "[]", CreatedAt = now, UpdatedAt = now
+                });
+            await db.SaveChangesAsync();
+        }
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var resp = await _client.PostAsJsonAsync(
+            $"/api/characters/{characterId}/gear-sets",
+            new SaveGearSetRequest { Name = "One too many", Slots = [] });
+
+        Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
+    }
+
+    [Fact]
     public async Task Update_replaces_name_job_and_slots()
     {
         var (token, _, characterId) = await SetupUserWithCharacterAsync(

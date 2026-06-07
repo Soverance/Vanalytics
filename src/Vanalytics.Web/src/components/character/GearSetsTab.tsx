@@ -6,6 +6,9 @@ import GearSetEditor, { type WorkingSet } from './GearSetEditor'
 import GearSetExportModal from './GearSetExportModal'
 import type { CharacterDetail, GearEntry, OwnedEquipmentItem, GearSetSlot, GameItemDetail } from '../../types/api'
 
+// Mirrors MaxGearSetsPerCharacter in CharactersController.cs (keep in sync).
+const MAX_GEAR_SETS_PER_CHARACTER = 500
+
 interface Props {
   character: CharacterDetail
   gear: GearEntry[]                  // currently-equipped, for Snapshot + name resolution
@@ -93,16 +96,26 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
   }
 
   // ---- List view ----
+  const atCap = sets.length >= MAX_GEAR_SETS_PER_CHARACTER
   return (
     <div className="space-y-3">
-      <div className="flex gap-2">
-        <button onClick={snapshot} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-indigo-900/50 text-amber-200 border border-amber-700/40">
+      <div className="flex items-center gap-2">
+        <button onClick={snapshot} disabled={atCap}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-indigo-900/50 text-amber-200 border border-amber-700/40 disabled:opacity-50 disabled:cursor-not-allowed">
           <Camera className="h-3.5 w-3.5" /> Snapshot current gear
         </button>
-        <button onClick={blank} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-gray-800/60 text-gray-300 border border-gray-700/40">
+        <button onClick={blank} disabled={atCap}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-gray-800/60 text-gray-300 border border-gray-700/40 disabled:opacity-50 disabled:cursor-not-allowed">
           <Plus className="h-3.5 w-3.5" /> Blank set
         </button>
+        <span className="ml-auto text-[10px] text-gray-500">{sets.length} / {MAX_GEAR_SETS_PER_CHARACTER}</span>
       </div>
+
+      {atCap && (
+        <div className="text-xs text-amber-300 bg-amber-950/30 border border-amber-800/40 rounded px-3 py-2">
+          This character has reached the maximum of {MAX_GEAR_SETS_PER_CHARACTER} gear sets. Delete one to make room.
+        </div>
+      )}
 
       {notice && (
         <div className="text-xs text-emerald-300 bg-emerald-950/30 border border-emerald-800/40 rounded px-3 py-2">

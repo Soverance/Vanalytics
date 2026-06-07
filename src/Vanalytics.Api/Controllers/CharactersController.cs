@@ -644,6 +644,10 @@ public class CharactersController : ControllerBase
         if (!TryNormalizeJob(request.Job, out var job))
             return BadRequest(new { message = "Invalid job." });
 
+        var count = await _db.CharacterGearSets.CountAsync(s => s.CharacterId == id);
+        if (count >= MaxGearSetsPerCharacter)
+            return Conflict(new { message = $"This character already has the maximum of {MaxGearSetsPerCharacter} gear sets. Delete one to make room." });
+
         var now = DateTimeOffset.UtcNow;
         var set = new CharacterGearSet
         {
@@ -716,6 +720,10 @@ public class CharactersController : ControllerBase
 
         return NoContent();
     }
+
+    // Per-character ceiling on saved gear sets — bounds DB growth; far above realistic use.
+    // Mirrored client-side by MAX_GEAR_SETS_PER_CHARACTER in GearSetsTab.tsx (keep in sync).
+    private const int MaxGearSetsPerCharacter = 500;
 
     // Validates the optional gear-set job tag against the real FFXI job list, returning the
     // canonical uppercase code (e.g. "thf" -> "THF"). Null/blank is allowed (job is optional).
