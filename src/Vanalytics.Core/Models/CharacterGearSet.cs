@@ -7,6 +7,14 @@ public class CharacterGearSet
     public string Name { get; set; } = string.Empty;
     public string? Job { get; set; }
 
+    /// <summary>GearSwap-faithful category (enum name from <see cref="Enums.GearSetCategory"/>),
+    /// e.g. "WeaponSkill". Defaults to "Other" for sets created before categorization.</summary>
+    public string Category { get; set; } = "Other";
+
+    /// <summary>JSON-serialized array of free-form tags, e.g. ["SATA","BiS"]. Vanalytics-only
+    /// organizational layer; never emitted to GearSwap Lua.</summary>
+    public string TagsJson { get; set; } = "[]";
+
     /// <summary>
     /// JSON-serialized array of slot snapshots: [{ "slot": "Legs", "itemId": 27932,
     /// "augments": ["Enhances \"Feint\" effect"] }]. Self-contained; not linked to a live
