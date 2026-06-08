@@ -5,6 +5,8 @@ import type { CharacterDetail, GameItemDetail } from '../types/api'
 import JobsGrid from '../components/JobsGrid'
 import CraftingTable from '../components/CraftingTable'
 import StatusPanel from '../components/character/StatusPanel'
+import ModelViewer from '../components/character/ModelViewer'
+import { useSlotDatPaths, toRaceId } from '../lib/model-mappings'
 import EquipmentGrid from '../components/character/EquipmentGrid'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
 import Tabs from '../components/Tabs'
@@ -55,6 +57,9 @@ export default function PublicProfilePage() {
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }, [server, name])
+
+  const raceId = toRaceId(character?.race, character?.gender)
+  const { slotDatPaths } = useSlotDatPaths(character?.gear ?? [], raceId, character?.faceModelId)
 
   // Pre-fetch item details for equipped items
   useEffect(() => {
@@ -169,13 +174,23 @@ export default function PublicProfilePage() {
 
           {/* Equipment tab: hidden instead of unmounted to preserve layout */}
           <div className={gearTab === 'Equipment' ? '' : 'hidden'}>
-            <div className="max-w-[400px]">
-              <EquipmentGrid
+            <div className="flex gap-4">
+              <ModelViewer
+                key={character.id}
+                race={character.race}
+                gender={character.gender}
                 gear={character.gear}
-                onSlotClick={() => {}}
-                itemCache={itemCache}
-                readOnly
+                slotDatPaths={slotDatPaths}
+                favoriteAnimation={character.favoriteAnimation}
               />
+              <div className="w-[400px] flex-shrink-0">
+                <EquipmentGrid
+                  gear={character.gear}
+                  onSlotClick={() => {}}
+                  itemCache={itemCache}
+                  readOnly
+                />
+              </div>
             </div>
           </div>
 

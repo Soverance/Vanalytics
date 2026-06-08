@@ -19,6 +19,7 @@ import ItemDetailPage from './pages/ItemDetailPage'
 // import BazaarActivityPage from './pages/BazaarActivityPage' // hidden until bazaar sync bugs resolved
 import VanadielClockPage from './pages/VanadielClockPage'
 import PublicProfilePage from './pages/PublicProfilePage'
+import { FfxiFileSystemProvider } from './context/FfxiFileSystemContext'
 import ModelDebugPage from './pages/ModelDebugPage'
 import SessionReportPage from './pages/SessionReportPage'
 import NpcBrowserPage from './pages/NpcBrowserPage'
@@ -142,7 +143,11 @@ export default function App() {
           </Route>
 
           {/* Public: shareable character profiles (MUST be after explicit routes) */}
-          <Route path="/:server/:name" element={<PublicProfilePage />} />
+          <Route path="/:server/:name" element={
+            <FfxiFileSystemProvider>
+              <PublicProfilePage />
+            </FfxiFileSystemProvider>
+          } />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
