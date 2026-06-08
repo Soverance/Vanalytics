@@ -16,20 +16,31 @@ export default function PublicProfilePage() {
   const [character, setCharacter] = useState<CharacterDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const [activeTab, setActiveTab] = useState<StatTab>('Jobs')
   const [itemCache, setItemCache] = useState<Map<number, GameItemDetail>>(new Map())
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
+    setLoading(true)
+    setNotFound(false)
+    setLoadError(false)
     fetch(`/api/profiles/${server}/${name}`)
       .then(async (res) => {
-        if (!res.ok) {
+        // 404 = genuinely not public / no such character.
+        // Anything else (500, etc.) is a load failure, not a missing
+        // profile — don't mislabel it as "no public profile".
+        if (res.status === 404) {
           setNotFound(true)
+          return
+        }
+        if (!res.ok) {
+          setLoadError(true)
           return
         }
         setCharacter(await res.json())
       })
-      .catch(() => setNotFound(true))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }, [server, name])
 
@@ -55,6 +66,27 @@ export default function PublicProfilePage() {
       </main>
     </div>
   )
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-gray-100">
+        <main className="mx-auto max-w-5xl px-4 py-8">
+          <div className="text-center py-16">
+            <h2 className="text-xl font-bold text-gray-400">Couldn't load profile</h2>
+            <p className="text-gray-500 mt-2">
+              Something went wrong loading {name} on {server}. Please try again.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   if (notFound) {
     return (

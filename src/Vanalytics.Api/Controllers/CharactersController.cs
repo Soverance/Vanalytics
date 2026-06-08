@@ -48,11 +48,15 @@ public class CharactersController : ControllerBase
     public async Task<IActionResult> Get(Guid id)
     {
         var userId = GetUserId();
+        // Split per collection to avoid a cartesian-product query that
+        // duplicates the wide Character row (incl. MeritsJson) across
+        // jobs × gear × crafts × skills. See ProfilesController for detail.
         var character = await _db.Characters
             .Include(c => c.Jobs)
             .Include(c => c.Gear)
             .Include(c => c.CraftingSkills)
             .Include(c => c.Skills)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(c => c.Id == id);
 
         if (character is null) return NotFound();
