@@ -138,20 +138,22 @@ function WarpSection({ category, ids }: { category: WarpCategory; ids: number[] 
 
 interface Props {
     characterId: string
+    fetchBase?: string
 }
 
-export default function ProgressionTab({ characterId }: Props) {
+export default function ProgressionTab({ characterId, fetchBase }: Props) {
+    const base = fetchBase ?? `/api/characters/${characterId}`
     const [data, setData] = useState<ProgressionResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [subTab, setSubTab] = useState<ProgressionSubTab>('Job Points')
 
     useEffect(() => {
         setLoading(true)
-        api<ProgressionResponse>(`/api/characters/${characterId}/progression`)
+        api<ProgressionResponse>(`${base}/progression`)
             .then(setData)
             .catch(() => setData(null))
             .finally(() => setLoading(false))
-    }, [characterId])
+    }, [base])
 
     if (loading) return <LoadingSpinner />
 

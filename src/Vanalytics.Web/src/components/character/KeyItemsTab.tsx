@@ -6,20 +6,22 @@ import { KEY_ITEMS, KEY_ITEM_CATEGORIES, type KeyItemCategory } from '../../lib/
 
 interface Props {
     characterId: string
+    fetchBase?: string
 }
 
-export default function KeyItemsTab({ characterId }: Props) {
+export default function KeyItemsTab({ characterId, fetchBase }: Props) {
+    const base = fetchBase ?? `/api/characters/${characterId}`
     const [data, setData] = useState<CollectionResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState<KeyItemCategory | 'All'>('All')
 
     useEffect(() => {
         setLoading(true)
-        api<CollectionResponse>(`/api/characters/${characterId}/collection`)
+        api<CollectionResponse>(`${base}/collection`)
             .then(setData)
             .catch(() => setData(null))
             .finally(() => setLoading(false))
-    }, [characterId])
+    }, [base])
 
     const heldSet = useMemo(() => new Set(data?.keyItemIds ?? []), [data])
 

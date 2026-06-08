@@ -1,4 +1,5 @@
 import type { CharacterDetail } from '../../types/api'
+import LinkshellPearl from './LinkshellPearl'
 
 const NATION_NAMES: Record<number, string> = { 0: "San d'Oria", 1: 'Bastok', 2: 'Windurst' }
 
@@ -43,7 +44,6 @@ export default function CharacterProfileHeader({
     character.nation != null
       ? NATION_NAMES[character.nation] + (character.nationRank ? ` Rank ${character.nationRank}` : '')
       : null,
-    character.linkshell ? `LS: ${character.linkshell}` : null,
   ].filter(Boolean)
 
   // Row 3: Meta
@@ -87,9 +87,16 @@ export default function CharacterProfileHeader({
       )}
 
       {/* Row 2: Identity */}
-      {identityParts.length > 0 && (
-        <div className="text-sm text-gray-400">
-          {identityParts.join(' · ')}
+      {(identityParts.length > 0 || character.linkshell) && (
+        <div className="text-sm text-gray-400 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+          {identityParts.length > 0 && <span>{identityParts.join(' · ')}</span>}
+          {character.linkshell && (
+            <span className="flex items-center gap-1">
+              {identityParts.length > 0 && <span className="text-gray-600">·</span>}
+              <LinkshellPearl colorRgb={character.linkshellColorRgb} size={12} title={character.linkshell} />
+              <span>{character.linkshell}</span>
+            </span>
+          )}
         </div>
       )}
 

@@ -22,6 +22,12 @@ public class Character
     public int? Mp { get; set; }
     public int? MaxMp { get; set; }
     public string? Linkshell { get; set; }
+
+    /// <summary>Which equipped slot the active linkshell came from (1 or 2). Null if unknown.</summary>
+    public int? LinkshellSlot { get; set; }
+
+    /// <summary>Packed RGB of the active linkshell, for the header pearl icon. Null if unknown.</summary>
+    public int? LinkshellColorRgb { get; set; }
     public int? Nation { get; set; }
     public int? NationRank { get; set; }
     public int? RankPoints { get; set; }

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vanalytics.Core.DTOs.Characters;
+using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Controllers;
@@ -37,5 +39,68 @@ public class ProfilesController : ControllerBase
         if (character is null) return NotFound();
 
         return Ok(CharactersController.MapToDetail(character));
+    }
+
+    private async Task<Guid?> ResolvePublicCharacterIdAsync(string server, string name) =>
+        await _db.Characters
+            .Where(c => c.Server == server && c.Name == name && c.IsPublic)
+            .Select(c => (Guid?)c.Id)
+            .FirstOrDefaultAsync();
+
+    [HttpGet("{server}/{name}/progression")]
+    public async Task<IActionResult> GetPublicProgression(string server, string name)
+    {
+        var id = await ResolvePublicCharacterIdAsync(server, name);
+        if (id is null) return NotFound();
+        return Ok(await CharactersController.LoadProgressionAsync(_db, id.Value));
+    }
+
+    [HttpGet("{server}/{name}/collection")]
+    public async Task<IActionResult> GetPublicCollection(string server, string name)
+    {
+        var id = await ResolvePublicCharacterIdAsync(server, name);
+        if (id is null) return NotFound();
+        return Ok(await CharactersController.LoadCollectionAsync(_db, id.Value));
+    }
+
+    [HttpGet("{server}/{name}/titles")]
+    public async Task<IActionResult> GetPublicTitles(string server, string name)
+    {
+        var id = await ResolvePublicCharacterIdAsync(server, name);
+        if (id is null) return NotFound();
+        return Ok(await CharactersController.LoadTitlesAsync(_db, id.Value));
+    }
+
+    [HttpGet("{server}/{name}/missions")]
+    public async Task<IActionResult> GetPublicMissions(string server, string name)
+    {
+        var id = await ResolvePublicCharacterIdAsync(server, name);
+        if (id is null) return NotFound();
+        return Ok(await CharactersController.LoadMissionsAsync(_db, id.Value));
+    }
+
+    [HttpGet("{server}/{name}/relics")]
+    public async Task<IActionResult> GetPublicRelics(string server, string name)
+    {
+        var id = await ResolvePublicCharacterIdAsync(server, name);
+        if (id is null) return NotFound();
+        return Ok(await CharactersController.LoadRelicsAsync(_db, id.Value));
+    }
+
+    [HttpGet("{server}/{name}/gear-sets")]
+    public async Task<IActionResult> GetPublicGearSets(string server, string name)
+    {
+        var id = await ResolvePublicCharacterIdAsync(server, name);
+        if (id is null) return NotFound();
+        return Ok(await CharactersController.LoadGearSetsAsync(_db, id.Value));
+    }
+
+    [HttpGet("{server}/{name}/gear-sets/{setId:long}")]
+    public async Task<IActionResult> GetPublicGearSet(string server, string name, long setId)
+    {
+        var id = await ResolvePublicCharacterIdAsync(server, name);
+        if (id is null) return NotFound();
+        var detail = await CharactersController.LoadGearSetAsync(_db, id.Value, setId);
+        return detail is null ? NotFound() : Ok(detail);
     }
 }

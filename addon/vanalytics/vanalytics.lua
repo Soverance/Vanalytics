@@ -17,6 +17,43 @@ local session = require('session')
 local inventory = require('inventory')
 local porter = require('porter')
 local extdata_util = require('extdata_util')
+
+-- Inventory item.status value for an equipped linkshell. Confirmed via
+-- //va lsdump on a live client: equipped linkshells report status 19. Spare
+-- pearls carried in a bag are not status 19, so they are excluded.
+local EQUIPPED_LS_STATUSES = { [19] = true }
+-- Equipped linkshells live in the main inventory bag.
+local LS_BAGS = { 'inventory' }
+
+-- Returns a list of { linkshellId, name, colorRgb, rank } for the character's
+-- currently-equipped linkshells (0, 1 or 2 entries), or nil if none. Slot
+-- (LS1 vs LS2) is intentionally not derived: player.linkshell_slot is the
+-- active pearl's inventory index, not the 1/2 linkshell number, which is only
+-- available in the equip packets (0x0C4/0x0E0) we don't capture.
+local function collect_equipped_linkshells(player, items)
+    if not player or not items then return nil end
+
+    local found = {}
+    for _, bag_key in ipairs(LS_BAGS) do
+        local bag = items[bag_key]
+        if bag then
+            for _, item in pairs(bag) do
+                if type(item) == 'table' and item.id and item.id > 0
+                    and item.status and EQUIPPED_LS_STATUSES[item.status] then
+                    local r = res.items[item.id]
+                    if r and r.type == 6 then
+                        local ls = extdata_util.decode_linkshell(item)
+                        if ls then found[#found + 1] = ls end
+                    end
+                end
+            end
+        end
+    end
+
+    if #found == 0 then return nil end
+    return found
+end
+
 local progression = require('progression')
 local missions_lib = require('missions')
 local collection_lib = require('collection')
@@ -1897,6 +1934,8 @@ local function read_character_state()
         if not next(merits) then merits = nil end
     end
 
+    local equipped_linkshells = collect_equipped_linkshells(player, items)
+
     local state = {
         characterName = char_name,
         server = server,
@@ -1911,6 +1950,10 @@ local function read_character_state()
         mp = player.vitals.mp,
         maxMp = player.vitals.max_mp,
         linkshell = player.linkshell,
+        -- player.linkshell is only the *active* LS; linkshell_slot (1 or 2)
+        -- records which equipped slot it came from so the UI can label it.
+        linkshellSlot = player.linkshell_slot,
+        linkshells = equipped_linkshells,
         nation = player.nation,
         titleId = current_title_id,
         titleName = (current_title_id > 0 and res.titles[current_title_id])
@@ -2429,6 +2472,54 @@ windower.register_event('addon command', function(command, ...)
             log('Session debug mode: ' .. (enabled and 'ON' or 'OFF'))
         else
             log('Session commands: start | stop | status | flush | cleanup | debug')
+        end
+
+    elseif command == 'lsdump' then
+        local player = windower.ffxi.get_player()
+        local items = windower.ffxi.get_items()
+        if not player or not items then
+            log_error('Not logged in.')
+            return
+        end
+        local extdata = require('extdata')
+        local lines = {}
+        lines[#lines + 1] = 'active linkshell = ' .. tostring(player.linkshell)
+        lines[#lines + 1] = 'active linkshell_slot = ' .. tostring(player.linkshell_slot)
+        lines[#lines + 1] = ''
+        local bag_names = {
+            [0] = 'inventory', [1] = 'safe', [2] = 'storage', [3] = 'temporary',
+            [4] = 'locker', [5] = 'satchel', [6] = 'sack', [7] = 'case', [8] = 'wardrobe',
+            [9] = 'safe2', [10] = 'wardrobe2', [11] = 'wardrobe3', [12] = 'wardrobe4',
+            [13] = 'wardrobe5', [14] = 'wardrobe6', [15] = 'wardrobe7', [16] = 'wardrobe8',
+        }
+        for _, bag_key in pairs(bag_names) do
+            local bag = items[bag_key]
+            if bag then
+                for _, item in pairs(bag) do
+                    if type(item) == 'table' and item.id and item.id > 0 then
+                        local r = res.items[item.id]
+                        if r and r.type == 6 then
+                            local ok, d = pcall(extdata.decode, item)
+                            local decoded = (ok and type(d) == 'table')
+                                and string.format('type=%s ls_id=%s status_id=%s name=%s rgb=%s,%s,%s',
+                                    tostring(d.type), tostring(d.linkshell_id), tostring(d.status_id),
+                                    tostring(d.name), tostring(d.r), tostring(d.g), tostring(d.b))
+                                or 'decode failed'
+                            lines[#lines + 1] = string.format('bag=%s id=%d status=%s | %s',
+                                bag_key, item.id, tostring(item.status), decoded)
+                        end
+                    end
+                end
+            end
+        end
+        local path = windower.addon_path .. 'lsdump.txt'
+        local f = io.open(path, 'w')
+        if f then
+            f:write(table.concat(lines, '\n'))
+            f:close()
+            log_success('LS dump written to ' .. path)
+        else
+            log_error('Failed to write lsdump.txt')
         end
 
     elseif command == 'dump' then

@@ -7,9 +7,20 @@ import CraftingTable from '../components/CraftingTable'
 import StatusPanel from '../components/character/StatusPanel'
 import EquipmentGrid from '../components/character/EquipmentGrid'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
+import Tabs from '../components/Tabs'
+import ProgressionTab from '../components/character/ProgressionTab'
+import MissionsTab from '../components/character/MissionsTab'
+import TitlesTab from '../components/character/TitlesTab'
+import KeyItemsTab from '../components/character/KeyItemsTab'
+import SpellsTab from '../components/character/SpellsTab'
+import RelicsTab from '../components/character/RelicsTab'
+import GearSetsTab from '../components/character/GearSetsTab'
 
-const STAT_TABS = ['Jobs', 'Crafting'] as const
+const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items'] as const
 type StatTab = typeof STAT_TABS[number]
+
+const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Spells', 'Gear Sets'] as const
+type GearTab = typeof GEAR_TABS[number]
 
 export default function PublicProfilePage() {
   const { server, name } = useParams<{ server: string; name: string }>()
@@ -18,6 +29,7 @@ export default function PublicProfilePage() {
   const [notFound, setNotFound] = useState(false)
   const [loadError, setLoadError] = useState(false)
   const [activeTab, setActiveTab] = useState<StatTab>('Jobs')
+  const [gearTab, setGearTab] = useState<GearTab>('Equipment')
   const [itemCache, setItemCache] = useState<Map<number, GameItemDetail>>(new Map())
   const [copied, setCopied] = useState(false)
 
@@ -105,6 +117,8 @@ export default function PublicProfilePage() {
 
   if (!character) return null
 
+  const fetchBase = `/api/profiles/${server}/${name}`
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
       <main className="mx-auto max-w-5xl px-4 py-8">
@@ -124,28 +138,18 @@ export default function PublicProfilePage() {
           </button>
         </div>
 
-        {/* Stats section: Jobs / Crafting tabs + Status panel */}
+        {/* Stats section: Jobs / Crafting / Progression / Missions / Titles / Key Items + Status panel */}
         <section className="mb-8">
           <div className="flex gap-8">
             <div className="flex-1 min-w-0">
-              <div className="flex gap-1 border-b border-gray-700 mb-4">
-                {STAT_TABS.map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      activeTab === tab
-                        ? 'text-blue-400 border-b-2 border-blue-400 -mb-px'
-                        : 'text-gray-500 hover:text-gray-300'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
+              <Tabs items={STAT_TABS} value={activeTab} onChange={setActiveTab} />
               <div className="h-[400px] overflow-y-auto styled-scrollbar">
                 {activeTab === 'Jobs' && <JobsGrid jobs={character.jobs} />}
                 {activeTab === 'Crafting' && <CraftingTable skills={character.craftingSkills} />}
+                {activeTab === 'Progression' && <ProgressionTab characterId={character.id} fetchBase={fetchBase} />}
+                {activeTab === 'Missions' && <MissionsTab characterId={character.id} fetchBase={fetchBase} />}
+                {activeTab === 'Titles' && <TitlesTab characterId={character.id} fetchBase={fetchBase} />}
+                {activeTab === 'Key Items' && <KeyItemsTab characterId={character.id} fetchBase={fetchBase} />}
               </div>
             </div>
 
@@ -159,20 +163,40 @@ export default function PublicProfilePage() {
           </div>
         </section>
 
-        {/* Equipment section */}
+        {/* Equipment / Ultimate Weapons / Spells / Gear Sets tabbed panel */}
         <section className="mb-8">
-          <div className="flex gap-1 border-b border-gray-700 mb-4">
-            <span className="px-4 py-2 text-sm font-medium text-blue-400 border-b-2 border-blue-400 -mb-px">
-              Equipment
-            </span>
+          <Tabs items={GEAR_TABS} value={gearTab} onChange={setGearTab} />
+
+          {/* Equipment tab: hidden instead of unmounted to preserve layout */}
+          <div className={gearTab === 'Equipment' ? '' : 'hidden'}>
+            <div className="max-w-[400px]">
+              <EquipmentGrid
+                gear={character.gear}
+                onSlotClick={() => {}}
+                itemCache={itemCache}
+                readOnly
+              />
+            </div>
           </div>
-          <div className="max-w-[400px]">
-            <EquipmentGrid
+
+          {gearTab === 'Ultimate Weapons' && (
+            <RelicsTab characterId={character.id} fetchBase={fetchBase} readOnly />
+          )}
+
+          {gearTab === 'Spells' && (
+            <SpellsTab characterId={character.id} fetchBase={fetchBase} />
+          )}
+
+          {gearTab === 'Gear Sets' && (
+            <GearSetsTab
+              character={character}
               gear={character.gear}
-              onSlotClick={() => {}}
               itemCache={itemCache}
+              onSaveFavorite={() => {}}
+              fetchBase={fetchBase}
+              readOnly
             />
-          </div>
+          )}
         </section>
       </main>
     </div>

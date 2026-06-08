@@ -20,6 +20,11 @@ public class CharactersController : ControllerBase
 {
     private readonly VanalyticsDbContext _db;
 
+    private static readonly JsonSerializerOptions JsonOpts = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     public CharactersController(VanalyticsDbContext db)
     {
         _db = db;
@@ -156,38 +161,28 @@ public class CharactersController : ControllerBase
     {
         var userId = GetUserId();
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
-
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
+        return Ok(await LoadProgressionAsync(_db, id));
+    }
 
-        var row = await _db.CharacterProgression
-            .FirstOrDefaultAsync(p => p.CharacterId == id);
+    internal static async Task<ProgressionResponse> LoadProgressionAsync(VanalyticsDbContext db, Guid id)
+    {
+        var row = await db.CharacterProgression.FirstOrDefaultAsync(p => p.CharacterId == id);
+        if (row is null) return new ProgressionResponse();
 
-        if (row is null)
-        {
-            // No packet data has arrived yet — return an empty shell so the UI can show its empty state.
-            return Ok(new ProgressionResponse());
-        }
-
-        // Stored JSON is camelCase (written via ProgressionController.JsonOpts).
-        // Deserialize with the matching naming policy — otherwise all fields
-        // silently fall back to defaults (empty arrays, zeros).
-        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
-        return Ok(new ProgressionResponse
+        return new ProgressionResponse
         {
             LimitPoints = row.LimitPoints,
             MeritPoints = row.MeritPoints,
             MeritPointsMax = row.MeritPointsMax,
             JobPointsUnlocked = row.JobPointsUnlocked,
-            JobPoints = row.JobPointsJson is null
-                ? null
-                : JsonSerializer.Deserialize<List<JobPointEntry>>(row.JobPointsJson, jsonOpts),
-            Warps = row.WarpsJson is null
-                ? null
-                : JsonSerializer.Deserialize<WarpUnlocks>(row.WarpsJson, jsonOpts),
+            JobPoints = row.JobPointsJson is null ? null
+                : JsonSerializer.Deserialize<List<JobPointEntry>>(row.JobPointsJson, JsonOpts),
+            Warps = row.WarpsJson is null ? null
+                : JsonSerializer.Deserialize<WarpUnlocks>(row.WarpsJson, JsonOpts),
             UpdatedAt = row.UpdatedAt,
-        });
+        };
     }
 
     [HttpGet("{id:guid}/collection")]
@@ -195,27 +190,24 @@ public class CharactersController : ControllerBase
     {
         var userId = GetUserId();
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
-
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
+        return Ok(await LoadCollectionAsync(_db, id));
+    }
 
-        var row = await _db.CharacterCollection
-            .FirstOrDefaultAsync(c => c.CharacterId == id);
+    internal static async Task<CollectionResponse> LoadCollectionAsync(VanalyticsDbContext db, Guid id)
+    {
+        var row = await db.CharacterCollection.FirstOrDefaultAsync(c => c.CharacterId == id);
+        if (row is null) return new CollectionResponse();
 
-        if (row is null) return Ok(new CollectionResponse());
-
-        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
-        return Ok(new CollectionResponse
+        return new CollectionResponse
         {
-            SpellIds = row.SpellIdsJson is null
-                ? null
-                : JsonSerializer.Deserialize<List<int>>(row.SpellIdsJson, jsonOpts),
-            KeyItemIds = row.KeyItemIdsJson is null
-                ? null
-                : JsonSerializer.Deserialize<List<int>>(row.KeyItemIdsJson, jsonOpts),
+            SpellIds = row.SpellIdsJson is null ? null
+                : JsonSerializer.Deserialize<List<int>>(row.SpellIdsJson, JsonOpts),
+            KeyItemIds = row.KeyItemIdsJson is null ? null
+                : JsonSerializer.Deserialize<List<int>>(row.KeyItemIdsJson, JsonOpts),
             UpdatedAt = row.UpdatedAt,
-        });
+        };
     }
 
     [HttpGet("{id:guid}/titles")]
@@ -223,11 +215,19 @@ public class CharactersController : ControllerBase
     {
         var userId = GetUserId();
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
-
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
+        return Ok(await LoadTitlesAsync(_db, id));
+    }
 
-        var titles = await _db.CharacterTitles
+    internal static async Task<TitlesResponse> LoadTitlesAsync(VanalyticsDbContext db, Guid id)
+    {
+        // Deliberate lightweight re-query: keeps this loader self-contained (signature: db, id)
+        // so it can be shared by both the authenticated and public (ProfilesController) paths.
+        var currentTitleId = await db.Characters
+            .Where(c => c.Id == id).Select(c => c.TitleId).FirstOrDefaultAsync();
+
+        var titles = await db.CharacterTitles
             .Where(t => t.CharacterId == id)
             .OrderByDescending(t => t.FirstSeenAt)
             .Select(t => new TitleEntry
@@ -238,11 +238,38 @@ public class CharactersController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(new TitlesResponse
-        {
-            CurrentTitleId = character.TitleId,
-            Titles = titles,
-        });
+        return new TitlesResponse { CurrentTitleId = currentTitleId, Titles = titles };
+    }
+
+    [HttpGet("{id:guid}/linkshells")]
+    public async Task<IActionResult> GetLinkshells(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        return Ok(await LoadLinkshellsAsync(_db, id));
+    }
+
+    internal static async Task<LinkshellsResponse> LoadLinkshellsAsync(VanalyticsDbContext db, Guid id)
+    {
+        // Every linkshell this character has ever synced with — current ones
+        // first, then former (departed) ones, each most-recently-seen first.
+        var linkshells = await db.LinkshellMemberships
+            .Where(m => m.CharacterId == id)
+            .OrderByDescending(m => m.IsCurrent)
+            .ThenByDescending(m => m.LastSeenAt)
+            .Select(m => new CharacterLinkshellEntry
+            {
+                Name = m.Linkshell.Name,
+                ColorRgb = m.Linkshell.ColorRgb,
+                Rank = m.Rank.ToString(),
+                IsCurrent = m.IsCurrent,
+                LastSeenAt = m.LastSeenAt,
+            })
+            .ToListAsync();
+
+        return new LinkshellsResponse { Linkshells = linkshells };
     }
 
     [HttpGet("{id:guid}/missions")]
@@ -250,24 +277,22 @@ public class CharactersController : ControllerBase
     {
         var userId = GetUserId();
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
-
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
+        return Ok(await LoadMissionsAsync(_db, id));
+    }
 
-        var row = await _db.CharacterMissions
-            .FirstOrDefaultAsync(m => m.CharacterId == id);
+    internal static async Task<MissionsResponse> LoadMissionsAsync(VanalyticsDbContext db, Guid id)
+    {
+        var row = await db.CharacterMissions.FirstOrDefaultAsync(m => m.CharacterId == id);
+        if (row is null) return new MissionsResponse();
 
-        if (row is null) return Ok(new MissionsResponse());
-
-        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
-        // Stored as Dictionary<string, MissionLineState> with camelCase keys.
         var dict = row.MissionsJson is null
             ? new Dictionary<string, MissionLineState>()
-            : JsonSerializer.Deserialize<Dictionary<string, MissionLineState>>(row.MissionsJson, jsonOpts)
+            : JsonSerializer.Deserialize<Dictionary<string, MissionLineState>>(row.MissionsJson, JsonOpts)
               ?? new Dictionary<string, MissionLineState>();
 
-        return Ok(new MissionsResponse
+        return new MissionsResponse
         {
             SandoriaMissions = dict.GetValueOrDefault("sandoriaMissions"),
             BastokMissions = dict.GetValueOrDefault("bastokMissions"),
@@ -284,7 +309,7 @@ public class CharactersController : ControllerBase
             RovMissions = dict.GetValueOrDefault("rovMissions"),
             TvrMissions = dict.GetValueOrDefault("tvrMissions"),
             UpdatedAt = row.UpdatedAt,
-        });
+        };
     }
 
     [HttpGet("{id:guid}/relics")]
@@ -292,50 +317,28 @@ public class CharactersController : ControllerBase
     {
         var userId = GetUserId();
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
-
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
+        return Ok(await LoadRelicsAsync(_db, id));
+    }
 
-        // Collect all item IDs this character has ever held
-        var currentItemIds = await _db.CharacterInventories
-            .Where(i => i.CharacterId == id)
-            .Select(i => i.ItemId)
-            .Distinct()
-            .ToListAsync();
-
-        var historicalItemIds = await _db.InventoryChanges
+    internal static async Task<object> LoadRelicsAsync(VanalyticsDbContext db, Guid id)
+    {
+        var currentItemIds = await db.CharacterInventories
+            .Where(i => i.CharacterId == id).Select(i => i.ItemId).Distinct().ToListAsync();
+        var historicalItemIds = await db.InventoryChanges
             .Where(c => c.CharacterId == id && c.ChangeType == Vanalytics.Core.Enums.InventoryChangeType.Added)
-            .Select(c => c.ItemId)
-            .Distinct()
-            .ToListAsync();
-
+            .Select(c => c.ItemId).Distinct().ToListAsync();
         var everHeldIds = currentItemIds.Union(historicalItemIds).ToHashSet();
 
-        // Get all weapon base names to search for
         var weaponDefs = Vanalytics.Core.Data.UltimateWeapons.All;
         var baseNames = weaponDefs.Select(w => w.BaseName).Distinct().ToList();
-
-        // Find all GameItems matching any ultimate weapon name
-        var matchingItems = await _db.GameItems
+        var matchingItems = await db.GameItems
             .Where(gi => baseNames.Contains(gi.Name))
-            .Select(gi => new
-            {
-                gi.ItemId,
-                gi.Name,
-                gi.IconPath,
-                gi.Category,
-                gi.ItemLevel,
-                gi.Level,
-                gi.Damage,
-                gi.Delay,
-                gi.Description
-            })
+            .Select(gi => new { gi.ItemId, gi.Name, gi.IconPath, gi.Category, gi.ItemLevel, gi.Level, gi.Damage, gi.Delay, gi.Description })
             .ToListAsync();
 
-        // Build response: for each weapon def, find matching items the player has held,
-        // collapse duplicate ItemIds at the same stage, and order by canonical progression.
         var results = new List<object>();
-
         foreach (var def in weaponDefs.DistinctBy(d => d.BaseName))
         {
             var versions = matchingItems
@@ -357,62 +360,21 @@ public class CharactersController : ControllerBase
                 .Select(g =>
                 {
                     var rep = g.OrderByDescending(v => v.CurrentlyHeld).First();
-                    return new
-                    {
-                        rep.ItemId,
-                        rep.Name,
-                        rep.IconPath,
-                        rep.ItemLevel,
-                        rep.Level,
-                        rep.Damage,
-                        rep.Delay,
-                        Stage = g.Key,
-                        rep.Rank,
-                        CurrentlyHeld = g.Any(v => v.CurrentlyHeld)
-                    };
+                    return new { rep.ItemId, rep.Name, rep.IconPath, rep.ItemLevel, rep.Level, rep.Damage, rep.Delay, Stage = g.Key, rep.Rank, CurrentlyHeld = g.Any(v => v.CurrentlyHeld) };
                 })
                 .OrderBy(v => v.Rank)
-                .Select(v => new
-                {
-                    v.ItemId,
-                    v.Name,
-                    v.IconPath,
-                    v.ItemLevel,
-                    v.Level,
-                    v.Damage,
-                    v.Delay,
-                    v.Stage,
-                    v.CurrentlyHeld
-                })
+                .Select(v => new { v.ItemId, v.Name, v.IconPath, v.ItemLevel, v.Level, v.Damage, v.Delay, v.Stage, v.CurrentlyHeld })
                 .ToList();
 
             if (versions.Count > 0)
-            {
-                results.Add(new
-                {
-                    BaseName = def.BaseName,
-                    def.Category,
-                    def.WeaponSkill,
-                    Versions = versions
-                });
-            }
+                results.Add(new { BaseName = def.BaseName, def.Category, def.WeaponSkill, Versions = versions });
         }
 
-        // Build progress per category
-        var progress = weaponDefs
-            .DistinctBy(d => d.BaseName)
-            .GroupBy(d => d.Category)
-            .Select(g => new
-            {
-                Category = g.Key,
-                Total = g.Count(),
-                Collected = g.Count(d =>
-                    matchingItems.Any(gi => gi.Name == d.BaseName && everHeldIds.Contains(gi.ItemId)))
-            })
-            .OrderBy(p => p.Category)
-            .ToList();
+        var progress = weaponDefs.DistinctBy(d => d.BaseName).GroupBy(d => d.Category)
+            .Select(g => new { Category = g.Key, Total = g.Count(), Collected = g.Count(d => matchingItems.Any(gi => gi.Name == d.BaseName && everHeldIds.Contains(gi.ItemId))) })
+            .OrderBy(p => p.Category).ToList();
 
-        return Ok(new { progress, weapons = results });
+        return new { progress, weapons = results };
     }
 
     [HttpGet("{id:guid}/porter")]
@@ -611,13 +573,17 @@ public class CharactersController : ControllerBase
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
+        return Ok(await LoadGearSetsAsync(_db, id));
+    }
 
-        var sets = await _db.CharacterGearSets
+    internal static async Task<List<GearSetSummaryResponse>> LoadGearSetsAsync(VanalyticsDbContext db, Guid id)
+    {
+        var sets = await db.CharacterGearSets
             .Where(s => s.CharacterId == id)
             .OrderByDescending(s => s.UpdatedAt)
             .ToListAsync();
 
-        var result = sets.Select(s => new GearSetSummaryResponse
+        return sets.Select(s => new GearSetSummaryResponse
         {
             Id = s.Id,
             Name = s.Name,
@@ -627,8 +593,6 @@ public class CharactersController : ControllerBase
             SlotCount = CountSlots(s.SlotsJson),
             UpdatedAt = s.UpdatedAt
         }).ToList();
-
-        return Ok(result);
     }
 
     [HttpGet("{id:guid}/gear-sets/{setId:long}")]
@@ -638,12 +602,14 @@ public class CharactersController : ControllerBase
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
+        var detail = await LoadGearSetAsync(_db, id, setId);
+        return detail is null ? NotFound() : Ok(detail);
+    }
 
-        var set = await _db.CharacterGearSets
-            .FirstOrDefaultAsync(s => s.Id == setId && s.CharacterId == id);
-        if (set is null) return NotFound();
-
-        return Ok(ToDetail(set));
+    internal static async Task<GearSetDetailResponse?> LoadGearSetAsync(VanalyticsDbContext db, Guid id, long setId)
+    {
+        var set = await db.CharacterGearSets.FirstOrDefaultAsync(s => s.Id == setId && s.CharacterId == id);
+        return set is null ? null : ToDetail(set);
     }
 
     [HttpPost("{id:guid}/gear-sets")]
@@ -840,6 +806,8 @@ public class CharactersController : ControllerBase
         Mp = c.Mp,
         MaxMp = c.MaxMp,
         Linkshell = c.Linkshell,
+        LinkshellSlot = c.LinkshellSlot,
+        LinkshellColorRgb = c.LinkshellColorRgb,
         Nation = c.Nation,
         NationRank = c.NationRank,
         RankPoints = c.RankPoints,

@@ -53,6 +53,8 @@ export interface CharacterDetail {
   mp?: number
   maxMp?: number
   linkshell?: string
+  linkshellSlot?: number
+  linkshellColorRgb?: number
   nation?: number
   nationRank?: number
   rankPoints?: number
@@ -863,6 +865,20 @@ export interface TitleEntry {
 export interface TitlesResponse {
   currentTitleId: number | null
   titles: TitleEntry[]
+}
+
+// Linkshells — every linkshell this character has synced with (current + former),
+// decoded from the equipped pearl extdata on each sync.
+export interface CharacterLinkshellEntry {
+  name: string
+  colorRgb: number
+  rank: string // "Member" | "Sackholder" | "Leader"
+  isCurrent: boolean
+  lastSeenAt: string
+}
+
+export interface LinkshellsResponse {
+  linkshells: CharacterLinkshellEntry[]
 }
 
 export interface MissionsResponse {

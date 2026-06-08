@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vanalytics.Data;
 
@@ -11,9 +12,11 @@ using Vanalytics.Data;
 namespace Vanalytics.Data.Migrations
 {
     [DbContext(typeof(VanalyticsDbContext))]
-    partial class VanalyticsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260608184529_AddCharacterLinkshellSlot")]
+    partial class AddCharacterLinkshellSlot
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -689,9 +692,6 @@ namespace Vanalytics.Data.Migrations
                     b.Property<string>("Linkshell")
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
-
-                    b.Property<int?>("LinkshellColorRgb")
-                        .HasColumnType("int");
 
                     b.Property<int?>("LinkshellSlot")
                         .HasColumnType("int");
@@ -1500,82 +1500,6 @@ namespace Vanalytics.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("ItemModelMappings");
-                });
-
-            modelBuilder.Entity("Vanalytics.Core.Models.Linkshell", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ColorRgb")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("FirstSeenAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<long>("GameLinkshellId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTimeOffset>("LastSeenAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("MemberCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<string>("Server")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Server", "GameLinkshellId")
-                        .IsUnique();
-
-                    b.ToTable("Linkshells");
-                });
-
-            modelBuilder.Entity("Vanalytics.Core.Models.LinkshellMembership", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("FirstSeenAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("IsCurrent")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset>("LastSeenAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("LinkshellId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Rank")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Slot")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LinkshellId");
-
-                    b.HasIndex("CharacterId", "LinkshellId")
-                        .IsUnique();
-
-                    b.ToTable("LinkshellMemberships");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.Macro", b =>
@@ -2556,25 +2480,6 @@ namespace Vanalytics.Data.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("Vanalytics.Core.Models.LinkshellMembership", b =>
-                {
-                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
-                        .WithMany()
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Vanalytics.Core.Models.Linkshell", "Linkshell")
-                        .WithMany("Memberships")
-                        .HasForeignKey("LinkshellId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-
-                    b.Navigation("Linkshell");
-                });
-
             modelBuilder.Entity("Vanalytics.Core.Models.Macro", b =>
                 {
                     b.HasOne("Vanalytics.Core.Models.MacroPage", "Page")
@@ -2704,11 +2609,6 @@ namespace Vanalytics.Data.Migrations
             modelBuilder.Entity("Vanalytics.Core.Models.GameServer", b =>
                 {
                     b.Navigation("StatusHistory");
-                });
-
-            modelBuilder.Entity("Vanalytics.Core.Models.Linkshell", b =>
-                {
-                    b.Navigation("Memberships");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.MacroBook", b =>

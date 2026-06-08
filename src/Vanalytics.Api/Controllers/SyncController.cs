@@ -48,6 +48,17 @@ public class SyncController : ControllerBase
     private const string MissingCharacterMessage =
         "Addon character context missing. The addon must send X-Character-Name and X-Server headers matching a character owned by this account. Update your Vanalytics addon if you're seeing this on a recent build.";
 
+    private static bool TryParseLinkshellRank(string? rank, out LinkshellRank result)
+    {
+        switch ((rank ?? string.Empty).ToLowerInvariant())
+        {
+            case "leader": result = LinkshellRank.Leader; return true;
+            case "sackholder": result = LinkshellRank.Sackholder; return true;
+            case "member": result = LinkshellRank.Member; return true;
+            default: result = LinkshellRank.Member; return false;
+        }
+    }
+
     [HttpPost]
     public async Task<IActionResult> Sync([FromBody] SyncRequest request)
     {
@@ -123,6 +134,7 @@ public class SyncController : ControllerBase
         character.Mp = request.Mp;
         character.MaxMp = request.MaxMp;
         character.Linkshell = request.Linkshell;
+        character.LinkshellSlot = request.LinkshellSlot;
         character.Nation = request.Nation;
         character.NationRank = request.NationRank;
         character.RankPoints = request.RankPoints;
@@ -323,6 +335,102 @@ public class SyncController : ControllerBase
         character.LastSyncAt = DateTimeOffset.UtcNow;
         character.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
+
+        // Linkshell membership accumulator. Never hard-deletes: a linkshell the
+        // character no longer reports is flipped to IsCurrent = false. Mirrors
+        // the CharacterTitles freshness pattern. Runs after the character is
+        // saved so character.Id is persisted for the membership FKs.
+        if (request.Linkshells.Count > 0)
+        {
+            var lsNow = DateTimeOffset.UtcNow;
+            var currentLinkshellPks = new HashSet<Guid>();
+
+            foreach (var entry in request.Linkshells)
+            {
+                if (entry.LinkshellId == 0 || string.IsNullOrEmpty(entry.Name)) continue;
+                if (!TryParseLinkshellRank(entry.Rank, out var rank)) continue;
+
+                var ls = await _db.Linkshells
+                    .FirstOrDefaultAsync(l => l.Server == character.Server && l.GameLinkshellId == entry.LinkshellId);
+                if (ls is null)
+                {
+                    ls = new Linkshell
+                    {
+                        Id = Guid.NewGuid(),
+                        Server = character.Server,
+                        GameLinkshellId = entry.LinkshellId,
+                        Name = entry.Name,
+                        ColorRgb = entry.ColorRgb,
+                        FirstSeenAt = lsNow,
+                        LastSeenAt = lsNow,
+                    };
+                    _db.Linkshells.Add(ls);
+                }
+                else
+                {
+                    ls.Name = entry.Name;
+                    ls.ColorRgb = entry.ColorRgb;
+                    ls.LastSeenAt = lsNow;
+                }
+
+                var membership = await _db.LinkshellMemberships
+                    .FirstOrDefaultAsync(m => m.CharacterId == character.Id && m.LinkshellId == ls.Id);
+                if (membership is null)
+                {
+                    _db.LinkshellMemberships.Add(new LinkshellMembership
+                    {
+                        Id = Guid.NewGuid(),
+                        CharacterId = character.Id,
+                        LinkshellId = ls.Id,
+                        Slot = entry.Slot ?? 0,
+                        Rank = rank,
+                        IsCurrent = true,
+                        FirstSeenAt = lsNow,
+                        LastSeenAt = lsNow,
+                    });
+                }
+                else
+                {
+                    membership.Slot = entry.Slot ?? membership.Slot;
+                    membership.Rank = rank;
+                    membership.IsCurrent = true;
+                    membership.LastSeenAt = lsNow;
+                }
+
+                currentLinkshellPks.Add(ls.Id);
+
+                // Denormalize the active linkshell's color onto the character for
+                // the profile-header pearl icon (matches the flat request.Linkshell).
+                if (!string.IsNullOrEmpty(request.Linkshell)
+                    && string.Equals(entry.Name, request.Linkshell, StringComparison.OrdinalIgnoreCase))
+                {
+                    character.LinkshellColorRgb = entry.ColorRgb;
+                }
+            }
+
+            var stale = await _db.LinkshellMemberships
+                .Where(m => m.CharacterId == character.Id && m.IsCurrent)
+                .ToListAsync();
+            foreach (var m in stale)
+            {
+                if (!currentLinkshellPks.Contains(m.LinkshellId))
+                    m.IsCurrent = false;
+            }
+
+            await _db.SaveChangesAsync();
+
+            var touchedPks = currentLinkshellPks
+                .Concat(stale.Select(m => m.LinkshellId))
+                .ToHashSet();
+            foreach (var lsId in touchedPks)
+            {
+                var ls = await _db.Linkshells.FirstOrDefaultAsync(l => l.Id == lsId);
+                if (ls is null) continue;
+                ls.MemberCount = await _db.LinkshellMemberships
+                    .CountAsync(m => m.LinkshellId == lsId && m.IsCurrent);
+            }
+            await _db.SaveChangesAsync();
+        }
 
         return Ok(new { message = "Sync successful", lastSyncAt = character.LastSyncAt });
     }

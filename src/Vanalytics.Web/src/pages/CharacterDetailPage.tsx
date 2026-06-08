@@ -20,6 +20,7 @@ import ProgressionTab from '../components/character/ProgressionTab'
 import MissionsTab from '../components/character/MissionsTab'
 import TitlesTab from '../components/character/TitlesTab'
 import KeyItemsTab from '../components/character/KeyItemsTab'
+import LinkshellsTab from '../components/character/LinkshellsTab'
 import SpellsTab from '../components/character/SpellsTab'
 import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
@@ -30,7 +31,7 @@ import { ApiError } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
 import Tabs from '../components/Tabs'
 
-const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items'] as const
+const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items', 'Linkshells'] as const
 type StatTab = typeof STAT_TABS[number]
 
 const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Spells', 'Macros', 'Sessions', 'Gear Sets'] as const
@@ -189,6 +190,7 @@ export default function CharacterDetailPage() {
               {activeTab === 'Missions' && <MissionsTab characterId={character.id} />}
               {activeTab === 'Titles' && <TitlesTab characterId={character.id} />}
               {activeTab === 'Key Items' && <KeyItemsTab characterId={character.id} />}
+              {activeTab === 'Linkshells' && <LinkshellsTab characterId={character.id} server={character.server} />}
             </div>
           </div>
 

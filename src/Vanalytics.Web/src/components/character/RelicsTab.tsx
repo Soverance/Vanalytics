@@ -29,9 +29,12 @@ function stageBadgeClass(stage: string): string {
 
 interface Props {
   characterId: string
+  fetchBase?: string
+  readOnly?: boolean
 }
 
-export default function RelicsTab({ characterId }: Props) {
+export default function RelicsTab({ characterId, fetchBase, readOnly = false }: Props) {
+  const base = fetchBase ?? `/api/characters/${characterId}`
   const [data, setData] = useState<RelicsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [categoryFilter, setCategoryFilter] = useState<string>('')
@@ -45,11 +48,11 @@ export default function RelicsTab({ characterId }: Props) {
 
   useEffect(() => {
     setLoading(true)
-    api<RelicsResponse>(`/api/characters/${characterId}/relics`)
+    api<RelicsResponse>(`${base}/relics`)
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false))
-  }, [characterId])
+  }, [base])
 
   const handleRowEnter = useCallback((itemId: number) => {
     setHoveredItemId(itemId)
@@ -109,12 +112,14 @@ export default function RelicsTab({ characterId }: Props) {
     return a.baseName.localeCompare(b.baseName)
   })
 
+  const innerTabs = readOnly ? INNER_TABS.filter(t => t !== 'Relics') : INNER_TABS
+
   return (
     <div>
-      <Tabs items={INNER_TABS} value={innerTab} onChange={setInnerTab} />
+      <Tabs items={innerTabs} value={innerTab} onChange={setInnerTab} />
 
       {innerTab === 'Relics' ? (
-        <RelicCurrencyProgress characterId={characterId} relics={data} />
+        !readOnly && <RelicCurrencyProgress characterId={characterId} relics={data} />
       ) : (
         <OverviewContent
           sortedProgress={sortedProgress}

@@ -19,6 +19,8 @@ public class CharacterDetailResponse
     public int? Mp { get; set; }
     public int? MaxMp { get; set; }
     public string? Linkshell { get; set; }
+    public int? LinkshellSlot { get; set; }
+    public int? LinkshellColorRgb { get; set; }
     public int? Nation { get; set; }
     public int? NationRank { get; set; }
     public int? RankPoints { get; set; }

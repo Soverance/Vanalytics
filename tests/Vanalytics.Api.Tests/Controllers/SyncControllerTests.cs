@@ -276,6 +276,100 @@ public class SyncControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Sync_WithLinkshells_CreatesLinkshellsAndMemberships()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("ls1@test.com", "ls1user");
+        var payload = new SyncRequest
+        {
+            CharacterName = "LsChar1",
+            Server = "Asura",
+            ActiveJob = "WAR",
+            ActiveJobLevel = 99,
+            Linkshells =
+            [
+                new SyncLinkshellEntry { Slot = 1, LinkshellId = 1001, Name = "Alpha", ColorRgb = 0xFF0000, Rank = "leader" },
+                new SyncLinkshellEntry { Slot = 2, LinkshellId = 1002, Name = "Beta", ColorRgb = 0x00FF00, Rank = "member" },
+            ]
+        };
+
+        var resp = await _client.SendAsync(CreateSyncRequest(apiKey, payload));
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var character = await db.Characters.FirstAsync(c => c.Name == "LsChar1");
+        var memberships = await db.LinkshellMemberships
+            .Include(m => m.Linkshell)
+            .Where(m => m.CharacterId == character.Id)
+            .ToListAsync();
+
+        Assert.Equal(2, memberships.Count);
+        Assert.All(memberships, m => Assert.True(m.IsCurrent));
+        var leader = memberships.Single(m => m.Linkshell.Name == "Alpha");
+        Assert.Equal(LinkshellRank.Leader, leader.Rank);
+        Assert.Equal(1, leader.Slot);
+        Assert.Equal(0xFF0000, leader.Linkshell.ColorRgb);
+    }
+
+    [Fact]
+    public async Task Sync_LinkshellRemoved_MarksMembershipNotCurrentNotDeleted()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("ls2@test.com", "ls2user");
+        SyncRequest Make(params SyncLinkshellEntry[] ls) => new()
+        {
+            CharacterName = "LsChar2",
+            Server = "Asura",
+            ActiveJob = "WAR",
+            ActiveJobLevel = 99,
+            Linkshells = ls.ToList()
+        };
+        var a = new SyncLinkshellEntry { Slot = 1, LinkshellId = 2001, Name = "Aaa", ColorRgb = 1, Rank = "member" };
+        var b = new SyncLinkshellEntry { Slot = 2, LinkshellId = 2002, Name = "Bbb", ColorRgb = 2, Rank = "member" };
+        await _client.SendAsync(CreateSyncRequest(apiKey, Make(a, b)));
+
+        var c = new SyncLinkshellEntry { Slot = 2, LinkshellId = 2003, Name = "Ccc", ColorRgb = 3, Rank = "member" };
+        await _client.SendAsync(CreateSyncRequest(apiKey, Make(a, c)));
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var character = await db.Characters.FirstAsync(ch => ch.Name == "LsChar2");
+        var all = await db.LinkshellMemberships
+            .Include(m => m.Linkshell)
+            .Where(m => m.CharacterId == character.Id)
+            .ToListAsync();
+
+        Assert.Equal(3, all.Count);
+        Assert.True(all.Single(m => m.Linkshell.Name == "Aaa").IsCurrent);
+        Assert.False(all.Single(m => m.Linkshell.Name == "Bbb").IsCurrent);
+        Assert.True(all.Single(m => m.Linkshell.Name == "Ccc").IsCurrent);
+    }
+
+    [Fact]
+    public async Task Sync_LinkshellRenamed_RefreshesNameOnSameGameId()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("ls3@test.com", "ls3user");
+        SyncRequest Make(string name) => new()
+        {
+            CharacterName = "LsChar3",
+            Server = "Asura",
+            ActiveJob = "WAR",
+            ActiveJobLevel = 99,
+            Linkshells = [new SyncLinkshellEntry { Slot = 1, LinkshellId = 3001, Name = name, ColorRgb = 5, Rank = "leader" }]
+        };
+        await _client.SendAsync(CreateSyncRequest(apiKey, Make("OldName")));
+        await _client.SendAsync(CreateSyncRequest(apiKey, Make("NewName")));
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var rows = await db.Linkshells
+            .Where(l => l.Server == "Asura" && l.GameLinkshellId == 3001)
+            .ToListAsync();
+
+        Assert.Single(rows);
+        Assert.Equal("NewName", rows[0].Name);
+    }
+
+    [Fact]
     public async Task Sync_SecondSync_UpsertsExistingData()
     {
         var (_, apiKey) = await SetupSyncUserAsync("sync5@test.com", "sync5user");

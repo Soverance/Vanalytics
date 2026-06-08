@@ -44,6 +44,8 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<InventoryMoveOrder> InventoryMoveOrders => Set<InventoryMoveOrder>();
     public DbSet<SynthRecipe> SynthRecipes => Set<SynthRecipe>();
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
+    public DbSet<Linkshell> Linkshells => Set<Linkshell>();
+    public DbSet<LinkshellMembership> LinkshellMemberships => Set<LinkshellMembership>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

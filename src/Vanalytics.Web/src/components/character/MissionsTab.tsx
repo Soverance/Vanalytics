@@ -122,20 +122,22 @@ function PointerLineSection({ line, state }: { line: PointerLineKey; state: Miss
 
 interface Props {
     characterId: string
+    fetchBase?: string
 }
 
-export default function MissionsTab({ characterId }: Props) {
+export default function MissionsTab({ characterId, fetchBase }: Props) {
+    const base = fetchBase ?? `/api/characters/${characterId}`
     const [data, setData] = useState<MissionsResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [subTab, setSubTab] = useState<MissionsSubTab>('Main')
 
     useEffect(() => {
         setLoading(true)
-        api<MissionsResponse>(`/api/characters/${characterId}/missions`)
+        api<MissionsResponse>(`${base}/missions`)
             .then(setData)
             .catch(() => setData(null))
             .finally(() => setLoading(false))
-    }, [characterId])
+    }, [base])
 
     if (loading) return <LoadingSpinner />
 

@@ -13,6 +13,7 @@ interface Props {
   onSortChange: (v: SortKey) => void
   activeTags: string[]
   onToggleTag: (tag: string) => void
+  readOnly?: boolean
   onOpen: (id: number) => void
   onExport: (id: number) => void
   onDelete: (id: number) => Promise<void>
@@ -20,7 +21,7 @@ interface Props {
 
 export default function GearSetList({
   rows, knownTags, search, onSearchChange, sort, onSortChange,
-  activeTags, onToggleTag, onOpen, onExport, onDelete,
+  activeTags, onToggleTag, readOnly = false, onOpen, onExport, onDelete,
 }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null)
   const [rowError, setRowError] = useState<{ id: number; msg: string } | null>(null)
@@ -87,7 +88,7 @@ export default function GearSetList({
               <button onClick={() => onExport(s.id)} className="text-gray-500 hover:text-amber-300" title="Export to GearSwap">
                 <Download className="h-4 w-4" />
               </button>
-              {confirmingDelete === s.id ? (
+              {!readOnly && (confirmingDelete === s.id ? (
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-gray-400">Delete?</span>
                   <button onClick={() => confirmDelete(s.id)} className="text-rose-400 hover:text-rose-300" title="Confirm delete">
@@ -102,7 +103,7 @@ export default function GearSetList({
                   className="text-gray-500 hover:text-rose-400" title="Delete">
                   <Trash2 className="h-4 w-4" />
                 </button>
-              )}
+              ))}
             </div>
             {rowError?.id === s.id && <div className="text-[11px] text-rose-300 px-3 pb-2">{rowError.msg}</div>}
           </div>

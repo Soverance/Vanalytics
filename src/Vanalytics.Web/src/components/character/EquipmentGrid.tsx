@@ -15,9 +15,10 @@ interface EquipmentGridProps {
   onSlotClick: (slotName: string) => void
   itemCache: Map<number, GameItemDetail>
   unavailableSlots?: Set<string>
+  readOnly?: boolean
 }
 
-export default function EquipmentGrid({ gear, onSlotClick, itemCache, unavailableSlots }: EquipmentGridProps) {
+export default function EquipmentGrid({ gear, onSlotClick, itemCache, unavailableSlots, readOnly = false }: EquipmentGridProps) {
   const gearBySlot = new Map(gear.map(g => [g.slot, g]))
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null)
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null)
@@ -65,9 +66,11 @@ export default function EquipmentGrid({ gear, onSlotClick, itemCache, unavailabl
             />
           ))}
         </div>
-        <div className="text-center text-gray-600 text-[9px] mt-2">
-          Click a slot to swap equipment
-        </div>
+        {!readOnly && (
+          <div className="text-center text-gray-600 text-[9px] mt-2">
+            Click a slot to swap equipment
+          </div>
+        )}
       </div>
 
       {/* Tooltip */}

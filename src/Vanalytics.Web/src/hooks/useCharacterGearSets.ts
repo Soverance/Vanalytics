@@ -15,12 +15,15 @@ export interface UseCharacterGearSets {
   deleteSet: (setId: number) => Promise<void>
 }
 
-export function useCharacterGearSets(characterId: string): UseCharacterGearSets {
+export function useCharacterGearSets(characterId: string, enabled = true): UseCharacterGearSets {
   const [sets, setSets] = useState<GearSetSummary[]>([])
-  const [loading, setLoading] = useState(true)
+  // Only start in the loading state when the hook will actually fetch; when
+  // disabled (e.g. read-only public view) it never fetches, so loading is false.
+  const [loading, setLoading] = useState(enabled)
   const [error, setError] = useState<Error | null>(null)
 
   const reload = useCallback(async () => {
+    if (!enabled) return
     setLoading(true)
     try {
       const data = await api<GearSetSummary[]>(`/api/characters/${characterId}/gear-sets`)
@@ -32,7 +35,7 @@ export function useCharacterGearSets(characterId: string): UseCharacterGearSets 
     } finally {
       setLoading(false)
     }
-  }, [characterId])
+  }, [characterId, enabled])
 
   useEffect(() => { reload() }, [reload])
 
