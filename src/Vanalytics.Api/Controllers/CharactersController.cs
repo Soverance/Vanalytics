@@ -592,6 +592,14 @@ public class CharactersController : ControllerBase
         return Ok(combined);
     }
 
+    // ─── DEFERRED CONTRACT (GearSwap codegen) ────────────────────────────────────
+    // GET {id}/gear-sets/details?job={job}&category={category}
+    //   -> GearSetDetailResponse[] (full slots) for all matching sets.
+    // The read path the future GearSwap Lua codegen will consume: bulk retrieval of a
+    // character+job's sets, grouped client-side by Category into GearSwap namespaces.
+    // Intentionally NOT implemented yet. See
+    // docs/superpowers/specs/2026-06-07-gear-sets-discovery-management-design.md.
+    // ─────────────────────────────────────────────────────────────────────────────
     [HttpGet("{id:guid}/gear-sets")]
     public async Task<IActionResult> GetGearSets(Guid id)
     {
@@ -610,6 +618,8 @@ public class CharactersController : ControllerBase
             Id = s.Id,
             Name = s.Name,
             Job = s.Job,
+            Category = s.Category,
+            Tags = DeserializeTags(s.TagsJson),
             SlotCount = CountSlots(s.SlotsJson),
             UpdatedAt = s.UpdatedAt
         }).ToList();
@@ -643,6 +653,8 @@ public class CharactersController : ControllerBase
             return BadRequest(new { message = "Name is required." });
         if (!TryNormalizeJob(request.Job, out var job))
             return BadRequest(new { message = "Invalid job." });
+        if (!TryNormalizeCategory(request.Category, out var category))
+            return BadRequest(new { message = "Invalid category." });
 
         var count = await _db.CharacterGearSets.CountAsync(s => s.CharacterId == id);
         if (count >= MaxGearSetsPerCharacter)
@@ -654,6 +666,8 @@ public class CharactersController : ControllerBase
             CharacterId = id,
             Name = request.Name.Trim(),
             Job = job,
+            Category = category,
+            TagsJson = JsonSerializer.Serialize(NormalizeTags(request.Tags)),
             SlotsJson = JsonSerializer.Serialize(request.Slots ?? []),
             CreatedAt = now,
             UpdatedAt = now
@@ -675,6 +689,8 @@ public class CharactersController : ControllerBase
             return BadRequest(new { message = "Name is required." });
         if (!TryNormalizeJob(request.Job, out var job))
             return BadRequest(new { message = "Invalid job." });
+        if (!TryNormalizeCategory(request.Category, out var category))
+            return BadRequest(new { message = "Invalid category." });
 
         var set = await _db.CharacterGearSets
             .FirstOrDefaultAsync(s => s.Id == setId && s.CharacterId == id);
@@ -682,6 +698,8 @@ public class CharactersController : ControllerBase
 
         set.Name = request.Name.Trim();
         set.Job = job;
+        set.Category = category;
+        set.TagsJson = JsonSerializer.Serialize(NormalizeTags(request.Tags));
         set.SlotsJson = JsonSerializer.Serialize(request.Slots ?? []);
         set.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
@@ -739,6 +757,45 @@ public class CharactersController : ControllerBase
         return false;
     }
 
+    // Validates the gear-set category against the GearSetCategory enum, returning the canonical
+    // enum name. Null/blank defaults to "Other"; an unrecognized value is rejected.
+    private static bool TryNormalizeCategory(string? category, out string normalized)
+    {
+        normalized = "Other";
+        if (string.IsNullOrWhiteSpace(category)) return true;
+        if (Enum.TryParse<Vanalytics.Core.Enums.GearSetCategory>(category.Trim(), ignoreCase: true, out var parsed))
+        {
+            normalized = parsed.ToString();
+            return true;
+        }
+        return false;
+    }
+
+    private const int MaxTags = 20;
+    private const int MaxTagLength = 30;
+
+    // Trims, drops empties, dedupes case-insensitively (first casing wins), caps tag length
+    // and total count. Tags are a free-form Vanalytics-only layer, so out-of-range input is
+    // normalized rather than rejected.
+    private static List<string> NormalizeTags(List<string>? tags)
+    {
+        if (tags is null) return [];
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var result = new List<string>();
+        foreach (var raw in tags)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) continue;
+            var t = raw.Trim();
+            if (t.Length > MaxTagLength) t = t[..MaxTagLength];
+            if (seen.Add(t)) result.Add(t);
+            if (result.Count >= MaxTags) break;
+        }
+        return result;
+    }
+
+    private static List<string> DeserializeTags(string tagsJson) =>
+        JsonSerializer.Deserialize<List<string>>(tagsJson) ?? [];
+
     private static int CountSlots(string slotsJson)
     {
         using var doc = JsonDocument.Parse(slotsJson);
@@ -750,6 +807,8 @@ public class CharactersController : ControllerBase
         Id = s.Id,
         Name = s.Name,
         Job = s.Job,
+        Category = s.Category,
+        Tags = DeserializeTags(s.TagsJson),
         Slots = JsonSerializer.Deserialize<List<GearSetSlotDto>>(s.SlotsJson) ?? [],
         CreatedAt = s.CreatedAt,
         UpdatedAt = s.UpdatedAt

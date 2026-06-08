@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { api } from '../api/client'
 import type { GearSetSummary, GearSetDetail, GearSetSlot } from '../types/api'
 
-interface SaveBody { name: string; job: string | null; slots: GearSetSlot[] }
+interface SaveBody { name: string; job: string | null; category: string; tags: string[]; slots: GearSetSlot[] }
 
 export interface UseCharacterGearSets {
   sets: GearSetSummary[]

@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react'
-import { Plus, Download, Trash2, Camera, Check, X } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, Camera } from 'lucide-react'
 import { api } from '../../api/client'
 import { useCharacterGearSets } from '../../hooks/useCharacterGearSets'
 import GearSetEditor, { type WorkingSet } from './GearSetEditor'
 import GearSetExportModal from './GearSetExportModal'
+import GearSetNav from './GearSetNav'
+import GearSetList from './GearSetList'
+import { buildTree, distinctTags, filterSets, type SortKey } from './gearSetFilters'
 import type { CharacterDetail, GearEntry, OwnedEquipmentItem, GearSetSlot, GameItemDetail } from '../../types/api'
 
 // Mirrors MaxGearSetsPerCharacter in CharactersController.cs (keep in sync).
@@ -22,9 +25,14 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
   const [editing, setEditing] = useState<WorkingSet | null>(null)
   const [exporting, setExporting] = useState<{ name: string; slots: GearSetSlot[] } | null>(null)
   const [owned, setOwned] = useState<OwnedEquipmentItem[]>([])
-  const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null)
-  const [rowError, setRowError] = useState<{ id: number; msg: string } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+
+  // Discovery state.
+  const [selJob, setSelJob] = useState<string | null>(null)
+  const [selCategory, setSelCategory] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [activeTags, setActiveTags] = useState<string[]>([])
+  const [sort, setSort] = useState<SortKey>('name')
 
   // Auto-dismiss the transient save confirmation.
   useEffect(() => {
@@ -40,6 +48,12 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
       .catch(() => setOwned([]))
   }, [characterId])
 
+  const tree = useMemo(() => buildTree(sets), [sets])
+  const knownTags = useMemo(() => distinctTags(sets), [sets])
+  const rows = useMemo(
+    () => filterSets(sets, { job: selJob, category: selCategory, search, tags: activeTags, sort }),
+    [sets, selJob, selCategory, search, activeTags, sort])
+
   const resolveName = (itemId: number, fallback: string) =>
     fallback || itemCache.get(itemId)?.name || owned.find(o => o.itemId === itemId)?.itemName || `#${itemId}`
 
@@ -47,37 +61,36 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
     const slots: GearSetSlot[] = gear
       .filter(g => g.itemId !== 0)
       .map(g => ({ slot: g.slot, itemId: g.itemId, itemName: g.itemName, augments: g.augments }))
-    setEditing({ id: null, name: 'New Set', job: '', slots })
+    setEditing({ id: null, name: 'New Set', job: '', category: 'Other', tags: [], slots })
   }
 
-  const blank = () => setEditing({ id: null, name: 'New Set', job: '', slots: [] })
+  const blank = () => setEditing({ id: null, name: 'New Set', job: '', category: 'Other', tags: [], slots: [] })
 
   const openExisting = async (setId: number) => {
     const detail = await getSet(setId)
     if (!detail) return
     const slots = detail.slots.map(s => ({ ...s, itemName: resolveName(s.itemId, s.itemName) }))
-    setEditing({ id: detail.id, name: detail.name, job: detail.job ?? '', slots })
+    setEditing({ id: detail.id, name: detail.name, job: detail.job ?? '',
+      category: detail.category, tags: detail.tags, slots })
   }
 
   // Throws on failure so the editor can surface the error inline; on success we
   // confirm via a transient notice and return to the list.
-  const save = async (body: { name: string; job: string | null; slots: GearSetSlot[] }) => {
+  const save = async (body: { name: string; job: string | null; category: string; tags: string[]; slots: GearSetSlot[] }) => {
     if (editing?.id == null) await createSet(body)
     else await updateSet(editing.id, body)
     setNotice('Gear set saved.')
     setEditing(null)
   }
 
-  const confirmDelete = async (setId: number) => {
-    setRowError(null)
-    try {
-      await deleteSet(setId)
-    } catch (e) {
-      setRowError({ id: setId, msg: e instanceof Error ? e.message : 'Failed to delete gear set.' })
-    } finally {
-      setConfirmingDelete(null)
-    }
+  const exportSet = async (setId: number) => {
+    const d = await getSet(setId)
+    if (d) setExporting({ name: d.name,
+      slots: d.slots.map(x => ({ ...x, itemName: resolveName(x.itemId, x.itemName) })) })
   }
+
+  const toggleTag = (tag: string) =>
+    setActiveTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
 
   // ---- Editor view ----
   if (editing) {
@@ -88,6 +101,7 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
         character={character}
         owned={owned}
         itemCache={itemCache}
+        knownTags={knownTags}
         onSaveFavorite={onSaveFavorite}
         onSave={save}
         onCancel={() => setEditing(null)}
@@ -123,47 +137,35 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
         </div>
       )}
 
-      {sets.length === 0 && <div className="text-xs text-gray-500 py-6 text-center">No gear sets yet.</div>}
-
-      <div className="space-y-1.5">
-        {sets.map(s => (
-          <div key={s.id} className="rounded bg-gray-800/40 border border-gray-700/40">
-            <div className="flex items-center gap-3 p-2.5">
-              <button onClick={() => openExisting(s.id)} className="flex-1 text-left">
-                <span className="text-sm text-gray-200">{s.name}</span>
-                {s.job && <span className="ml-2 text-[10px] text-amber-300/70 px-1.5 py-0.5 rounded bg-indigo-900/40">{s.job}</span>}
-                <span className="ml-2 text-[10px] text-gray-500">{s.slotCount} slots</span>
-              </button>
-              <button onClick={async () => {
-                const d = await getSet(s.id)
-                if (d) setExporting({ name: d.name,
-                  slots: d.slots.map(x => ({ ...x, itemName: resolveName(x.itemId, x.itemName) })) })
-              }} className="text-gray-500 hover:text-amber-300" title="Export to GearSwap">
-                <Download className="h-4 w-4" />
-              </button>
-              {confirmingDelete === s.id ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-gray-400">Delete?</span>
-                  <button onClick={() => confirmDelete(s.id)} className="text-rose-400 hover:text-rose-300" title="Confirm delete">
-                    <Check className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => setConfirmingDelete(null)} className="text-gray-500 hover:text-gray-300" title="Cancel">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <button onClick={() => { setRowError(null); setConfirmingDelete(s.id) }}
-                  className="text-gray-500 hover:text-rose-400" title="Delete">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            {rowError?.id === s.id && (
-              <div className="text-[11px] text-rose-300 px-3 pb-2">{rowError.msg}</div>
-            )}
+      {sets.length === 0 ? (
+        <div className="text-xs text-gray-500 py-6 text-center">No gear sets yet.</div>
+      ) : (
+        <div className="flex gap-4">
+          <div className="w-44 flex-shrink-0">
+            <GearSetNav
+              tree={tree}
+              selectedJob={selJob}
+              selectedCategory={selCategory}
+              onSelect={(job, category) => { setSelJob(job); setSelCategory(category) }}
+            />
           </div>
-        ))}
-      </div>
+          <div className="flex-1 min-w-0">
+            <GearSetList
+              rows={rows}
+              knownTags={knownTags}
+              search={search}
+              onSearchChange={setSearch}
+              sort={sort}
+              onSortChange={setSort}
+              activeTags={activeTags}
+              onToggleTag={toggleTag}
+              onOpen={openExisting}
+              onExport={exportSet}
+              onDelete={deleteSet}
+            />
+          </div>
+        </div>
+      )}
 
       {exporting && (
         <GearSetExportModal name={exporting.name} slots={exporting.slots} onClose={() => setExporting(null)} />

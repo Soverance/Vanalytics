@@ -181,6 +181,97 @@ public class GearSetsControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Create_roundtrips_category_and_tags()
+    {
+        var (token, _, characterId) = await SetupUserWithCharacterAsync(
+            "gscat1@test.com", "gscat1", "Gearsetcatone");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var created = await (await _client.PostAsJsonAsync(
+            $"/api/characters/{characterId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "Rudra's Storm", Job = "THF", Category = "WeaponSkill",
+                Tags = ["SATA", "BiS"], Slots = []
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        Assert.Equal("WeaponSkill", created!.Category);
+        Assert.Equal(["SATA", "BiS"], created.Tags);
+
+        var list = await _client.GetFromJsonAsync<List<GearSetSummaryResponse>>(
+            $"/api/characters/{characterId}/gear-sets");
+        Assert.Equal("WeaponSkill", list!.Single().Category);
+        Assert.Equal(["SATA", "BiS"], list.Single().Tags);
+    }
+
+    [Fact]
+    public async Task Create_truncates_overlong_tags_to_max_length()
+    {
+        var (token, _, characterId) = await SetupUserWithCharacterAsync(
+            "gscat5@test.com", "gscat5", "Gearsetcatfive");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // A 40-char tag must be capped to MaxTagLength (30) by NormalizeTags.
+        var created = await (await _client.PostAsJsonAsync(
+            $"/api/characters/{characterId}/gear-sets",
+            new SaveGearSetRequest { Name = "Long", Tags = [new string('A', 40)], Slots = [] }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        Assert.Equal(new string('A', 30), created!.Tags.Single());
+    }
+
+    [Fact]
+    public async Task Create_with_invalid_category_returns_400()
+    {
+        var (token, _, characterId) = await SetupUserWithCharacterAsync(
+            "gscat2@test.com", "gscat2", "Gearsetcattwo");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var resp = await _client.PostAsJsonAsync(
+            $"/api/characters/{characterId}/gear-sets",
+            new SaveGearSetRequest { Name = "Bad", Category = "NotACategory", Slots = [] });
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_defaults_category_to_other_when_omitted()
+    {
+        var (token, _, characterId) = await SetupUserWithCharacterAsync(
+            "gscat3@test.com", "gscat3", "Gearsetcatthree");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var created = await (await _client.PostAsJsonAsync(
+            $"/api/characters/{characterId}/gear-sets",
+            new SaveGearSetRequest { Name = "Untagged", Slots = [] }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        Assert.Equal("Other", created!.Category);
+        Assert.Empty(created.Tags);
+    }
+
+    [Fact]
+    public async Task Create_normalizes_tags_trims_dedupes_drops_empties()
+    {
+        var (token, _, characterId) = await SetupUserWithCharacterAsync(
+            "gscat4@test.com", "gscat4", "Gearsetcatfour");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var created = await (await _client.PostAsJsonAsync(
+            $"/api/characters/{characterId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "Dirty", Category = "Idle",
+                Tags = ["  SATA ", "sata", "", "   ", "BiS"], Slots = []
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        // Trimmed, case-insensitively deduped (first casing wins), empties dropped.
+        Assert.Equal(["SATA", "BiS"], created!.Tags);
+    }
+
+    [Fact]
     public async Task Create_normalizes_job_casing_to_canonical_form()
     {
         var (token, _, characterId) = await SetupUserWithCharacterAsync(

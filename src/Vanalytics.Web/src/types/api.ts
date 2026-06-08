@@ -997,6 +997,8 @@ export interface GearSetSummary {
   id: number
   name: string
   job: string | null
+  category: string
+  tags: string[]
   slotCount: number
   updatedAt: string
 }
@@ -1012,6 +1014,8 @@ export interface GearSetDetail {
   id: number
   name: string
   job: string | null
+  category: string
+  tags: string[]
   slots: GearSetSlot[]
   createdAt: string
   updatedAt: string
