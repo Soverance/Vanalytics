@@ -495,7 +495,7 @@ local hunt_target_name_text = texts.new(
     }
 )
 local hunt_target_stats_text = texts.new(
-    '${idx_dec|-} | 0x${idx_hex|-} | st ${status|-} | hp ${hpp|-}%\n${distance|-}y | claim ${claim|-}',
+    '${idx_dec|-} | 0x${idx_hex|-} | st ${status|-} | hp ${hpp|-}% | claim ${claim|-}',
     {
         pos = { x = settings.HuntTargetPos.x or 10, y = (settings.HuntTargetPos.y or 400) + 32 },
         bg = { alpha = 200, red = 0, green = 0, blue = 0, visible = true },
@@ -529,19 +529,51 @@ local hunt_target_hp_text = texts.new(
         flags = { draggable = false, bold = true, italic = false },
     }
 )
+-- Range line — fourth stacked object under the stats line. Shows edge-to-edge
+-- distance, vertical (height) offset, and a range-band label; color shifts
+-- green/gold/muted by band (see update_hunt_target_text). Separate object
+-- because the texts library is one-color-per-object — same reason the HP bar
+-- is split out. Initial pos is a placeholder; repositioned each tick.
+local hunt_target_range_text = texts.new(
+    '${content|}',
+    {
+        pos = { x = settings.HuntTargetPos.x or 10, y = (settings.HuntTargetPos.y or 400) + 56 },
+        bg = { alpha = 200, red = 0, green = 0, blue = 0, visible = true },
+        padding = 6,
+        text = {
+            font = 'Consolas',
+            size = 10,
+            alpha = 255,
+            red = 130, green = 170, blue = 180,
+            stroke = { width = 1, alpha = 255, red = 0, green = 0, blue = 0 },
+        },
+        flags = { draggable = false, bold = true, italic = false },
+    }
+)
 hunt_target_name_text:hide()
 hunt_target_stats_text:hide()
 hunt_target_hp_text:hide()
+hunt_target_range_text:hide()
 
--- Name is one line of size-14 bold + padding both sides. Stats block is two
--- size-10 lines + padding. Heights used for vertical stacking of the three
--- target text objects (name → stats → hp bar). Mirrors the WATCH_* constants.
+-- Name is one line of size-14 bold + padding both sides. Stats block is one
+-- size-10 line + padding. Heights used for vertical stacking of the four
+-- target text objects (name → stats → range → hp bar). Mirrors the WATCH_* constants.
 local TARGET_NAME_HEIGHT = 40
-local TARGET_STATS_HEIGHT = 42  -- 2 lines * ~15px + 12 padding
+local TARGET_STATS_HEIGHT = 30  -- 1 line * ~18px + 12 padding
+local TARGET_RANGE_HEIGHT = 30  -- 1 line * ~18px + 12 padding
+
+-- Range bands in edge-to-edge yalms. Verified vs Windower DistancePlus and
+-- FFXIclopedia <https://ffxiclopedia.fandom.com/wiki/Distance>. We subtract
+-- model sizes before banding, so these fixed cutoffs are size-independent.
+local MELEE_RANGE = 3.0   -- edge melee cutoff (TUNABLE — confirm in-game)
+local CAST_RANGE  = 20.0  -- edge cast/action cutoff (21.8' center - ~1.8 models)
+local HEIGHT_UP   = 8.5   -- vertical gate, target above you (DistancePlus)
+local HEIGHT_DOWN = 7.5   -- vertical gate magnitude, target below you (DistancePlus)
 
 local function hide_hunt_target_panel()
     hunt_target_name_text:hide()
     hunt_target_stats_text:hide()
+    hunt_target_range_text:hide()
     hunt_target_hp_text:hide()
 end
 
@@ -554,15 +586,39 @@ local function update_hunt_target_text()
         return
     end
 
-    local distance = '?'
+    -- Distance / height / range band. Horizontal distance matches the game's
+    -- range checks; subtracting both model sizes gives the edge-to-edge gap
+    -- that actually governs whether an action lands. dz gates vertically.
+    local range_str = '?'
+    local rr, rg, rb = 150, 150, 150           -- muted gray = unknown / out of render
     local player = windower.ffxi.get_player()
-    if player then
-        local self_mob = windower.ffxi.get_mob_by_id(player.id)
-        if self_mob and mob.x and self_mob.x then
-            local dx = mob.x - self_mob.x
-            local dy = mob.y - self_mob.y
-            distance = string.format('%.1f', math.sqrt(dx * dx + dy * dy))
+    local self_mob = player and windower.ffxi.get_mob_by_id(player.id) or nil
+    if self_mob and mob.x and self_mob.x then
+        local dx = mob.x - self_mob.x
+        local dy = mob.y - self_mob.y
+        local dz = (mob.z or self_mob.z) - self_mob.z
+        local center = math.sqrt(dx * dx + dy * dy)
+        local edge = center - (mob.model_size or 0) - (self_mob.model_size or 0)
+        if edge < 0 then edge = 0 end
+
+        -- ASCII-safe directional arrows (^/v) chosen up front over the unicode
+        -- arrows, which may not render through Windower's text path.
+        local height_str
+        if dz >= 0.5 then      height_str = string.format('^%.1f', dz)
+        elseif dz <= -0.5 then height_str = string.format('v%.1f', -dz)
+        else                   height_str = '~0.0' end
+
+        local label
+        if dz > HEIGHT_UP or dz < -HEIGHT_DOWN then
+            label, rr, rg, rb = '[HEIGHT]', 190, 110, 110
+        elseif edge <= MELEE_RANGE then
+            label, rr, rg, rb = '[MELEE]', 130, 170, 100
+        elseif edge <= CAST_RANGE then
+            label, rr, rg, rb = '[CAST]', 210, 180, 120
+        else
+            label, rr, rg, rb = '[FAR]', 190, 110, 110
         end
+        range_str = string.format('%.1fy  %s  %s', edge, height_str, label)
     end
 
     hunt_target_name_text:update({ name = mob.name or '?' })
@@ -571,7 +627,6 @@ local function update_hunt_target_text()
         idx_hex = string.format('%03X', mob.index or 0),
         status = tostring(mob.status or 0),
         hpp = tostring(mob.hpp or 0),
-        distance = distance,
         claim = (mob.claim_id and mob.claim_id ~= 0) and tostring(mob.claim_id) or '-',
     })
 
@@ -588,13 +643,18 @@ local function update_hunt_target_text()
     elseif hp >= 25 then hunt_target_hp_text:color(210, 180, 120)
     else                 hunt_target_hp_text:color(190, 110, 110) end
 
-    -- Sync positions every tick: name → stats → hp bar.
+    hunt_target_range_text:update({ content = range_str })
+    hunt_target_range_text:color(rr, rg, rb)
+
+    -- Sync positions every tick: name → stats → range → hp bar.
     local nx, ny = hunt_target_name_text:pos_x(), hunt_target_name_text:pos_y()
     hunt_target_stats_text:pos(nx, ny + TARGET_NAME_HEIGHT)
-    hunt_target_hp_text:pos(nx, ny + TARGET_NAME_HEIGHT + TARGET_STATS_HEIGHT)
+    hunt_target_range_text:pos(nx, ny + TARGET_NAME_HEIGHT + TARGET_STATS_HEIGHT)
+    hunt_target_hp_text:pos(nx, ny + TARGET_NAME_HEIGHT + TARGET_STATS_HEIGHT + TARGET_RANGE_HEIGHT)
 
     hunt_target_name_text:show()
     hunt_target_stats_text:show()
+    hunt_target_range_text:show()
     hunt_target_hp_text:show()
 end
 
