@@ -17,7 +17,7 @@ type SectionName = 'database' | 'economy' | 'server' | 'community' | 'admin'
 function getSection(pathname: string): SectionName | null {
   if (pathname.startsWith('/items') || pathname.startsWith('/npcs') || pathname.startsWith('/zones') || pathname.startsWith('/recipes')) return 'database'
   if (pathname.startsWith('/bazaar')) return 'economy'
-  if (pathname.startsWith('/forum') || pathname.startsWith('/players') || pathname.startsWith('/users/')) return 'community'
+  if (pathname.startsWith('/forum') || pathname.startsWith('/players') || pathname.startsWith('/linkshells') || pathname.startsWith('/users/')) return 'community'
   if (pathname.startsWith('/server/')) return 'server'
   if (pathname.startsWith('/admin')) return 'admin'
   return null
@@ -197,6 +197,7 @@ function LayoutInner() {
 
           <SidebarSection label="Community" icon={<Users className="h-4 w-4 shrink-0" />} isOpen={openSection === 'community'} onToggle={() => toggleSection('community')}>
             <SidebarLink to="/players" label="Players" icon={<Users className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+            <SidebarLink to="/linkshells" label="Linkshells" icon={<Users className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
             <SidebarLink to="/forum" end={false} label="Forum" icon={<MessageSquare className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
           </SidebarSection>
 

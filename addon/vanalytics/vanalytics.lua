@@ -2070,6 +2070,88 @@ local function do_sync(on_complete)
 end
 
 -----------------------------------------------------------------------
+-- Version check
+--
+-- Compares this addon's _addon.version against the server's reported
+-- version (from /health). The bundled addon is stamped to match the
+-- deployment version at release time (deploy.yml), so a mismatch means
+-- the player is running an addon copy from a different release.
+--
+-- report_always=true prints a full report (the //va version command);
+-- false stays silent unless the addon is out of date (the login nag).
+-----------------------------------------------------------------------
+
+-- Extract major.minor.patch from a version string, tolerating any
+-- +commithash / -suffix the server's InformationalVersion may carry.
+local function parse_semver(v)
+    if type(v) ~= 'string' then return nil end
+    local maj, min, pat = v:match('(%d+)%.(%d+)%.(%d+)')
+    if not maj then return nil end
+    return { tonumber(maj), tonumber(min), tonumber(pat) }
+end
+
+-- Returns -1, 0, 1 for a < b, a == b, a > b.
+local function compare_semver(a, b)
+    for i = 1, 3 do
+        if a[i] < b[i] then return -1 end
+        if a[i] > b[i] then return 1 end
+    end
+    return 0
+end
+
+local function check_version(report_always)
+    http_request({
+        url = settings.ApiUrl .. '/health',
+        method = 'GET',
+        label = 'version-check',
+    }, function(result, status_code, _, body)
+        -- /health returns 200 when healthy, 503 when the DB is degraded;
+        -- the version is in the body either way, so we parse regardless of
+        -- status_code. result is nil only on a connection-level failure.
+        if not result then
+            if report_always then
+                log_error('Version check failed: could not reach server (' .. tostring(status_code) .. ').')
+            end
+            return
+        end
+
+        local data = body and json_decode(body)
+        local server_version = type(data) == 'table' and data.version or nil
+        local server = parse_semver(server_version)
+        local localv = parse_semver(_addon.version)
+
+        if not server then
+            if report_always then
+                log_error('Version check: server did not report a recognizable version.')
+            end
+            return
+        end
+
+        local cmp = localv and compare_semver(localv, server)
+
+        if report_always then
+            log('--- Vanalytics Version ---')
+            log('Addon:  ' .. tostring(_addon.version))
+            log('Server: ' .. tostring(server_version))
+            if not localv then
+                log_error('Local addon version is in an unrecognized format.')
+            elseif cmp == 0 then
+                log_success('You are up to date.')
+            elseif cmp < 0 then
+                log_error('Your addon is OUT OF DATE. Re-download it from ' .. settings.ApiUrl)
+            else
+                log('Your addon is newer than the server (dev/preview build).')
+            end
+        elseif localv and cmp < 0 then
+            -- Silent path (login): only speak up when behind.
+            log_error('Addon out of date: you have ' .. tostring(_addon.version)
+                .. ', server is ' .. tostring(server_version)
+                .. '. Re-download from the web app to update.')
+        end
+    end)
+end
+
+-----------------------------------------------------------------------
 -- Auto-sync timer (single global prerender handler, controlled by state)
 -----------------------------------------------------------------------
 local timer_active = false
@@ -2406,6 +2488,9 @@ windower.register_event('addon command', function(command, ...)
         else
             log('Last Sync: ' .. last_sync_status)
         end
+
+    elseif command == 'version' then
+        check_version(true)
 
     elseif command == 'apikey' then
         local key = args[1]
@@ -3244,6 +3329,7 @@ windower.register_event('addon command', function(command, ...)
         log('//va url <url>    - Set API URL (or: local / prod)')
         log('//va sync         - Sync now')
         log('//va status       - Show status')
+        log('//va version      - Check addon version against the server')
         log('//va interval N   - Set sync interval in minutes (min: ' .. MIN_INTERVAL .. ')')
         log('//va notify on|off - Toggle in-game chat notifications on successful sync')
         log('//va dump         - Dump player data to file')
@@ -3294,6 +3380,8 @@ windower.register_event('login', function(name)
         log('Logged in as ' .. name .. '. Auto-sync active (every ' .. get_effective_interval() .. ' min).')
         start_timer()
     end
+    -- Quietly warn if this addon is older than the deployed server version.
+    check_version(false)
 end)
 
 windower.register_event('logout', function()
@@ -3336,6 +3424,9 @@ windower.register_event('load', function()
             log('Loaded. Auto-sync active (every ' .. get_effective_interval() .. ' min).')
             start_timer()
         end
+        -- Already logged in at load (e.g. //lua reload): run the same
+        -- quiet out-of-date check the login event would have done.
+        check_version(false)
     else
         log('Loaded. Waiting for login...')
     end

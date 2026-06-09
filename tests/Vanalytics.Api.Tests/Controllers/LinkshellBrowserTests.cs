@@ -97,7 +97,9 @@ public class LinkshellBrowserTests : IAsyncLifetime
             Jobs = [new SyncJobEntry { Job = job, Level = 99 }],
             Linkshells = [new SyncLinkshellEntry { LinkshellId = lsId, Name = lsName, ColorRgb = colorRgb, Rank = rank }]
         });
-        await _client.SendAsync(syncReq);
+        var syncResp = await _client.SendAsync(syncReq);
+        Assert.True(syncResp.IsSuccessStatusCode,
+            $"Seed sync failed ({(int)syncResp.StatusCode}): {await syncResp.Content.ReadAsStringAsync()}");
 
         if (!isPublic) return;
 
@@ -138,5 +140,89 @@ public class LinkshellBrowserTests : IAsyncLifetime
         Assert.NotNull(asura);
         Assert.Contains(asura!, x => x.Name == "AsuraShell");
         Assert.DoesNotContain(asura!, x => x.Name == "BahaShell");
+    }
+
+    [Fact]
+    public async Task GetProfile_NamesPublicMembers_CountsPrivate_SortsRankThenName()
+    {
+        // Same LS (8001 "RosterShell"): a private leader, a public sackholder, two public members.
+        await SeedMemberAsync("p1a@test.com", "p1a", "Zelda",  "Asura", 8001, "RosterShell", 0x00FF00, "leader",     isPublic: false);
+        await SeedMemberAsync("p1b@test.com", "p1b", "Aaron",  "Asura", 8001, "RosterShell", 0x00FF00, "sackholder", isPublic: true);
+        await SeedMemberAsync("p1c@test.com", "p1c", "Yvonne", "Asura", 8001, "RosterShell", 0x00FF00, "member",     isPublic: true);
+        await SeedMemberAsync("p1d@test.com", "p1d", "Brett",  "Asura", 8001, "RosterShell", 0x00FF00, "member",     isPublic: true);
+
+        var profile = await _client.GetFromJsonAsync<LinkshellProfile>("/api/linkshells/Asura/RosterShell");
+
+        Assert.NotNull(profile);
+        Assert.Equal(4, profile!.MemberCount);
+        Assert.Equal(3, profile.PublicMemberCount);
+        Assert.Equal(1, profile.PrivateMemberCount);     // the private leader Zelda
+        Assert.Equal("Unknown", profile.RecruitmentStatus);
+
+        // Only public members are named; sorted Sackholder, then Members alphabetically.
+        Assert.Equal(3, profile.Members.Count);
+        Assert.Equal(new[] { "Aaron", "Brett", "Yvonne" }, profile.Members.Select(m => m.Name).ToArray());
+        Assert.Equal("Sackholder", profile.Members[0].Rank);
+        Assert.Equal("WAR", profile.Members[0].Job);
+        Assert.Equal(99, profile.Members[0].Level);
+        Assert.DoesNotContain(profile.Members, m => m.Name == "Zelda"); // private, never named
+    }
+
+    [Fact]
+    public async Task GetProfile_OrdersLeaderAboveSackholderAboveMember()
+    {
+        // All public so the full rank order is exercised. Seed out of order
+        // (member, leader, sackholder) and alphabetically scrambled to prove the
+        // endpoint sorts by rank first, then name — not insertion order.
+        await SeedMemberAsync("o1@test.com", "o1", "Mona",  "Asura", 8201, "OrderShell", 1, "member",     isPublic: true);
+        await SeedMemberAsync("o2@test.com", "o2", "Liana", "Asura", 8201, "OrderShell", 1, "leader",     isPublic: true);
+        await SeedMemberAsync("o3@test.com", "o3", "Sara",  "Asura", 8201, "OrderShell", 1, "sackholder", isPublic: true);
+        await SeedMemberAsync("o4@test.com", "o4", "Alma",  "Asura", 8201, "OrderShell", 1, "member",     isPublic: true);
+
+        var profile = await _client.GetFromJsonAsync<LinkshellProfile>("/api/linkshells/Asura/OrderShell");
+
+        Assert.NotNull(profile);
+        // Leader, then Sackholder, then Members alphabetically (Alma before Mona).
+        Assert.Equal(new[] { "Liana", "Sara", "Alma", "Mona" }, profile!.Members.Select(m => m.Name).ToArray());
+        Assert.Equal(new[] { "Leader", "Sackholder", "Member", "Member" }, profile.Members.Select(m => m.Rank).ToArray());
+    }
+
+    [Fact]
+    public async Task GetProfile_UnknownName_Returns404()
+    {
+        var resp = await _client.GetAsync("/api/linkshells/Asura/NoSuchShell");
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetProfile_ExcludesFormerMembers()
+    {
+        // Char joins LS 8101 then swaps it out: re-sync with a different LS flips
+        // the first membership to IsCurrent = false (Phase 1 freshness behavior).
+        await SeedMemberAsync("p3@test.com", "p3", "Switcher", "Asura", 8101, "OldShell", 1, "member", isPublic: true);
+
+        // Re-sync the same character with a different linkshell only.
+        var login = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest { Email = "p3@test.com", Password = "Password123!" });
+        var token = (await login.Content.ReadFromJsonAsync<AuthResponse>())!.AccessToken;
+        var keyReq = new HttpRequestMessage(HttpMethod.Post, "/api/keys/generate");
+        keyReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var apiKey = (await (await _client.SendAsync(keyReq)).Content.ReadFromJsonAsync<ApiKeyResponse>())!;
+        var syncReq = new HttpRequestMessage(HttpMethod.Post, "/api/sync");
+        syncReq.Headers.Add("X-Api-Key", apiKey.ApiKey);
+        syncReq.Content = JsonContent.Create(new SyncRequest
+        {
+            CharacterName = "Switcher",
+            Server = "Asura",
+            ActiveJob = "WAR",
+            ActiveJobLevel = 99,
+            Linkshells = [new SyncLinkshellEntry { LinkshellId = 8102, Name = "NewShell", ColorRgb = 1, Rank = "member" }]
+        });
+        var reSyncResp = await _client.SendAsync(syncReq);
+        Assert.True(reSyncResp.IsSuccessStatusCode,
+            $"Re-sync failed ({(int)reSyncResp.StatusCode}): {await reSyncResp.Content.ReadAsStringAsync()}");
+
+        var resp = await _client.GetAsync("/api/linkshells/Asura/OldShell");
+        // OldShell now has 0 current members -> MemberCount 0 -> not resolvable.
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
     }
 }

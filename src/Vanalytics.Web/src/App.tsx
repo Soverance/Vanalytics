@@ -31,6 +31,8 @@ import ForumNewThreadPage from './pages/ForumNewThreadPage'
 import ForumSearchPage from './pages/ForumSearchPage'
 import UserProfilePage from './pages/UserProfilePage'
 import PlayerDirectoryPage from './pages/PlayerDirectoryPage'
+import LinkshellDirectoryPage from './pages/LinkshellDirectoryPage'
+import LinkshellProfilePage from './pages/LinkshellProfilePage'
 import RecipeBrowserPage from './pages/RecipeBrowserPage'
 import RecipeDetailPage from './pages/RecipeDetailPage'
 
@@ -140,7 +142,11 @@ export default function App() {
             <Route path="/forum/:categorySlug/:threadSlug" element={<ForumThreadPage />} />
             <Route path="/users/:username" element={<UserProfilePage />} />
             <Route path="/players" element={<PlayerDirectoryPage />} />
+            <Route path="/linkshells" element={<LinkshellDirectoryPage />} />
           </Route>
+
+          {/* Public: shareable linkshell profiles (3-segment, before /:server/:name) */}
+          <Route path="/:server/linkshell/:name" element={<LinkshellProfilePage />} />
 
           {/* Public: shareable character profiles (MUST be after explicit routes) */}
           <Route path="/:server/:name" element={

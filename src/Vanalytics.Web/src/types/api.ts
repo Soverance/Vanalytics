@@ -881,6 +881,36 @@ export interface LinkshellsResponse {
   linkshells: CharacterLinkshellEntry[]
 }
 
+// Public linkshell browser (Phase 2)
+export interface LinkshellListItem {
+  name: string
+  server: string
+  colorRgb: number
+  memberCount: number
+  publicMemberCount: number
+  lastActiveAt: string | null
+}
+
+export interface LinkshellMemberRow {
+  name: string
+  rank: string // "Leader" | "Sackholder" | "Member"
+  job: string | null
+  level: number | null
+  lastSeen: string
+}
+
+export interface LinkshellProfile {
+  name: string
+  server: string
+  colorRgb: number
+  memberCount: number
+  publicMemberCount: number
+  privateMemberCount: number
+  lastActiveAt: string | null
+  recruitmentStatus: string
+  members: LinkshellMemberRow[]
+}
+
 export interface MissionsResponse {
   sandoriaMissions: MissionLineState | null
   bastokMissions: MissionLineState | null
