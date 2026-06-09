@@ -37,6 +37,9 @@ public class DatabaseMigrationService(IServiceProvider services, IConfiguration 
 
             await ForumSeeder.SeedSystemCategoriesAsync(db);
 
+            // One-time, idempotent de-emailing of legacy OAuth usernames.
+            await UsernameBackfill.BackfillAsync(db, new UsernameGenerator(), logger, stoppingToken);
+
             logger.LogInformation("Database seeding completed.");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

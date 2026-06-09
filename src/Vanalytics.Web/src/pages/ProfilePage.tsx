@@ -53,6 +53,12 @@ export default function ProfilePage() {
   const [serverSaving, setServerSaving] = useState(false)
   const [serverSaved, setServerSaved] = useState(false)
 
+  // Display name state
+  const [displayNameInput, setDisplayNameInput] = useState(user?.displayName ?? '')
+  const [displayNameSaving, setDisplayNameSaving] = useState(false)
+  const [displayNameSaved, setDisplayNameSaved] = useState(false)
+  const [displayNameError, setDisplayNameError] = useState('')
+
   // FFXI setup state
   const [ffxiSetupError, setFfxiSetupError] = useState<'blocked' | 'invalid' | 'error' | null>(null)
   const [ffxiErrorDetail, setFfxiErrorDetail] = useState<string | null>(null)
@@ -77,6 +83,10 @@ export default function ProfilePage() {
     setSelectedDefaultServer(user?.defaultServer ?? '')
   }, [user?.defaultServer])
 
+  useEffect(() => {
+    setDisplayNameInput(user?.displayName ?? '')
+  }, [user?.displayName])
+
   const handleSaveServer = async () => {
     setServerSaving(true)
     setServerSaved(false)
@@ -92,6 +102,40 @@ export default function ProfilePage() {
       // silently fail
     } finally {
       setServerSaving(false)
+    }
+  }
+
+  const DISPLAY_NAME_PATTERN = /^[A-Za-z0-9 _\-.'\[\]]+$/
+
+  const handleSaveDisplayName = async () => {
+    const trimmed = displayNameInput.trim()
+    setDisplayNameError('')
+
+    if (trimmed.length > 0) {
+      if (trimmed.length < 3 || trimmed.length > 24) {
+        setDisplayNameError('Display name must be 3–24 characters.')
+        return
+      }
+      if (!DISPLAY_NAME_PATTERN.test(trimmed)) {
+        setDisplayNameError("Only letters, numbers, spaces, and _ - . ' [ ] are allowed.")
+        return
+      }
+    }
+
+    setDisplayNameSaving(true)
+    setDisplayNameSaved(false)
+    try {
+      await api('/api/auth/me/display-name', {
+        method: 'PUT',
+        body: JSON.stringify({ displayName: trimmed || null }),
+      })
+      await refreshUser()
+      setDisplayNameSaved(true)
+      setTimeout(() => setDisplayNameSaved(false), 2000)
+    } catch (e) {
+      setDisplayNameError(e instanceof ApiError ? e.message : 'Could not save display name.')
+    } finally {
+      setDisplayNameSaving(false)
     }
   }
 
@@ -308,6 +352,34 @@ export default function ProfilePage() {
       {/* Preferences tab */}
       {activeTab === 'preferences' && (
         <div className="space-y-6">
+          <section className="rounded-lg border border-gray-800 bg-gray-900 p-6 max-w-lg">
+            <h2 className="text-lg font-semibold mb-1">Display Name</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              The name shown for you across the site — in the forum, on your profile, and in the nav.
+              Leave it blank to fall back to your <span className="text-gray-400">@{user.username}</span> handle.
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                value={displayNameInput}
+                onChange={(e) => { setDisplayNameInput(e.target.value); setDisplayNameError('') }}
+                maxLength={24}
+                placeholder={user.username}
+                className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 flex-1"
+              />
+              <button
+                onClick={handleSaveDisplayName}
+                disabled={displayNameSaving || displayNameInput.trim() === (user.displayName ?? '')}
+                className="px-4 py-2 text-sm rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
+              >
+                {displayNameSaving ? 'Saving...' : displayNameSaved ? 'Saved!' : 'Save'}
+              </button>
+            </div>
+            {displayNameError && (
+              <p className="mt-2 text-sm text-red-400">{displayNameError}</p>
+            )}
+          </section>
+
           <section className="rounded-lg border border-gray-800 bg-gray-900 p-6 max-w-lg">
             <h2 className="text-lg font-semibold mb-1">Default Server</h2>
             <p className="text-sm text-gray-500 mb-4">
