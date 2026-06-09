@@ -148,7 +148,11 @@ export default function LinkshellDirectoryPage() {
                 >
                   <td className="px-3 py-2 font-medium text-gray-100">
                     <span className="flex items-center gap-2">
-                      <LinkshellPearl colorRgb={l.colorRgb} size={14} title={l.name} />
+                      {l.logoUrl ? (
+                        <img src={l.logoUrl} alt="" className="h-6 w-6 shrink-0 object-contain" />
+                      ) : (
+                        <LinkshellPearl colorRgb={l.colorRgb} size={14} title={l.name} />
+                      )}
                       <span className="truncate">{l.name}</span>
                     </span>
                   </td>

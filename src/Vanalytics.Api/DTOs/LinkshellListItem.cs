@@ -9,4 +9,5 @@ public class LinkshellListItem
     public int MemberCount { get; init; }        // current members (public + private)
     public int PublicMemberCount { get; init; }  // current members whose character IsPublic
     public DateTimeOffset? LastActiveAt { get; init; }
+    public string? LogoUrl { get; init; }        // from the LS profile, null if none
 }

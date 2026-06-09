@@ -33,6 +33,7 @@ public class LinkshellsController(
                 MemberCount = l.MemberCount,
                 PublicMemberCount = l.Memberships.Count(m => m.IsCurrent && m.Character.IsPublic),
                 LastActiveAt = l.LastSeenAt,
+                LogoUrl = l.Profile != null ? l.Profile.LogoBlobUrl : null,
             })
             .ToListAsync();
 

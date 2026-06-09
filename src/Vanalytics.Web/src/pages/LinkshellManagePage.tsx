@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { ImagePlus, Trash2 } from 'lucide-react'
 import type { LinkshellProfileResponse, LinkshellExternalLink } from '../types/api'
 import { api, uploadFile, getStoredTokens } from '../api/client'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -7,6 +8,17 @@ import ForumEditor from '../components/forum/ForumEditor'
 
 const STATUSES = ['Unknown', 'Open', 'Closed']
 const MAX_LINKS = 5
+const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+const LOGO_MAX_BYTES = 5 * 1024 * 1024
+
+// Subtle checkerboard so a transparent logo's edges are visible while editing.
+const CHECKERBOARD: React.CSSProperties = {
+  backgroundColor: '#1f2937',
+  backgroundImage:
+    'linear-gradient(45deg, #374151 25%, transparent 25%), linear-gradient(-45deg, #374151 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #374151 75%), linear-gradient(-45deg, transparent 75%, #374151 75%)',
+  backgroundSize: '12px 12px',
+  backgroundPosition: '0 0, 0 6px, 6px -6px, -6px 0px',
+}
 
 export default function LinkshellManagePage() {
   const { server, name } = useParams<{ server: string; name: string }>()
@@ -23,6 +35,8 @@ export default function LinkshellManagePage() {
   const [status, setStatus] = useState('Unknown')
   const [links, setLinks] = useState<LinkshellExternalLink[]>([])
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
 
   const profilePath = `/${encodeURIComponent(server ?? '')}/linkshell/${encodeURIComponent(name ?? '')}`
 
@@ -55,11 +69,22 @@ export default function LinkshellManagePage() {
   const handleLogo = async (file: File) => {
     if (!data) return
     setError('')
+    if (!LOGO_TYPES.includes(file.type)) {
+      setError('Use a PNG, JPEG, GIF, or WebP image.')
+      return
+    }
+    if (file.size > LOGO_MAX_BYTES) {
+      setError('Logo must be 5 MB or smaller.')
+      return
+    }
+    setLogoUploading(true)
     try {
       const result = await uploadFile<{ url: string }>(`/api/linkshells/${data.linkshellId}/logo`, file)
       setLogoUrl(result.url)
     } catch {
       setError('Logo upload failed.')
+    } finally {
+      setLogoUploading(false)
     }
   }
 
@@ -116,15 +141,44 @@ export default function LinkshellManagePage() {
 
         {/* Logo */}
         <label className="block text-sm font-semibold text-gray-300 mb-2">Logo</label>
-        <div className="flex items-center gap-3 mb-6">
-          {logoUrl
-            ? <img src={logoUrl} alt="" className="h-16 w-16 rounded object-cover border border-gray-700" />
-            : <div className="h-16 w-16 rounded border border-dashed border-gray-700 flex items-center justify-center text-xs text-gray-600">none</div>}
-          <input type="file" accept="image/jpeg,image/png,image/gif,image/webp"
-                 onChange={e => { const f = e.target.files?.[0]; if (f) handleLogo(f); e.target.value = '' }}
-                 className="text-xs text-gray-400" />
-          {logoUrl && <button type="button" onClick={clearLogo} className="text-xs text-red-400 hover:underline">Remove</button>}
+        <div className="flex items-center gap-4 mb-2">
+          <div
+            className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-700"
+            style={CHECKERBOARD}
+          >
+            {logoUrl
+              ? <img src={logoUrl} alt="Linkshell logo" className="h-full w-full object-contain" />
+              : <span className="text-[10px] text-gray-400">No logo</span>}
+          </div>
+          <div className="flex flex-col items-start gap-2">
+            <button
+              type="button"
+              onClick={() => logoInputRef.current?.click()}
+              disabled={logoUploading}
+              className="inline-flex items-center gap-2 rounded-md border border-gray-600 bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-200 hover:bg-gray-700 disabled:opacity-50"
+            >
+              <ImagePlus className="h-4 w-4" />
+              {logoUploading ? 'Uploading...' : logoUrl ? 'Replace logo' : 'Upload logo'}
+            </button>
+            {logoUrl && (
+              <button
+                type="button"
+                onClick={clearLogo}
+                className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Remove
+              </button>
+            )}
+          </div>
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            className="hidden"
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleLogo(f); e.target.value = '' }}
+          />
         </div>
+        <p className="text-xs text-gray-500 mb-6">Square PNG with a transparent background works best. Max 5&nbsp;MB.</p>
 
         {/* Recruitment status */}
         <label className="block text-sm font-semibold text-gray-300 mb-2">Recruitment status</label>

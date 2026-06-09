@@ -889,6 +889,7 @@ export interface LinkshellListItem {
   memberCount: number
   publicMemberCount: number
   lastActiveAt: string | null
+  logoUrl: string | null
 }
 
 export interface LinkshellMemberRow {

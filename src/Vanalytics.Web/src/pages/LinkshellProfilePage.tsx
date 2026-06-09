@@ -88,7 +88,7 @@ export default function LinkshellProfilePage() {
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               {profile.profile?.logoUrl ? (
-                <img src={profile.profile.logoUrl} alt="" className="h-9 w-9 rounded object-cover border border-gray-700" />
+                <img src={profile.profile.logoUrl} alt="" className="h-14 w-14 shrink-0 object-contain" />
               ) : (
                 <LinkshellPearl colorRgb={profile.colorRgb} size={36} title={profile.name} />
               )}
