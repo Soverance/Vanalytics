@@ -247,6 +247,28 @@ public class LinkshellBrowserTests : IAsyncLifetime
             .Select(l => l.Id).FirstAsync();
     }
 
+    private async Task<Guid> CharacterIdAsync(string server, string name)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        return await db.Characters
+            .Where(c => c.Server == server && c.Name == name)
+            .Select(c => c.Id).FirstAsync();
+    }
+
+    private async Task UploadLogoAsync(Guid linkshellId, string token)
+    {
+        var png = Convert.FromBase64String(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+        var form = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(png);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+        form.Add(fileContent, "file", "logo.png");
+        var upload = new HttpRequestMessage(HttpMethod.Post, $"/api/linkshells/{linkshellId}/logo") { Content = form };
+        upload.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        Assert.True((await _client.SendAsync(upload)).IsSuccessStatusCode);
+    }
+
     private static HttpRequestMessage Authed(HttpMethod method, string url, string token, object? body = null)
     {
         var req = new HttpRequestMessage(method, url);
@@ -430,5 +452,23 @@ public class LinkshellBrowserTests : IAsyncLifetime
         var after = await _client.GetFromJsonAsync<List<LinkshellListItem>>("/api/linkshells?server=Asura");
         var item2 = Assert.Single(after!, x => x.Name == "RecShell");
         Assert.Equal("Open", item2.RecruitmentStatus);
+    }
+
+    [Fact]
+    public async Task GetCharacterLinkshells_IncludesLogoUrl_AfterLogoUpload()
+    {
+        await SeedMemberAsync("cl1@test.com", "cl1", "LogoChar", "Asura", 9901, "CharLogoLS", 1, "leader", isPublic: true);
+        var token = await LoginAsync("cl1@test.com");
+        var lsId = await LinkshellIdAsync("Asura", "CharLogoLS");
+        await UploadLogoAsync(lsId, token);
+
+        // Owner fetches their character's linkshells -> the entry carries the logo.
+        var charId = await CharacterIdAsync("Asura", "LogoChar");
+        var req = Authed(HttpMethod.Get, $"/api/characters/{charId}/linkshells", token);
+        var data = await (await _client.SendAsync(req)).Content.ReadFromJsonAsync<LinkshellsResponse>();
+
+        Assert.NotNull(data);
+        var entry = Assert.Single(data!.Linkshells, e => e.Name == "CharLogoLS");
+        Assert.False(string.IsNullOrEmpty(entry.LogoUrl));
     }
 }

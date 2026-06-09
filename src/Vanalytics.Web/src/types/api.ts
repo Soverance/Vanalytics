@@ -55,6 +55,7 @@ export interface CharacterDetail {
   linkshell?: string
   linkshellSlot?: number
   linkshellColorRgb?: number
+  linkshellLogoUrl?: string | null
   nation?: number
   nationRank?: number
   rankPoints?: number
@@ -872,6 +873,7 @@ export interface TitlesResponse {
 export interface CharacterLinkshellEntry {
   name: string
   colorRgb: number
+  logoUrl: string | null
   rank: string // "Member" | "Sackholder" | "Leader"
   isCurrent: boolean
   lastSeenAt: string

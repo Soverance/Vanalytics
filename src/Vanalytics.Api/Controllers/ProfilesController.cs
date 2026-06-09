@@ -38,7 +38,9 @@ public class ProfilesController : ControllerBase
 
         if (character is null) return NotFound();
 
-        return Ok(CharactersController.MapToDetail(character));
+        var detail = CharactersController.MapToDetail(character);
+        detail.LinkshellLogoUrl = await CharactersController.LoadActiveLinkshellLogoAsync(_db, character);
+        return Ok(detail);
     }
 
     private async Task<Guid?> ResolvePublicCharacterIdAsync(string server, string name) =>

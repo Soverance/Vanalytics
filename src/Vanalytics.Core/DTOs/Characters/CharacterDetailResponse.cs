@@ -21,6 +21,7 @@ public class CharacterDetailResponse
     public string? Linkshell { get; set; }
     public int? LinkshellSlot { get; set; }
     public int? LinkshellColorRgb { get; set; }
+    public string? LinkshellLogoUrl { get; set; } // active LS's custom logo, null -> pearl fallback
     public int? Nation { get; set; }
     public int? NationRank { get; set; }
     public int? RankPoints { get; set; }

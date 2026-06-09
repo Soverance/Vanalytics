@@ -93,7 +93,11 @@ export default function CharacterProfileHeader({
           {character.linkshell && (
             <span className="flex items-center gap-1">
               {identityParts.length > 0 && <span className="text-gray-600">·</span>}
-              <LinkshellPearl colorRgb={character.linkshellColorRgb} size={12} title={character.linkshell} />
+              {character.linkshellLogoUrl ? (
+                <img src={character.linkshellLogoUrl} alt="" title={character.linkshell} className="h-4 w-4 shrink-0 object-contain" />
+              ) : (
+                <LinkshellPearl colorRgb={character.linkshellColorRgb} size={12} title={character.linkshell} />
+              )}
               <span>{character.linkshell}</span>
             </span>
           )}

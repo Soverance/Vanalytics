@@ -12,6 +12,9 @@ public class CharacterLinkshellEntry
     /// <summary>Packed RGB (r &lt;&lt; 16 | g &lt;&lt; 8 | b) for the pearl icon.</summary>
     public int ColorRgb { get; set; }
 
+    /// <summary>Custom linkshell logo URL, or null to fall back to the pearl.</summary>
+    public string? LogoUrl { get; set; }
+
     /// <summary>"Member" | "Sackholder" | "Leader".</summary>
     public string Rank { get; set; } = string.Empty;
 

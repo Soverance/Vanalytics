@@ -67,7 +67,9 @@ public class CharactersController : ControllerBase
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
 
-        return Ok(MapToDetail(character));
+        var detail = MapToDetail(character);
+        detail.LinkshellLogoUrl = await LoadActiveLinkshellLogoAsync(_db, character);
+        return Ok(detail);
     }
 
     [HttpPut("{id:guid}")]
@@ -263,6 +265,7 @@ public class CharactersController : ControllerBase
             {
                 Name = m.Linkshell.Name,
                 ColorRgb = m.Linkshell.ColorRgb,
+                LogoUrl = m.Linkshell.Profile != null ? m.Linkshell.Profile.LogoBlobUrl : null,
                 Rank = m.Rank.ToString(),
                 IsCurrent = m.IsCurrent,
                 LastSeenAt = m.LastSeenAt,
@@ -270,6 +273,20 @@ public class CharactersController : ControllerBase
             .ToListAsync();
 
         return new LinkshellsResponse { Linkshells = linkshells };
+    }
+
+    // The active linkshell's custom logo (or null), for the profile-header mark.
+    // The active LS is the character's current membership whose Linkshell.Name
+    // matches the denormalized active name (c.Linkshell); resolve its profile
+    // logo. Returns null when there's no active LS or it has no logo.
+    internal static Task<string?> LoadActiveLinkshellLogoAsync(VanalyticsDbContext db, Character c)
+    {
+        if (string.IsNullOrEmpty(c.Linkshell)) return Task.FromResult<string?>(null);
+        return db.LinkshellMemberships
+            .Where(m => m.CharacterId == c.Id && m.IsCurrent
+                && m.Linkshell.Server == c.Server && m.Linkshell.Name == c.Linkshell)
+            .Select(m => m.Linkshell.Profile != null ? m.Linkshell.Profile.LogoBlobUrl : null)
+            .FirstOrDefaultAsync();
     }
 
     [HttpGet("{id:guid}/missions")]

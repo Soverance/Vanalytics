@@ -61,7 +61,11 @@ export default function LinkshellsTab({ characterId, server, fetchBase }: Props)
                   to={`/${encodeURIComponent(server)}/linkshell/${encodeURIComponent(ls.name)}`}
                   className="flex items-center gap-2 text-gray-200 hover:text-blue-300"
                 >
-                  <LinkshellPearl colorRgb={ls.colorRgb} size={14} title={ls.name} />
+                  {ls.logoUrl ? (
+                    <img src={ls.logoUrl} alt="" title={ls.name} className="h-4 w-4 shrink-0 object-contain" />
+                  ) : (
+                    <LinkshellPearl colorRgb={ls.colorRgb} size={14} title={ls.name} />
+                  )}
                   <span className="truncate">{ls.name}</span>
                 </Link>
               </td>
