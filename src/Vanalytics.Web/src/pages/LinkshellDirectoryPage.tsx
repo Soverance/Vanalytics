@@ -5,10 +5,19 @@ import { useAuth } from '../context/AuthContext'
 import type { LinkshellListItem, GameServer } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import LinkshellPearl from '../components/character/LinkshellPearl'
+import { RECRUIT_STYLE } from '../components/character/linkshellStyles'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 
 type SortKey = keyof LinkshellListItem
 type SortDir = 'asc' | 'desc'
+
+// Directory recruitment filter: label -> the status it matches ('' = no filter).
+const RECRUIT_FILTERS: { label: string; match: string }[] = [
+  { label: 'All', match: '' },
+  { label: 'Recruiting', match: 'Open' },
+  { label: 'Closed', match: 'Closed' },
+  { label: 'Unknown', match: 'Unknown' },
+]
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return '—'
@@ -30,6 +39,7 @@ export default function LinkshellDirectoryPage() {
   const [servers, setServers] = useState<GameServer[]>([])
   const [selectedServer, setSelectedServer] = useState<string>('')
   const [search, setSearch] = useState('')
+  const [recruitFilter, setRecruitFilter] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('memberCount')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [loading, setLoading] = useState(true)
@@ -70,6 +80,9 @@ export default function LinkshellDirectoryPage() {
       const q = search.toLowerCase()
       list = list.filter(l => l.name.toLowerCase().includes(q))
     }
+    if (recruitFilter) {
+      list = list.filter(l => l.recruitmentStatus === recruitFilter)
+    }
     return [...list].sort((a, b) => {
       const av = a[sortKey]
       const bv = b[sortKey]
@@ -83,7 +96,7 @@ export default function LinkshellDirectoryPage() {
       const bs = String(bv).toLowerCase()
       return sortDir === 'asc' ? as.localeCompare(bs) : bs.localeCompare(as)
     })
-  }, [linkshells, search, sortKey, sortDir])
+  }, [linkshells, search, recruitFilter, sortKey, sortDir])
 
   const SortIndicator = ({ col }: { col: SortKey }) => {
     if (sortKey !== col) return null
@@ -107,6 +120,16 @@ export default function LinkshellDirectoryPage() {
           <option value="All Servers">All Servers</option>
           {servers.map(s => (
             <option key={s.name} value={s.name}>{s.name}</option>
+          ))}
+        </select>
+        <select
+          value={recruitFilter}
+          onChange={e => setRecruitFilter(e.target.value)}
+          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+          title="Filter by recruitment status"
+        >
+          {RECRUIT_FILTERS.map(f => (
+            <option key={f.label} value={f.match}>{f.label}</option>
           ))}
         </select>
         <input
@@ -136,6 +159,7 @@ export default function LinkshellDirectoryPage() {
                 <th className={thClass} onClick={() => handleSort('server')}>Server<SortIndicator col="server" /></th>
                 <th className={thClass} onClick={() => handleSort('memberCount')}>Members<SortIndicator col="memberCount" /></th>
                 <th className={thClass} onClick={() => handleSort('publicMemberCount')}>Public<SortIndicator col="publicMemberCount" /></th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider select-none">Recruitment</th>
                 <th className={thClass} onClick={() => handleSort('lastActiveAt')}>Last Active<SortIndicator col="lastActiveAt" /></th>
               </tr>
             </thead>
@@ -159,6 +183,15 @@ export default function LinkshellDirectoryPage() {
                   <td className="px-3 py-2 text-gray-400">{l.server}</td>
                   <td className="px-3 py-2 text-gray-400">{l.memberCount}</td>
                   <td className="px-3 py-2 text-gray-400">{l.publicMemberCount}</td>
+                  <td className="px-3 py-2">
+                    {l.recruitmentStatus === 'Open' || l.recruitmentStatus === 'Closed' ? (
+                      <span className={`inline-block rounded border px-1.5 py-0.5 text-[10px] font-medium ${RECRUIT_STYLE[l.recruitmentStatus]}`}>
+                        {l.recruitmentStatus}
+                      </span>
+                    ) : (
+                      <span className="text-gray-600">—</span>
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-gray-400">{timeAgo(l.lastActiveAt)}</td>
                 </tr>
               ))}

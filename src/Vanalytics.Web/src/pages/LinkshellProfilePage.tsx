@@ -4,6 +4,7 @@ import type { LinkshellProfileResponse } from '../types/api'
 import { getStoredTokens } from '../api/client'
 import LoadingSpinner from '../components/LoadingSpinner'
 import LinkshellPearl from '../components/character/LinkshellPearl'
+import { RECRUIT_STYLE } from '../components/character/linkshellStyles'
 
 // A current member is "stale" if not seen within this many days; rendered greyed.
 const LINKSHELL_STALE_DAYS = 14
@@ -12,12 +13,6 @@ const RANK_STYLE: Record<string, string> = {
   Leader: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
   Sackholder: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
   Member: 'bg-gray-700/40 text-gray-400 border-gray-600/50',
-}
-
-const RECRUIT_STYLE: Record<string, string> = {
-  Open: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-  Closed: 'bg-gray-700/40 text-gray-400 border-gray-600/50',
-  Unknown: 'bg-gray-800/40 text-gray-500 border-gray-600/50',
 }
 
 function timeAgo(dateStr: string | null): string {

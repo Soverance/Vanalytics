@@ -24,20 +24,40 @@ public class LinkshellsController(
         if (!string.IsNullOrEmpty(server))
             query = query.Where(l => l.Server == server);
 
-        var items = await query
-            .Select(l => new LinkshellListItem
+        // Project the recruitment status as its int-backed enum (a translatable
+        // CASE over the optional profile nav) and stringify in memory, rather
+        // than relying on Enum.ToString() translation inside the SQL projection.
+        var rows = await query
+            .Select(l => new
             {
-                Name = l.Name,
-                Server = l.Server,
-                ColorRgb = l.ColorRgb,
-                MemberCount = l.MemberCount,
+                l.Name,
+                l.Server,
+                l.ColorRgb,
+                l.MemberCount,
                 PublicMemberCount = l.Memberships.Count(m => m.IsCurrent && m.Character.IsPublic),
-                LastActiveAt = l.LastSeenAt,
+                l.LastSeenAt,
                 LogoUrl = l.Profile != null ? l.Profile.LogoBlobUrl : null,
+                RecruitmentStatus = l.Profile != null ? l.Profile.RecruitmentStatus : RecruitmentStatus.Unknown,
             })
             .ToListAsync();
 
-        return Ok(items.OrderByDescending(i => i.MemberCount).ThenBy(i => i.Name).ToList());
+        var items = rows
+            .OrderByDescending(r => r.MemberCount)
+            .ThenBy(r => r.Name)
+            .Select(r => new LinkshellListItem
+            {
+                Name = r.Name,
+                Server = r.Server,
+                ColorRgb = r.ColorRgb,
+                MemberCount = r.MemberCount,
+                PublicMemberCount = r.PublicMemberCount,
+                LastActiveAt = r.LastSeenAt,
+                LogoUrl = r.LogoUrl,
+                RecruitmentStatus = r.RecruitmentStatus.ToString(),
+            })
+            .ToList();
+
+        return Ok(items);
     }
 
     // Name is the URL segment; an FFXI linkshell name never contains '/', so the

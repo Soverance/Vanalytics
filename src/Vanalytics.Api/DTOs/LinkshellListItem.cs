@@ -10,4 +10,5 @@ public class LinkshellListItem
     public int PublicMemberCount { get; init; }  // current members whose character IsPublic
     public DateTimeOffset? LastActiveAt { get; init; }
     public string? LogoUrl { get; init; }        // from the LS profile, null if none
+    public string RecruitmentStatus { get; init; } = "Unknown"; // from the profile, else "Unknown"
 }

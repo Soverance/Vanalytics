@@ -890,6 +890,7 @@ export interface LinkshellListItem {
   publicMemberCount: number
   lastActiveAt: string | null
   logoUrl: string | null
+  recruitmentStatus: string // "Open" | "Closed" | "Unknown"
 }
 
 export interface LinkshellMemberRow {

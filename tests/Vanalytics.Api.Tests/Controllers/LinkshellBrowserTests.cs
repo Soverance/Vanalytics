@@ -410,4 +410,25 @@ public class LinkshellBrowserTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.Forbidden, (await _client.SendAsync(upload)).StatusCode);
     }
+
+    [Fact]
+    public async Task GetDirectory_IncludesRecruitmentStatus_UnknownThenOpen()
+    {
+        await SeedMemberAsync("rs1@test.com", "rs1", "RecBoss", "Asura", 9801, "RecShell", 1, "leader", isPublic: true);
+
+        // No profile yet -> Unknown.
+        var before = await _client.GetFromJsonAsync<List<LinkshellListItem>>("/api/linkshells?server=Asura");
+        var item1 = Assert.Single(before!, x => x.Name == "RecShell");
+        Assert.Equal("Unknown", item1.RecruitmentStatus);
+
+        // Officer sets Open via the Phase 3 PUT.
+        var token = await LoginAsync("rs1@test.com");
+        var lsId = await LinkshellIdAsync("Asura", "RecShell");
+        var put = Authed(HttpMethod.Put, $"/api/linkshells/{lsId}/profile", token, new { recruitmentStatus = "Open" });
+        Assert.True((await _client.SendAsync(put)).IsSuccessStatusCode);
+
+        var after = await _client.GetFromJsonAsync<List<LinkshellListItem>>("/api/linkshells?server=Asura");
+        var item2 = Assert.Single(after!, x => x.Name == "RecShell");
+        Assert.Equal("Open", item2.RecruitmentStatus);
+    }
 }
