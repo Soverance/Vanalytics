@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import type { LinkshellProfile } from '../types/api'
+import type { LinkshellProfileResponse } from '../types/api'
+import { getStoredTokens } from '../api/client'
 import LoadingSpinner from '../components/LoadingSpinner'
 import LinkshellPearl from '../components/character/LinkshellPearl'
 
@@ -11,6 +12,12 @@ const RANK_STYLE: Record<string, string> = {
   Leader: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
   Sackholder: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
   Member: 'bg-gray-700/40 text-gray-400 border-gray-600/50',
+}
+
+const RECRUIT_STYLE: Record<string, string> = {
+  Open: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+  Closed: 'bg-gray-700/40 text-gray-400 border-gray-600/50',
+  Unknown: 'bg-gray-800/40 text-gray-500 border-gray-600/50',
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -30,7 +37,7 @@ function isStale(dateStr: string): boolean {
 
 export default function LinkshellProfilePage() {
   const { server, name } = useParams<{ server: string; name: string }>()
-  const [profile, setProfile] = useState<LinkshellProfile | null>(null)
+  const [profile, setProfile] = useState<LinkshellProfileResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -39,7 +46,10 @@ export default function LinkshellProfilePage() {
     setLoading(true)
     setNotFound(false)
     setLoadError(false)
-    fetch(`/api/linkshells/${encodeURIComponent(server ?? '')}/${encodeURIComponent(name ?? '')}`)
+    const { accessToken } = getStoredTokens()
+    const headers: Record<string, string> = {}
+    if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`
+    fetch(`/api/linkshells/${encodeURIComponent(server ?? '')}/${encodeURIComponent(name ?? '')}`, { headers })
       .then(async res => {
         if (res.status === 404) { setNotFound(true); return }
         if (!res.ok) { setLoadError(true); return }
@@ -77,7 +87,11 @@ export default function LinkshellProfilePage() {
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <LinkshellPearl colorRgb={profile.colorRgb} size={36} title={profile.name} />
+              {profile.profile?.logoUrl ? (
+                <img src={profile.profile.logoUrl} alt="" className="h-9 w-9 rounded object-cover border border-gray-700" />
+              ) : (
+                <LinkshellPearl colorRgb={profile.colorRgb} size={36} title={profile.name} />
+              )}
               <div className="min-w-0">
                 <h1 className="text-2xl font-bold text-gray-100 truncate">{profile.name}</h1>
                 <p className="text-sm text-gray-400">
@@ -86,11 +100,45 @@ export default function LinkshellProfilePage() {
                 </p>
               </div>
             </div>
-            <span className="shrink-0 rounded border border-gray-600/50 bg-gray-800/40 px-2 py-1 text-[11px] text-gray-400">
-              Recruitment: {profile.recruitmentStatus}
-            </span>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <span className={`rounded border px-2 py-1 text-[11px] ${RECRUIT_STYLE[profile.recruitmentStatus] ?? RECRUIT_STYLE.Unknown}`}>
+                Recruitment: {profile.recruitmentStatus}
+              </span>
+              {profile.canManage && (
+                <Link
+                  to={`/${encodeURIComponent(profile.server)}/linkshell/${encodeURIComponent(profile.name)}/manage`}
+                  className="text-xs text-blue-400 hover:underline"
+                >
+                  Manage this linkshell
+                </Link>
+              )}
+            </div>
           </div>
         </div>
+
+        {profile.profile?.description && (
+          <div className="prose prose-invert prose-sm max-w-none rounded-xl border border-gray-800 bg-gray-900/40 p-5 mb-6"
+               dangerouslySetInnerHTML={{ __html: profile.profile.description }} />
+        )}
+
+        {profile.profile && profile.profile.externalLinks.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {profile.profile.externalLinks.map((l, i) => (
+              <a key={i} href={l.url} target="_blank" rel="noopener noreferrer"
+                 className="rounded-full border border-gray-700 bg-gray-800/60 px-3 py-1 text-xs text-blue-300 hover:bg-gray-700">
+                {l.label}
+              </a>
+            ))}
+          </div>
+        )}
+
+        {profile.profile?.recruitmentRules && (
+          <>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-2">Recruitment</h2>
+            <div className="prose prose-invert prose-sm max-w-none rounded-xl border border-gray-800 bg-gray-900/40 p-5 mb-6"
+                 dangerouslySetInnerHTML={{ __html: profile.profile.recruitmentRules }} />
+          </>
+        )}
 
         {/* Roster */}
         <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-2">Roster</h2>

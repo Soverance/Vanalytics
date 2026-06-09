@@ -22,4 +22,7 @@ public class Linkshell
     public DateTimeOffset LastSeenAt { get; set; }
 
     public List<LinkshellMembership> Memberships { get; set; } = [];
+
+    /// <summary>Optional leader-customized profile (Phase 3); null until claimed.</summary>
+    public LinkshellProfile? Profile { get; set; }
 }

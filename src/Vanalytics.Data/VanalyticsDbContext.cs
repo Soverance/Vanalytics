@@ -46,6 +46,7 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
     public DbSet<Linkshell> Linkshells => Set<Linkshell>();
     public DbSet<LinkshellMembership> LinkshellMemberships => Set<LinkshellMembership>();
+    public DbSet<LinkshellProfile> LinkshellProfiles => Set<LinkshellProfile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

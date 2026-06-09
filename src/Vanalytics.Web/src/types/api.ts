@@ -899,7 +899,20 @@ export interface LinkshellMemberRow {
   lastSeen: string
 }
 
-export interface LinkshellProfile {
+export interface LinkshellExternalLink {
+  label: string
+  url: string
+}
+
+export interface LinkshellCustomization {
+  logoUrl: string | null
+  description: string | null
+  recruitmentRules: string | null
+  externalLinks: LinkshellExternalLink[]
+}
+
+export interface LinkshellProfileResponse {
+  linkshellId: string
   name: string
   server: string
   colorRgb: number
@@ -907,7 +920,9 @@ export interface LinkshellProfile {
   publicMemberCount: number
   privateMemberCount: number
   lastActiveAt: string | null
-  recruitmentStatus: string
+  recruitmentStatus: string // "Unknown" | "Open" | "Closed"
+  canManage: boolean
+  profile: LinkshellCustomization | null
   members: LinkshellMemberRow[]
 }
 

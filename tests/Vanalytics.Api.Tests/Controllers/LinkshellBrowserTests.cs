@@ -151,7 +151,7 @@ public class LinkshellBrowserTests : IAsyncLifetime
         await SeedMemberAsync("p1c@test.com", "p1c", "Yvonne", "Asura", 8001, "RosterShell", 0x00FF00, "member",     isPublic: true);
         await SeedMemberAsync("p1d@test.com", "p1d", "Brett",  "Asura", 8001, "RosterShell", 0x00FF00, "member",     isPublic: true);
 
-        var profile = await _client.GetFromJsonAsync<LinkshellProfile>("/api/linkshells/Asura/RosterShell");
+        var profile = await _client.GetFromJsonAsync<LinkshellProfileResponse>("/api/linkshells/Asura/RosterShell");
 
         Assert.NotNull(profile);
         Assert.Equal(4, profile!.MemberCount);
@@ -166,6 +166,9 @@ public class LinkshellBrowserTests : IAsyncLifetime
         Assert.Equal("WAR", profile.Members[0].Job);
         Assert.Equal(99, profile.Members[0].Level);
         Assert.DoesNotContain(profile.Members, m => m.Name == "Zelda"); // private, never named
+
+        Assert.False(profile.CanManage); // anonymous request -> never manageable
+        Assert.Null(profile.Profile);    // no profile row yet -> null
     }
 
     [Fact]
@@ -179,7 +182,7 @@ public class LinkshellBrowserTests : IAsyncLifetime
         await SeedMemberAsync("o3@test.com", "o3", "Sara",  "Asura", 8201, "OrderShell", 1, "sackholder", isPublic: true);
         await SeedMemberAsync("o4@test.com", "o4", "Alma",  "Asura", 8201, "OrderShell", 1, "member",     isPublic: true);
 
-        var profile = await _client.GetFromJsonAsync<LinkshellProfile>("/api/linkshells/Asura/OrderShell");
+        var profile = await _client.GetFromJsonAsync<LinkshellProfileResponse>("/api/linkshells/Asura/OrderShell");
 
         Assert.NotNull(profile);
         // Leader, then Sackholder, then Members alphabetically (Alma before Mona).
@@ -224,5 +227,187 @@ public class LinkshellBrowserTests : IAsyncLifetime
         var resp = await _client.GetAsync("/api/linkshells/Asura/OldShell");
         // OldShell now has 0 current members -> MemberCount 0 -> not resolvable.
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    // === Phase 3: profile management ===
+
+    private async Task<string> LoginAsync(string email)
+    {
+        var login = await _client.PostAsJsonAsync("/api/auth/login",
+            new LoginRequest { Email = email, Password = "Password123!" });
+        return (await login.Content.ReadFromJsonAsync<AuthResponse>())!.AccessToken;
+    }
+
+    private async Task<Guid> LinkshellIdAsync(string server, string name)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        return await db.Linkshells
+            .Where(l => l.Server == server && l.Name == name)
+            .Select(l => l.Id).FirstAsync();
+    }
+
+    private static HttpRequestMessage Authed(HttpMethod method, string url, string token, object? body = null)
+    {
+        var req = new HttpRequestMessage(method, url);
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        if (body != null) req.Content = JsonContent.Create(body);
+        return req;
+    }
+
+    [Fact]
+    public async Task PutProfile_AsLeader_CreatesProfile_AndShowsCanManage()
+    {
+        await SeedMemberAsync("m1@test.com", "m1", "Boss", "Asura", 9001, "MyShell", 0x112233, "leader", isPublic: true);
+        var token = await LoginAsync("m1@test.com");
+        var lsId = await LinkshellIdAsync("Asura", "MyShell");
+
+        var put = Authed(HttpMethod.Put, $"/api/linkshells/{lsId}/profile", token, new
+        {
+            description = "<p>Welcome!</p>",
+            recruitmentStatus = "Open",
+            recruitmentRules = "<p>Be cool.</p>",
+            externalLinks = new[] { new { label = "Discord", url = "https://discord.gg/abc" } }
+        });
+        var putResp = await _client.SendAsync(put);
+        Assert.True(putResp.IsSuccessStatusCode, await putResp.Content.ReadAsStringAsync());
+
+        var get = Authed(HttpMethod.Get, "/api/linkshells/Asura/MyShell", token);
+        var profile = await (await _client.SendAsync(get)).Content.ReadFromJsonAsync<LinkshellProfileResponse>();
+        Assert.NotNull(profile);
+        Assert.True(profile!.CanManage);
+        Assert.Equal("Open", profile.RecruitmentStatus);
+        Assert.NotNull(profile.Profile);
+        Assert.Equal("<p>Welcome!</p>", profile.Profile!.Description);
+        Assert.Single(profile.Profile.ExternalLinks);
+        Assert.Equal("Discord", profile.Profile.ExternalLinks[0].Label);
+    }
+
+    [Fact]
+    public async Task PutProfile_AsPlainMember_Forbidden()
+    {
+        await SeedMemberAsync("m2lead@test.com", "m2lead", "Lead2", "Asura", 9101, "MemShell", 1, "leader", isPublic: true);
+        await SeedMemberAsync("m2@test.com", "m2", "Grunt", "Asura", 9101, "MemShell", 1, "member", isPublic: true);
+        var token = await LoginAsync("m2@test.com");
+        var lsId = await LinkshellIdAsync("Asura", "MemShell");
+
+        var put = Authed(HttpMethod.Put, $"/api/linkshells/{lsId}/profile", token, new { recruitmentStatus = "Open" });
+        var resp = await _client.SendAsync(put);
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutProfile_AsSackholder_Allowed()
+    {
+        await SeedMemberAsync("m3lead@test.com", "m3lead", "Lead3", "Asura", 9201, "SackShell", 1, "leader", isPublic: true);
+        await SeedMemberAsync("m3@test.com", "m3", "Sack", "Asura", 9201, "SackShell", 1, "sackholder", isPublic: true);
+        var token = await LoginAsync("m3@test.com");
+        var lsId = await LinkshellIdAsync("Asura", "SackShell");
+
+        var put = Authed(HttpMethod.Put, $"/api/linkshells/{lsId}/profile", token, new { recruitmentStatus = "Closed" });
+        var resp = await _client.SendAsync(put);
+        Assert.True(resp.IsSuccessStatusCode, await resp.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task PutProfile_RejectsTooManyLinks()
+    {
+        await SeedMemberAsync("m4@test.com", "m4", "Boss4", "Asura", 9301, "LinkShell", 1, "leader", isPublic: true);
+        var token = await LoginAsync("m4@test.com");
+        var lsId = await LinkshellIdAsync("Asura", "LinkShell");
+
+        var links = Enumerable.Range(0, 6).Select(i => new { label = $"L{i}", url = "https://x.com" }).ToArray();
+        var put = Authed(HttpMethod.Put, $"/api/linkshells/{lsId}/profile", token, new { recruitmentStatus = "Open", externalLinks = links });
+        var resp = await _client.SendAsync(put);
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutProfile_RejectsNonHttpLink()
+    {
+        await SeedMemberAsync("m5@test.com", "m5", "Boss5", "Asura", 9401, "SchemeShell", 1, "leader", isPublic: true);
+        var token = await LoginAsync("m5@test.com");
+        var lsId = await LinkshellIdAsync("Asura", "SchemeShell");
+
+        var put = Authed(HttpMethod.Put, $"/api/linkshells/{lsId}/profile", token,
+            new { recruitmentStatus = "Open", externalLinks = new[] { new { label = "Bad", url = "javascript:alert(1)" } } });
+        var resp = await _client.SendAsync(put);
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutProfile_FormerLeader_Forbidden()
+    {
+        await SeedMemberAsync("m6@test.com", "m6", "ExLead", "Asura", 9501, "OldLead", 1, "leader", isPublic: true);
+        // Keep a second current member so the LS still resolves (MemberCount > 0).
+        await SeedMemberAsync("m6b@test.com", "m6b", "Stayer", "Asura", 9501, "OldLead", 1, "member", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "OldLead");
+
+        // Re-sync ExLead with a different LS -> OldLead membership flips IsCurrent=false.
+        var token = await LoginAsync("m6@test.com");
+        var keyReq = Authed(HttpMethod.Post, "/api/keys/generate", token);
+        var apiKey = (await (await _client.SendAsync(keyReq)).Content.ReadFromJsonAsync<ApiKeyResponse>())!;
+        var syncReq = new HttpRequestMessage(HttpMethod.Post, "/api/sync");
+        syncReq.Headers.Add("X-Api-Key", apiKey.ApiKey);
+        syncReq.Content = JsonContent.Create(new SyncRequest
+        {
+            CharacterName = "ExLead", Server = "Asura", ActiveJob = "WAR", ActiveJobLevel = 99,
+            Linkshells = [new SyncLinkshellEntry { LinkshellId = 9502, Name = "ElseWhere", ColorRgb = 1, Rank = "leader" }]
+        });
+        Assert.True((await _client.SendAsync(syncReq)).IsSuccessStatusCode);
+
+        var put = Authed(HttpMethod.Put, $"/api/linkshells/{lsId}/profile", token, new { recruitmentStatus = "Open" });
+        var resp = await _client.SendAsync(put);
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadLogo_AsLeader_SetsLogoUrl_ThenDeleteClears()
+    {
+        await SeedMemberAsync("lg1@test.com", "lg1", "LogoBoss", "Asura", 9601, "LogoShell", 1, "leader", isPublic: true);
+        var token = await LoginAsync("lg1@test.com");
+        var lsId = await LinkshellIdAsync("Asura", "LogoShell");
+
+        // 1x1 PNG.
+        var png = Convert.FromBase64String(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+        var form = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(png);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+        form.Add(fileContent, "file", "logo.png");
+
+        var upload = new HttpRequestMessage(HttpMethod.Post, $"/api/linkshells/{lsId}/logo") { Content = form };
+        upload.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var uploadResp = await _client.SendAsync(upload);
+        Assert.True(uploadResp.IsSuccessStatusCode, await uploadResp.Content.ReadAsStringAsync());
+
+        var get1 = Authed(HttpMethod.Get, "/api/linkshells/Asura/LogoShell", token);
+        var p1 = await (await _client.SendAsync(get1)).Content.ReadFromJsonAsync<LinkshellProfileResponse>();
+        Assert.False(string.IsNullOrEmpty(p1!.Profile?.LogoUrl));
+
+        var del = Authed(HttpMethod.Delete, $"/api/linkshells/{lsId}/logo", token);
+        Assert.True((await _client.SendAsync(del)).IsSuccessStatusCode);
+
+        var get2 = Authed(HttpMethod.Get, "/api/linkshells/Asura/LogoShell", token);
+        var p2 = await (await _client.SendAsync(get2)).Content.ReadFromJsonAsync<LinkshellProfileResponse>();
+        Assert.True(string.IsNullOrEmpty(p2!.Profile?.LogoUrl));
+    }
+
+    [Fact]
+    public async Task UploadLogo_AsMember_Forbidden()
+    {
+        await SeedMemberAsync("lg2lead@test.com", "lg2lead", "LLead", "Asura", 9701, "LogoMem", 1, "leader", isPublic: true);
+        await SeedMemberAsync("lg2@test.com", "lg2", "LMem", "Asura", 9701, "LogoMem", 1, "member", isPublic: true);
+        var token = await LoginAsync("lg2@test.com");
+        var lsId = await LinkshellIdAsync("Asura", "LogoMem");
+
+        var form = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(new byte[] { 1, 2, 3 });
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+        form.Add(fileContent, "file", "logo.png");
+        var upload = new HttpRequestMessage(HttpMethod.Post, $"/api/linkshells/{lsId}/logo") { Content = form };
+        upload.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await _client.SendAsync(upload)).StatusCode);
     }
 }

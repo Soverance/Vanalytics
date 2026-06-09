@@ -33,6 +33,7 @@ import UserProfilePage from './pages/UserProfilePage'
 import PlayerDirectoryPage from './pages/PlayerDirectoryPage'
 import LinkshellDirectoryPage from './pages/LinkshellDirectoryPage'
 import LinkshellProfilePage from './pages/LinkshellProfilePage'
+import LinkshellManagePage from './pages/LinkshellManagePage'
 import RecipeBrowserPage from './pages/RecipeBrowserPage'
 import RecipeDetailPage from './pages/RecipeDetailPage'
 
@@ -147,6 +148,9 @@ export default function App() {
 
           {/* Public: shareable linkshell profiles (3-segment, before /:server/:name) */}
           <Route path="/:server/linkshell/:name" element={<LinkshellProfilePage />} />
+
+          {/* Manage (authenticated; eligibility re-checked server-side) */}
+          <Route path="/:server/linkshell/:name/manage" element={<ProtectedRoute><LinkshellManagePage /></ProtectedRoute>} />
 
           {/* Public: shareable character profiles (MUST be after explicit routes) */}
           <Route path="/:server/:name" element={

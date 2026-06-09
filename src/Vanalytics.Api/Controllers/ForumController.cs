@@ -536,50 +536,8 @@ public class ForumController : ControllerBase
         }
     }
 
-    private string SanitizeImageSources(string html)
-    {
-        var allowedPrefix = _attachmentStore.BaseUrl;
-        var result = new System.Text.StringBuilder(html.Length);
-        var pos = 0;
-        while (pos < html.Length)
-        {
-            var imgStart = html.IndexOf("<img ", pos, StringComparison.OrdinalIgnoreCase);
-            if (imgStart < 0)
-            {
-                result.Append(html, pos, html.Length - pos);
-                break;
-            }
-            result.Append(html, pos, imgStart - pos);
-
-            var imgEnd = html.IndexOf('>', imgStart);
-            if (imgEnd < 0)
-            {
-                result.Append(html, pos, html.Length - pos);
-                break;
-            }
-            imgEnd++;
-
-            var tag = html[imgStart..imgEnd];
-            var srcIdx = tag.IndexOf("src=\"", StringComparison.OrdinalIgnoreCase);
-            if (srcIdx >= 0)
-            {
-                var srcStart = srcIdx + 5;
-                var srcEnd = tag.IndexOf('"', srcStart);
-                if (srcEnd > srcStart)
-                {
-                    var src = tag[srcStart..srcEnd];
-                    if (src.StartsWith(allowedPrefix, StringComparison.OrdinalIgnoreCase))
-                    {
-                        result.Append(tag);
-                    }
-                    // else: drop the img tag (external source)
-                }
-            }
-
-            pos = imgEnd;
-        }
-        return result.ToString();
-    }
+    private string SanitizeImageSources(string html) =>
+        RichTextSanitizer.SanitizeImageSources(html, _attachmentStore.BaseUrl);
 
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
