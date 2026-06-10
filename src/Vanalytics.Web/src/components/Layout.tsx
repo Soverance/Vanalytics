@@ -250,7 +250,7 @@ function LayoutInner() {
               </div>
             </NavLink>
             <div className="pr-4">
-              <NotificationBell />
+              <NotificationBell openUp />
             </div>
           </div>
         ) : (

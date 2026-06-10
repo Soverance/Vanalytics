@@ -23,7 +23,7 @@ function label(type: string): string {
   }
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({ openUp = false }: { openUp?: boolean }) {
   const { summary, refresh } = useNotificationSummary()
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<NotificationItem[]>([])
@@ -74,7 +74,11 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 rounded-lg border border-gray-800 bg-gray-900 shadow-xl">
+        <div
+          className={`absolute z-50 w-80 rounded-lg border border-gray-800 bg-gray-900 shadow-xl ${
+            openUp ? 'bottom-full left-0 mb-2' : 'top-full right-0 mt-2'
+          }`}
+        >
           <div className="flex items-center justify-between border-b border-gray-800 px-3 py-2">
             <span className="text-sm font-medium text-gray-200">Notifications</span>
             <button onClick={markAll} className="text-xs text-blue-400 hover:text-blue-300">Mark all read</button>
