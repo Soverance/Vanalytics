@@ -3,8 +3,9 @@ import { api, ApiError } from '../api/client'
 import type { AdminUser, UserRole, CreateUserResponse } from '../types/api'
 import UserAvatar from '../components/UserAvatar'
 import ConfirmModal from '../components/ConfirmModal'
+import GeneratedPasswordReveal from '../components/GeneratedPasswordReveal'
 import { useAuth } from '../context/AuthContext'
-import { X, Plus, Copy, Check } from 'lucide-react'
+import { X, Plus } from 'lucide-react'
 
 const ROLES: UserRole[] = ['Member', 'Moderator', 'Admin']
 
@@ -21,7 +22,6 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<CreateUserResponse | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,13 +39,6 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleCopy = async () => {
-    if (!result) return
-    await navigator.clipboard.writeText(result.generatedPassword)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }
 
   const handleClose = () => {
@@ -78,29 +71,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
             <p className="text-sm text-gray-300">
               User <span className="font-medium text-gray-100">{result.username}</span> created successfully.
             </p>
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
-                Generated Password
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={result.generatedPassword}
-                  className="flex-1 rounded border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100 font-mono text-sm"
-                />
-                <button
-                  onClick={handleCopy}
-                  className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700"
-                  title="Copy password"
-                >
-                  {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-amber-400">
-                Save this password — it won't be shown again.
-              </p>
-            </div>
+            <GeneratedPasswordReveal password={result.generatedPassword} />
             <button
               onClick={handleClose}
               className="w-full rounded bg-blue-600 py-2 font-medium hover:bg-blue-500"
