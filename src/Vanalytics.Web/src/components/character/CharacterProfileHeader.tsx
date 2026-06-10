@@ -33,6 +33,9 @@ export default function CharacterProfileHeader({
   // Row 1: Combat
   const combatParts = [
     jobSubLine,
+    // Su is always shown (incl. Su 0), matching the in-game status panel.
+    character.superiorLevel != null ? `Su ${character.superiorLevel}` : null,
+    // ML only when the active job is actually a master (> 0).
     character.masterLevel != null && character.masterLevel > 0 ? `ML ${character.masterLevel}` : null,
     character.itemLevel != null && character.itemLevel > 0 ? `iLvl ${character.itemLevel}` : null,
   ].filter(Boolean)

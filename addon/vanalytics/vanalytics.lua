@@ -1716,18 +1716,22 @@ local function read_character_state()
     local active_job = player.main_job
     local active_job_level = player.main_job_level
 
-    -- All jobs with levels > 0, including JP/CP data
+    -- All jobs with levels > 0, including JP/CP and master-level data.
+    -- player.master_levels only contains jobs that own the Master Breaker
+    -- key item, so masterLevel is nil for locked jobs and 0-50 for unlocked.
     local jobs = {}
     for job_key, level in pairs(player.jobs) do
         if type(level) == 'number' and level > 0 then
             local job_abbr = tostring(job_key)
             local jp_data = player.job_points and player.job_points[job_abbr:lower()]
+            local master_level = player.master_levels and player.master_levels[job_abbr]
             table.insert(jobs, {
                 job = job_abbr,
                 level = level,
                 jp = jp_data and jp_data.jp or 0,
                 jpSpent = jp_data and jp_data.jp_spent or 0,
                 cp = jp_data and jp_data.cp or 0,
+                masterLevel = master_level,  -- nil when locked (no breaker)
             })
         end
     end
@@ -1943,7 +1947,9 @@ local function read_character_state()
         activeJobLevel = active_job_level,
         subJob = player.sub_job,
         subJobLevel = player.sub_job_level,
-        masterLevel = player.superior_level,
+        masterLevel = (player.master_levels and player.main_job
+            and player.master_levels[player.main_job]) or 0,
+        superiorLevel = player.superior_level,
         itemLevel = player.item_level,
         hp = player.vitals.hp,
         maxHp = player.vitals.max_hp,

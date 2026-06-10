@@ -12,7 +12,7 @@ player.autorun = boolean
 player.id = number                      -- Entity ID
 player.index = number                   -- Entity index
 player.item_level = number              -- Current iLvl (e.g., 118)
-player.superior_level = number          -- Master level (e.g., 5)
+player.superior_level = number          -- Superior equipment level ("Su" rank, 0-5). NOT Master Level.
 player.race = number                    -- Via mob.race: 1=Hume M, 2=Hume F, 3=Elvaan M, 4=Elvaan F, 5=Taru M, 6=Taru F, 7=Mithra, 8=Galka
 
 -- Main/Sub job
@@ -110,8 +110,11 @@ player.job_points.thf.sneak_attack_effect = number  -- 0-20
 player.job_points.thf.trick_attack_effect = number
 -- ... each job has ~10-13 ability-specific JP upgrades
 
--- Master Levels table: structure TBD (was {table} in dump but not expanded)
-player.master_levels = table
+-- Master Levels: keyed by uppercase job abbreviation, value is the job's
+-- Master Level (0-50). ONLY contains jobs that own the Master Breaker key
+-- item (empty {} if none do). Does NOT expose Exemplar Points progress —
+-- EP current/needed comes from packet 0x061 (active job only).
+player.master_levels = table            -- e.g. { BLU = 12, THF = 8 }
 
 -- Buffs table: active status effects (not expanded in dump)
 player.buffs = table

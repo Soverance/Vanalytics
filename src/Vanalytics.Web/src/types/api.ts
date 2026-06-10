@@ -47,6 +47,7 @@ export interface CharacterDetail {
   subJob?: string
   subJobLevel?: number
   masterLevel?: number
+  superiorLevel?: number
   itemLevel?: number
   hp?: number
   maxHp?: number
@@ -830,6 +831,14 @@ export interface WarpUnlocks {
   eschanPortals: number[]
 }
 
+export interface MasterLevelEntry {
+  jobId: number
+  masterLevel: number
+  epCurrent: number | null
+  epNeeded: number | null
+  capped: boolean
+}
+
 export interface ProgressionResponse {
   limitPoints: number | null
   meritPoints: number | null
@@ -837,6 +846,7 @@ export interface ProgressionResponse {
   jobPointsUnlocked: boolean | null
   jobPoints: JobPointEntry[] | null
   warps: WarpUnlocks | null
+  masterLevels: MasterLevelEntry[] | null
   updatedAt: string | null
 }
 
