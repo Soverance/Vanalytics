@@ -186,4 +186,40 @@ public class CharactersControllerTests : IAsyncLifetime
         var resp = await _client.GetAsync("/api/characters");
         Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
     }
+
+    [Fact]
+    public async Task CharacterDetail_ReturnsSuperiorLevel()
+    {
+        var token = await CreateUserAndGetTokenAsync("char8@test.com", "char8user");
+
+        // Generate API key
+        var keyReq = Authed(HttpMethod.Post, "/api/keys/generate", token);
+        var keyResp = await _client.SendAsync(keyReq);
+        var apiKey = (await keyResp.Content.ReadFromJsonAsync<ApiKeyResponse>())!;
+
+        // Sync to create character with SuperiorLevel = 3
+        var syncReq = new HttpRequestMessage(HttpMethod.Post, "/api/sync");
+        syncReq.Headers.Add("X-Api-Key", apiKey.ApiKey);
+        syncReq.Content = JsonContent.Create(new SyncRequest
+        {
+            CharacterName = "SuChar",
+            Server = "Asura",
+            ActiveJob = "WAR",
+            ActiveJobLevel = 99,
+            SuperiorLevel = 3,
+            Jobs = [new SyncJobEntry { Job = "WAR", Level = 99 }]
+        });
+        await _client.SendAsync(syncReq);
+
+        // Get character ID from list
+        var listResp = await _client.SendAsync(Authed(HttpMethod.Get, "/api/characters", token));
+        var chars = (await listResp.Content.ReadFromJsonAsync<List<CharacterSummaryResponse>>())!;
+        var characterId = chars.First(c => c.Name == "SuChar").Id;
+
+        // Fetch detail and assert SuperiorLevel
+        var resp = await _client.SendAsync(Authed(HttpMethod.Get, $"/api/characters/{characterId}", token));
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var body = await resp.Content.ReadFromJsonAsync<CharacterDetailResponse>();
+        Assert.Equal(3, body!.SuperiorLevel);
+    }
 }

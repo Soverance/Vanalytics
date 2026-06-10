@@ -834,6 +834,7 @@ public class CharactersController : ControllerBase
         SubJob = c.SubJob,
         SubJobLevel = c.SubJobLevel,
         MasterLevel = c.MasterLevel,
+        SuperiorLevel = c.SuperiorLevel,
         ItemLevel = c.ItemLevel,
         Hp = c.Hp,
         MaxHp = c.MaxHp,
