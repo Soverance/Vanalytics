@@ -128,6 +128,7 @@ public class SyncController : ControllerBase
         character.SubJob = request.SubJob;
         character.SubJobLevel = request.SubJobLevel;
         character.MasterLevel = request.MasterLevel;
+        character.SuperiorLevel = request.SuperiorLevel;
         character.ItemLevel = request.ItemLevel;
         character.Hp = request.Hp;
         character.MaxHp = request.MaxHp;
@@ -215,7 +216,11 @@ public class SyncController : ControllerBase
                 IsActive = jobType.ToString().Equals(request.ActiveJob, StringComparison.OrdinalIgnoreCase),
                 JP = jobEntry.JP,
                 JPSpent = jobEntry.JPSpent,
-                CP = jobEntry.CP
+                CP = jobEntry.CP,
+                MasterLevel = jobEntry.MasterLevel,
+                MasterEpCurrent = jobEntry.MasterEpCurrent,
+                MasterEpNeeded = jobEntry.MasterEpNeeded,
+                MasterCapped = jobEntry.MasterCapped,
             });
         }
         _db.CharacterJobs.AddRange(newJobs);

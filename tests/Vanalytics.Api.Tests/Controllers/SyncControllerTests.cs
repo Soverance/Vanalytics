@@ -370,6 +370,51 @@ public class SyncControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Sync_PersistsSuperiorLevelAndPerJobMasterLevels()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("syncml@test.com", "syncmluser");
+
+        var payload = new SyncRequest
+        {
+            CharacterName = "MLChar",
+            Server = "Asura",
+            ActiveJob = "BLU",
+            ActiveJobLevel = 99,
+            SuperiorLevel = 5,
+            MasterLevel = 12,
+            Jobs =
+            [
+                new SyncJobEntry { Job = "BLU", Level = 99, MasterLevel = 12,
+                    MasterEpCurrent = 1840, MasterEpNeeded = 2400, MasterCapped = false },
+                new SyncJobEntry { Job = "THF", Level = 99, MasterLevel = 0 },
+                new SyncJobEntry { Job = "WAR", Level = 99 }, // null MasterLevel = no breaker
+            ],
+        };
+
+        var resp = await _client.SendAsync(CreateSyncRequest(apiKey, payload));
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var character = await db.Characters.Include(c => c.Jobs).FirstAsync(c => c.Name == "MLChar");
+
+        Assert.Equal(5, character.SuperiorLevel);
+        Assert.Equal(12, character.MasterLevel);
+
+        var blu = character.Jobs.First(j => j.JobId == JobType.BLU);
+        Assert.Equal(12, blu.MasterLevel);
+        Assert.Equal(1840, blu.MasterEpCurrent);
+        Assert.Equal(2400, blu.MasterEpNeeded);
+        Assert.False(blu.MasterCapped);
+
+        var thf = character.Jobs.First(j => j.JobId == JobType.THF);
+        Assert.Equal(0, thf.MasterLevel);
+
+        var war = character.Jobs.First(j => j.JobId == JobType.WAR);
+        Assert.Null(war.MasterLevel);
+    }
+
+    [Fact]
     public async Task Sync_SecondSync_UpsertsExistingData()
     {
         var (_, apiKey) = await SetupSyncUserAsync("sync5@test.com", "sync5user");
