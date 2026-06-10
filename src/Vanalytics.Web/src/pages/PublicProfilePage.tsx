@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { api } from '../api/client'
-import type { CharacterDetail, GameItemDetail } from '../types/api'
+import type { CharacterDetail, GameItemDetail, CharacterOwner } from '../types/api'
 import JobsGrid from '../components/JobsGrid'
 import CraftingTable from '../components/CraftingTable'
 import StatusPanel from '../components/character/StatusPanel'
@@ -27,6 +27,7 @@ type GearTab = typeof GEAR_TABS[number]
 export default function PublicProfilePage() {
   const { server, name } = useParams<{ server: string; name: string }>()
   const [character, setCharacter] = useState<CharacterDetail | null>(null)
+  const [owner, setOwner] = useState<CharacterOwner | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -56,6 +57,13 @@ export default function PublicProfilePage() {
       })
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
+  }, [server, name])
+
+  useEffect(() => {
+    setOwner(null)
+    api<CharacterOwner>(`/api/profiles/${server}/${name}/owner`)
+      .then(setOwner)
+      .catch(() => setOwner(null))
   }, [server, name])
 
   const raceId = toRaceId(character?.race, character?.gender)
@@ -127,7 +135,7 @@ export default function PublicProfilePage() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
       <main className="mx-auto max-w-5xl px-4 py-8">
-        <CharacterProfileHeader character={character} />
+        <CharacterProfileHeader character={character} owner={owner} />
 
         {/* Share link */}
         <div className="mb-6 -mt-4">

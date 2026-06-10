@@ -1,4 +1,7 @@
-import type { CharacterDetail } from '../../types/api'
+import { Link } from 'react-router-dom'
+import type { CharacterDetail, CharacterOwner } from '../../types/api'
+import MessageButton from '../messages/MessageButton'
+import { ownerDisplayLabel, shouldShowMessageButton } from './ownerActions'
 import LinkshellPearl from './LinkshellPearl'
 
 const NATION_NAMES: Record<number, string> = { 0: "San d'Oria", 1: 'Bastok', 2: 'Windurst' }
@@ -14,6 +17,7 @@ function formatPlaytime(seconds: number): string {
 
 interface CharacterProfileHeaderProps {
   character: CharacterDetail
+  owner?: CharacterOwner | null
   showPublicButton?: boolean
   onTogglePublic?: () => void
   onShareClick?: () => void
@@ -21,6 +25,7 @@ interface CharacterProfileHeaderProps {
 
 export default function CharacterProfileHeader({
   character,
+  owner,
   showPublicButton,
   onTogglePublic,
   onShareClick,
@@ -111,6 +116,24 @@ export default function CharacterProfileHeader({
       {metaParts.length > 0 && (
         <div className="text-xs text-gray-500">
           {metaParts.join(' · ')}
+        </div>
+      )}
+
+      {/* Row 4: Owner — only on public profiles, where owner info is provided */}
+      {owner && (
+        <div className="mt-2 flex items-center gap-2 text-sm">
+          <span className="text-gray-500">Owned by</span>
+          <Link
+            to={`/users/${owner.ownerUsername}`}
+            className="text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            {ownerDisplayLabel(owner)}
+          </Link>
+          {shouldShowMessageButton(owner) && (
+            <span className="ml-1">
+              <MessageButton toUserId={owner.ownerUserId} />
+            </span>
+          )}
         </div>
       )}
     </div>
