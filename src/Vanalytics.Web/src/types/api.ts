@@ -352,6 +352,14 @@ export interface UserProfileResponse {
   publicCharacters: UserPublicCharacter[]
 }
 
+export interface CharacterOwner {
+  ownerUserId: string
+  ownerUsername: string
+  ownerDisplayName: string | null
+  ownerAvatarUrl: string | null
+  canMessage: boolean
+}
+
 // Admin
 export interface AdminUser {
   id: string
