@@ -937,6 +937,8 @@ export interface LinkshellProfileResponse {
   lastActiveAt: string | null
   recruitmentStatus: string // "Unknown" | "Open" | "Closed"
   canManage: boolean
+  applyState: string // Closed | NotLoggedIn | NoEligibleCharacter | AlreadyMember | OnCooldown | NoReachableLeaders | Open
+  cooldownUntil: string | null
   profile: LinkshellCustomization | null
   members: LinkshellMemberRow[]
 }

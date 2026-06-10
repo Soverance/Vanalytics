@@ -186,6 +186,12 @@ export default function LinkshellManagePage() {
                 className="mb-6 rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200">
           {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
+        {status === 'Open' && (
+          <p className="-mt-4 mb-6 text-xs text-gray-500">
+            While recruitment is Open, applications arrive as direct messages to all current
+            leaders and sackholders. Check your <Link to="/messages" className="text-blue-400 hover:underline">messages</Link>.
+          </p>
+        )}
 
         {/* Description */}
         <label className="block text-sm font-semibold text-gray-300 mb-2">Description</label>

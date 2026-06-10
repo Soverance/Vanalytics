@@ -228,15 +228,30 @@ public class LinkshellsController(
         var profileUrl = $"{WebBaseUrl}/{Uri.EscapeDataString(character.Server)}/{Uri.EscapeDataString(character.Name)}";
         var body = $"{intro}\n\n— Applying to {ls.Name} as {character.Name} ({character.Server})\n{profileUrl}";
 
-        // Fan out one DM per recipient. A recipient who has blocked the applicant
-        // returns Blocked = true and is skipped silently (never revealed).
+        // Fan out one DM per recipient, best-effort. A recipient who has blocked
+        // the applicant returns Blocked = true and is skipped silently (never
+        // revealed); an unexpected send failure for one recipient must not abort
+        // the others or the application record, so each send is isolated.
         var delivered = 0;
         foreach (var recipientId in recipientIds)
         {
-            var result = await messaging.SendMessageAsync(userId, recipientId, body);
-            if (!result.Blocked) delivered++;
+            try
+            {
+                var result = await messaging.SendMessageAsync(userId, recipientId, body);
+                if (!result.Blocked) delivered++;
+            }
+            catch
+            {
+                // Skip this recipient; the application still records and the
+                // remaining leaders are still contacted.
+            }
         }
 
+        // Record the application AFTER fan-out so RecipientCount reflects actual
+        // deliveries. The DM is the application; the row exists only for the
+        // cooldown + button state. If this save fails the applicant gets a 500
+        // and can retry (a leader may see a duplicate DM) — preferable to writing
+        // the cooldown row first and silently failing to notify anyone.
         db.LinkshellApplications.Add(new LinkshellApplication
         {
             Id = Guid.NewGuid(),
