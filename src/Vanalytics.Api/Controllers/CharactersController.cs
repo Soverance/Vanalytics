@@ -170,8 +170,24 @@ public class CharactersController : ControllerBase
 
     internal static async Task<ProgressionResponse> LoadProgressionAsync(VanalyticsDbContext db, Guid id)
     {
+        var masterLevelRows = await db.CharacterJobs
+            .Where(j => j.CharacterId == id && j.MasterLevel != null)
+            .OrderByDescending(j => j.MasterLevel)
+            .ToListAsync();
+        var masterLevels = masterLevelRows
+            .Select(j => new MasterLevelEntry
+            {
+                JobId = (int)j.JobId,
+                MasterLevel = j.MasterLevel!.Value,
+                EpCurrent = j.MasterEpCurrent,
+                EpNeeded = j.MasterEpNeeded,
+                Capped = j.MasterCapped,
+            })
+            .ToList();
+
         var row = await db.CharacterProgression.FirstOrDefaultAsync(p => p.CharacterId == id);
-        if (row is null) return new ProgressionResponse();
+        if (row is null)
+            return new ProgressionResponse { MasterLevels = masterLevels.Count > 0 ? masterLevels : null };
 
         return new ProgressionResponse
         {
@@ -183,6 +199,7 @@ public class CharactersController : ControllerBase
                 : JsonSerializer.Deserialize<List<JobPointEntry>>(row.JobPointsJson, JsonOpts),
             Warps = row.WarpsJson is null ? null
                 : JsonSerializer.Deserialize<WarpUnlocks>(row.WarpsJson, JsonOpts),
+            MasterLevels = masterLevels.Count > 0 ? masterLevels : null,
             UpdatedAt = row.UpdatedAt,
         };
     }

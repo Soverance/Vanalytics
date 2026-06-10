@@ -10,6 +10,8 @@ using Soverance.Auth.DTOs;
 using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.Keys;
 using Vanalytics.Core.DTOs.Sync;
+using Vanalytics.Core.Enums;
+using Vanalytics.Core.Models;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Tests.Controllers;
@@ -305,5 +307,50 @@ public class PublicProfileSectionsTests : IAsyncLifetime
         await CreatePublicCharacterAsync("pp_gs2@test.com", "ppgs2user", "GsChar2", "Asura");
         var resp = await _client.GetAsync("/api/profiles/Asura/GsChar2/gear-sets/999999");
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    // ── Task 4 (ML): Master Levels ───────────────────────────────────────────────
+
+    [Fact]
+    public async Task PublicProgression_IncludesMasterLevels()
+    {
+        // Arrange: a public character with per-job master levels synced.
+        var server = "Asura";
+        var name = "MLPublic";
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            var user = new Soverance.Auth.Models.User
+            {
+                Id = Guid.NewGuid(), Email = "mlpub@test.com", Username = "mlpubuser",
+                PasswordHash = "x", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow,
+            };
+            db.Users.Add(user);
+            var character = new Character
+            {
+                Id = Guid.NewGuid(), UserId = user.Id, Name = name, Server = server,
+                IsPublic = true, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow,
+            };
+            db.Characters.Add(character);
+            db.CharacterJobs.AddRange(
+                new CharacterJob { Id = Guid.NewGuid(), CharacterId = character.Id, JobId = JobType.BLU,
+                    Level = 99, MasterLevel = 12, MasterEpCurrent = 1840, MasterEpNeeded = 2400, MasterCapped = false },
+                new CharacterJob { Id = Guid.NewGuid(), CharacterId = character.Id, JobId = JobType.WAR,
+                    Level = 99, MasterLevel = null }); // locked job, excluded
+            await db.SaveChangesAsync();
+        }
+
+        // Act
+        var resp = await _client.GetAsync($"/api/profiles/{server}/{name}/progression");
+        resp.EnsureSuccessStatusCode();
+        var body = await resp.Content.ReadFromJsonAsync<ProgressionResponse>();
+
+        // Assert: only unlocked job present, with EP.
+        Assert.NotNull(body!.MasterLevels);
+        Assert.Single(body.MasterLevels!);
+        var blu = body.MasterLevels![0];
+        Assert.Equal((int)JobType.BLU, blu.JobId);
+        Assert.Equal(12, blu.MasterLevel);
+        Assert.Equal(1840, blu.EpCurrent);
     }
 }

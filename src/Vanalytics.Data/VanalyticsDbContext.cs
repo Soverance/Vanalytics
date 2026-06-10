@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Soverance.Data;
 using Soverance.Forum.Extensions;
+using Soverance.Messaging.Extensions;
 using Vanalytics.Core.Models;
 
 namespace Vanalytics.Data;
@@ -53,5 +54,6 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(VanalyticsDbContext).Assembly);
         modelBuilder.ApplyForumConfigurations();
+        modelBuilder.ApplyMessagingConfigurations();
     }
 }
