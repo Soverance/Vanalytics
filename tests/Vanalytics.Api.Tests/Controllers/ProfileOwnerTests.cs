@@ -226,4 +226,31 @@ public class ProfileOwnerTests : IAsyncLifetime
         var resp = await _client.GetAsync("/api/profiles/Asura/NoSuchChar/owner");
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
     }
+
+    [Fact]
+    public async Task SendMessage_WhenRecipientBlockedSender_ReturnsForbidden()
+    {
+        // Recipient owns a public character; we read their user id from the owner endpoint.
+        var recipientToken = await CreatePublicCharacterAsync("blk_recv@test.com", "blkrecv", "RecvChar", "Asura");
+        var recipientId = (await GetOwnerAsync("Asura", "RecvChar")).OwnerUserId;
+
+        var senderToken = await CreateUserAndGetTokenAsync("blk_send@test.com", "blksend");
+
+        // Recipient blocks sender.
+        await BlockAsync(recipientToken, await GetSenderIdAsync(senderToken));
+
+        var req = new HttpRequestMessage(HttpMethod.Post, "/api/messages");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", senderToken);
+        req.Content = JsonContent.Create(new { toUserId = recipientId, body = "hello" });
+        var resp = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    // Reads a user's own id by publishing a throwaway public character and reading it back.
+    private async Task<Guid> GetSenderIdAsync(string token)
+    {
+        await CreatePublicCharacterViaTokenAsync(token, "SenderProbeChar", "Asura");
+        return (await GetOwnerAsync("Asura", "SenderProbeChar")).OwnerUserId;
+    }
 }
