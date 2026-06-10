@@ -4,14 +4,25 @@ import { Bell } from 'lucide-react'
 import { api } from '../../api/client'
 import { useNotificationSummary } from '../../hooks/useNotificationSummary'
 
+interface NotificationActor {
+  username: string | null
+  displayName: string | null
+  avatarUrl: string | null
+}
+
 interface NotificationItem {
   id: number
   type: string
   actorUserId: string | null
+  actor: NotificationActor | null
   targetUrl: string
   snippet: string | null
   isRead: boolean
   createdAt: string
+}
+
+function actorName(actor: NotificationActor | null): string {
+  return actor?.displayName ?? actor?.username ?? 'Someone'
 }
 
 function label(type: string): string {
@@ -93,7 +104,7 @@ export default function NotificationBell({ openUp = false }: { openUp?: boolean 
                   onClick={() => openItem(n)}
                   className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-800/50 ${n.isRead ? 'text-gray-400' : 'text-gray-100'}`}
                 >
-                  <span className="font-medium">Someone</span> {label(n.type)}
+                  <span className="font-medium">{actorName(n.actor)}</span> {label(n.type)}
                   {n.snippet && <span className="block truncate text-xs text-gray-500">{n.snippet}</span>}
                 </button>
               ))

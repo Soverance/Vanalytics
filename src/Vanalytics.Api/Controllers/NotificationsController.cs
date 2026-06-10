@@ -11,10 +11,12 @@ namespace Vanalytics.Api.Controllers;
 public class NotificationsController : ControllerBase
 {
     private readonly INotificationService _notifications;
+    private readonly IMessagingUserResolver _users;
 
-    public NotificationsController(INotificationService notifications)
+    public NotificationsController(INotificationService notifications, IMessagingUserResolver users)
     {
         _notifications = notifications;
+        _users = users;
     }
 
     [HttpGet]
@@ -24,7 +26,26 @@ public class NotificationsController : ControllerBase
         [FromQuery] bool unread = false)
     {
         var result = await _notifications.ListAsync(GetUserId(), limit, beforeId, unread);
-        return Ok(result);
+
+        // Resolve actor identities so the UI can show real display names (same as the forum).
+        var actorInfos = await _users.ResolveUsersAsync(
+            result.Items.Where(i => i.ActorUserId.HasValue).Select(i => i.ActorUserId!.Value));
+
+        var items = result.Items.Select(i => new
+        {
+            i.Id,
+            i.Type,
+            i.ActorUserId,
+            i.TargetUrl,
+            i.Snippet,
+            i.IsRead,
+            i.CreatedAt,
+            actor = i.ActorUserId.HasValue && actorInfos.TryGetValue(i.ActorUserId.Value, out var u)
+                ? new { username = u.Username, displayName = u.DisplayName, avatarUrl = u.AvatarUrl }
+                : null,
+        });
+
+        return Ok(new { items, result.HasMore });
     }
 
     [HttpGet("summary")]

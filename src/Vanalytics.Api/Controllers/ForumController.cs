@@ -257,7 +257,9 @@ public class ForumController : ControllerBase
             {
                 // Emit notifications: thread author + replied-to post author (service dedups self via null return)
                 var thread = await db.Set<Soverance.Forum.Models.ForumThread>()
-                    .FirstOrDefaultAsync(t => t.Id == threadId);
+                    .Where(t => t.Id == threadId)
+                    .Select(t => new { t.AuthorId, t.Slug, CategorySlug = t.Category.Slug })
+                    .FirstOrDefaultAsync();
                 var recipients = new HashSet<Guid>();
                 if (thread != null) recipients.Add(thread.AuthorId);
                 if (request.ReplyToPostId.HasValue)
@@ -270,7 +272,9 @@ public class ForumController : ControllerBase
                 }
 
                 var me = GetUserId();
-                var targetUrl = thread != null ? $"/forum/thread/{thread.Slug}#post-{post.Id}" : "/forum";
+                var targetUrl = thread != null
+                    ? $"/forum/{thread.CategorySlug}/{thread.Slug}#post-{post.Id}"
+                    : "/forum";
                 foreach (var recipient in recipients)
                 {
                     await _notifications.CreateAsync(
@@ -380,13 +384,13 @@ public class ForumController : ControllerBase
                     var db = HttpContext.RequestServices.GetRequiredService<VanalyticsDbContext>();
                     var reactionPost = await db.Set<Soverance.Forum.Models.ForumPost>()
                         .Where(p => p.Id == postId)
-                        .Select(p => new { p.AuthorId, p.ThreadId, Slug = p.Thread.Slug })
+                        .Select(p => new { p.AuthorId, Slug = p.Thread.Slug, CategorySlug = p.Thread.Category.Slug })
                         .FirstOrDefaultAsync();
                     if (reactionPost != null)
                     {
                         await _notifications.CreateAsync(
                             reactionPost.AuthorId, NotificationType.ForumReaction, GetUserId(),
-                            $"/forum/thread/{reactionPost.Slug}#post-{postId}", null);
+                            $"/forum/{reactionPost.CategorySlug}/{reactionPost.Slug}#post-{postId}", null);
                     }
                 }
             }
