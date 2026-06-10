@@ -130,7 +130,7 @@ export default function CharacterProfileHeader({
             {ownerDisplayLabel(owner)}
           </Link>
           {shouldShowMessageButton(owner) && (
-            <MessageButton toUserId={owner.ownerUserId} />
+            <MessageButton toUserId={owner.ownerUserId} toName={ownerDisplayLabel(owner)} />
           )}
         </div>
       )}

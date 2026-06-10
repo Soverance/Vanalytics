@@ -43,7 +43,7 @@ export default function UserProfilePage() {
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl font-bold text-gray-100">{profile.displayName ?? profile.username}</h1>
-            <MessageButton toUserId={profile.id} />
+            <MessageButton toUserId={profile.id} toName={profile.displayName ?? profile.username} />
           </div>
           {profile.displayName && <p className="text-sm text-gray-500">@{profile.username}</p>}
           <p className="text-xs text-gray-600">
