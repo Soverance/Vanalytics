@@ -3,6 +3,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Soverance.Messaging.Services;
 using Vanalytics.Api.DTOs;
 using Vanalytics.Api.Services;
 using Vanalytics.Core.Enums;
@@ -15,8 +17,19 @@ namespace Vanalytics.Api.Controllers;
 [Route("api/[controller]")]
 public class LinkshellsController(
     VanalyticsDbContext db,
-    IForumAttachmentStore assetStore) : ControllerBase
+    IForumAttachmentStore assetStore,
+    IMessagingService messaging,
+    IConfiguration configuration) : ControllerBase
 {
+    // One application per (linkshell, user) per this window.
+    private static readonly TimeSpan ApplyCooldown = TimeSpan.FromDays(30);
+    private const int MaxIntroLength = 2000;
+
+    // Absolute origin of the web app, used to build the applicant's public
+    // profile link inside the DM body. Configurable; defaults to production.
+    private string WebBaseUrl =>
+        (configuration["App:WebBaseUrl"] ?? "https://vanalytics.soverance.com").TrimEnd('/');
+
     [HttpGet]
     public async Task<IActionResult> GetDirectory([FromQuery] string? server)
     {
@@ -106,7 +119,9 @@ public class LinkshellsController(
             })
             .ToList();
 
-        var canManage = await CanManageAsync(GetOptionalUserId(), ls.Id);
+        var viewerId = GetOptionalUserId();
+        var canManage = await CanManageAsync(viewerId, ls.Id);
+        var (applyState, cooldownUntil) = await ComputeApplyStateAsync(viewerId, ls);
 
         return Ok(new LinkshellProfileResponse
         {
@@ -123,6 +138,8 @@ public class LinkshellsController(
             LastActiveAt = ls.LastSeenAt,
             RecruitmentStatus = (ls.Profile?.RecruitmentStatus ?? RecruitmentStatus.Unknown).ToString(),
             CanManage = canManage,
+            ApplyState = applyState,
+            CooldownUntil = cooldownUntil,
             Profile = ls.Profile is null ? null : ToCustomization(ls.Profile),
             Members = rows,
         });
@@ -155,6 +172,83 @@ public class LinkshellsController(
 
         await db.SaveChangesAsync();
         return Ok(ToCustomization(profile));
+    }
+
+    [Authorize]
+    [HttpPost("{linkshellId:guid}/apply")]
+    public async Task<IActionResult> Apply(Guid linkshellId, [FromBody] ApplyToLinkshellRequest request)
+    {
+        var userId = GetUserId();
+
+        var ls = await db.Linkshells
+            .Include(l => l.Profile)
+            .FirstOrDefaultAsync(l => l.Id == linkshellId);
+        if (ls is null) return NotFound();
+
+        var status = ls.Profile?.RecruitmentStatus ?? RecruitmentStatus.Unknown;
+        if (status != RecruitmentStatus.Open)
+            return Conflict(new { message = "This linkshell is not currently recruiting." });
+
+        var intro = (request.Intro ?? "").Trim();
+        if (intro.Length == 0)
+            return BadRequest(new { message = "Please write a short introduction." });
+        if (intro.Length > MaxIntroLength)
+            return BadRequest(new { message = $"Introduction is too long ({MaxIntroLength} characters max)." });
+
+        var character = await db.Characters.FirstOrDefaultAsync(c => c.Id == request.CharacterId);
+        if (character is null || character.UserId != userId) return Forbid();
+        if (character.Server != ls.Server)
+            return BadRequest(new { message = "Choose a character on this linkshell's server." });
+
+        var alreadyMember = await db.LinkshellMemberships.AnyAsync(m =>
+            m.LinkshellId == linkshellId && m.IsCurrent && m.Character.UserId == userId);
+        if (alreadyMember)
+            return Conflict(new { message = "You are already a member of this linkshell." });
+
+        var cutoff = DateTimeOffset.UtcNow - ApplyCooldown;
+        var appliedRecently = await db.LinkshellApplications.AnyAsync(a =>
+            a.LinkshellId == linkshellId && a.ApplicantUserId == userId && a.CreatedAt > cutoff);
+        if (appliedRecently)
+            return Conflict(new { message = "You have already applied to this linkshell recently." });
+
+        // Resolve recipients: distinct owning users of CURRENT leader/sackholder
+        // memberships, excluding the applicant. Every character has an owner, so
+        // there is no null-user case to filter.
+        var recipientIds = await db.LinkshellMemberships
+            .Where(m => m.LinkshellId == linkshellId && m.IsCurrent
+                && (m.Rank == LinkshellRank.Leader || m.Rank == LinkshellRank.Sackholder)
+                && m.Character.UserId != userId)
+            .Select(m => m.Character.UserId)
+            .Distinct()
+            .ToListAsync();
+
+        if (recipientIds.Count == 0)
+            return Conflict(new { message = "This linkshell has no reachable leaders to receive applications." });
+
+        var profileUrl = $"{WebBaseUrl}/{Uri.EscapeDataString(character.Server)}/{Uri.EscapeDataString(character.Name)}";
+        var body = $"{intro}\n\n— Applying to {ls.Name} as {character.Name} ({character.Server})\n{profileUrl}";
+
+        // Fan out one DM per recipient. A recipient who has blocked the applicant
+        // returns Blocked = true and is skipped silently (never revealed).
+        var delivered = 0;
+        foreach (var recipientId in recipientIds)
+        {
+            var result = await messaging.SendMessageAsync(userId, recipientId, body);
+            if (!result.Blocked) delivered++;
+        }
+
+        db.LinkshellApplications.Add(new LinkshellApplication
+        {
+            Id = Guid.NewGuid(),
+            LinkshellId = linkshellId,
+            ApplicantUserId = userId,
+            CharacterId = character.Id,
+            CreatedAt = DateTimeOffset.UtcNow,
+            RecipientCount = delivered,
+        });
+        await db.SaveChangesAsync();
+
+        return Ok(new { recipientCount = delivered });
     }
 
     private static readonly HashSet<string> AllowedLogoTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -224,6 +318,40 @@ public class LinkshellsController(
             && m.Character.UserId == userId
             && m.IsCurrent
             && (m.Rank == LinkshellRank.Leader || m.Rank == LinkshellRank.Sackholder));
+    }
+
+    // Computes the Apply button state for a given viewer against a loaded LS
+    // (its Profile must already be Included). Returns the state string plus the
+    // cooldown-until instant when OnCooldown.
+    private async Task<(string State, DateTimeOffset? CooldownUntil)> ComputeApplyStateAsync(Guid? userId, Linkshell ls)
+    {
+        var status = ls.Profile?.RecruitmentStatus ?? RecruitmentStatus.Unknown;
+        if (status != RecruitmentStatus.Open) return ("Closed", null);
+        if (userId is null) return ("NotLoggedIn", null);
+
+        var isMember = await db.LinkshellMemberships.AnyAsync(m =>
+            m.LinkshellId == ls.Id && m.IsCurrent && m.Character.UserId == userId);
+        if (isMember) return ("AlreadyMember", null);
+
+        var hasSameServerChar = await db.Characters.AnyAsync(c =>
+            c.UserId == userId && c.Server == ls.Server);
+        if (!hasSameServerChar) return ("NoEligibleCharacter", null);
+
+        var lastAppliedAt = await db.LinkshellApplications
+            .Where(a => a.LinkshellId == ls.Id && a.ApplicantUserId == userId)
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => (DateTimeOffset?)a.CreatedAt)
+            .FirstOrDefaultAsync();
+        if (lastAppliedAt is not null && lastAppliedAt.Value > DateTimeOffset.UtcNow - ApplyCooldown)
+            return ("OnCooldown", lastAppliedAt.Value + ApplyCooldown);
+
+        var hasReachableLeader = await db.LinkshellMemberships.AnyAsync(m =>
+            m.LinkshellId == ls.Id && m.IsCurrent
+            && (m.Rank == LinkshellRank.Leader || m.Rank == LinkshellRank.Sackholder)
+            && m.Character.UserId != userId);
+        if (!hasReachableLeader) return ("NoReachableLeaders", null);
+
+        return ("Open", null);
     }
 
     // Returns the existing profile row, or a new (added, unsaved) one. Returns

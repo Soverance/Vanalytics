@@ -14,6 +14,14 @@ public class LinkshellProfileResponse
     public DateTimeOffset? LastActiveAt { get; init; }
     public string RecruitmentStatus { get; init; } = "Unknown"; // from profile row, else "Unknown"
     public bool CanManage { get; init; }                         // true only for an authed current officer
+
+    /// <summary>Apply button state for the current viewer: Closed | NotLoggedIn |
+    /// NoEligibleCharacter | AlreadyMember | OnCooldown | NoReachableLeaders | Open.</summary>
+    public string ApplyState { get; init; } = "Closed";
+
+    /// <summary>When OnCooldown, the moment the viewer may re-apply; else null.</summary>
+    public DateTimeOffset? CooldownUntil { get; init; }
+
     public LinkshellCustomization? Profile { get; init; }        // null until a profile row exists
     public required List<LinkshellMemberRow> Members { get; init; }
 }

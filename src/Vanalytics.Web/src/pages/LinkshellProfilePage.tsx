@@ -5,6 +5,7 @@ import { getStoredTokens } from '../api/client'
 import LoadingSpinner from '../components/LoadingSpinner'
 import LinkshellPearl from '../components/character/LinkshellPearl'
 import { RECRUIT_STYLE } from '../components/character/linkshellStyles'
+import ApplyModal from '../components/linkshell/ApplyModal'
 
 // A current member is "stale" if not seen within this many days; rendered greyed.
 const LINKSHELL_STALE_DAYS = 14
@@ -30,12 +31,55 @@ function isStale(dateStr: string): boolean {
   return Date.now() - new Date(dateStr).getTime() > LINKSHELL_STALE_DAYS * 86_400_000
 }
 
+function ApplyButton({
+  state, cooldownUntil, applied, onApply,
+}: {
+  state: string
+  cooldownUntil: string | null
+  applied: boolean
+  onApply: () => void
+}) {
+  if (applied || state === 'OnCooldown') {
+    const until = cooldownUntil ? new Date(cooldownUntil).toLocaleDateString() : null
+    return (
+      <span className="rounded border border-gray-700 bg-gray-800/60 px-3 py-1.5 text-xs text-gray-400">
+        Application sent{until ? ` · can re-apply ${until}` : ''}
+      </span>
+    )
+  }
+  switch (state) {
+    case 'Open':
+      return (
+        <button
+          type="button" onClick={onApply}
+          className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500"
+        >
+          Apply to join
+        </button>
+      )
+    case 'NotLoggedIn':
+      return <Link to="/login" className="text-xs text-blue-400 hover:underline">Sign in to apply</Link>
+    case 'AlreadyMember':
+      return <span className="text-xs text-gray-500">You're a member</span>
+    case 'NoEligibleCharacter':
+      return <span className="text-xs text-gray-500">No character on this server</span>
+    case 'NoReachableLeaders':
+      return <span className="text-xs text-gray-500">No leaders to contact</span>
+    default: // "Closed"
+      return null
+  }
+}
+
 export default function LinkshellProfilePage() {
   const { server, name } = useParams<{ server: string; name: string }>()
   const [profile, setProfile] = useState<LinkshellProfileResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [loadError, setLoadError] = useState(false)
+  const [showApply, setShowApply] = useState(false)
+  // Local override so the button flips to "applied" immediately after success,
+  // without a refetch.
+  const [appliedOverride, setAppliedOverride] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -99,6 +143,12 @@ export default function LinkshellProfilePage() {
               <span className={`rounded border px-2 py-1 text-[11px] ${RECRUIT_STYLE[profile.recruitmentStatus] ?? RECRUIT_STYLE.Unknown}`}>
                 Recruitment: {profile.recruitmentStatus}
               </span>
+              <ApplyButton
+                state={profile.applyState}
+                cooldownUntil={profile.cooldownUntil}
+                applied={appliedOverride}
+                onApply={() => setShowApply(true)}
+              />
               {profile.canManage && (
                 <Link
                   to={`/${encodeURIComponent(profile.server)}/linkshell/${encodeURIComponent(profile.name)}/manage`}
@@ -179,6 +229,16 @@ export default function LinkshellProfilePage() {
         <div className="mt-6">
           <Link to="/linkshells" className="text-blue-400 hover:underline text-sm">← Browse linkshells</Link>
         </div>
+        {showApply && (
+          <ApplyModal
+            linkshellId={profile.linkshellId}
+            linkshellName={profile.name}
+            server={profile.server}
+            recruitmentRulesHtml={profile.profile?.recruitmentRules ?? null}
+            onClose={() => setShowApply(false)}
+            onApplied={() => { setShowApply(false); setAppliedOverride(true) }}
+          />
+        )}
       </div>
     </div>
   )

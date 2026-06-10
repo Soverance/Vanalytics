@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -256,6 +257,17 @@ public class LinkshellBrowserTests : IAsyncLifetime
             .Select(c => c.Id).FirstAsync();
     }
 
+    // Sets a linkshell's recruitment status via the Phase-3 PUT, as the given officer.
+    private async Task SetRecruitmentAsync(string officerEmail, Guid linkshellId, string status)
+    {
+        var token = await LoginAsync(officerEmail);
+        var put = Authed(HttpMethod.Put, $"/api/linkshells/{linkshellId}/profile", token,
+            new { recruitmentStatus = status });
+        var resp = await _client.SendAsync(put);
+        Assert.True(resp.IsSuccessStatusCode,
+            $"SetRecruitment failed ({(int)resp.StatusCode}): {await resp.Content.ReadAsStringAsync()}");
+    }
+
     private async Task UploadLogoAsync(Guid linkshellId, string token)
     {
         var png = Convert.FromBase64String(
@@ -470,5 +482,293 @@ public class LinkshellBrowserTests : IAsyncLifetime
         Assert.NotNull(data);
         var entry = Assert.Single(data!.Linkshells, e => e.Name == "CharLogoLS");
         Assert.False(string.IsNullOrEmpty(entry.LogoUrl));
+    }
+
+    // Posts an application as the given user. Returns the raw response so the
+    // test can assert status and/or read the body.
+    private async Task<HttpResponseMessage> ApplyAsync(string applicantEmail, Guid linkshellId, Guid characterId, string intro = "Hi, I'd love to join!")
+    {
+        var token = await LoginAsync(applicantEmail);
+        var req = Authed(HttpMethod.Post, $"/api/linkshells/{linkshellId}/apply", token,
+            new { characterId, intro });
+        return await _client.SendAsync(req);
+    }
+
+    // Logs in as an EXISTING user and syncs an additional character into a
+    // linkshell — used to give one user two leadership characters (dedup test).
+    private async Task SeedExtraCharacterAsync(
+        string existingEmail, string charName, string server, long lsId, string lsName, string rank, string job = "WAR")
+    {
+        var token = await LoginAsync(existingEmail);
+        var keyReq = Authed(HttpMethod.Post, "/api/keys/generate", token);
+        var apiKey = (await (await _client.SendAsync(keyReq)).Content.ReadFromJsonAsync<ApiKeyResponse>())!;
+        var syncReq = new HttpRequestMessage(HttpMethod.Post, "/api/sync");
+        syncReq.Headers.Add("X-Api-Key", apiKey.ApiKey);
+        syncReq.Content = JsonContent.Create(new SyncRequest
+        {
+            CharacterName = charName, Server = server, ActiveJob = job, ActiveJobLevel = 99,
+            Jobs = [new SyncJobEntry { Job = job, Level = 99 }],
+            Linkshells = [new SyncLinkshellEntry { LinkshellId = lsId, Name = lsName, ColorRgb = 1, Rank = rank }]
+        });
+        Assert.True((await _client.SendAsync(syncReq)).IsSuccessStatusCode);
+    }
+
+    private async Task<Guid> UserIdAsync(string server, string charName)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        return await db.Characters
+            .Where(c => c.Server == server && c.Name == charName)
+            .Select(c => c.UserId).FirstAsync();
+    }
+
+    private record ApplyResult(int RecipientCount);
+
+    // === Recruitment: ApplyState (read side) ===
+
+    [Fact]
+    public async Task ApplyState_AnonymousOnOpenLS_IsNotLoggedIn()
+    {
+        await SeedMemberAsync("as1@test.com", "as1", "AsLead", "Asura", 10001, "AsOpen", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "AsOpen");
+        await SetRecruitmentAsync("as1@test.com", lsId, "Open");
+
+        var profile = await _client.GetFromJsonAsync<LinkshellProfileResponse>("/api/linkshells/Asura/AsOpen");
+        Assert.Equal("NotLoggedIn", profile!.ApplyState);
+    }
+
+    [Fact]
+    public async Task ApplyState_ClosedLS_IsClosedEvenWhenLoggedIn()
+    {
+        await SeedMemberAsync("as2@test.com", "as2", "ClLead", "Asura", 10101, "ClShell", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "ClShell");
+        await SetRecruitmentAsync("as2@test.com", lsId, "Closed");
+        await SeedMemberAsync("ap2@test.com", "ap2", "Hopeful2", "Asura", 10102, "OtherLS2", 1, "member", isPublic: true);
+        var token = await LoginAsync("ap2@test.com");
+
+        var get = Authed(HttpMethod.Get, "/api/linkshells/Asura/ClShell", token);
+        var profile = await (await _client.SendAsync(get)).Content.ReadFromJsonAsync<LinkshellProfileResponse>();
+        Assert.Equal("Closed", profile!.ApplyState);
+    }
+
+    [Fact]
+    public async Task ApplyState_EligibleNonMember_IsOpen()
+    {
+        await SeedMemberAsync("as3@test.com", "as3", "OpLead", "Asura", 10201, "OpenJoin", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "OpenJoin");
+        await SetRecruitmentAsync("as3@test.com", lsId, "Open");
+        await SeedMemberAsync("ap3@test.com", "ap3", "Hopeful3", "Asura", 10202, "OtherLS3", 1, "member", isPublic: true);
+        var token = await LoginAsync("ap3@test.com");
+
+        var get = Authed(HttpMethod.Get, "/api/linkshells/Asura/OpenJoin", token);
+        var profile = await (await _client.SendAsync(get)).Content.ReadFromJsonAsync<LinkshellProfileResponse>();
+        Assert.Equal("Open", profile!.ApplyState);
+    }
+
+    [Fact]
+    public async Task ApplyState_CurrentMember_IsAlreadyMember()
+    {
+        await SeedMemberAsync("as4@test.com", "as4", "MmLead", "Asura", 10301, "MemberJoin", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "MemberJoin");
+        await SetRecruitmentAsync("as4@test.com", lsId, "Open");
+        await SeedMemberAsync("ap4@test.com", "ap4", "InsideGuy", "Asura", 10301, "MemberJoin", 1, "member", isPublic: true);
+        var token = await LoginAsync("ap4@test.com");
+
+        var get = Authed(HttpMethod.Get, "/api/linkshells/Asura/MemberJoin", token);
+        var profile = await (await _client.SendAsync(get)).Content.ReadFromJsonAsync<LinkshellProfileResponse>();
+        Assert.Equal("AlreadyMember", profile!.ApplyState);
+    }
+
+    [Fact]
+    public async Task ApplyState_NoSameServerCharacter_IsNoEligibleCharacter()
+    {
+        await SeedMemberAsync("as5@test.com", "as5", "XsLead", "Asura", 10401, "CrossServer", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "CrossServer");
+        await SetRecruitmentAsync("as5@test.com", lsId, "Open");
+        await SeedMemberAsync("ap5@test.com", "ap5", "BahaOnly", "Bahamut", 10402, "BahaLS5", 1, "member", isPublic: true);
+        var token = await LoginAsync("ap5@test.com");
+
+        var get = Authed(HttpMethod.Get, "/api/linkshells/Asura/CrossServer", token);
+        var profile = await (await _client.SendAsync(get)).Content.ReadFromJsonAsync<LinkshellProfileResponse>();
+        Assert.Equal("NoEligibleCharacter", profile!.ApplyState);
+    }
+
+    // === Recruitment: Apply eligibility gates ===
+
+    [Fact]
+    public async Task Apply_ToClosedLS_Returns409()
+    {
+        await SeedMemberAsync("e1@test.com", "e1", "ClsLead", "Asura", 11001, "ClosedApply", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "ClosedApply");
+        await SetRecruitmentAsync("e1@test.com", lsId, "Closed");
+        await SeedMemberAsync("e1a@test.com", "e1a", "Applier1", "Asura", 11002, "OtherE1", 1, "member", isPublic: true);
+        var charId = await CharacterIdAsync("Asura", "Applier1");
+
+        var resp = await ApplyAsync("e1a@test.com", lsId, charId);
+        Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Apply_WithWrongServerCharacter_Returns400()
+    {
+        await SeedMemberAsync("e2@test.com", "e2", "WsLead", "Asura", 11101, "WrongSrv", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "WrongSrv");
+        await SetRecruitmentAsync("e2@test.com", lsId, "Open");
+        await SeedMemberAsync("e2a@test.com", "e2a", "BahaChar", "Bahamut", 11102, "BahaE2", 1, "member", isPublic: true);
+        var charId = await CharacterIdAsync("Bahamut", "BahaChar");
+
+        var resp = await ApplyAsync("e2a@test.com", lsId, charId);
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Apply_WithForeignCharacter_Returns403()
+    {
+        await SeedMemberAsync("e3@test.com", "e3", "FgLead", "Asura", 11201, "ForeignChar", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "ForeignChar");
+        await SetRecruitmentAsync("e3@test.com", lsId, "Open");
+        var foreignCharId = await CharacterIdAsync("Asura", "FgLead");
+        await SeedMemberAsync("e3a@test.com", "e3a", "RealApplier", "Asura", 11202, "OtherE3", 1, "member", isPublic: true);
+
+        var resp = await ApplyAsync("e3a@test.com", lsId, foreignCharId);
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Apply_AsCurrentMember_Returns409()
+    {
+        await SeedMemberAsync("e4@test.com", "e4", "MbLead", "Asura", 11301, "MemberApply", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "MemberApply");
+        await SetRecruitmentAsync("e4@test.com", lsId, "Open");
+        await SeedMemberAsync("e4a@test.com", "e4a", "Insider4", "Asura", 11301, "MemberApply", 1, "member", isPublic: true);
+        var charId = await CharacterIdAsync("Asura", "Insider4");
+
+        var resp = await ApplyAsync("e4a@test.com", lsId, charId);
+        Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Apply_WithEmptyIntro_Returns400()
+    {
+        await SeedMemberAsync("e5@test.com", "e5", "EmLead", "Asura", 11401, "EmptyIntro", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "EmptyIntro");
+        await SetRecruitmentAsync("e5@test.com", lsId, "Open");
+        await SeedMemberAsync("e5a@test.com", "e5a", "Applier5", "Asura", 11402, "OtherE5", 1, "member", isPublic: true);
+        var charId = await CharacterIdAsync("Asura", "Applier5");
+
+        var resp = await ApplyAsync("e5a@test.com", lsId, charId, intro: "   ");
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    // === Recruitment: fan-out behavior ===
+
+    [Fact]
+    public async Task Apply_HappyPath_DeliversDmToLeader_AndReturnsRecipientCount()
+    {
+        await SeedMemberAsync("f1@test.com", "f1", "F1Lead", "Asura", 12001, "HappyLS", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "HappyLS");
+        await SetRecruitmentAsync("f1@test.com", lsId, "Open");
+        await SeedMemberAsync("f1a@test.com", "f1a", "Hopeful1", "Asura", 12002, "OtherF1", 1, "member", isPublic: true);
+        var charId = await CharacterIdAsync("Asura", "Hopeful1");
+
+        var resp = await ApplyAsync("f1a@test.com", lsId, charId, intro: "I raid nightly and want in.");
+        Assert.True(resp.IsSuccessStatusCode, await resp.Content.ReadAsStringAsync());
+        var result = await resp.Content.ReadFromJsonAsync<ApplyResult>();
+        Assert.Equal(1, result!.RecipientCount);
+
+        // The leader now has exactly one conversation.
+        var leaderToken = await LoginAsync("f1@test.com");
+        var convoReq = Authed(HttpMethod.Get, "/api/messages/conversations", leaderToken);
+        var convos = await (await _client.SendAsync(convoReq)).Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(1, convos.GetProperty("items").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Apply_DedupsMultipleLeadershipCharsOfSameUser_ToOneRecipient()
+    {
+        await SeedMemberAsync("f2@test.com", "f2", "F2Main", "Asura", 12101, "DedupLS", 1, "leader", isPublic: true);
+        await SeedExtraCharacterAsync("f2@test.com", "F2Alt", "Asura", 12101, "DedupLS", "sackholder");
+        var lsId = await LinkshellIdAsync("Asura", "DedupLS");
+        await SetRecruitmentAsync("f2@test.com", lsId, "Open");
+        await SeedMemberAsync("f2a@test.com", "f2a", "Hopeful2", "Asura", 12102, "OtherF2", 1, "member", isPublic: true);
+        var charId = await CharacterIdAsync("Asura", "Hopeful2");
+
+        var resp = await ApplyAsync("f2a@test.com", lsId, charId);
+        Assert.True(resp.IsSuccessStatusCode, await resp.Content.ReadAsStringAsync());
+        var result = await resp.Content.ReadFromJsonAsync<ApplyResult>();
+        Assert.Equal(1, result!.RecipientCount); // deduped to the single owning user
+    }
+
+    [Fact]
+    public async Task Apply_WhenSoleLeaderBlockedApplicant_SilentSuccess_RecipientCountZero()
+    {
+        await SeedMemberAsync("f3@test.com", "f3", "F3Lead", "Asura", 12201, "BlockLS", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "BlockLS");
+        await SetRecruitmentAsync("f3@test.com", lsId, "Open");
+        await SeedMemberAsync("f3a@test.com", "f3a", "Hopeful3", "Asura", 12202, "OtherF3", 1, "member", isPublic: true);
+        var charId = await CharacterIdAsync("Asura", "Hopeful3");
+        var applicantUserId = await UserIdAsync("Asura", "Hopeful3");
+
+        // Leader blocks the applicant.
+        var leaderToken = await LoginAsync("f3@test.com");
+        var blockReq = Authed(HttpMethod.Post, $"/api/users/{applicantUserId}/block", leaderToken);
+        Assert.True((await _client.SendAsync(blockReq)).IsSuccessStatusCode);
+
+        var resp = await ApplyAsync("f3a@test.com", lsId, charId);
+        Assert.True(resp.IsSuccessStatusCode, await resp.Content.ReadAsStringAsync());
+        var result = await resp.Content.ReadFromJsonAsync<ApplyResult>();
+        Assert.Equal(0, result!.RecipientCount);
+    }
+
+    [Fact]
+    public async Task Apply_WhenNoCurrentLeaders_Returns409()
+    {
+        await SeedMemberAsync("f4@test.com", "f4", "F4ExLead", "Asura", 12301, "NoLeaderLS", 1, "leader", isPublic: true);
+        await SeedMemberAsync("f4b@test.com", "f4b", "F4Stayer", "Asura", 12301, "NoLeaderLS", 1, "member", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "NoLeaderLS");
+        await SetRecruitmentAsync("f4@test.com", lsId, "Open");
+
+        // Leader re-syncs into a different LS -> NoLeaderLS leadership flips IsCurrent=false.
+        var exLeadToken = await LoginAsync("f4@test.com");
+        var keyReq = Authed(HttpMethod.Post, "/api/keys/generate", exLeadToken);
+        var apiKey = (await (await _client.SendAsync(keyReq)).Content.ReadFromJsonAsync<ApiKeyResponse>())!;
+        var syncReq = new HttpRequestMessage(HttpMethod.Post, "/api/sync");
+        syncReq.Headers.Add("X-Api-Key", apiKey.ApiKey);
+        syncReq.Content = JsonContent.Create(new SyncRequest
+        {
+            CharacterName = "F4ExLead", Server = "Asura", ActiveJob = "WAR", ActiveJobLevel = 99,
+            Linkshells = [new SyncLinkshellEntry { LinkshellId = 12302, Name = "ElseWhereF4", ColorRgb = 1, Rank = "leader" }]
+        });
+        Assert.True((await _client.SendAsync(syncReq)).IsSuccessStatusCode);
+
+        await SeedMemberAsync("f4a@test.com", "f4a", "Hopeful4", "Asura", 12303, "OtherF4", 1, "member", isPublic: true);
+        var charId = await CharacterIdAsync("Asura", "Hopeful4");
+
+        var resp = await ApplyAsync("f4a@test.com", lsId, charId);
+        Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Apply_SecondTimeWithinCooldown_Returns409()
+    {
+        await SeedMemberAsync("f5@test.com", "f5", "F5Lead", "Asura", 12401, "CooldownLS", 1, "leader", isPublic: true);
+        var lsId = await LinkshellIdAsync("Asura", "CooldownLS");
+        await SetRecruitmentAsync("f5@test.com", lsId, "Open");
+        await SeedMemberAsync("f5a@test.com", "f5a", "Hopeful5", "Asura", 12402, "OtherF5", 1, "member", isPublic: true);
+        var charId = await CharacterIdAsync("Asura", "Hopeful5");
+
+        var first = await ApplyAsync("f5a@test.com", lsId, charId);
+        Assert.True(first.IsSuccessStatusCode, await first.Content.ReadAsStringAsync());
+
+        var second = await ApplyAsync("f5a@test.com", lsId, charId);
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+
+        // And the profile now reports OnCooldown with a future cooldownUntil.
+        var token = await LoginAsync("f5a@test.com");
+        var get = Authed(HttpMethod.Get, "/api/linkshells/Asura/CooldownLS", token);
+        var profile = await (await _client.SendAsync(get)).Content.ReadFromJsonAsync<LinkshellProfileResponse>();
+        Assert.Equal("OnCooldown", profile!.ApplyState);
+        Assert.NotNull(profile.CooldownUntil);
+        Assert.True(profile.CooldownUntil > DateTimeOffset.UtcNow);
     }
 }

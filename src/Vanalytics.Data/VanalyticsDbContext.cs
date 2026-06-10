@@ -48,6 +48,7 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<Linkshell> Linkshells => Set<Linkshell>();
     public DbSet<LinkshellMembership> LinkshellMemberships => Set<LinkshellMembership>();
     public DbSet<LinkshellProfile> LinkshellProfiles => Set<LinkshellProfile>();
+    public DbSet<LinkshellApplication> LinkshellApplications => Set<LinkshellApplication>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
