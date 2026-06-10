@@ -11,6 +11,7 @@ import { SyncProvider } from '../context/SyncContext'
 import SyncBanner from './SyncBanner'
 import { FfxiFileSystemProvider } from '../context/FfxiFileSystemContext'
 import SidebarClock from './SidebarClock'
+import NotificationBell from './notifications/NotificationBell'
 
 type SectionName = 'database' | 'economy' | 'server' | 'community' | 'admin'
 
@@ -230,23 +231,28 @@ function LayoutInner() {
 
         {/* User profile */}
         {user ? (
-          <NavLink
-            to="/profile"
-            onClick={() => setSidebarOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 border-t border-gray-800 px-4 py-3 transition-colors ${
-                isActive
-                  ? 'bg-gray-800'
-                  : 'hover:bg-gray-800/50'
-              }`
-            }
-          >
-            <UserAvatar username={user.username ?? ''} displayName={user.displayName} avatarUrl={user.avatarUrl} size="sm" />
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-200 truncate">{user.displayName ?? user.username}</p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+          <div className="flex items-center border-t border-gray-800">
+            <NavLink
+              to="/profile"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) =>
+                `flex flex-1 items-center gap-3 min-w-0 px-4 py-3 transition-colors ${
+                  isActive
+                    ? 'bg-gray-800'
+                    : 'hover:bg-gray-800/50'
+                }`
+              }
+            >
+              <UserAvatar username={user.username ?? ''} displayName={user.displayName} avatarUrl={user.avatarUrl} size="sm" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-200 truncate">{user.displayName ?? user.username}</p>
+                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              </div>
+            </NavLink>
+            <div className="pr-4">
+              <NotificationBell />
             </div>
-          </NavLink>
+          </div>
         ) : (
           <div className="border-t border-gray-800 px-4 py-3">
             <button
@@ -274,6 +280,7 @@ function LayoutInner() {
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img src="/vanalytics-typography-horizontal-logo.png" alt="Vana'lytics" className="min-w-0 max-w-[180px]" />
           </Link>
+          {user && <div className="ml-auto"><NotificationBell /></div>}
         </header>
 
         <SyncBanner />
