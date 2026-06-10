@@ -131,9 +131,13 @@ public class AdminUsersController : ControllerBase
         user.UpdatedAt = DateTimeOffset.UtcNow;
 
         // Revoke active sessions so existing tokens stop working after the reset.
-        await _db.RefreshTokens
+        // Done on tracked entities so the password change and revocations persist
+        // atomically in the single SaveChangesAsync below.
+        var activeTokens = await _db.RefreshTokens
             .Where(t => t.UserId == user.Id && !t.IsRevoked)
-            .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsRevoked, true));
+            .ToListAsync();
+        foreach (var token in activeTokens)
+            token.IsRevoked = true;
 
         await _db.SaveChangesAsync();
 
