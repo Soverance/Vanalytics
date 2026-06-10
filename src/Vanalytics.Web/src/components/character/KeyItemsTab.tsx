@@ -50,6 +50,10 @@ export default function KeyItemsTab({ characterId, fetchBase }: Props) {
         return () => window.removeEventListener('keydown', onKey)
     }, [expandedId])
 
+    // Collapse any open detail panel when the visible set changes, so a panel
+    // can't linger (or silently reopen) on a row the user has filtered away.
+    useEffect(() => { setExpandedId(null) }, [filter, query])
+
     if (loading) return <LoadingSpinner />
 
     if (!data || data.keyItemIds == null) {
@@ -132,7 +136,9 @@ export default function KeyItemsTab({ characterId, fetchBase }: Props) {
 
             <div className="rounded border border-gray-700/60 bg-gray-900/30">
                 {filtered.length === 0 ? (
-                    <p className="px-3 py-2 text-xs text-gray-500">No key items match.</p>
+                    <p className="px-3 py-2 text-xs text-gray-500">
+                        {searching ? 'No key items match.' : 'No key items in this category.'}
+                    </p>
                 ) : (
                     <ul className="divide-y divide-gray-800/60">
                         {filtered.map(k => {

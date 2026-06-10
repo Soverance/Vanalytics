@@ -20,6 +20,7 @@ public class SyncRequest
     public string? SubJob { get; set; }
     public int? SubJobLevel { get; set; }
     public int? MasterLevel { get; set; }
+    public int? SuperiorLevel { get; set; }
     public int? ItemLevel { get; set; }
     public int? Hp { get; set; }
     public int? MaxHp { get; set; }
@@ -85,6 +86,13 @@ public class SyncJobEntry
     public int JP { get; set; }
     public int JPSpent { get; set; }
     public int CP { get; set; }
+
+    // Master Level — null when the job has no Master Breaker (locked),
+    // 0–50 when unlocked. EP fields populated only once seen as active job.
+    public int? MasterLevel { get; set; }
+    public int? MasterEpCurrent { get; set; }
+    public int? MasterEpNeeded { get; set; }
+    public bool MasterCapped { get; set; }
 }
 
 public class SyncGearEntry
