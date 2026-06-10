@@ -1212,3 +1212,11 @@ export function lookupKeyItem(id: number): KeyItemCatalogEntry {
     if (found) return found
     return { id, name: `Key Item #${id}`, category: 'Permanent Key Items' }
 }
+
+// Deep link to a key item's BG-Wiki page. Uses the MediaWiki *search* URL
+// (not a guessed /ffxi/<slug>) because key item names are stored lowercase and
+// many lack an exact-title page — the search form auto-jumps to the page when
+// it exists and otherwise shows results, so it never hard-404s.
+export function keyItemWikiUrl(name: string): string {
+    return `https://www.bg-wiki.com/index.php?search=${encodeURIComponent(name)}`
+}
