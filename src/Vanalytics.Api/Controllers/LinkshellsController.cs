@@ -3,7 +3,6 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Soverance.Messaging.Services;
 using Vanalytics.Api.DTOs;
 using Vanalytics.Api.Services;
@@ -18,17 +17,11 @@ namespace Vanalytics.Api.Controllers;
 public class LinkshellsController(
     VanalyticsDbContext db,
     IForumAttachmentStore assetStore,
-    IMessagingService messaging,
-    IConfiguration configuration) : ControllerBase
+    IMessagingService messaging) : ControllerBase
 {
     // One application per (linkshell, user) per this window.
     private static readonly TimeSpan ApplyCooldown = TimeSpan.FromDays(30);
     private const int MaxIntroLength = 2000;
-
-    // Absolute origin of the web app, used to build the applicant's public
-    // profile link inside the DM body. Configurable; defaults to production.
-    private string WebBaseUrl =>
-        (configuration["App:WebBaseUrl"] ?? "https://vanalytics.soverance.com").TrimEnd('/');
 
     [HttpGet]
     public async Task<IActionResult> GetDirectory([FromQuery] string? server)
@@ -225,8 +218,10 @@ public class LinkshellsController(
         if (recipientIds.Count == 0)
             return Conflict(new { message = "This linkshell has no reachable leaders to receive applications." });
 
-        var profileUrl = $"{WebBaseUrl}/{Uri.EscapeDataString(character.Server)}/{Uri.EscapeDataString(character.Name)}";
-        var body = $"{intro}\n\n— Applying to {ls.Name} as {character.Name} ({character.Server})\n{profileUrl}";
+        // Relative profile path; the web app renders it as a clickable in-app
+        // link labelled with the character (e.g. "Soverance (Asura)").
+        var profilePath = $"/{Uri.EscapeDataString(character.Server)}/{Uri.EscapeDataString(character.Name)}";
+        var body = $"{intro}\n\n— Applying to {ls.Name} as {profilePath}";
 
         // Fan out one DM per recipient, best-effort. A recipient who has blocked
         // the applicant returns Blocked = true and is skipped silently (never

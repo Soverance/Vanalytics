@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
+import MessageBody from './MessageBody'
 
 interface MessageDto { id: number; conversationId: number; senderId: string; body: string; createdAt: string }
 interface ConversationUser { id: string; username: string | null; displayName: string | null; avatarUrl: string | null }
@@ -100,7 +101,7 @@ export default function ConversationView({ conversationId, onSent }: { conversat
       <div className="flex-1 space-y-2 overflow-y-auto p-4">
         {detail.messages.map((m) => (
           <div key={m.id} className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${m.senderId === user?.id ? 'ml-auto bg-blue-600 text-white' : 'bg-gray-800 text-gray-100'}`}>
-            <span className="whitespace-pre-wrap break-words">{m.body}</span>
+            <MessageBody body={m.body} />
           </div>
         ))}
         <div ref={endRef} />
