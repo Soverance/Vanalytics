@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Soverance.Messaging.Models;
 using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Data;
@@ -41,6 +43,47 @@ public class ProfilesController : ControllerBase
         var detail = CharactersController.MapToDetail(character);
         detail.LinkshellLogoUrl = await CharactersController.LoadActiveLinkshellLogoAsync(_db, character);
         return Ok(detail);
+    }
+
+    [HttpGet("{server}/{name}/owner")]
+    public async Task<IActionResult> GetPublicProfileOwner(string server, string name)
+    {
+        var owner = await _db.Characters
+            .Where(c => c.Server == server && c.Name == name && c.IsPublic)
+            .Select(c => new
+            {
+                c.User.Id,
+                c.User.Username,
+                c.User.DisplayName,
+                c.User.AvatarUrl,
+            })
+            .FirstOrDefaultAsync();
+
+        if (owner is null) return NotFound();
+
+        // The auth middleware populates the principal when a valid bearer token is
+        // present, even on this anonymous endpoint — so we can read the viewer if
+        // they happen to be signed in.
+        Guid? viewerId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var v)
+            ? v : null;
+
+        var canMessage = false;
+        if (viewerId is Guid me && me != owner.Id)
+        {
+            var blocked = await _db.Set<UserBlock>().AnyAsync(b =>
+                (b.BlockerUserId == me && b.BlockedUserId == owner.Id) ||
+                (b.BlockerUserId == owner.Id && b.BlockedUserId == me));
+            canMessage = !blocked;
+        }
+
+        return Ok(new CharacterOwnerResponse
+        {
+            OwnerUserId = owner.Id,
+            OwnerUsername = owner.Username,
+            OwnerDisplayName = owner.DisplayName,
+            OwnerAvatarUrl = owner.AvatarUrl,
+            CanMessage = canMessage,
+        });
     }
 
     private async Task<Guid?> ResolvePublicCharacterIdAsync(string server, string name) =>
