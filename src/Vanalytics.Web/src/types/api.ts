@@ -342,6 +342,7 @@ export interface UserPublicCharacter {
 }
 
 export interface UserProfileResponse {
+  id: string
   username: string
   displayName: string | null
   avatarUrl: string | null

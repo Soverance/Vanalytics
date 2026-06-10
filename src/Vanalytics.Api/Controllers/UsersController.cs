@@ -67,6 +67,7 @@ public class UsersController : ControllerBase
 
         return Ok(new
         {
+            Id = user.Id,
             user.Username,
             user.DisplayName,
             user.AvatarUrl,

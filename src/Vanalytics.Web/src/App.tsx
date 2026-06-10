@@ -14,6 +14,7 @@ import ServerStatusDashboard from './pages/ServerStatusDashboard'
 import AdminUsersPage from './pages/AdminUsersPage'
 import AdminItemsPage from './pages/AdminItemsPage'
 import AdminSamlPage from './pages/AdminSamlPage'
+import AdminReportsPage from './pages/AdminReportsPage'
 import ItemDatabasePage from './pages/ItemDatabasePage'
 import ItemDetailPage from './pages/ItemDetailPage'
 // import BazaarActivityPage from './pages/BazaarActivityPage' // hidden until bazaar sync bugs resolved
@@ -36,6 +37,7 @@ import LinkshellProfilePage from './pages/LinkshellProfilePage'
 import LinkshellManagePage from './pages/LinkshellManagePage'
 import RecipeBrowserPage from './pages/RecipeBrowserPage'
 import RecipeDetailPage from './pages/RecipeDetailPage'
+import MessagesPage from './pages/MessagesPage'
 
 
 function SamlCodeHandler() {
@@ -128,6 +130,7 @@ export default function App() {
             <Route path="/admin/users" element={<ProtectedRoute requiredRole="Admin"><AdminUsersPage /></ProtectedRoute>} />
             <Route path="/admin/data" element={<ProtectedRoute requiredRole="Admin"><AdminItemsPage /></ProtectedRoute>} />
             <Route path="/admin/saml" element={<ProtectedRoute requiredRole="Admin"><AdminSamlPage /></ProtectedRoute>} />
+            <Route path="/admin/reports" element={<ProtectedRoute requiredRole="Admin"><AdminReportsPage /></ProtectedRoute>} />
             <Route path="/npcs" element={<NpcBrowserPage />} />
             <Route path="/zones" element={<ZoneBrowserPage />} />
             <Route path="/recipes" element={<RecipeBrowserPage />} />
@@ -144,6 +147,8 @@ export default function App() {
             <Route path="/users/:username" element={<UserProfilePage />} />
             <Route path="/players" element={<PlayerDirectoryPage />} />
             <Route path="/linkshells" element={<LinkshellDirectoryPage />} />
+            <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+            <Route path="/messages/:conversationId" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
           </Route>
 
           {/* Public: shareable linkshell profiles (3-segment, before /:server/:name) */}

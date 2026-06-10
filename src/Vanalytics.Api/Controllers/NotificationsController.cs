@@ -12,11 +12,13 @@ public class NotificationsController : ControllerBase
 {
     private readonly INotificationService _notifications;
     private readonly IMessagingUserResolver _users;
+    private readonly IMessagingService _messaging;
 
-    public NotificationsController(INotificationService notifications, IMessagingUserResolver users)
+    public NotificationsController(INotificationService notifications, IMessagingUserResolver users, IMessagingService messaging)
     {
         _notifications = notifications;
         _users = users;
+        _messaging = messaging;
     }
 
     [HttpGet]
@@ -51,8 +53,10 @@ public class NotificationsController : ControllerBase
     [HttpGet("summary")]
     public async Task<IActionResult> Summary()
     {
-        var notifications = await _notifications.GetUnreadCountAsync(GetUserId());
-        return Ok(new { notifications, messages = 0 }); // messages wired in Plan B
+        var userId = GetUserId();
+        var notifications = await _notifications.GetUnreadCountAsync(userId);
+        var messages = await _messaging.GetUnreadConversationCountAsync(userId);
+        return Ok(new { notifications, messages });
     }
 
     [HttpPost("{id}/read")]
