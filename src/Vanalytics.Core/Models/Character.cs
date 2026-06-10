@@ -16,6 +16,7 @@ public class Character
     public string? SubJob { get; set; }
     public int? SubJobLevel { get; set; }
     public int? MasterLevel { get; set; }
+    public int? SuperiorLevel { get; set; }
     public int? ItemLevel { get; set; }
     public int? Hp { get; set; }
     public int? MaxHp { get; set; }
