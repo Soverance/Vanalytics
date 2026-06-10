@@ -361,6 +361,7 @@ export interface AdminUser {
   role: UserRole
   isSystemAccount: boolean
   hasApiKey: boolean
+  hasPassword: boolean
   oAuthProvider: string | null
   characterCount: number
   createdAt: string
@@ -378,6 +379,12 @@ export interface CreateUserResponse {
   email: string
   username: string
   role: string
+  generatedPassword: string
+}
+
+export interface ResetPasswordResponse {
+  id: string
+  username: string
   generatedPassword: string
 }
 
