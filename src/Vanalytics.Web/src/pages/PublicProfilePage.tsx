@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { CharacterDetail, GameItemDetail, CharacterOwner } from '../types/api'
 import JobsGrid from '../components/JobsGrid'
@@ -26,6 +26,9 @@ type GearTab = typeof GEAR_TABS[number]
 
 export default function PublicProfilePage() {
   const { server, name } = useParams<{ server: string; name: string }>()
+  const [searchParams] = useSearchParams()
+  const gearsetParam = searchParams.get('gearset')
+  const initialSetId = gearsetParam && /^\d+$/.test(gearsetParam) ? Number(gearsetParam) : undefined
   const [character, setCharacter] = useState<CharacterDetail | null>(null)
   const [owner, setOwner] = useState<CharacterOwner | null>(null)
   const [loading, setLoading] = useState(true)
@@ -65,6 +68,11 @@ export default function PublicProfilePage() {
       .then(setOwner)
       .catch(() => setOwner(null))
   }, [server, name])
+
+  // Deep-link: a ?gearset=<id> means the visitor wants a specific set — jump to that tab.
+  useEffect(() => {
+    if (initialSetId != null) setGearTab('Gear Sets')
+  }, [initialSetId])
 
   const raceId = toRaceId(character?.race, character?.gender)
   const { slotDatPaths } = useSlotDatPaths(character?.gear ?? [], raceId, character?.faceModelId)
@@ -218,6 +226,7 @@ export default function PublicProfilePage() {
               onSaveFavorite={() => {}}
               fetchBase={fetchBase}
               readOnly
+              initialSetId={initialSetId}
             />
           )}
         </section>

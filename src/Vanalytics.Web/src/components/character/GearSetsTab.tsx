@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Plus, Camera } from 'lucide-react'
 import { api } from '../../api/client'
 import { useCharacterGearSets } from '../../hooks/useCharacterGearSets'
@@ -20,9 +20,11 @@ interface Props {
   onSaveFavorite: (fav: { category: string; animationName: string; motionIndex: number } | null) => void
   fetchBase?: string
   readOnly?: boolean
+  /** When set (read-only mode), auto-open this set's read-only view once on mount. */
+  initialSetId?: number
 }
 
-export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite, fetchBase, readOnly = false }: Props) {
+export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite, fetchBase, readOnly = false, initialSetId }: Props) {
   const characterId = character.id
   const base = fetchBase ?? `/api/characters/${characterId}`
   const { sets: hookSets, createSet, updateSet, deleteSet, getSet } = useCharacterGearSets(characterId, !readOnly)
@@ -121,6 +123,27 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
   const toggleTag = (tag: string) =>
     setActiveTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
 
+  const copyLink = (setId: number) => {
+    const url = `${window.location.origin}/${character.server}/${character.name}?gearset=${setId}`
+    navigator.clipboard.writeText(url)
+    setNotice(character.isPublic
+      ? 'Link copied.'
+      : 'Link copied — your profile is private, so the link works once you make it public.')
+  }
+
+  // Deep-link: auto-open the targeted set once (read-only public profile). openExisting
+  // fetches the detail directly, so it does not depend on the list having loaded. A null
+  // result (private/missing/bad id) is a no-op and we fall back to the list view. The
+  // ?gearset param is intentionally left in the URL for re-shareability; the ref guard
+  // (once per id) prevents reopening after the user closes the view.
+  const appliedInitialRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (!readOnly || initialSetId == null) return
+    if (appliedInitialRef.current === initialSetId) return
+    appliedInitialRef.current = initialSetId
+    void openExisting(initialSetId)
+  }, [readOnly, initialSetId])
+
   // ---- Read-only detail view ----
   if (readOnly && readOnlyDetail) {
     return (
@@ -206,6 +229,7 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
               onOpen={openExisting}
               onExport={exportSet}
               onDelete={readOnly ? () => Promise.resolve() : deleteSet}
+              onCopyLink={readOnly ? undefined : copyLink}
             />
           </div>
         </div>

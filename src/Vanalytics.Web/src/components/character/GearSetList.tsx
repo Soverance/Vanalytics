@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Download, Trash2, Check, X } from 'lucide-react'
+import { Download, Trash2, Check, X, Link2 } from 'lucide-react'
 import { categoryLabel } from '../../lib/gearSetCategories'
 import { visibleSlice, type SortKey } from './gearSetFilters'
 import type { GearSetSummary } from '../../types/api'
@@ -17,11 +17,12 @@ interface Props {
   onOpen: (id: number) => void
   onExport: (id: number) => void
   onDelete: (id: number) => Promise<void>
+  onCopyLink?: (id: number) => void
 }
 
 export default function GearSetList({
   rows, knownTags, search, onSearchChange, sort, onSortChange,
-  activeTags, onToggleTag, readOnly = false, onOpen, onExport, onDelete,
+  activeTags, onToggleTag, readOnly = false, onOpen, onExport, onDelete, onCopyLink,
 }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null)
   const [rowError, setRowError] = useState<{ id: number; msg: string } | null>(null)
@@ -88,6 +89,11 @@ export default function GearSetList({
               <button onClick={() => onExport(s.id)} className="text-gray-500 hover:text-amber-300" title="Export to GearSwap">
                 <Download className="h-4 w-4" />
               </button>
+              {onCopyLink && (
+                <button onClick={() => onCopyLink(s.id)} className="text-gray-500 hover:text-sky-300" title="Copy share link">
+                  <Link2 className="h-4 w-4" />
+                </button>
+              )}
               {!readOnly && (confirmingDelete === s.id ? (
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-gray-400">Delete?</span>

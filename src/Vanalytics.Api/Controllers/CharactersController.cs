@@ -612,20 +612,21 @@ public class CharactersController : ControllerBase
 
     internal static async Task<List<GearSetSummaryResponse>> LoadGearSetsAsync(VanalyticsDbContext db, Guid id)
     {
-        var sets = await db.CharacterGearSets
+        var rows = await db.CharacterGearSets
             .Where(s => s.CharacterId == id)
             .OrderByDescending(s => s.UpdatedAt)
+            .Select(s => new { s.Id, s.Name, s.Job, s.Category, s.TagsJson, SlotCount = s.Slots.Count, s.UpdatedAt })
             .ToListAsync();
 
-        return sets.Select(s => new GearSetSummaryResponse
+        return rows.Select(r => new GearSetSummaryResponse
         {
-            Id = s.Id,
-            Name = s.Name,
-            Job = s.Job,
-            Category = s.Category,
-            Tags = DeserializeTags(s.TagsJson),
-            SlotCount = CountSlots(s.SlotsJson),
-            UpdatedAt = s.UpdatedAt
+            Id = r.Id,
+            Name = r.Name,
+            Job = r.Job,
+            Category = r.Category,
+            Tags = DeserializeTags(r.TagsJson),
+            SlotCount = r.SlotCount,
+            UpdatedAt = r.UpdatedAt
         }).ToList();
     }
 
@@ -642,7 +643,9 @@ public class CharactersController : ControllerBase
 
     internal static async Task<GearSetDetailResponse?> LoadGearSetAsync(VanalyticsDbContext db, Guid id, long setId)
     {
-        var set = await db.CharacterGearSets.FirstOrDefaultAsync(s => s.Id == setId && s.CharacterId == id);
+        var set = await db.CharacterGearSets
+            .Include(s => s.Slots)
+            .FirstOrDefaultAsync(s => s.Id == setId && s.CharacterId == id);
         return set is null ? null : ToDetail(set);
     }
 
@@ -672,10 +675,11 @@ public class CharactersController : ControllerBase
             Job = job,
             Category = category,
             TagsJson = JsonSerializer.Serialize(NormalizeTags(request.Tags)),
-            SlotsJson = JsonSerializer.Serialize(request.Slots ?? []),
             CreatedAt = now,
             UpdatedAt = now
         };
+        foreach (var slot in ToSlotEntities(request))
+            set.Slots.Add(slot);
         _db.CharacterGearSets.Add(set);
         await _db.SaveChangesAsync();
 
@@ -697,6 +701,7 @@ public class CharactersController : ControllerBase
             return BadRequest(new { message = "Invalid category." });
 
         var set = await _db.CharacterGearSets
+            .Include(s => s.Slots)
             .FirstOrDefaultAsync(s => s.Id == setId && s.CharacterId == id);
         if (set is null) return NotFound();
 
@@ -704,7 +709,12 @@ public class CharactersController : ControllerBase
         set.Job = job;
         set.Category = category;
         set.TagsJson = JsonSerializer.Serialize(NormalizeTags(request.Tags));
-        set.SlotsJson = JsonSerializer.Serialize(request.Slots ?? []);
+        // Full-replace: delete the existing slot rows before adding the incoming ones.
+        // Order matters — clearing first would no-op the RemoveRange and orphan the rows.
+        _db.GearSetSlots.RemoveRange(set.Slots);
+        set.Slots.Clear();
+        foreach (var slot in ToSlotEntities(request))
+            set.Slots.Add(slot);
         set.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
 
@@ -800,11 +810,17 @@ public class CharactersController : ControllerBase
     private static List<string> DeserializeTags(string tagsJson) =>
         JsonSerializer.Deserialize<List<string>>(tagsJson) ?? [];
 
-    private static int CountSlots(string slotsJson)
-    {
-        using var doc = JsonDocument.Parse(slotsJson);
-        return doc.RootElement.ValueKind == JsonValueKind.Array ? doc.RootElement.GetArrayLength() : 0;
-    }
+    private static List<GearSetSlot> ToSlotEntities(SaveGearSetRequest request) =>
+        (request.Slots ?? []).Select(s => new GearSetSlot
+        {
+            Slot = s.Slot,
+            ItemId = s.ItemId,
+            ItemName = s.ItemName ?? string.Empty,
+            AugmentsJson = s.Augments is { Count: > 0 } ? JsonSerializer.Serialize(s.Augments) : null
+        }).ToList();
+
+    private static List<string> DeserializeAugments(string? json) =>
+        string.IsNullOrEmpty(json) ? [] : (JsonSerializer.Deserialize<List<string>>(json) ?? []);
 
     private static GearSetDetailResponse ToDetail(CharacterGearSet s) => new()
     {
@@ -813,7 +829,13 @@ public class CharactersController : ControllerBase
         Job = s.Job,
         Category = s.Category,
         Tags = DeserializeTags(s.TagsJson),
-        Slots = JsonSerializer.Deserialize<List<GearSetSlotDto>>(s.SlotsJson) ?? [],
+        Slots = s.Slots.Select(sl => new GearSetSlotDto
+        {
+            Slot = sl.Slot,
+            ItemId = sl.ItemId,
+            ItemName = sl.ItemName,
+            Augments = DeserializeAugments(sl.AugmentsJson)
+        }).ToList(),
         CreatedAt = s.CreatedAt,
         UpdatedAt = s.UpdatedAt
     };

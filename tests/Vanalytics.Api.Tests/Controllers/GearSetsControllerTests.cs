@@ -303,7 +303,7 @@ public class GearSetsControllerTests : IAsyncLifetime
                 db.CharacterGearSets.Add(new CharacterGearSet
                 {
                     CharacterId = characterId, Name = $"Set {i}",
-                    SlotsJson = "[]", CreatedAt = now, UpdatedAt = now
+                    CreatedAt = now, UpdatedAt = now
                 });
             await db.SaveChangesAsync();
         }

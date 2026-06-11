@@ -12,7 +12,6 @@ public class CharacterGearSetConfiguration : IEntityTypeConfiguration<CharacterG
 
         builder.Property(s => s.Name).HasMaxLength(100).IsRequired();
         builder.Property(s => s.Job).HasMaxLength(20);
-        builder.Property(s => s.SlotsJson).HasColumnType("nvarchar(max)").IsRequired();
         builder.Property(s => s.Category).HasMaxLength(20).IsRequired().HasDefaultValue("Other");
         builder.Property(s => s.TagsJson).HasColumnType("nvarchar(max)").IsRequired().HasDefaultValue("[]");
 

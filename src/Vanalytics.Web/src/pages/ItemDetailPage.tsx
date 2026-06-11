@@ -161,7 +161,7 @@ export default function ItemDetailPage() {
           </div>
           <ItemCrafting itemId={item.itemId} />
           <div className="rounded-lg border border-gray-800 bg-gray-900 p-4">
-            <ItemOwners itemId={item.itemId} />
+            <ItemOwners itemId={item.itemId} isRareEx={item.isRare || item.isExclusive} />
           </div>
         </div>
       </div>

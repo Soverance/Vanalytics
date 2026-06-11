@@ -15,12 +15,8 @@ public class CharacterGearSet
     /// organizational layer; never emitted to GearSwap Lua.</summary>
     public string TagsJson { get; set; } = "[]";
 
-    /// <summary>
-    /// JSON-serialized array of slot snapshots: [{ "slot": "Legs", "itemId": 27932,
-    /// "augments": ["Enhances \"Feint\" effect"] }]. Self-contained; not linked to a live
-    /// item instance. Empty slots are omitted from the array.
-    /// </summary>
-    public string SlotsJson { get; set; } = "[]";
+    /// <summary>Occupied slots of this set. Empty slots are simply absent. Replaces SlotsJson.</summary>
+    public ICollection<GearSetSlot> Slots { get; set; } = new List<GearSetSlot>();
 
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }

@@ -996,8 +996,26 @@ export interface ItemOwnerEntry {
 }
 
 export interface ItemOwnersResponse {
-  equipped: ItemOwnerEntry[]
-  inventory: ItemOwnerEntry[]
+  totalCount: number
+  page: number
+  pageSize: number
+  owners: ItemOwnerEntry[]
+}
+
+export interface ItemGearSetEntry {
+  server: string
+  characterName: string
+  setId: number
+  setName: string
+  category: string
+  job: string | null
+}
+
+export interface ItemGearSetsResponse {
+  totalCount: number
+  page: number
+  pageSize: number
+  entries: ItemGearSetEntry[]
 }
 
 export interface PlayerListItem {
