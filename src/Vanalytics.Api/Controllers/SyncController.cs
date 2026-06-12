@@ -195,6 +195,17 @@ public class SyncController : ControllerBase
             }
         }
 
+        // Master levels accumulate. The addon can only read the ACTIVE job's
+        // master level each sync, so any other job arrives with a null MasterLevel.
+        // Snapshot the existing per-job master-level data BEFORE the CharacterJobs
+        // wipe below so it can be carried forward for jobs the current payload
+        // doesn't report — mirrors the titles/linkshell "never wipe on absence"
+        // pattern. Without this, switching jobs erases every other job's ML.
+        var priorMasterLevels = await _db.CharacterJobs
+            .Where(j => j.CharacterId == character.Id && j.MasterLevel != null)
+            .Select(j => new { j.JobId, j.MasterLevel, j.MasterEpCurrent, j.MasterEpNeeded, j.MasterCapped })
+            .ToDictionaryAsync(j => j.JobId);
+
         // Full state replacement
         await _db.CharacterJobs.Where(j => j.CharacterId == character.Id).ExecuteDeleteAsync();
         await _db.EquippedGear.Where(g => g.CharacterId == character.Id).ExecuteDeleteAsync();
@@ -207,6 +218,21 @@ public class SyncController : ControllerBase
         {
             if (!Enum.TryParse<JobType>(jobEntry.Job, true, out var jobType)) continue;
 
+            // Carry a previously-known master level forward when this sync doesn't
+            // report one for the job (it isn't the active job right now). Master
+            // level only ever increases, so a prior value is never stale.
+            var masterLevel = jobEntry.MasterLevel;
+            var masterEpCurrent = jobEntry.MasterEpCurrent;
+            var masterEpNeeded = jobEntry.MasterEpNeeded;
+            var masterCapped = jobEntry.MasterCapped;
+            if (masterLevel == null && priorMasterLevels.TryGetValue(jobType, out var prior))
+            {
+                masterLevel = prior.MasterLevel;
+                masterEpCurrent = prior.MasterEpCurrent;
+                masterEpNeeded = prior.MasterEpNeeded;
+                masterCapped = prior.MasterCapped;
+            }
+
             newJobs.Add(new CharacterJob
             {
                 Id = Guid.NewGuid(),
@@ -217,10 +243,10 @@ public class SyncController : ControllerBase
                 JP = jobEntry.JP,
                 JPSpent = jobEntry.JPSpent,
                 CP = jobEntry.CP,
-                MasterLevel = jobEntry.MasterLevel,
-                MasterEpCurrent = jobEntry.MasterEpCurrent,
-                MasterEpNeeded = jobEntry.MasterEpNeeded,
-                MasterCapped = jobEntry.MasterCapped,
+                MasterLevel = masterLevel,
+                MasterEpCurrent = masterEpCurrent,
+                MasterEpNeeded = masterEpNeeded,
+                MasterCapped = masterCapped,
             });
         }
         _db.CharacterJobs.AddRange(newJobs);
