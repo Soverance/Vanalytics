@@ -359,3 +359,30 @@ export function lookupWarp(category: WarpCategory, id: number): WarpEntry {
     if (found) return found
     return { id, name: `${WARP_CATEGORY_LABELS[category].replace(/s$/, '')} #${id}` }
 }
+
+export interface WarpListEntry {
+    entry: WarpEntry
+    obtained: boolean
+}
+
+// Merge a category's full catalog with the obtained bit-index IDs into an
+// ordered obtained/missing list. Catalog entries come first (in catalog order,
+// which groups by region); any obtained ID with no catalog entry (an unmapped
+// destination) is appended as a trailing obtained row via the lookupWarp
+// fallback, so no captured travel data is hidden.
+export function listWarps(category: WarpCategory, obtainedIds: number[]): WarpListEntry[] {
+    const obtained = new Set(obtainedIds)
+    const catalog = CATALOG[category]
+    const rows: WarpListEntry[] = catalog.map(entry => ({
+        entry,
+        obtained: obtained.has(entry.id),
+    }))
+
+    const catalogIds = new Set(catalog.map(e => e.id))
+    for (const id of obtainedIds) {
+        if (!catalogIds.has(id)) {
+            rows.push({ entry: lookupWarp(category, id), obtained: true })
+        }
+    }
+    return rows
+}
