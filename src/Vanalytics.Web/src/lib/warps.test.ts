@@ -33,4 +33,17 @@ describe('listWarps', () => {
     expect(last.obtained).toBe(true)
     expect(rows.slice(0, TELEPOINTS.length).every(r => !r.obtained)).toBe(true)
   })
+
+  it('dedupes repeated unmapped obtained IDs into a single trailing row', () => {
+    const rows = listWarps('telepoints', [9, 9])
+    const unmapped = rows.filter(r => r.entry.id === 9)
+    expect(unmapped).toHaveLength(1)
+    expect(rows).toHaveLength(TELEPOINTS.length + 1)
+  })
+
+  it('appends multiple unmapped IDs in first-seen order', () => {
+    const rows = listWarps('telepoints', [10, 9])
+    const trailing = rows.slice(TELEPOINTS.length)
+    expect(trailing.map(r => r.entry.id)).toEqual([10, 9])
+  })
 })

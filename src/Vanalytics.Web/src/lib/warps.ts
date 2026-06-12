@@ -379,7 +379,11 @@ export function listWarps(category: WarpCategory, obtainedIds: number[]): WarpLi
     }))
 
     const catalogIds = new Set(catalog.map(e => e.id))
-    for (const id of obtainedIds) {
+    // Iterate the deduped obtained Set (not the raw array) so a repeated
+    // unmapped ID can't produce duplicate trailing rows. Set iteration order
+    // is first-occurrence order, so trailing rows stay in the order the IDs
+    // were first seen.
+    for (const id of obtained) {
         if (!catalogIds.has(id)) {
             rows.push({ entry: lookupWarp(category, id), obtained: true })
         }
