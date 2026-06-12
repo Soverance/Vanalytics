@@ -8,6 +8,7 @@ using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Core.DTOs.Porter;
 using Vanalytics.Core.DTOs.Sync;
+using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
 
@@ -177,7 +178,10 @@ public class CharactersController : ControllerBase
         var masterLevels = masterLevelRows
             .Select(j => new MasterLevelEntry
             {
-                JobId = (int)j.JobId,
+                // Export FFXI's 1-based job id (the frontend JOB_NAMES table is
+                // 1-based). Casting the 0-based JobType enum directly renders
+                // every job one slot off (BLU→SMN, THF→RDM).
+                JobId = j.JobId.ToFfxiJobId(),
                 MasterLevel = j.MasterLevel!.Value,
                 EpCurrent = j.MasterEpCurrent,
                 EpNeeded = j.MasterEpNeeded,

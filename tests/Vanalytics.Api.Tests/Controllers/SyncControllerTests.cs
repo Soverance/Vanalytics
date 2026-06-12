@@ -455,4 +455,92 @@ public class SyncControllerTests : IAsyncLifetime
         Assert.Equal(2, character.Jobs.Count);
         Assert.Equal(99, character.Jobs.First(j => j.JobId == JobType.THF).Level);
     }
+
+    [Fact]
+    public async Task Progression_MasterLevels_ReturnsCanonicalFfxiJobId()
+    {
+        var (jwt, apiKey) = await SetupSyncUserAsync("syncmlid@test.com", "syncmliduser");
+
+        // BLU (FFXI job id 16) and THF (id 6) both report a master level.
+        var syncResp = await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
+        {
+            CharacterName = "MLIdChar",
+            Server = "Asura",
+            ActiveJob = "BLU",
+            ActiveJobLevel = 99,
+            Jobs =
+            [
+                new SyncJobEntry { Job = "BLU", Level = 99, MasterLevel = 12 },
+                new SyncJobEntry { Job = "THF", Level = 99, MasterLevel = 8 },
+            ],
+        }));
+        Assert.Equal(HttpStatusCode.OK, syncResp.StatusCode);
+
+        Guid charId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            charId = (await db.Characters.FirstAsync(c => c.Name == "MLIdChar")).Id;
+        }
+
+        var req = new HttpRequestMessage(HttpMethod.Get, $"/api/characters/{charId}/progression");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        var progression = (await resp.Content.ReadFromJsonAsync<ProgressionResponse>())!;
+        Assert.NotNull(progression.MasterLevels);
+
+        // FFXI canonical job ids (the frontend JOB_NAMES table is 1-based): BLU = 16, THF = 6.
+        // The export must NOT leak the 0-based JobType enum value (BLU=15, THF=5).
+        var blu = progression.MasterLevels!.Single(m => m.MasterLevel == 12);
+        Assert.Equal(16, blu.JobId);
+        var thf = progression.MasterLevels!.Single(m => m.MasterLevel == 8);
+        Assert.Equal(6, thf.JobId);
+    }
+
+    [Fact]
+    public async Task Sync_MasterLevel_PersistsForJobsAbsentFromLaterSync()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("syncmlacc@test.com", "syncmlaccuser");
+
+        // Sync #1: active job BLU reports ML 12. THF is unlocked but the addon can only
+        // read the ACTIVE job's master level, so THF arrives with a null master level.
+        await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
+        {
+            CharacterName = "MLAccChar",
+            Server = "Asura",
+            ActiveJob = "BLU",
+            ActiveJobLevel = 99,
+            Jobs =
+            [
+                new SyncJobEntry { Job = "BLU", Level = 99, MasterLevel = 12 },
+                new SyncJobEntry { Job = "THF", Level = 99 }, // null ML — not the active job
+            ],
+        }));
+
+        // Sync #2: player switched to THF (ML 8); now BLU's ML is null in the payload.
+        var resp = await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
+        {
+            CharacterName = "MLAccChar",
+            Server = "Asura",
+            ActiveJob = "THF",
+            ActiveJobLevel = 99,
+            Jobs =
+            [
+                new SyncJobEntry { Job = "BLU", Level = 99 }, // null ML — no longer active
+                new SyncJobEntry { Job = "THF", Level = 99, MasterLevel = 8 },
+            ],
+        }));
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var character = await db.Characters.Include(c => c.Jobs).FirstAsync(c => c.Name == "MLAccChar");
+
+        // BLU's master level must survive even though sync #2 didn't report it (accumulate,
+        // never wipe on absence — mirrors the titles/linkshell/Porter freshness pattern).
+        Assert.Equal(12, character.Jobs.First(j => j.JobId == JobType.BLU).MasterLevel);
+        Assert.Equal(8, character.Jobs.First(j => j.JobId == JobType.THF).MasterLevel);
+    }
 }

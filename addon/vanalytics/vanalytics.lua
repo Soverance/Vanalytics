@@ -1715,8 +1715,11 @@ local function read_character_state()
     local active_job_level = player.main_job_level
 
     -- All jobs with levels > 0, including JP/CP and master-level data.
-    -- player.master_levels only contains jobs that own the Master Breaker
-    -- key item, so masterLevel is nil for locked jobs and 0-50 for unlocked.
+    -- player.master_levels in practice only reports the CURRENTLY ACTIVE job's
+    -- master level, so masterLevel is non-nil only for the active job here. The
+    -- server carries previously-synced master levels forward for the other jobs
+    -- (it never wipes ML on absence), so switching jobs accumulates rather than
+    -- overwrites.
     local jobs = {}
     for job_key, level in pairs(player.jobs) do
         if type(level) == 'number' and level > 0 then
