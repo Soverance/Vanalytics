@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -15,6 +14,7 @@ using Soverance.Data.Extensions;
 using Soverance.Data.SqlServer.Extensions;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Net.Http.Headers;
+using Vanalytics.Api;
 using Vanalytics.Api.Middleware;
 using Vanalytics.Api.Services;
 using Vanalytics.Api.Services.Sync;
@@ -305,10 +305,7 @@ app.MapGet("/health", async (VanalyticsDbContext db, IHostEnvironment env) =>
         // Connection failure — dbHealthy stays false
     }
 
-    var version = typeof(Program).Assembly
-        .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion
-        ?? typeof(Program).Assembly.GetName().Version?.ToString()
-        ?? "unknown";
+    var version = AppVersion.Current;
 
     var status = dbHealthy ? "healthy" : "degraded";
 
