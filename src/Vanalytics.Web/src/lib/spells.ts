@@ -985,4 +985,25 @@ export function lookupSpell(id: number): SpellCatalogEntry {
     return { id, name: `Spell #${id}`, type: 'WhiteMagic', mpCost: 0, minLevel: 0 }
 }
 
+// Spell types learned from a "Scroll of {name}" item. Blue Magic (learned by
+// being hit by a monster move), Summoner pacts (avatar fights/items), and
+// Trusts (cipher/quest items) have no scroll and are intentionally excluded.
+const SCROLL_LEARNABLE = new Set<SpellType>([
+    'WhiteMagic', 'BlackMagic', 'Ninjutsu', 'BardSong', 'Geomancy',
+])
+
+export const isScrollLearnable = (type: SpellType): boolean =>
+    SCROLL_LEARNABLE.has(type)
+
+// Deep link to BG-Wiki. Scroll-learnable spells point at the scroll item
+// ("Scroll of {name}") so players can see how to obtain it; scroll-less spells
+// point at the spell's own page. Uses the MediaWiki search URL (not a guessed
+// /ffxi/<slug>) so it never hard-404s — matches keyItemWikiUrl in key-items.ts.
+export function spellWikiUrl(spell: SpellCatalogEntry): string {
+    const q = isScrollLearnable(spell.type)
+        ? `Scroll of ${spell.name}`
+        : spell.name
+    return `https://www.bg-wiki.com/index.php?search=${encodeURIComponent(q)}`
+}
+
 export const TRUSTS: SpellCatalogEntry[] = SPELLS.filter(s => s.type === 'Trust')
