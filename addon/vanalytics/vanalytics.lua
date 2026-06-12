@@ -2142,7 +2142,7 @@ local function check_version(report_always)
             elseif cmp == 0 then
                 log_success('You are up to date.')
             elseif cmp < 0 then
-                log_error('Your addon is OUT OF DATE. Re-download it from ' .. settings.ApiUrl)
+                log_error('Your addon is OUT OF DATE. Run //va update to update now.')
             else
                 log('Your addon is newer than the server (dev/preview build).')
             end
@@ -2150,8 +2150,104 @@ local function check_version(report_always)
             -- Silent path (login): only speak up when behind.
             log_error('Addon out of date: you have ' .. tostring(_addon.version)
                 .. ', server is ' .. tostring(server_version)
-                .. '. Re-download from the web app to update.')
+                .. '. Run //va update to update now.')
         end
+    end)
+end
+
+-----------------------------------------------------------------------
+-- Self-update: //va update
+-- Fetches the server manifest, downloads each shipped file sequentially
+-- into memory, and only after EVERY file arrives intact writes them to
+-- disk and hot-reloads. settings.xml is excluded server-side, so the
+-- player's API key and config are never touched. A failure at any point
+-- before the write phase leaves the install completely unchanged.
+-----------------------------------------------------------------------
+local function run_update(args)
+    local force = false
+    for _, a in ipairs(args or {}) do
+        if a == '--force' then force = true end
+    end
+
+    log('Checking for updates...')
+    http_request({
+        url = settings.ApiUrl .. '/api/addon/manifest',
+        method = 'GET',
+        label = 'update-manifest',
+    }, function(result, status_code, _, body)
+        if not result or status_code ~= 200 then
+            log_error('Update failed: could not fetch manifest (' .. tostring(status_code) .. ').')
+            return
+        end
+
+        local manifest = body and json_decode(body)
+        if type(manifest) ~= 'table' or type(manifest.files) ~= 'table' then
+            log_error('Update failed: malformed manifest from server.')
+            return
+        end
+
+        local server_version = manifest.version
+        local server = parse_semver(server_version)
+        local localv = parse_semver(_addon.version)
+        if not force and server and localv and compare_semver(localv, server) >= 0 then
+            log_success('Already up to date (' .. tostring(_addon.version) .. ').')
+            return
+        end
+
+        local files = manifest.files
+        if #files == 0 then
+            log_error('Update failed: manifest listed no files.')
+            return
+        end
+
+        -- In-memory staging: nothing is written to disk until every file is in.
+        local staged = {}
+        local idx = 0
+
+        local function write_all_and_reload()
+            for _, entry in ipairs(files) do
+                local f = io.open(windower.addon_path .. entry.path, 'wb')
+                if not f then
+                    log_error('Update failed while writing ' .. tostring(entry.path)
+                        .. '. The install may be partially updated; re-run //va update.')
+                    return
+                end
+                f:write(staged[entry.path])
+                f:close()
+            end
+            log_success('Updated to ' .. tostring(server_version) .. '. Reloading...')
+            windower.send_command('lua reload vanalytics')
+        end
+
+        local download_next
+        download_next = function()
+            idx = idx + 1
+            if idx > #files then
+                write_all_and_reload()
+                return
+            end
+            local entry = files[idx]
+            http_request({
+                url = settings.ApiUrl .. '/api/addon/file?path=' .. tostring(entry.path),
+                method = 'GET',
+                label = 'update-file',
+            }, function(r, sc, _, fbody)
+                if not r or sc ~= 200 or type(fbody) ~= 'string' then
+                    log_error('Update failed: could not fetch ' .. tostring(entry.path)
+                        .. ' (' .. tostring(sc) .. ') — no changes made.')
+                    return
+                end
+                if entry.size and #fbody ~= entry.size then
+                    log_error('Update failed: ' .. tostring(entry.path) .. ' size mismatch ('
+                        .. #fbody .. ' vs ' .. tostring(entry.size) .. ') — no changes made.')
+                    return
+                end
+                staged[entry.path] = fbody
+                download_next()
+            end)
+        end
+
+        download_next()
     end)
 end
 
@@ -2495,6 +2591,9 @@ windower.register_event('addon command', function(command, ...)
 
     elseif command == 'version' then
         check_version(true)
+
+    elseif command == 'update' then
+        run_update(args)
 
     elseif command == 'apikey' then
         local key = args[1]
@@ -3334,6 +3433,7 @@ windower.register_event('addon command', function(command, ...)
         log('//va sync         - Sync now')
         log('//va status       - Show status')
         log('//va version      - Check addon version against the server')
+        log('//va update       - Download the latest addon from the server and reload (--force to re-download)')
         log('//va interval N   - Set sync interval in minutes (min: ' .. MIN_INTERVAL .. ')')
         log('//va notify on|off - Toggle in-game chat notifications on successful sync')
         log('//va dump         - Dump player data to file')
