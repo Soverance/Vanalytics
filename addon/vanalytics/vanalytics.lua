@@ -1027,15 +1027,15 @@ local function fetch_zone_nms(zone_id)
         label = 'zone-nms',
     }, function(result, status_code, _, body)
         if not result or status_code ~= 200 then
-            log_error(string.format('Mob info fetch failed for zone %d (status %s) — alerts default to standard sound, no countdown.',
-                zone_id, tostring(status_code)))
+            -- Silent: uncurated zones (most of them) and transient fetch
+            -- failures shouldn't spam chat. The hunt classifier degrades
+            -- gracefully — empty mob_info means standard sound, no countdown.
             mob_info = {}
             mob_info_zone = zone_id
             return
         end
         local payload = body and json_decode(body)
         if type(payload) ~= 'table' then
-            log_error('Mob info fetch: invalid response for zone ' .. zone_id)
             mob_info = {}
             mob_info_zone = zone_id
             return
@@ -1070,8 +1070,6 @@ local function fetch_zone_nms(zone_id)
             end
         end
         mob_info_zone = zone_id
-        log(string.format('Loaded mob info for zone %d: %d total names, %d classified as NM.',
-            zone_id, total, nm_count))
     end)
 end
 
@@ -2363,58 +2361,6 @@ end)
 -----------------------------------------------------------------------
 windower.register_event('incoming chunk', function(id, data)
     if id == 0x061 then
-        -- TEMP master-level offset probe (remove after confirming offset).
-        -- Master Level lives in the 'mastery_info' uint32 of packet 0x061 as
-        -- the job_lv byte; we don't yet know its exact offset on this server,
-        -- so dump the candidate region and Windower's own player fields to a
-        -- file so we can match the byte that equals the character's known ML.
-        -- Overwrites each 0x061 (login + every zone) so the file stays small
-        -- and always holds the latest capture.
-        do
-            local lines = {}
-            lines[#lines + 1] = '=== ML probe (packet 0x061) ==='
-
-            -- Candidate byte region. data:byte(n) is 1-based, so offset X -> X+1.
-            -- ('B' in Windower pack lib is a boolean, not a uint8 -- use :byte.)
-            local parts = {}
-            for off = 0x4A, 0x64 do
-                parts[#parts + 1] = string.format('%02X=%d', off, data:byte(off + 1))
-            end
-            lines[#lines + 1] = 'bytes ' .. table.concat(parts, ' ')
-
-            local p = windower.ffxi.get_player()
-            if p then
-                lines[#lines + 1] = 'superior_level=' .. tostring(p.superior_level)
-                    .. '  item_level=' .. tostring(p.item_level)
-                    .. '  main_job_level=' .. tostring(p.main_job_level)
-                if type(p.master_levels) == 'table' then
-                    lines[#lines + 1] = 'master_levels = {'
-                    for k, v in pairs(p.master_levels) do
-                        if type(v) == 'table' then
-                            local inner = {}
-                            for ik, iv in pairs(v) do
-                                inner[#inner + 1] = tostring(ik) .. '=' .. tostring(iv)
-                            end
-                            lines[#lines + 1] = '  ' .. tostring(k) .. ' = { ' .. table.concat(inner, ' ') .. ' }'
-                        else
-                            lines[#lines + 1] = '  ' .. tostring(k) .. ' = ' .. tostring(v)
-                        end
-                    end
-                    lines[#lines + 1] = '}'
-                else
-                    lines[#lines + 1] = 'master_levels = ' .. tostring(p.master_levels)
-                end
-            end
-
-            local probe_path = windower.addon_path .. 'ml_probe.txt'
-            local pf = io.open(probe_path, 'w')
-            if pf then
-                pf:write(table.concat(lines, '\n') .. '\n')
-                pf:close()
-                windower.add_to_chat(207, '[ML probe] wrote ' .. probe_path)
-            end
-        end
-
         current_title_id = data:unpack('H', 0x44 + 1) or 0
 
         -- Base stats (unsigned short)

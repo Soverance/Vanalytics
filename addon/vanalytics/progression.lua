@@ -174,35 +174,8 @@ end
 -- Packet parsing: called from vanalytics.lua's incoming-chunk handler
 -- whenever id == 0x063. `data` is the full chunk including the 8-byte
 -- packet header; Order is the uint16 at offset 0x04.
------------------------------------------------------------------------
--- One-shot debug: dump the first 80 bytes of each 0x063 Order to
--- progression/debug.log so we can diagnose unexpected packet shapes.
--- Each Order is dumped at most once per addon load.
-local debug_dumped = {}
-local function debug_dump(order, data)
-    if debug_dumped[order] then return end
-    debug_dumped[order] = true
-    local dir = windower.addon_path .. 'progression/'
-    windower.create_dir(dir)
-    local f = io.open(dir .. 'debug.log', 'a')
-    if not f then return end
-    local hex = {}
-    local total = #data
-    for i = 1, math.min(80, total) do
-        local b = data:byte(i)
-        hex[#hex + 1] = string.format('%02X', b)
-    end
-    f:write(string.format(
-        '[%s] 0x063 Order=0x%02X len=%d bytes=%s\n',
-        os.date('%H:%M:%S'), order, total, table.concat(hex, ' ')
-    ))
-    f:close()
-end
-
 function progression.handle_packet(data)
     local order = u16le(data, 0x04 + 1)
-
-    debug_dump(order, data)
 
     if order == 0x02 then
         -- Order 0x02: Merit/Limit Points (packet len=16 confirmed in-game)
