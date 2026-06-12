@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Fragment } from 'react'
 import { api } from '../../api/client'
 import type { CollectionResponse } from '../../types/api'
 import LoadingSpinner from '../LoadingSpinner'
-import { SPELLS, SPELL_TYPE_LABELS, type SpellType } from '../../lib/spells'
+import { SPELLS, SPELL_TYPE_LABELS, spellWikiUrl, isScrollLearnable, type SpellType } from '../../lib/spells'
 
 interface Props {
     characterId: string
@@ -23,6 +23,7 @@ export default function SpellsTab({ characterId, fetchBase }: Props) {
     const [typeFilter, setTypeFilter] = useState<SpellType | 'All'>('All')
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+    const [expandedId, setExpandedId] = useState<number | null>(null)
 
     useEffect(() => {
         setLoading(true)
@@ -31,6 +32,18 @@ export default function SpellsTab({ characterId, fetchBase }: Props) {
             .catch(() => setData(null))
             .finally(() => setLoading(false))
     }, [base])
+
+    // Close the detail panel on Escape.
+    useEffect(() => {
+        if (expandedId == null) return
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setExpandedId(null) }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [expandedId])
+
+    // Collapse any open panel when the visible set changes, so a panel can't
+    // linger on a row the user has filtered away.
+    useEffect(() => { setExpandedId(null) }, [typeFilter, statusFilter, search])
 
     const knownSet = useMemo(() => new Set(data?.spellIds ?? []), [data])
 
@@ -67,6 +80,7 @@ export default function SpellsTab({ characterId, fetchBase }: Props) {
     }
 
     const totalKnown = data.spellIds.length
+    const colCount = typeFilter === 'All' ? 5 : 4
 
     return (
         <div className="space-y-3 pr-2">
@@ -142,28 +156,73 @@ export default function SpellsTab({ characterId, fetchBase }: Props) {
                         <tbody>
                             {filteredSpells.map(s => {
                                 const known = knownSet.has(s.id)
+                                const isOpen = expandedId === s.id
                                 return (
-                                    <tr key={s.id} className="border-t border-gray-800/60">
-                                        <td className="px-3 py-1.5 text-center">
-                                            <span className={known ? 'text-emerald-400' : 'text-gray-700'}>
-                                                {known ? '✓' : '·'}
-                                            </span>
-                                        </td>
-                                        <td className={`px-3 py-1.5 ${known ? 'text-gray-100' : 'text-gray-500'}`}>
-                                            {s.name}
-                                        </td>
-                                        {typeFilter === 'All' && (
-                                            <td className="px-3 py-1.5 text-gray-500 text-xs">
-                                                {SPELL_TYPE_LABELS[s.type]}
+                                    <Fragment key={s.id}>
+                                        <tr
+                                            onClick={() => setExpandedId(isOpen ? null : s.id)}
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault()
+                                                    setExpandedId(isOpen ? null : s.id)
+                                                }
+                                            }}
+                                            tabIndex={0}
+                                            aria-expanded={isOpen}
+                                            className="border-t border-gray-800/60 cursor-pointer hover:bg-gray-800/40 focus:outline-none focus:bg-gray-800/40"
+                                        >
+                                            <td className="px-3 py-1.5 text-center">
+                                                <span className={known ? 'text-emerald-400' : 'text-gray-700'}>
+                                                    {known ? '✓' : '·'}
+                                                </span>
                                             </td>
+                                            <td className={`px-3 py-1.5 ${known ? 'text-gray-100' : 'text-gray-500'}`}>
+                                                {s.name}
+                                            </td>
+                                            {typeFilter === 'All' && (
+                                                <td className="px-3 py-1.5 text-gray-500 text-xs">
+                                                    {SPELL_TYPE_LABELS[s.type]}
+                                                </td>
+                                            )}
+                                            <td className="px-3 py-1.5 text-right text-gray-500 tabular-nums">
+                                                {s.type === 'Trust' ? '—' : s.minLevel}
+                                            </td>
+                                            <td className="px-3 py-1.5 text-right text-gray-500 tabular-nums">
+                                                {s.mpCost > 0 ? s.mpCost : '—'}
+                                            </td>
+                                        </tr>
+                                        {isOpen && (
+                                            <tr className="bg-gray-900/40">
+                                                <td colSpan={colCount} className="px-3 pb-2.5 pt-1 text-xs">
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-gray-200 font-medium">{s.name}</span>
+                                                            <span className={`px-1.5 py-0.5 rounded text-[10px] ${
+                                                                known ? 'bg-emerald-500/20 text-emerald-300' : 'bg-gray-700/50 text-gray-400'
+                                                            }`}>
+                                                                {known ? 'Known' : 'Not learned'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-gray-500">
+                                                            {SPELL_TYPE_LABELS[s.type]}
+                                                            {s.type !== 'Trust' && ` · Lv.${s.minLevel}`}
+                                                            {s.mpCost > 0 && ` · ${s.mpCost} MP`}
+                                                        </div>
+                                                        <a
+                                                            href={spellWikiUrl(s)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-block text-blue-400 hover:text-blue-300 hover:underline"
+                                                        >
+                                                            {isScrollLearnable(s.type)
+                                                                ? 'View scroll on BG-Wiki ↗'
+                                                                : 'View spell on BG-Wiki ↗'}
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         )}
-                                        <td className="px-3 py-1.5 text-right text-gray-500 tabular-nums">
-                                            {s.type === 'Trust' ? '—' : s.minLevel}
-                                        </td>
-                                        <td className="px-3 py-1.5 text-right text-gray-500 tabular-nums">
-                                            {s.mpCost > 0 ? s.mpCost : '—'}
-                                        </td>
-                                    </tr>
+                                    </Fragment>
                                 )
                             })}
                         </tbody>
