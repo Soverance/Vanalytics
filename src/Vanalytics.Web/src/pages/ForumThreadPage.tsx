@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Pin, Lock, Trash2, Flame, RotateCcw } from 'lucide-react'
 import { api, ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -19,7 +19,14 @@ function isAdmin(user: UserProfile | null): boolean {
 export default function ForumThreadPage() {
   const { categorySlug, threadSlug } = useParams<{ categorySlug: string; threadSlug: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
+
+  // Target post from a #post-{id} hash (e.g. a notification link).
+  const hashMatch = /^#post-(\d+)$/.exec(location.hash)
+  const targetPostId = hashMatch ? Number(hashMatch[1]) : null
+  const [highlightPostId, setHighlightPostId] = useState<number | null>(null)
+  const jumpedRef = useRef<number | null>(null)
 
   const [thread, setThread] = useState<ThreadDetailResponse | null>(null)
   const [posts, setPosts] = useState<EnrichedPostResponse[]>([])
@@ -75,6 +82,24 @@ export default function ForumThreadPage() {
       setLoadingMore(false)
     }
   }
+
+  // Jump to a #post-{id} from the hash. Posts are paginated, so auto-load more
+  // pages until the target is present (a reply notification targets the newest
+  // post, which lives on the last page). Re-runs as `posts` grows.
+  useEffect(() => {
+    if (targetPostId === null || loadingPosts) return
+    if (jumpedRef.current === targetPostId) return
+    const el = document.getElementById(`post-${targetPostId}`)
+    if (el) {
+      jumpedRef.current = targetPostId
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setHighlightPostId(targetPostId)
+      const timer = setTimeout(() => setHighlightPostId(null), 2500)
+      return () => clearTimeout(timer)
+    }
+    if (hasMore && !loadingMore) loadMore()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetPostId, posts, loadingPosts, hasMore, loadingMore])
 
   const handleTogglePin = async () => {
     if (!thread) return
@@ -277,6 +302,7 @@ export default function ForumThreadPage() {
             <ForumPost
               key={post.id}
               post={post}
+              highlight={highlightPostId === post.id}
               isFirstPost={index === 0}
               isAuthor={user?.id === post.authorId}
               isModerator={mod}

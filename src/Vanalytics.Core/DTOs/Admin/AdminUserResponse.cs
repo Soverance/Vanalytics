@@ -9,6 +9,7 @@ public class AdminUserResponse
     public string Role { get; set; } = string.Empty;
     public bool IsSystemAccount { get; set; }
     public bool HasApiKey { get; set; }
+    public bool HasPassword { get; set; }
     public string? OAuthProvider { get; set; }
     public int CharacterCount { get; set; }
     public DateTimeOffset CreatedAt { get; set; }

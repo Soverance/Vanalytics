@@ -50,6 +50,17 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Resolved version: $VERSION"
 
+      - name: Stamp addon version
+        run: |
+          # Rewrite the hardcoded addon version so the bundled/downloadable
+          # addon advertises the same version as this deployment. Mutates the
+          # runner checkout only (not committed); the file is copied into the
+          # image by the csproj <Content Include> and zipped at runtime by
+          # AddonController. The committed file keeps a dev-sentinel version.
+          sed -i "s/^_addon\.version = '.*'/_addon.version = '${{ steps.version.outputs.version }}'/" \
+            addon/vanalytics/vanalytics.lua
+          echo "Stamped: $(grep '^_addon.version' addon/vanalytics/vanalytics.lua)"
+
       - name: Clear Docker credentials
         run: docker logout
 

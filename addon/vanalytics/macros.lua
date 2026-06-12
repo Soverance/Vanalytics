@@ -450,10 +450,31 @@ function macros.parse_titles(macro_path)
 end
 
 -- Get a fingerprint of all macro DAT file timestamps in the directory.
--- Returns a table keyed by filename -> timestamp string, using a single dir command.
--- This is much cheaper than reading/hashing all 200 files.
+-- Returns a table keyed by filename -> mtime (number) when lfs is available
+-- (the common case in Windower 4), or a date-string parsed from `dir /T:W`
+-- output as a fallback. Either is fine — book_files_changed only needs the
+-- values to compare equal across consecutive checks of an unchanged file.
 function macros.get_file_timestamps(macro_path)
     local timestamps = {}
+
+    local ok_lfs, lfs = pcall(require, 'lfs')
+    if ok_lfs then
+        local entries = windower.get_dir(macro_path)
+        if entries then
+            for _, name in ipairs(entries) do
+                if name:match('^mcr%d*%.dat$') then
+                    local attr = lfs.attributes(macro_path .. '\\' .. name)
+                    if attr and attr.modification then
+                        timestamps[name] = attr.modification
+                    end
+                end
+            end
+        end
+        return timestamps
+    end
+
+    -- Fallback for installs without LuaFileSystem: parse `dir /T:W` output.
+    -- Spawns a brief cmd.exe window; acceptable in the rare-fallback case.
     local handle = io.popen('dir /T:W "' .. macro_path .. '\\mcr*.dat" 2>NUL')
     if not handle then return timestamps end
 

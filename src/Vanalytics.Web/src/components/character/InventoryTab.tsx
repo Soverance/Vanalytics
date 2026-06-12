@@ -61,6 +61,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
 
   // Tooltip state
   const [hoveredItemId, setHoveredItemId] = useState<number | null>(null)
+  const [hoveredAugments, setHoveredAugments] = useState<string[] | null>(null)
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null)
   const [itemDetailCache, setItemDetailCache] = useState<Map<number, GameItemDetail>>(new Map())
   const containerRef = useRef<HTMLDivElement>(null)
@@ -263,6 +264,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
             stackSize: item.stackSize,
             isRare: item.isRare,
             isExclusive: item.isExclusive,
+            augments: [],
             quantity: 1,
             slotIndex: -1,
             lastSeenAt: slip.syncedAt,
@@ -319,8 +321,9 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
   }
 
   // Tooltip hover handlers
-  const handleRowEnter = useCallback((itemId: number) => {
+  const handleRowEnter = useCallback((itemId: number, augments?: string[]) => {
     setHoveredItemId(itemId)
+    setHoveredAugments(augments ?? null)
     if (!itemDetailCache.has(itemId)) {
       api<GameItemDetail>(`/api/items/${itemId}`)
         .then(detail => {
@@ -358,6 +361,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
 
   const handleRowLeave = useCallback(() => {
     setHoveredItemId(null)
+    setHoveredAugments(null)
     setTooltipPos(null)
   }, [])
 
@@ -390,7 +394,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
         onClick={() => {
           if (!item.isPorter) toggleSelection(itemBag, item.slotIndex)
         }}
-        onMouseEnter={() => handleRowEnter(item.itemId)}
+        onMouseEnter={() => handleRowEnter(item.itemId, item.augments)}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleRowLeave}
       >
@@ -730,7 +734,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
           className="fixed z-50 pointer-events-none"
           style={{ top: tooltipPos.top, left: tooltipPos.left }}
         >
-          <ItemPreviewBox item={hoveredDetail} />
+          <ItemPreviewBox item={hoveredDetail} augments={hoveredAugments ?? undefined} />
         </div>
       )}
     </div>

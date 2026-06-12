@@ -4,26 +4,28 @@ import { useAuth } from '../context/AuthContext'
 import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
 import LoginModal from './LoginModal'
-import { Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare } from 'lucide-react'
+import { Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare, Flag } from 'lucide-react'
 import { CompareProvider } from './compare/CompareContext'
 import CompareTray from './compare/CompareTray'
 import { SyncProvider } from '../context/SyncContext'
 import SyncBanner from './SyncBanner'
 import { FfxiFileSystemProvider } from '../context/FfxiFileSystemContext'
 import SidebarClock from './SidebarClock'
+import NotificationBell from './notifications/NotificationBell'
+import { useNotificationSummary } from '../hooks/useNotificationSummary'
 
 type SectionName = 'database' | 'economy' | 'server' | 'community' | 'admin'
 
 function getSection(pathname: string): SectionName | null {
   if (pathname.startsWith('/items') || pathname.startsWith('/npcs') || pathname.startsWith('/zones') || pathname.startsWith('/recipes')) return 'database'
   if (pathname.startsWith('/bazaar')) return 'economy'
-  if (pathname.startsWith('/forum') || pathname.startsWith('/players') || pathname.startsWith('/users/')) return 'community'
+  if (pathname.startsWith('/forum') || pathname.startsWith('/players') || pathname.startsWith('/linkshells') || pathname.startsWith('/users/') || pathname.startsWith('/messages')) return 'community'
   if (pathname.startsWith('/server/')) return 'server'
   if (pathname.startsWith('/admin')) return 'admin'
   return null
 }
 
-function SidebarLink({ to, label, icon, end = true, onClick }: { to: string; label: string; icon: ReactNode; end?: boolean; onClick?: () => void }) {
+function SidebarLink({ to, label, icon, end = true, onClick, badge }: { to: string; label: string; icon: ReactNode; end?: boolean; onClick?: () => void; badge?: number }) {
   return (
     <NavLink
       to={to}
@@ -38,7 +40,12 @@ function SidebarLink({ to, label, icon, end = true, onClick }: { to: string; lab
       }
     >
       {icon}
-      {label}
+      <span className="flex-1">{label}</span>
+      {badge != null && badge > 0 && (
+        <span className="rounded-full bg-blue-600 px-1.5 text-[10px] font-semibold text-white">
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
     </NavLink>
   )
 }
@@ -102,6 +109,7 @@ export default function Layout() {
 
 function LayoutInner() {
   const { user } = useAuth()
+  const { summary: notifSummary } = useNotificationSummary()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { isOpen: loginOpen, open: openLogin, close: closeLogin } = useLoginModal()
   const [version, setVersion] = useState<string | null>(null)
@@ -197,7 +205,11 @@ function LayoutInner() {
 
           <SidebarSection label="Community" icon={<Users className="h-4 w-4 shrink-0" />} isOpen={openSection === 'community'} onToggle={() => toggleSection('community')}>
             <SidebarLink to="/players" label="Players" icon={<Users className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+            <SidebarLink to="/linkshells" label="Linkshells" icon={<Users className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
             <SidebarLink to="/forum" end={false} label="Forum" icon={<MessageSquare className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+            {user && (
+              <SidebarLink to="/messages" end={false} label="Messages" icon={<MessageSquare className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} badge={notifSummary.messages} />
+            )}
           </SidebarSection>
 
           <SidebarLink to="/setup" label="Setup Guide" icon={<BookOpen className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
@@ -207,6 +219,7 @@ function LayoutInner() {
               <SidebarLink to="/admin/users" label="Users" icon={<Users className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
               <SidebarLink to="/admin/data" label="Data" icon={<Database className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
               <SidebarLink to="/admin/saml" label="SAML" icon={<KeyRound className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+              <SidebarLink to="/admin/reports" label="Reports" icon={<Flag className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
             </SidebarSection>
           )}
         </nav>
@@ -229,23 +242,28 @@ function LayoutInner() {
 
         {/* User profile */}
         {user ? (
-          <NavLink
-            to="/profile"
-            onClick={() => setSidebarOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 border-t border-gray-800 px-4 py-3 transition-colors ${
-                isActive
-                  ? 'bg-gray-800'
-                  : 'hover:bg-gray-800/50'
-              }`
-            }
-          >
-            <UserAvatar username={user.username ?? ''} displayName={user.displayName} avatarUrl={user.avatarUrl} size="sm" />
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-200 truncate">{user.displayName ?? user.username}</p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+          <div className="flex items-center border-t border-gray-800">
+            <NavLink
+              to="/profile"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) =>
+                `flex flex-1 items-center gap-3 min-w-0 px-4 py-3 transition-colors ${
+                  isActive
+                    ? 'bg-gray-800'
+                    : 'hover:bg-gray-800/50'
+                }`
+              }
+            >
+              <UserAvatar username={user.username ?? ''} displayName={user.displayName} avatarUrl={user.avatarUrl} size="sm" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-200 truncate">{user.displayName ?? user.username}</p>
+                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              </div>
+            </NavLink>
+            <div className="pr-4">
+              <NotificationBell openUp />
             </div>
-          </NavLink>
+          </div>
         ) : (
           <div className="border-t border-gray-800 px-4 py-3">
             <button
@@ -273,6 +291,7 @@ function LayoutInner() {
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img src="/vanalytics-typography-horizontal-logo.png" alt="Vana'lytics" className="min-w-0 max-w-[180px]" />
           </Link>
+          {user && <div className="ml-auto"><NotificationBell /></div>}
         </header>
 
         <SyncBanner />

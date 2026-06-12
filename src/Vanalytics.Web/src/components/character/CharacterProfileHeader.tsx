@@ -1,4 +1,8 @@
-import type { CharacterDetail } from '../../types/api'
+import { Link } from 'react-router-dom'
+import type { CharacterDetail, CharacterOwner } from '../../types/api'
+import MessageButton from '../messages/MessageButton'
+import { ownerDisplayLabel, shouldShowMessageButton } from './ownerActions'
+import LinkshellPearl from './LinkshellPearl'
 
 const NATION_NAMES: Record<number, string> = { 0: "San d'Oria", 1: 'Bastok', 2: 'Windurst' }
 
@@ -13,6 +17,7 @@ function formatPlaytime(seconds: number): string {
 
 interface CharacterProfileHeaderProps {
   character: CharacterDetail
+  owner?: CharacterOwner | null
   showPublicButton?: boolean
   onTogglePublic?: () => void
   onShareClick?: () => void
@@ -20,6 +25,7 @@ interface CharacterProfileHeaderProps {
 
 export default function CharacterProfileHeader({
   character,
+  owner,
   showPublicButton,
   onTogglePublic,
   onShareClick,
@@ -32,6 +38,9 @@ export default function CharacterProfileHeader({
   // Row 1: Combat
   const combatParts = [
     jobSubLine,
+    // Su is always shown (incl. Su 0), matching the in-game status panel.
+    character.superiorLevel != null ? `Su ${character.superiorLevel}` : null,
+    // ML only when the active job is actually a master (> 0).
     character.masterLevel != null && character.masterLevel > 0 ? `ML ${character.masterLevel}` : null,
     character.itemLevel != null && character.itemLevel > 0 ? `iLvl ${character.itemLevel}` : null,
   ].filter(Boolean)
@@ -43,7 +52,6 @@ export default function CharacterProfileHeader({
     character.nation != null
       ? NATION_NAMES[character.nation] + (character.nationRank ? ` Rank ${character.nationRank}` : '')
       : null,
-    character.linkshell ? `LS: ${character.linkshell}` : null,
   ].filter(Boolean)
 
   // Row 3: Meta
@@ -87,9 +95,20 @@ export default function CharacterProfileHeader({
       )}
 
       {/* Row 2: Identity */}
-      {identityParts.length > 0 && (
-        <div className="text-sm text-gray-400">
-          {identityParts.join(' · ')}
+      {(identityParts.length > 0 || character.linkshell) && (
+        <div className="text-sm text-gray-400 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+          {identityParts.length > 0 && <span>{identityParts.join(' · ')}</span>}
+          {character.linkshell && (
+            <span className="flex items-center gap-1">
+              {identityParts.length > 0 && <span className="text-gray-600">·</span>}
+              {character.linkshellLogoUrl ? (
+                <img src={character.linkshellLogoUrl} alt="" title={character.linkshell} className="h-4 w-4 shrink-0 object-contain" />
+              ) : (
+                <LinkshellPearl colorRgb={character.linkshellColorRgb} size={12} title={character.linkshell} />
+              )}
+              <span>{character.linkshell}</span>
+            </span>
+          )}
         </div>
       )}
 
@@ -97,6 +116,22 @@ export default function CharacterProfileHeader({
       {metaParts.length > 0 && (
         <div className="text-xs text-gray-500">
           {metaParts.join(' · ')}
+        </div>
+      )}
+
+      {/* Row 4: Owner — only on public profiles, where owner info is provided */}
+      {owner && (
+        <div className="mt-2 flex items-center gap-2 text-sm">
+          <span className="text-gray-500">Owned by</span>
+          <Link
+            to={`/users/${owner.ownerUsername}`}
+            className="text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            {ownerDisplayLabel(owner)}
+          </Link>
+          {shouldShowMessageButton(owner) && (
+            <MessageButton toUserId={owner.ownerUserId} toName={ownerDisplayLabel(owner)} />
+          )}
         </div>
       )}
     </div>

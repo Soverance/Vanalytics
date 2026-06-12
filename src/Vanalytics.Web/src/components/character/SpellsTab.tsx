@@ -6,6 +6,7 @@ import { SPELLS, SPELL_TYPE_LABELS, type SpellType } from '../../lib/spells'
 
 interface Props {
     characterId: string
+    fetchBase?: string
 }
 
 const TYPE_ORDER: SpellType[] = [
@@ -15,7 +16,8 @@ const TYPE_ORDER: SpellType[] = [
 
 type StatusFilter = 'all' | 'known' | 'unknown'
 
-export default function SpellsTab({ characterId }: Props) {
+export default function SpellsTab({ characterId, fetchBase }: Props) {
+    const base = fetchBase ?? `/api/characters/${characterId}`
     const [data, setData] = useState<CollectionResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [typeFilter, setTypeFilter] = useState<SpellType | 'All'>('All')
@@ -24,11 +26,11 @@ export default function SpellsTab({ characterId }: Props) {
 
     useEffect(() => {
         setLoading(true)
-        api<CollectionResponse>(`/api/characters/${characterId}/collection`)
+        api<CollectionResponse>(`${base}/collection`)
             .then(setData)
             .catch(() => setData(null))
             .finally(() => setLoading(false))
-    }, [characterId])
+    }, [base])
 
     const knownSet = useMemo(() => new Set(data?.spellIds ?? []), [data])
 

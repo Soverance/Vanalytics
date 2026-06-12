@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Soverance.Data;
 using Soverance.Forum.Extensions;
+using Soverance.Messaging.Extensions;
 using Vanalytics.Core.Models;
 
 namespace Vanalytics.Data;
@@ -31,6 +32,8 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<InventoryChange> InventoryChanges => Set<InventoryChange>();
     public DbSet<CharacterPorterSlip> CharacterPorterSlips => Set<CharacterPorterSlip>();
     public DbSet<CharacterPorterItem> CharacterPorterItems => Set<CharacterPorterItem>();
+    public DbSet<CharacterGearSet> CharacterGearSets => Set<CharacterGearSet>();
+    public DbSet<GearSetSlot> GearSetSlots => Set<GearSetSlot>();
     public DbSet<CharacterProgression> CharacterProgression => Set<CharacterProgression>();
     public DbSet<CharacterMissions> CharacterMissions => Set<CharacterMissions>();
     public DbSet<CharacterTitle> CharacterTitles => Set<CharacterTitle>();
@@ -43,11 +46,16 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<InventoryMoveOrder> InventoryMoveOrders => Set<InventoryMoveOrder>();
     public DbSet<SynthRecipe> SynthRecipes => Set<SynthRecipe>();
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
+    public DbSet<Linkshell> Linkshells => Set<Linkshell>();
+    public DbSet<LinkshellMembership> LinkshellMemberships => Set<LinkshellMembership>();
+    public DbSet<LinkshellProfile> LinkshellProfiles => Set<LinkshellProfile>();
+    public DbSet<LinkshellApplication> LinkshellApplications => Set<LinkshellApplication>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(VanalyticsDbContext).Assembly);
         modelBuilder.ApplyForumConfigurations();
+        modelBuilder.ApplyMessagingConfigurations();
     }
 }

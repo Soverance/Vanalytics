@@ -13,5 +13,12 @@ public class CharacterJob
     public int JPSpent { get; set; }
     public int CP { get; set; }
 
+    // Master Level — null when the job has no Master Breaker (locked),
+    // 0–50 when unlocked. EP fields accumulate from packet 0x061 per active job.
+    public int? MasterLevel { get; set; }
+    public int? MasterEpCurrent { get; set; }
+    public int? MasterEpNeeded { get; set; }
+    public bool MasterCapped { get; set; }
+
     public Character Character { get; set; } = null!;
 }

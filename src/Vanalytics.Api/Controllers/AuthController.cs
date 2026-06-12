@@ -6,6 +6,7 @@ using Soverance.Auth.DTOs;
 using Soverance.Auth.Models;
 using Soverance.Auth.Services;
 using Vanalytics.Api.Services;
+using Vanalytics.Api.Validation;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Controllers;
@@ -112,5 +113,31 @@ public class AuthController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new { defaultServer = user.DefaultServer });
+    }
+
+    [Authorize]
+    [HttpPut("me/display-name")]
+    public async Task<IActionResult> UpdateDisplayName([FromBody] UpdateDisplayNameRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var user = await _db.Users.FindAsync(userId);
+        if (user is null) return NotFound();
+
+        var trimmed = request.DisplayName?.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            user.DisplayName = null;
+        }
+        else
+        {
+            if (!DisplayNameValidator.IsValid(trimmed, out var error))
+                return BadRequest(new { message = error });
+            user.DisplayName = trimmed;
+        }
+
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { displayName = user.DisplayName });
     }
 }

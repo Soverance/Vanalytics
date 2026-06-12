@@ -58,7 +58,7 @@ end
 local function cache_path(character_name, server)
     if not character_name or not server then return nil end
     local dir = windower.addon_path .. 'collection/'
-    os.execute('mkdir "' .. dir:gsub('/', '\\') .. '" 2>NUL')
+    windower.create_dir(dir)
     return dir .. character_name:lower() .. '_' .. server:lower() .. '.json'
 end
 

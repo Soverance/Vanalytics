@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { api, ApiError } from '../api/client'
-import type { AdminUser, UserRole, CreateUserResponse } from '../types/api'
+import type { AdminUser, UserRole, CreateUserResponse, ResetPasswordResponse } from '../types/api'
 import UserAvatar from '../components/UserAvatar'
 import ConfirmModal from '../components/ConfirmModal'
+import GeneratedPasswordReveal from '../components/GeneratedPasswordReveal'
 import { useAuth } from '../context/AuthContext'
-import { X, Plus, Copy, Check } from 'lucide-react'
+import { X, Plus } from 'lucide-react'
 
 const ROLES: UserRole[] = ['Member', 'Moderator', 'Admin']
 
@@ -21,7 +22,6 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<CreateUserResponse | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,13 +39,6 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleCopy = async () => {
-    if (!result) return
-    await navigator.clipboard.writeText(result.generatedPassword)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }
 
   const handleClose = () => {
@@ -78,29 +71,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
             <p className="text-sm text-gray-300">
               User <span className="font-medium text-gray-100">{result.username}</span> created successfully.
             </p>
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
-                Generated Password
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={result.generatedPassword}
-                  className="flex-1 rounded border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100 font-mono text-sm"
-                />
-                <button
-                  onClick={handleCopy}
-                  className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700"
-                  title="Copy password"
-                >
-                  {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-amber-400">
-                Save this password — it won't be shown again.
-              </p>
-            </div>
+            <GeneratedPasswordReveal password={result.generatedPassword} />
             <button
               onClick={handleClose}
               className="w-full rounded bg-blue-600 py-2 font-medium hover:bg-blue-500"
@@ -158,6 +129,43 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
   )
 }
 
+function ResetPasswordResultModal({
+  result,
+  onClose,
+}: {
+  result: ResetPasswordResponse
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-lg border border-gray-800 bg-gray-900 p-6 mx-4">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-300"
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <h2 className="text-lg font-bold mb-4">Password Reset</h2>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-300">
+            New password for <span className="font-medium text-gray-100">{result.username}</span>.
+            Their previous password and active sessions no longer work.
+          </p>
+          <GeneratedPasswordReveal password={result.generatedPassword} />
+          <button
+            onClick={onClose}
+            className="w-full rounded bg-blue-600 py-2 font-medium hover:bg-blue-500"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminUsersPage() {
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
@@ -165,6 +173,8 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<{ id: string; username: string } | null>(null)
+  const [pendingReset, setPendingReset] = useState<{ id: string; username: string } | null>(null)
+  const [resetResult, setResetResult] = useState<ResetPasswordResponse | null>(null)
 
   const fetchUsers = async () => {
     try {
@@ -199,6 +209,20 @@ export default function AdminUsersPage() {
       fetchUsers()
     } catch (err) {
       if (err instanceof ApiError) setError(err.message)
+    }
+  }
+
+  const handleReset = async (id: string) => {
+    setError('')
+    try {
+      const res = await api<ResetPasswordResponse>(`/api/admin/users/${id}/reset-password`, {
+        method: 'POST',
+      })
+      setResetResult(res)
+      fetchUsers()
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.message)
+      else setError('Failed to reset password')
     }
   }
 
@@ -276,14 +300,24 @@ export default function AdminUsersPage() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {!u.isSystemAccount && u.role !== 'Admin' && (
-                    <button
-                      onClick={() => setPendingDelete({ id: u.id, username: u.username })}
-                      className="text-xs text-red-400 hover:text-red-300"
-                    >
-                      Delete
-                    </button>
-                  )}
+                  <div className="flex items-center justify-end gap-3">
+                    {u.hasPassword && !u.isSystemAccount && (
+                      <button
+                        onClick={() => setPendingReset({ id: u.id, username: u.username })}
+                        className="text-xs text-gray-400 hover:text-gray-200"
+                      >
+                        Reset password
+                      </button>
+                    )}
+                    {!u.isSystemAccount && u.role !== 'Admin' && (
+                      <button
+                        onClick={() => setPendingDelete({ id: u.id, username: u.username })}
+                        className="text-xs text-red-400 hover:text-red-300"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -308,6 +342,22 @@ export default function AdminUsersPage() {
           confirmLabel="Delete"
           onConfirm={() => { handleDelete(pendingDelete.id); setPendingDelete(null) }}
           onCancel={() => setPendingDelete(null)}
+        />
+      )}
+
+      {pendingReset && (
+        <ConfirmModal
+          message={`Reset password for "${pendingReset.username}"? Their current password and active sessions stop working immediately.`}
+          confirmLabel="Reset password"
+          onConfirm={() => { handleReset(pendingReset.id); setPendingReset(null) }}
+          onCancel={() => setPendingReset(null)}
+        />
+      )}
+
+      {resetResult && (
+        <ResetPasswordResultModal
+          result={resetResult}
+          onClose={() => setResetResult(null)}
         />
       )}
     </div>

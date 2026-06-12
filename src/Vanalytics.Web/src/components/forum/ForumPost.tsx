@@ -11,6 +11,7 @@ import ConfirmModal from '../ConfirmModal'
 interface Props {
   post: EnrichedPostResponse
   isFirstPost?: boolean
+  highlight?: boolean
   isAuthor: boolean
   isModerator: boolean
   isAdmin: boolean
@@ -20,7 +21,8 @@ interface Props {
   onQuote?: (postId: number, username: string) => void
 }
 
-export default function ForumPost({ post, isFirstPost, isAuthor, isModerator, isAdmin, isAuthenticated, onUpdated, onPurged, onQuote }: Props) {
+export default function ForumPost({ post, isFirstPost, highlight, isAuthor, isModerator, isAdmin, isAuthenticated, onUpdated, onPurged, onQuote }: Props) {
+  const highlightRing = highlight ? ' ring-2 ring-blue-500 transition-shadow' : ''
   const [editing, setEditing] = useState(false)
   const [editBody, setEditBody] = useState(post.body ?? '')
   const [purging, setPurging] = useState(false)
@@ -63,7 +65,7 @@ export default function ForumPost({ post, isFirstPost, isAuthor, isModerator, is
 
   if (post.isDeleted) {
     return (
-      <div id={`post-${post.id}`} className="flex gap-4 rounded-lg border border-gray-800/50 bg-gray-900/30 p-4">
+      <div id={`post-${post.id}`} className={`flex gap-4 rounded-lg border border-gray-800/50 bg-gray-900/30 p-4${highlightRing}`}>
         <ForumAuthorBadge username={post.authorUsername} displayName={post.authorDisplayName} avatarUrl={post.authorAvatarHash} postCount={post.authorPostCount} joinedAt={post.authorJoinedAt} />
         <div className="flex-1">
           <div className="flex items-center justify-between">
@@ -99,7 +101,7 @@ export default function ForumPost({ post, isFirstPost, isAuthor, isModerator, is
   }
 
   return (
-    <div id={`post-${post.id}`} className="flex gap-4 rounded-lg border border-gray-800 bg-gray-900 p-4">
+    <div id={`post-${post.id}`} className={`flex gap-4 rounded-lg border border-gray-800 bg-gray-900 p-4${highlightRing}`}>
       <ForumAuthorBadge username={post.authorUsername} displayName={post.authorDisplayName} avatarUrl={post.authorAvatarHash} postCount={post.authorPostCount} joinedAt={post.authorJoinedAt} />
       <div className="flex-1 min-w-0">
         {editing ? (

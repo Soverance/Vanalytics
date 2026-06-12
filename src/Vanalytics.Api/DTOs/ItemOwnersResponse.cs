@@ -10,6 +10,8 @@ public class ItemOwnerEntry
 
 public class ItemOwnersResponse
 {
-    public required List<ItemOwnerEntry> Equipped { get; init; }
-    public required List<ItemOwnerEntry> Inventory { get; init; }
+    public int TotalCount { get; init; }
+    public int Page { get; init; }
+    public int PageSize { get; init; }
+    public required List<ItemOwnerEntry> Owners { get; init; }
 }

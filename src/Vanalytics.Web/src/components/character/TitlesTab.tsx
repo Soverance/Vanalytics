@@ -6,6 +6,7 @@ import { TITLES, TITLE_CONTENT_CATEGORIES, lookupTitle } from '../../lib/titles'
 
 interface Props {
     characterId: string
+    fetchBase?: string
 }
 
 function formatDate(iso: string): string {
@@ -13,18 +14,19 @@ function formatDate(iso: string): string {
     return iso.slice(0, 10)
 }
 
-export default function TitlesTab({ characterId }: Props) {
+export default function TitlesTab({ characterId, fetchBase }: Props) {
+    const base = fetchBase ?? `/api/characters/${characterId}`
     const [data, setData] = useState<TitlesResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState<string>('All')
 
     useEffect(() => {
         setLoading(true)
-        api<TitlesResponse>(`/api/characters/${characterId}/titles`)
+        api<TitlesResponse>(`${base}/titles`)
             .then(setData)
             .catch(() => setData(null))
             .finally(() => setLoading(false))
-    }, [characterId])
+    }, [base])
 
     // Merge backend "obtained" rows with catalog metadata. Unknown IDs fall
     // back to "Title #N" via lookupTitle.

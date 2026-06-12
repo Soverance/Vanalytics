@@ -4,5 +4,6 @@ public enum InventoryChangeType
 {
     Added,
     Removed,
-    QuantityChanged
+    QuantityChanged,
+    AugmentsChanged
 }

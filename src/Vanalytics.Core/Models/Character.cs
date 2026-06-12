@@ -16,12 +16,19 @@ public class Character
     public string? SubJob { get; set; }
     public int? SubJobLevel { get; set; }
     public int? MasterLevel { get; set; }
+    public int? SuperiorLevel { get; set; }
     public int? ItemLevel { get; set; }
     public int? Hp { get; set; }
     public int? MaxHp { get; set; }
     public int? Mp { get; set; }
     public int? MaxMp { get; set; }
     public string? Linkshell { get; set; }
+
+    /// <summary>Which equipped slot the active linkshell came from (1 or 2). Null if unknown.</summary>
+    public int? LinkshellSlot { get; set; }
+
+    /// <summary>Packed RGB of the active linkshell, for the header pearl icon. Null if unknown.</summary>
+    public int? LinkshellColorRgb { get; set; }
     public int? Nation { get; set; }
     public int? NationRank { get; set; }
     public int? RankPoints { get; set; }

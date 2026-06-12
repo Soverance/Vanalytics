@@ -441,14 +441,57 @@ public class ItemsController : ControllerBase
     }
 
     [HttpGet("{id:int}/owners")]
-    public async Task<IActionResult> GetItemOwners(int id)
+    public async Task<IActionResult> GetItemOwners(
+        int id,
+        [FromQuery] string? q = null,
+        [FromQuery] string? server = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDir = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25)
     {
-        // Characters who have this item equipped
-        var equippedChars = await _db.EquippedGear
-            .Where(g => g.ItemId == id)
-            .Select(g => g.Character)
-            .Where(c => c.IsPublic)
-            .Distinct()
+        if (page < 1) page = 1;
+        if (pageSize > 100) pageSize = 100;
+
+        var item = await _db.GameItems.FindAsync(id);
+        if (item is null) return NotFound();
+
+        // Owner lists are tracked only for Rare/Ex items — a full owner list for common
+        // stackables would be huge and meaningless. Non-Rare/Ex => empty (UI hides the section).
+        if (!(item.IsRare || item.IsExclusive))
+            return Ok(new ItemOwnersResponse { TotalCount = 0, Page = page, PageSize = pageSize, Owners = [] });
+
+        // Distinct on character id first — DISTINCT over the full Character entity would include
+        // its nvarchar(max) columns and error on SQL Server.
+        var ownerIds = _db.CharacterInventories
+            .Where(inv => inv.ItemId == id && inv.Character.IsPublic)
+            .Select(inv => inv.CharacterId)
+            .Distinct();
+
+        var chars = _db.Characters.Where(c => ownerIds.Contains(c.Id));
+
+        if (!string.IsNullOrWhiteSpace(q))
+            chars = chars.Where(c => c.Name.Contains(q));
+        if (!string.IsNullOrWhiteSpace(server))
+            chars = chars.Where(c => c.Server == server);
+
+        var totalCount = await chars.CountAsync();
+
+        var desc = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase);
+        chars = (sortBy?.ToLowerInvariant()) switch
+        {
+            "server" => desc
+                ? chars.OrderByDescending(c => c.Server).ThenBy(c => c.Name)
+                : chars.OrderBy(c => c.Server).ThenBy(c => c.Name),
+            "level" => desc
+                ? chars.OrderByDescending(c => c.Jobs.Where(j => j.IsActive).Select(j => (int?)j.Level).FirstOrDefault()).ThenBy(c => c.Name)
+                : chars.OrderBy(c => c.Jobs.Where(j => j.IsActive).Select(j => (int?)j.Level).FirstOrDefault()).ThenBy(c => c.Name),
+            _ => desc ? chars.OrderByDescending(c => c.Name) : chars.OrderBy(c => c.Name),
+        };
+
+        var owners = await chars
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(c => new ItemOwnerEntry
             {
                 Name = c.Name,
@@ -456,41 +499,50 @@ public class ItemsController : ControllerBase
                 Job = c.Jobs.Where(j => j.IsActive).Select(j => j.JobId.ToString()).FirstOrDefault(),
                 Level = c.Jobs.Where(j => j.IsActive).Select(j => (int?)j.Level).FirstOrDefault(),
             })
-            .OrderBy(e => e.Name)
             .ToListAsync();
 
-        // For Rare/Ex items, also check inventory
-        var inventoryChars = new List<ItemOwnerEntry>();
-        var gameItem = await _db.GameItems.FindAsync(id);
-        if (gameItem is { IsRare: true } or { IsExclusive: true })
-        {
-            var equippedNames = equippedChars.Select(e => e.Name + e.Server).ToHashSet();
-            inventoryChars = await _db.CharacterInventories
-                .Where(i => i.ItemId == id)
-                .Select(i => i.Character)
-                .Where(c => c.IsPublic)
-                .Distinct()
-                .Select(c => new ItemOwnerEntry
-                {
-                    Name = c.Name,
-                    Server = c.Server,
-                    Job = c.Jobs.Where(j => j.IsActive).Select(j => j.JobId.ToString()).FirstOrDefault(),
-                    Level = c.Jobs.Where(j => j.IsActive).Select(j => (int?)j.Level).FirstOrDefault(),
-                })
-                .OrderBy(e => e.Name)
-                .ToListAsync();
+        return Ok(new ItemOwnersResponse { TotalCount = totalCount, Page = page, PageSize = pageSize, Owners = owners });
+    }
 
-            // Remove characters already in the equipped list
-            inventoryChars = inventoryChars
-                .Where(i => !equippedNames.Contains(i.Name + i.Server))
-                .ToList();
-        }
+    [HttpGet("{id:int}/gear-sets")]
+    public async Task<IActionResult> GetItemGearSets(
+        int id,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25)
+    {
+        if (page < 1) page = 1;
+        if (pageSize > 100) pageSize = 100;
 
-        return Ok(new ItemOwnersResponse
-        {
-            Equipped = equippedChars,
-            Inventory = inventoryChars,
-        });
+        var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
+        if (!itemExists) return NotFound();
+
+        // Distinct on set id first — DISTINCT over the full CharacterGearSet entity would
+        // include its nvarchar(max) TagsJson column and error on SQL Server.
+        var setIds = _db.GearSetSlots
+            .Where(slot => slot.ItemId == id && slot.GearSet.Character.IsPublic)
+            .Select(slot => slot.GearSetId)
+            .Distinct();
+
+        var setsQuery = _db.CharacterGearSets.Where(s => setIds.Contains(s.Id));
+
+        var totalCount = await setsQuery.CountAsync();
+
+        var entries = await setsQuery
+            .OrderBy(s => s.Character.Name).ThenBy(s => s.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(s => new ItemGearSetEntry
+            {
+                Server = s.Character.Server,
+                CharacterName = s.Character.Name,
+                SetId = s.Id,
+                SetName = s.Name,
+                Category = s.Category,
+                Job = s.Job,
+            })
+            .ToListAsync();
+
+        return Ok(new ItemGearSetsResponse { TotalCount = totalCount, Page = page, PageSize = pageSize, Entries = entries });
     }
 
     private static readonly Dictionary<string, Expression<Func<GameItem, int?>>> StatExpressions = new(StringComparer.OrdinalIgnoreCase)

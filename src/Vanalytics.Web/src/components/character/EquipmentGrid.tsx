@@ -14,9 +14,11 @@ interface EquipmentGridProps {
   gear: GearEntry[]
   onSlotClick: (slotName: string) => void
   itemCache: Map<number, GameItemDetail>
+  unavailableSlots?: Set<string>
+  readOnly?: boolean
 }
 
-export default function EquipmentGrid({ gear, onSlotClick, itemCache }: EquipmentGridProps) {
+export default function EquipmentGrid({ gear, onSlotClick, itemCache, unavailableSlots, readOnly = false }: EquipmentGridProps) {
   const gearBySlot = new Map(gear.map(g => [g.slot, g]))
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null)
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null)
@@ -60,12 +62,15 @@ export default function EquipmentGrid({ gear, onSlotClick, itemCache }: Equipmen
               gear={gearBySlot.get(slotName)}
               onClick={() => onSlotClick(slotName)}
               onHoverElement={(el) => handleSlotHover(slotName, el)}
+              isUnavailable={unavailableSlots?.has(slotName)}
             />
           ))}
         </div>
-        <div className="text-center text-gray-600 text-[9px] mt-2">
-          Click a slot to swap equipment
-        </div>
+        {!readOnly && (
+          <div className="text-center text-gray-600 text-[9px] mt-2">
+            Click a slot to swap equipment
+          </div>
+        )}
       </div>
 
       {/* Tooltip */}
@@ -74,7 +79,7 @@ export default function EquipmentGrid({ gear, onSlotClick, itemCache }: Equipmen
           className="absolute z-50 pointer-events-none"
           style={{ top: tooltipPos.top, left: tooltipPos.left }}
         >
-          <ItemPreviewBox item={hoveredItem} />
+          <ItemPreviewBox item={hoveredItem} augments={hoveredGear?.augments} />
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --animate-orb-pulse: orb-pulse 6s ease-in-out infinite;

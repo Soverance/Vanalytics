@@ -47,12 +47,16 @@ export interface CharacterDetail {
   subJob?: string
   subJobLevel?: number
   masterLevel?: number
+  superiorLevel?: number
   itemLevel?: number
   hp?: number
   maxHp?: number
   mp?: number
   maxMp?: number
   linkshell?: string
+  linkshellSlot?: number
+  linkshellColorRgb?: number
+  linkshellLogoUrl?: string | null
   nation?: number
   nationRank?: number
   rankPoints?: number
@@ -108,6 +112,7 @@ export interface GearEntry {
   slot: string
   itemId: number
   itemName: string
+  augments: string[]
 }
 
 export interface SkillEntry {
@@ -337,6 +342,7 @@ export interface UserPublicCharacter {
 }
 
 export interface UserProfileResponse {
+  id: string
   username: string
   displayName: string | null
   avatarUrl: string | null
@@ -344,6 +350,14 @@ export interface UserProfileResponse {
   postCount: number
   recentPosts: UserRecentPost[]
   publicCharacters: UserPublicCharacter[]
+}
+
+export interface CharacterOwner {
+  ownerUserId: string
+  ownerUsername: string
+  ownerDisplayName: string | null
+  ownerAvatarUrl: string | null
+  canMessage: boolean
 }
 
 // Admin
@@ -355,6 +369,7 @@ export interface AdminUser {
   role: UserRole
   isSystemAccount: boolean
   hasApiKey: boolean
+  hasPassword: boolean
   oAuthProvider: string | null
   characterCount: number
   createdAt: string
@@ -372,6 +387,12 @@ export interface CreateUserResponse {
   email: string
   username: string
   role: string
+  generatedPassword: string
+}
+
+export interface ResetPasswordResponse {
+  id: string
+  username: string
   generatedPassword: string
 }
 
@@ -695,6 +716,7 @@ export interface InventoryItem {
   baseSell: number | null
   isRare: boolean
   isExclusive: boolean
+  augments: string[]
 }
 
 export type InventoryByBag = Record<string, InventoryItem[]>
@@ -825,6 +847,14 @@ export interface WarpUnlocks {
   eschanPortals: number[]
 }
 
+export interface MasterLevelEntry {
+  jobId: number
+  masterLevel: number
+  epCurrent: number | null
+  epNeeded: number | null
+  capped: boolean
+}
+
 export interface ProgressionResponse {
   limitPoints: number | null
   meritPoints: number | null
@@ -832,6 +862,7 @@ export interface ProgressionResponse {
   jobPointsUnlocked: boolean | null
   jobPoints: JobPointEntry[] | null
   warps: WarpUnlocks | null
+  masterLevels: MasterLevelEntry[] | null
   updatedAt: string | null
 }
 
@@ -861,6 +892,70 @@ export interface TitleEntry {
 export interface TitlesResponse {
   currentTitleId: number | null
   titles: TitleEntry[]
+}
+
+// Linkshells — every linkshell this character has synced with (current + former),
+// decoded from the equipped pearl extdata on each sync.
+export interface CharacterLinkshellEntry {
+  name: string
+  colorRgb: number
+  logoUrl: string | null
+  rank: string // "Member" | "Sackholder" | "Leader"
+  isCurrent: boolean
+  lastSeenAt: string
+}
+
+export interface LinkshellsResponse {
+  linkshells: CharacterLinkshellEntry[]
+}
+
+// Public linkshell browser (Phase 2)
+export interface LinkshellListItem {
+  name: string
+  server: string
+  colorRgb: number
+  memberCount: number
+  publicMemberCount: number
+  lastActiveAt: string | null
+  logoUrl: string | null
+  recruitmentStatus: string // "Open" | "Closed" | "Unknown"
+}
+
+export interface LinkshellMemberRow {
+  name: string
+  rank: string // "Leader" | "Sackholder" | "Member"
+  job: string | null
+  level: number | null
+  lastSeen: string
+}
+
+export interface LinkshellExternalLink {
+  label: string
+  url: string
+}
+
+export interface LinkshellCustomization {
+  logoUrl: string | null
+  description: string | null
+  recruitmentRules: string | null
+  externalLinks: LinkshellExternalLink[]
+}
+
+export interface LinkshellProfileResponse {
+  linkshellId: string
+  name: string
+  server: string
+  colorRgb: number
+  memberCount: number
+  publicMemberCount: number
+  privateMemberCount: number
+  lastActiveAt: string | null
+  recruitmentStatus: string // "Unknown" | "Open" | "Closed"
+  canManage: boolean
+  applyState: string // Closed | NotLoggedIn | NoEligibleCharacter | AlreadyMember | OnCooldown | NoReachableLeaders | Open
+  cooldownUntil: string | null
+  profile: LinkshellCustomization | null
+  members: LinkshellMemberRow[]
 }
 
 export interface MissionsResponse {
@@ -901,8 +996,26 @@ export interface ItemOwnerEntry {
 }
 
 export interface ItemOwnersResponse {
-  equipped: ItemOwnerEntry[]
-  inventory: ItemOwnerEntry[]
+  totalCount: number
+  page: number
+  pageSize: number
+  owners: ItemOwnerEntry[]
+}
+
+export interface ItemGearSetEntry {
+  server: string
+  characterName: string
+  setId: number
+  setName: string
+  category: string
+  job: string | null
+}
+
+export interface ItemGearSetsResponse {
+  totalCount: number
+  page: number
+  pageSize: number
+  entries: ItemGearSetEntry[]
 }
 
 export interface PlayerListItem {
@@ -988,4 +1101,42 @@ export interface ItemRecipeInfo {
     primaryCraftLevel: number
     quantity: number
   }[]
+}
+
+// Gear Sets
+export interface GearSetSummary {
+  id: number
+  name: string
+  job: string | null
+  category: string
+  tags: string[]
+  slotCount: number
+  updatedAt: string
+}
+
+export interface GearSetSlot {
+  slot: string
+  itemId: number
+  itemName: string
+  augments: string[]
+}
+
+export interface GearSetDetail {
+  id: number
+  name: string
+  job: string | null
+  category: string
+  tags: string[]
+  slots: GearSetSlot[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OwnedEquipmentItem {
+  itemId: number
+  itemName: string
+  iconPath: string | null
+  slots: number | null
+  jobs: number | null
+  augments: string[]
 }

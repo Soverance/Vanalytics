@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
-import type { ProgressionResponse, JobPointEntry } from '../../types/api'
+import type { ProgressionResponse, JobPointEntry, MasterLevelEntry } from '../../types/api'
 import LoadingSpinner from '../LoadingSpinner'
 import Tabs from '../Tabs'
 import { WARP_CATEGORY_LABELS, WARP_CATEGORY_CAPACITY, lookupWarp, type WarpCategory } from '../../lib/warps'
 
-const PROGRESSION_TABS = ['Job Points', 'Travel'] as const
+const PROGRESSION_TABS = ['Job Points', 'Master Levels', 'Travel'] as const
 type ProgressionSubTab = typeof PROGRESSION_TABS[number]
 
 // Job IDs in packet 0x063 Order 0x05 are 0-indexed; slot 0 is NONE.
@@ -93,6 +93,73 @@ function JobPointsTable({ entries, unlocked }: { entries: JobPointEntry[]; unloc
     )
 }
 
+// Master Level caps at 50 per job.
+const MASTER_LEVEL_CAP = 50
+
+function MasterLevelsTable({ entries }: { entries: MasterLevelEntry[] }) {
+    const named = entries
+        .filter(e => JOB_NAMES[e.jobId])
+        .map(e => ({ ...e, name: JOB_NAMES[e.jobId] }))
+        .sort((a, b) => b.masterLevel - a.masterLevel || a.name.localeCompare(b.name))
+
+    if (named.length === 0) {
+        return (
+            <p className="text-gray-500 text-sm">
+                No master levels captured yet. Master Levels sync on your next login/zone
+                once a job has the Master Breaker key item.
+            </p>
+        )
+    }
+
+    const totalMl = named.reduce((sum, j) => sum + j.masterLevel, 0)
+    const masteredJobs = named.filter(j => j.masterLevel > 0).length
+
+    return (
+        <div>
+            <div className="flex gap-4 mb-3 text-sm text-gray-400">
+                <span>Total ML: <span className="text-gray-100 font-semibold tabular-nums">{totalMl}</span></span>
+                <span>Mastered jobs: <span className="text-gray-100 font-semibold tabular-nums">{masteredJobs}</span></span>
+            </div>
+            <table className="w-full text-sm">
+                <thead>
+                    <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
+                        <th className="px-3 py-2 text-left">Job</th>
+                        <th className="px-3 py-2 text-right">ML</th>
+                        <th className="px-3 py-2 text-right">Exemplar Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {named.map(j => {
+                        const capped = j.capped || j.masterLevel >= MASTER_LEVEL_CAP
+                        const hasEp = j.epCurrent != null && j.epNeeded != null && j.epNeeded > 0
+                        return (
+                            <tr key={j.jobId} className="border-t border-gray-700/50">
+                                <td className="px-3 py-1.5 text-gray-100 font-medium">{j.name}</td>
+                                <td className="px-3 py-1.5 text-right tabular-nums">
+                                    <span className={capped ? 'text-amber-300' : 'text-gray-200'}>{j.masterLevel}</span>
+                                    {capped && (
+                                        <span
+                                            className="ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-300 align-middle"
+                                            title="Master Level at cap (50)"
+                                        >
+                                            MAX
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="px-3 py-1.5 text-right tabular-nums text-gray-300">
+                                    {capped ? '—' : hasEp
+                                        ? `${j.epCurrent!.toLocaleString()} / ${j.epNeeded!.toLocaleString()}`
+                                        : '—'}
+                                </td>
+                            </tr>
+                        )
+                    })}
+                </tbody>
+            </table>
+        </div>
+    )
+}
+
 function WarpSection({ category, ids }: { category: WarpCategory; ids: number[] }) {
     const [expanded, setExpanded] = useState(false)
     const label = WARP_CATEGORY_LABELS[category]
@@ -138,20 +205,22 @@ function WarpSection({ category, ids }: { category: WarpCategory; ids: number[] 
 
 interface Props {
     characterId: string
+    fetchBase?: string
 }
 
-export default function ProgressionTab({ characterId }: Props) {
+export default function ProgressionTab({ characterId, fetchBase }: Props) {
+    const base = fetchBase ?? `/api/characters/${characterId}`
     const [data, setData] = useState<ProgressionResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [subTab, setSubTab] = useState<ProgressionSubTab>('Job Points')
 
     useEffect(() => {
         setLoading(true)
-        api<ProgressionResponse>(`/api/characters/${characterId}/progression`)
+        api<ProgressionResponse>(`${base}/progression`)
             .then(setData)
             .catch(() => setData(null))
             .finally(() => setLoading(false))
-    }, [characterId])
+    }, [base])
 
     if (loading) return <LoadingSpinner />
 
@@ -159,6 +228,7 @@ export default function ProgressionTab({ characterId }: Props) {
         data.limitPoints !== null ||
         data.meritPointsMax !== null ||
         (data.jobPoints && data.jobPoints.length > 0) ||
+        (data.masterLevels && data.masterLevels.length > 0) ||
         data.warps
     )
 
@@ -200,6 +270,8 @@ export default function ProgressionTab({ characterId }: Props) {
                 data!.jobPoints && data!.jobPoints.length > 0
                     ? <JobPointsTable entries={data!.jobPoints} unlocked={data!.jobPointsUnlocked} />
                     : <p className="text-gray-500 text-sm">No job point data captured yet.</p>
+            ) : subTab === 'Master Levels' ? (
+                <MasterLevelsTable entries={data!.masterLevels ?? []} />
             ) : (
                 data!.warps ? (
                     <div className="space-y-1.5">

@@ -59,7 +59,7 @@
       "spawnType": "lottery",
       "respawnTime": null,
       "placeholders": [
-        { "name": "Diatryma", "mobIndex": null }
+        { "name": "Diatryma", "mobIndex": "0x0DF" }
       ],
       "notes": "Lottery from Diatryma."
     },

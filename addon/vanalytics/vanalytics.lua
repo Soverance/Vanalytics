@@ -16,6 +16,44 @@ local packets = require('packets')
 local session = require('session')
 local inventory = require('inventory')
 local porter = require('porter')
+local extdata_util = require('extdata_util')
+
+-- Inventory item.status value for an equipped linkshell. Confirmed via
+-- //va lsdump on a live client: equipped linkshells report status 19. Spare
+-- pearls carried in a bag are not status 19, so they are excluded.
+local EQUIPPED_LS_STATUSES = { [19] = true }
+-- Equipped linkshells live in the main inventory bag.
+local LS_BAGS = { 'inventory' }
+
+-- Returns a list of { linkshellId, name, colorRgb, rank } for the character's
+-- currently-equipped linkshells (0, 1 or 2 entries), or nil if none. Slot
+-- (LS1 vs LS2) is intentionally not derived: player.linkshell_slot is the
+-- active pearl's inventory index, not the 1/2 linkshell number, which is only
+-- available in the equip packets (0x0C4/0x0E0) we don't capture.
+local function collect_equipped_linkshells(player, items)
+    if not player or not items then return nil end
+
+    local found = {}
+    for _, bag_key in ipairs(LS_BAGS) do
+        local bag = items[bag_key]
+        if bag then
+            for _, item in pairs(bag) do
+                if type(item) == 'table' and item.id and item.id > 0
+                    and item.status and EQUIPPED_LS_STATUSES[item.status] then
+                    local r = res.items[item.id]
+                    if r and r.type == 6 then
+                        local ls = extdata_util.decode_linkshell(item)
+                        if ls then found[#found + 1] = ls end
+                    end
+                end
+            end
+        end
+    end
+
+    if #found == 0 then return nil end
+    return found
+end
+
 local progression = require('progression')
 local missions_lib = require('missions')
 local collection_lib = require('collection')
@@ -37,6 +75,9 @@ local defaults = {
     HuntSoundEnabled = true,
     HuntNmPos = { x = 1200, y = 50 },
     HuntNmPinned = false,
+    -- One-time flag: forces a full inventory re-sync after upgrading to the
+    -- augment-capture build so existing (unchanged) items backfill their augments.
+    AugmentBackfillDone = false,
 }
 
 local settings = config.load(defaults)
@@ -418,15 +459,34 @@ end
 -----------------------------------------------------------------------
 local function find_macro_path()
     local user_dir = windower.ffxi_path .. 'USER'
-    -- Find the most recently modified content ID directory
+    -- Find the most recently modified content ID directory.
     local best_dir = nil
-    local best_time = 0
-    local handle = io.popen('dir "' .. user_dir .. '" /b /ad /o-d 2>nul')
-    if handle then
-        -- First line is the most recently modified directory
-        best_dir = handle:read('*l')
-        handle:close()
+
+    local ok_lfs, lfs = pcall(require, 'lfs')
+    if ok_lfs then
+        local best_time = 0
+        local entries = windower.get_dir(user_dir)
+        if entries then
+            for _, name in ipairs(entries) do
+                local full = user_dir .. '\\' .. name
+                local attr = lfs.attributes(full)
+                if attr and attr.mode == 'directory' and (attr.modification or 0) > best_time then
+                    best_time = attr.modification
+                    best_dir = name
+                end
+            end
+        end
+    else
+        -- Fallback for installs without LuaFileSystem. Spawns a brief
+        -- cmd.exe window; acceptable in the rare-fallback case.
+        local handle = io.popen('dir "' .. user_dir .. '" /b /ad /o-d 2>nul')
+        if handle then
+            -- First line is the most recently modified directory.
+            best_dir = handle:read('*l')
+            handle:close()
+        end
     end
+
     if not best_dir then return nil end
     return user_dir .. '\\' .. best_dir
 end
@@ -472,7 +532,7 @@ local hunt_target_name_text = texts.new(
     }
 )
 local hunt_target_stats_text = texts.new(
-    '${idx_dec|-} | 0x${idx_hex|-} | st ${status|-} | hp ${hpp|-}%\n${distance|-}y | claim ${claim|-}',
+    '${idx_dec|-} | 0x${idx_hex|-} | st ${status|-} | hp ${hpp|-}% | claim ${claim|-}',
     {
         pos = { x = settings.HuntTargetPos.x or 10, y = (settings.HuntTargetPos.y or 400) + 32 },
         bg = { alpha = 200, red = 0, green = 0, blue = 0, visible = true },
@@ -506,19 +566,51 @@ local hunt_target_hp_text = texts.new(
         flags = { draggable = false, bold = true, italic = false },
     }
 )
+-- Range line — fourth stacked object under the stats line. Shows edge-to-edge
+-- distance, vertical (height) offset, and a range-band label; color shifts
+-- green/gold/muted by band (see update_hunt_target_text). Separate object
+-- because the texts library is one-color-per-object — same reason the HP bar
+-- is split out. Initial pos is a placeholder; repositioned each tick.
+local hunt_target_range_text = texts.new(
+    '${content|}',
+    {
+        pos = { x = settings.HuntTargetPos.x or 10, y = (settings.HuntTargetPos.y or 400) + 56 },
+        bg = { alpha = 200, red = 0, green = 0, blue = 0, visible = true },
+        padding = 6,
+        text = {
+            font = 'Consolas',
+            size = 10,
+            alpha = 255,
+            red = 130, green = 170, blue = 180,
+            stroke = { width = 1, alpha = 255, red = 0, green = 0, blue = 0 },
+        },
+        flags = { draggable = false, bold = true, italic = false },
+    }
+)
 hunt_target_name_text:hide()
 hunt_target_stats_text:hide()
 hunt_target_hp_text:hide()
+hunt_target_range_text:hide()
 
--- Name is one line of size-14 bold + padding both sides. Stats block is two
--- size-10 lines + padding. Heights used for vertical stacking of the three
--- target text objects (name → stats → hp bar). Mirrors the WATCH_* constants.
+-- Name is one line of size-14 bold + padding both sides. Stats block is one
+-- size-10 line + padding. Heights used for vertical stacking of the four
+-- target text objects (name → stats → range → hp bar). Mirrors the WATCH_* constants.
 local TARGET_NAME_HEIGHT = 40
-local TARGET_STATS_HEIGHT = 42  -- 2 lines * ~15px + 12 padding
+local TARGET_STATS_HEIGHT = 30  -- 1 line * ~18px + 12 padding
+local TARGET_RANGE_HEIGHT = 30  -- 1 line * ~18px + 12 padding
+
+-- Range bands in edge-to-edge yalms. Verified vs Windower DistancePlus and
+-- FFXIclopedia <https://ffxiclopedia.fandom.com/wiki/Distance>. We subtract
+-- model sizes before banding, so these fixed cutoffs are size-independent.
+local MELEE_RANGE = 3.0   -- edge melee cutoff (TUNABLE — confirm in-game)
+local CAST_RANGE  = 20.0  -- edge cast/action cutoff (21.8' center - ~1.8 models)
+local HEIGHT_UP   = 8.5   -- vertical gate, target above you (DistancePlus)
+local HEIGHT_DOWN = 7.5   -- vertical gate magnitude, target below you (DistancePlus)
 
 local function hide_hunt_target_panel()
     hunt_target_name_text:hide()
     hunt_target_stats_text:hide()
+    hunt_target_range_text:hide()
     hunt_target_hp_text:hide()
 end
 
@@ -531,15 +623,39 @@ local function update_hunt_target_text()
         return
     end
 
-    local distance = '?'
+    -- Distance / height / range band. Horizontal distance matches the game's
+    -- range checks; subtracting both model sizes gives the edge-to-edge gap
+    -- that actually governs whether an action lands. dz gates vertically.
+    local range_str = '?'
+    local rr, rg, rb = 150, 150, 150           -- muted gray = unknown / out of render
     local player = windower.ffxi.get_player()
-    if player then
-        local self_mob = windower.ffxi.get_mob_by_id(player.id)
-        if self_mob and mob.x and self_mob.x then
-            local dx = mob.x - self_mob.x
-            local dy = mob.y - self_mob.y
-            distance = string.format('%.1f', math.sqrt(dx * dx + dy * dy))
+    local self_mob = player and windower.ffxi.get_mob_by_id(player.id) or nil
+    if self_mob and mob.x and self_mob.x then
+        local dx = mob.x - self_mob.x
+        local dy = mob.y - self_mob.y
+        local dz = (mob.z or self_mob.z) - self_mob.z
+        local center = math.sqrt(dx * dx + dy * dy)
+        local edge = center - (mob.model_size or 0) - (self_mob.model_size or 0)
+        if edge < 0 then edge = 0 end
+
+        -- ASCII-safe directional arrows (^/v) chosen up front over the unicode
+        -- arrows, which may not render through Windower's text path.
+        local height_str
+        if dz >= 0.5 then      height_str = string.format('^%.1f', dz)
+        elseif dz <= -0.5 then height_str = string.format('v%.1f', -dz)
+        else                   height_str = '~0.0' end
+
+        local label
+        if dz > HEIGHT_UP or dz < -HEIGHT_DOWN then
+            label, rr, rg, rb = '[HEIGHT]', 190, 110, 110
+        elseif edge <= MELEE_RANGE then
+            label, rr, rg, rb = '[MELEE]', 130, 170, 100
+        elseif edge <= CAST_RANGE then
+            label, rr, rg, rb = '[CAST]', 210, 180, 120
+        else
+            label, rr, rg, rb = '[FAR]', 190, 110, 110
         end
+        range_str = string.format('%.1fy  %s  %s', edge, height_str, label)
     end
 
     hunt_target_name_text:update({ name = mob.name or '?' })
@@ -548,7 +664,6 @@ local function update_hunt_target_text()
         idx_hex = string.format('%03X', mob.index or 0),
         status = tostring(mob.status or 0),
         hpp = tostring(mob.hpp or 0),
-        distance = distance,
         claim = (mob.claim_id and mob.claim_id ~= 0) and tostring(mob.claim_id) or '-',
     })
 
@@ -565,13 +680,18 @@ local function update_hunt_target_text()
     elseif hp >= 25 then hunt_target_hp_text:color(210, 180, 120)
     else                 hunt_target_hp_text:color(190, 110, 110) end
 
-    -- Sync positions every tick: name → stats → hp bar.
+    hunt_target_range_text:update({ content = range_str })
+    hunt_target_range_text:color(rr, rg, rb)
+
+    -- Sync positions every tick: name → stats → range → hp bar.
     local nx, ny = hunt_target_name_text:pos_x(), hunt_target_name_text:pos_y()
     hunt_target_stats_text:pos(nx, ny + TARGET_NAME_HEIGHT)
-    hunt_target_hp_text:pos(nx, ny + TARGET_NAME_HEIGHT + TARGET_STATS_HEIGHT)
+    hunt_target_range_text:pos(nx, ny + TARGET_NAME_HEIGHT + TARGET_STATS_HEIGHT)
+    hunt_target_hp_text:pos(nx, ny + TARGET_NAME_HEIGHT + TARGET_STATS_HEIGHT + TARGET_RANGE_HEIGHT)
 
     hunt_target_name_text:show()
     hunt_target_stats_text:show()
+    hunt_target_range_text:show()
     hunt_target_hp_text:show()
 end
 
@@ -1596,18 +1716,22 @@ local function read_character_state()
     local active_job = player.main_job
     local active_job_level = player.main_job_level
 
-    -- All jobs with levels > 0, including JP/CP data
+    -- All jobs with levels > 0, including JP/CP and master-level data.
+    -- player.master_levels only contains jobs that own the Master Breaker
+    -- key item, so masterLevel is nil for locked jobs and 0-50 for unlocked.
     local jobs = {}
     for job_key, level in pairs(player.jobs) do
         if type(level) == 'number' and level > 0 then
             local job_abbr = tostring(job_key)
             local jp_data = player.job_points and player.job_points[job_abbr:lower()]
+            local master_level = player.master_levels and player.master_levels[job_abbr]
             table.insert(jobs, {
                 job = job_abbr,
                 level = level,
                 jp = jp_data and jp_data.jp or 0,
                 jpSpent = jp_data and jp_data.jp_spent or 0,
                 cp = jp_data and jp_data.cp or 0,
+                masterLevel = master_level,  -- nil when locked (no breaker)
             })
         end
     end
@@ -1697,6 +1821,7 @@ local function read_character_state()
                                 slot = slot_name,
                                 itemId = item.id,
                                 itemName = item_name,
+                                augments = extdata_util.decode_augments(item),
                             })
                         end
                     end
@@ -1813,6 +1938,8 @@ local function read_character_state()
         if not next(merits) then merits = nil end
     end
 
+    local equipped_linkshells = collect_equipped_linkshells(player, items)
+
     local state = {
         characterName = char_name,
         server = server,
@@ -1820,13 +1947,19 @@ local function read_character_state()
         activeJobLevel = active_job_level,
         subJob = player.sub_job,
         subJobLevel = player.sub_job_level,
-        masterLevel = player.superior_level,
+        masterLevel = (player.master_levels and player.main_job
+            and player.master_levels[player.main_job]) or 0,
+        superiorLevel = player.superior_level,
         itemLevel = player.item_level,
         hp = player.vitals.hp,
         maxHp = player.vitals.max_hp,
         mp = player.vitals.mp,
         maxMp = player.vitals.max_mp,
         linkshell = player.linkshell,
+        -- player.linkshell is only the *active* LS; linkshell_slot (1 or 2)
+        -- records which equipped slot it came from so the UI can label it.
+        linkshellSlot = player.linkshell_slot,
+        linkshells = equipped_linkshells,
         nation = player.nation,
         titleId = current_title_id,
         titleName = (current_title_id > 0 and res.titles[current_title_id])
@@ -1939,6 +2072,88 @@ local function do_sync(on_complete)
             log_error('Sync failed with status ' .. tostring(status_code))
         end
         on_complete()
+    end)
+end
+
+-----------------------------------------------------------------------
+-- Version check
+--
+-- Compares this addon's _addon.version against the server's reported
+-- version (from /health). The bundled addon is stamped to match the
+-- deployment version at release time (deploy.yml), so a mismatch means
+-- the player is running an addon copy from a different release.
+--
+-- report_always=true prints a full report (the //va version command);
+-- false stays silent unless the addon is out of date (the login nag).
+-----------------------------------------------------------------------
+
+-- Extract major.minor.patch from a version string, tolerating any
+-- +commithash / -suffix the server's InformationalVersion may carry.
+local function parse_semver(v)
+    if type(v) ~= 'string' then return nil end
+    local maj, min, pat = v:match('(%d+)%.(%d+)%.(%d+)')
+    if not maj then return nil end
+    return { tonumber(maj), tonumber(min), tonumber(pat) }
+end
+
+-- Returns -1, 0, 1 for a < b, a == b, a > b.
+local function compare_semver(a, b)
+    for i = 1, 3 do
+        if a[i] < b[i] then return -1 end
+        if a[i] > b[i] then return 1 end
+    end
+    return 0
+end
+
+local function check_version(report_always)
+    http_request({
+        url = settings.ApiUrl .. '/health',
+        method = 'GET',
+        label = 'version-check',
+    }, function(result, status_code, _, body)
+        -- /health returns 200 when healthy, 503 when the DB is degraded;
+        -- the version is in the body either way, so we parse regardless of
+        -- status_code. result is nil only on a connection-level failure.
+        if not result then
+            if report_always then
+                log_error('Version check failed: could not reach server (' .. tostring(status_code) .. ').')
+            end
+            return
+        end
+
+        local data = body and json_decode(body)
+        local server_version = type(data) == 'table' and data.version or nil
+        local server = parse_semver(server_version)
+        local localv = parse_semver(_addon.version)
+
+        if not server then
+            if report_always then
+                log_error('Version check: server did not report a recognizable version.')
+            end
+            return
+        end
+
+        local cmp = localv and compare_semver(localv, server)
+
+        if report_always then
+            log('--- Vanalytics Version ---')
+            log('Addon:  ' .. tostring(_addon.version))
+            log('Server: ' .. tostring(server_version))
+            if not localv then
+                log_error('Local addon version is in an unrecognized format.')
+            elseif cmp == 0 then
+                log_success('You are up to date.')
+            elseif cmp < 0 then
+                log_error('Your addon is OUT OF DATE. Re-download it from ' .. settings.ApiUrl)
+            else
+                log('Your addon is newer than the server (dev/preview build).')
+            end
+        elseif localv and cmp < 0 then
+            -- Silent path (login): only speak up when behind.
+            log_error('Addon out of date: you have ' .. tostring(_addon.version)
+                .. ', server is ' .. tostring(server_version)
+                .. '. Re-download from the web app to update.')
+        end
     end)
 end
 
@@ -2148,6 +2363,58 @@ end)
 -----------------------------------------------------------------------
 windower.register_event('incoming chunk', function(id, data)
     if id == 0x061 then
+        -- TEMP master-level offset probe (remove after confirming offset).
+        -- Master Level lives in the 'mastery_info' uint32 of packet 0x061 as
+        -- the job_lv byte; we don't yet know its exact offset on this server,
+        -- so dump the candidate region and Windower's own player fields to a
+        -- file so we can match the byte that equals the character's known ML.
+        -- Overwrites each 0x061 (login + every zone) so the file stays small
+        -- and always holds the latest capture.
+        do
+            local lines = {}
+            lines[#lines + 1] = '=== ML probe (packet 0x061) ==='
+
+            -- Candidate byte region. data:byte(n) is 1-based, so offset X -> X+1.
+            -- ('B' in Windower pack lib is a boolean, not a uint8 -- use :byte.)
+            local parts = {}
+            for off = 0x4A, 0x64 do
+                parts[#parts + 1] = string.format('%02X=%d', off, data:byte(off + 1))
+            end
+            lines[#lines + 1] = 'bytes ' .. table.concat(parts, ' ')
+
+            local p = windower.ffxi.get_player()
+            if p then
+                lines[#lines + 1] = 'superior_level=' .. tostring(p.superior_level)
+                    .. '  item_level=' .. tostring(p.item_level)
+                    .. '  main_job_level=' .. tostring(p.main_job_level)
+                if type(p.master_levels) == 'table' then
+                    lines[#lines + 1] = 'master_levels = {'
+                    for k, v in pairs(p.master_levels) do
+                        if type(v) == 'table' then
+                            local inner = {}
+                            for ik, iv in pairs(v) do
+                                inner[#inner + 1] = tostring(ik) .. '=' .. tostring(iv)
+                            end
+                            lines[#lines + 1] = '  ' .. tostring(k) .. ' = { ' .. table.concat(inner, ' ') .. ' }'
+                        else
+                            lines[#lines + 1] = '  ' .. tostring(k) .. ' = ' .. tostring(v)
+                        end
+                    end
+                    lines[#lines + 1] = '}'
+                else
+                    lines[#lines + 1] = 'master_levels = ' .. tostring(p.master_levels)
+                end
+            end
+
+            local probe_path = windower.addon_path .. 'ml_probe.txt'
+            local pf = io.open(probe_path, 'w')
+            if pf then
+                pf:write(table.concat(lines, '\n') .. '\n')
+                pf:close()
+                windower.add_to_chat(207, '[ML probe] wrote ' .. probe_path)
+            end
+        end
+
         current_title_id = data:unpack('H', 0x44 + 1) or 0
 
         -- Base stats (unsigned short)
@@ -2280,6 +2547,9 @@ windower.register_event('addon command', function(command, ...)
             log('Last Sync: ' .. last_sync_status)
         end
 
+    elseif command == 'version' then
+        check_version(true)
+
     elseif command == 'apikey' then
         local key = args[1]
         if not key or key == '' then
@@ -2345,6 +2615,54 @@ windower.register_event('addon command', function(command, ...)
             log('Session debug mode: ' .. (enabled and 'ON' or 'OFF'))
         else
             log('Session commands: start | stop | status | flush | cleanup | debug')
+        end
+
+    elseif command == 'lsdump' then
+        local player = windower.ffxi.get_player()
+        local items = windower.ffxi.get_items()
+        if not player or not items then
+            log_error('Not logged in.')
+            return
+        end
+        local extdata = require('extdata')
+        local lines = {}
+        lines[#lines + 1] = 'active linkshell = ' .. tostring(player.linkshell)
+        lines[#lines + 1] = 'active linkshell_slot = ' .. tostring(player.linkshell_slot)
+        lines[#lines + 1] = ''
+        local bag_names = {
+            [0] = 'inventory', [1] = 'safe', [2] = 'storage', [3] = 'temporary',
+            [4] = 'locker', [5] = 'satchel', [6] = 'sack', [7] = 'case', [8] = 'wardrobe',
+            [9] = 'safe2', [10] = 'wardrobe2', [11] = 'wardrobe3', [12] = 'wardrobe4',
+            [13] = 'wardrobe5', [14] = 'wardrobe6', [15] = 'wardrobe7', [16] = 'wardrobe8',
+        }
+        for _, bag_key in pairs(bag_names) do
+            local bag = items[bag_key]
+            if bag then
+                for _, item in pairs(bag) do
+                    if type(item) == 'table' and item.id and item.id > 0 then
+                        local r = res.items[item.id]
+                        if r and r.type == 6 then
+                            local ok, d = pcall(extdata.decode, item)
+                            local decoded = (ok and type(d) == 'table')
+                                and string.format('type=%s ls_id=%s status_id=%s name=%s rgb=%s,%s,%s',
+                                    tostring(d.type), tostring(d.linkshell_id), tostring(d.status_id),
+                                    tostring(d.name), tostring(d.r), tostring(d.g), tostring(d.b))
+                                or 'decode failed'
+                            lines[#lines + 1] = string.format('bag=%s id=%d status=%s | %s',
+                                bag_key, item.id, tostring(item.status), decoded)
+                        end
+                    end
+                end
+            end
+        end
+        local path = windower.addon_path .. 'lsdump.txt'
+        local f = io.open(path, 'w')
+        if f then
+            f:write(table.concat(lines, '\n'))
+            f:close()
+            log_success('LS dump written to ' .. path)
+        else
+            log_error('Failed to write lsdump.txt')
         end
 
     elseif command == 'dump' then
@@ -3069,6 +3387,7 @@ windower.register_event('addon command', function(command, ...)
         log('//va url <url>    - Set API URL (or: local / prod)')
         log('//va sync         - Sync now')
         log('//va status       - Show status')
+        log('//va version      - Check addon version against the server')
         log('//va interval N   - Set sync interval in minutes (min: ' .. MIN_INTERVAL .. ')')
         log('//va notify on|off - Toggle in-game chat notifications on successful sync')
         log('//va dump         - Dump player data to file')
@@ -3119,6 +3438,8 @@ windower.register_event('login', function(name)
         log('Logged in as ' .. name .. '. Auto-sync active (every ' .. get_effective_interval() .. ' min).')
         start_timer()
     end
+    -- Quietly warn if this addon is older than the deployed server version.
+    check_version(false)
 end)
 
 windower.register_event('logout', function()
@@ -3139,6 +3460,18 @@ windower.register_event('logout', function()
 end)
 
 windower.register_event('load', function()
+    -- One-time inventory backfill for the augment-capture feature. Existing
+    -- characters already have inventory rows on the server with no augment data,
+    -- and a normal diff sync won't re-send unchanged items. Forcing the next
+    -- inventory sync to be a full re-sync re-sends every item WITH augments.
+    -- Gated by a persisted flag so it runs only once per install.
+    if not settings.AugmentBackfillDone then
+        inventory.reset()
+        settings.AugmentBackfillDone = true
+        config.save(settings)
+        log('Augment backfill: next sync will be a full inventory re-sync.')
+    end
+
     -- If already logged in when addon loads, start timer
     local player = windower.ffxi.get_player()
     if player then
@@ -3149,6 +3482,9 @@ windower.register_event('load', function()
             log('Loaded. Auto-sync active (every ' .. get_effective_interval() .. ' min).')
             start_timer()
         end
+        -- Already logged in at load (e.g. //lua reload): run the same
+        -- quiet out-of-date check the login event would have done.
+        check_version(false)
     else
         log('Loaded. Waiting for login...')
     end

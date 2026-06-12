@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Soverance.Forum.DTOs;
 using Soverance.Forum.Models;
 using Soverance.Forum.Services;
+using Soverance.Messaging.Models;
+using Soverance.Messaging.Services;
 using Vanalytics.Api.DTOs;
 using Vanalytics.Api.Services;
 using Microsoft.EntityFrameworkCore;
@@ -19,13 +21,15 @@ public class ForumController : ControllerBase
     private readonly IForumAuthorResolver _authors;
     private readonly IForumSearchService _search;
     private readonly IForumAttachmentStore _attachmentStore;
+    private readonly INotificationService _notifications;
 
-    public ForumController(IForumService forum, IForumAuthorResolver authors, IForumSearchService search, IForumAttachmentStore attachmentStore)
+    public ForumController(IForumService forum, IForumAuthorResolver authors, IForumSearchService search, IForumAttachmentStore attachmentStore, INotificationService notifications)
     {
         _forum = forum;
         _authors = authors;
         _search = search;
         _attachmentStore = attachmentStore;
+        _notifications = notifications;
     }
 
     // === Search (Public) ===
@@ -248,6 +252,39 @@ public class ForumController : ControllerBase
         if (post != null)
         {
             await LinkAttachmentsToPost(db, sanitizedBody, post.Id);
+
+            try
+            {
+                // Emit notifications: thread author + replied-to post author (service dedups self via null return)
+                var thread = await db.Set<Soverance.Forum.Models.ForumThread>()
+                    .Where(t => t.Id == threadId)
+                    .Select(t => new { t.AuthorId, t.Slug, CategorySlug = t.Category.Slug })
+                    .FirstOrDefaultAsync();
+                var recipients = new HashSet<Guid>();
+                if (thread != null) recipients.Add(thread.AuthorId);
+                if (request.ReplyToPostId.HasValue)
+                {
+                    var parentAuthorId = await db.Set<Soverance.Forum.Models.ForumPost>()
+                        .Where(p => p.Id == request.ReplyToPostId.Value)
+                        .Select(p => (Guid?)p.AuthorId)
+                        .FirstOrDefaultAsync();
+                    if (parentAuthorId.HasValue) recipients.Add(parentAuthorId.Value);
+                }
+
+                var me = GetUserId();
+                var targetUrl = thread != null
+                    ? $"/forum/{thread.CategorySlug}/{thread.Slug}#post-{post.Id}"
+                    : "/forum";
+                foreach (var recipient in recipients)
+                {
+                    await _notifications.CreateAsync(
+                        recipient, NotificationType.ForumReply, me, targetUrl, BuildSnippet(sanitizedBody));
+                }
+            }
+            catch
+            {
+                // Notifications are best-effort; never fail the reply because a notification could not be created.
+            }
         }
 
         return StatusCode(201, post);
@@ -339,6 +376,29 @@ public class ForumController : ControllerBase
         try
         {
             var (reactions, userReactions) = await _forum.ToggleReactionAsync(postId, GetUserId(), request.ReactionType);
+
+            try
+            {
+                if (userReactions.Contains(request.ReactionType)) // reaction added, not removed
+                {
+                    var db = HttpContext.RequestServices.GetRequiredService<VanalyticsDbContext>();
+                    var reactionPost = await db.Set<Soverance.Forum.Models.ForumPost>()
+                        .Where(p => p.Id == postId)
+                        .Select(p => new { p.AuthorId, Slug = p.Thread.Slug, CategorySlug = p.Thread.Category.Slug })
+                        .FirstOrDefaultAsync();
+                    if (reactionPost != null)
+                    {
+                        await _notifications.CreateAsync(
+                            reactionPost.AuthorId, NotificationType.ForumReaction, GetUserId(),
+                            $"/forum/{reactionPost.CategorySlug}/{reactionPost.Slug}#post-{postId}", null);
+                    }
+                }
+            }
+            catch
+            {
+                // Notifications are best-effort; never fail the reaction because a notification could not be created.
+            }
+
             return Ok(new { reactions, userReactions });
         }
         catch (ArgumentException)
@@ -536,50 +596,8 @@ public class ForumController : ControllerBase
         }
     }
 
-    private string SanitizeImageSources(string html)
-    {
-        var allowedPrefix = _attachmentStore.BaseUrl;
-        var result = new System.Text.StringBuilder(html.Length);
-        var pos = 0;
-        while (pos < html.Length)
-        {
-            var imgStart = html.IndexOf("<img ", pos, StringComparison.OrdinalIgnoreCase);
-            if (imgStart < 0)
-            {
-                result.Append(html, pos, html.Length - pos);
-                break;
-            }
-            result.Append(html, pos, imgStart - pos);
-
-            var imgEnd = html.IndexOf('>', imgStart);
-            if (imgEnd < 0)
-            {
-                result.Append(html, pos, html.Length - pos);
-                break;
-            }
-            imgEnd++;
-
-            var tag = html[imgStart..imgEnd];
-            var srcIdx = tag.IndexOf("src=\"", StringComparison.OrdinalIgnoreCase);
-            if (srcIdx >= 0)
-            {
-                var srcStart = srcIdx + 5;
-                var srcEnd = tag.IndexOf('"', srcStart);
-                if (srcEnd > srcStart)
-                {
-                    var src = tag[srcStart..srcEnd];
-                    if (src.StartsWith(allowedPrefix, StringComparison.OrdinalIgnoreCase))
-                    {
-                        result.Append(tag);
-                    }
-                    // else: drop the img tag (external source)
-                }
-            }
-
-            pos = imgEnd;
-        }
-        return result.ToString();
-    }
+    private string SanitizeImageSources(string html) =>
+        RichTextSanitizer.SanitizeImageSources(html, _attachmentStore.BaseUrl);
 
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -588,5 +606,13 @@ public class ForumController : ControllerBase
     {
         var sub = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return sub != null ? Guid.Parse(sub) : null;
+    }
+
+    private static string BuildSnippet(string html)
+    {
+        var text = System.Text.RegularExpressions.Regex.Replace(html, "<.*?>", " ");
+        text = System.Net.WebUtility.HtmlDecode(text).Trim();
+        text = System.Text.RegularExpressions.Regex.Replace(text, "\\s+", " ");
+        return text.Length <= 140 ? text : text[..140];
     }
 }

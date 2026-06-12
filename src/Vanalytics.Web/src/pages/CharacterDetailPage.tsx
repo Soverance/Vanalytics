@@ -20,19 +20,21 @@ import ProgressionTab from '../components/character/ProgressionTab'
 import MissionsTab from '../components/character/MissionsTab'
 import TitlesTab from '../components/character/TitlesTab'
 import KeyItemsTab from '../components/character/KeyItemsTab'
+import LinkshellsTab from '../components/character/LinkshellsTab'
 import SpellsTab from '../components/character/SpellsTab'
 import MacroPageReel from '../components/macros/MacroPageReel'
 import MacroEditorPanel from '../components/macros/MacroEditorPanel'
 import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
 import SessionsTab from '../components/session/SessionsTab'
+import GearSetsTab from '../components/character/GearSetsTab'
 import { ApiError } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
 import Tabs from '../components/Tabs'
 
-const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items'] as const
+const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items', 'Linkshells'] as const
 type StatTab = typeof STAT_TABS[number]
 
-const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Spells', 'Macros', 'Sessions'] as const
+const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Spells', 'Macros', 'Sessions', 'Gear Sets'] as const
 type GearTab = typeof GEAR_TABS[number]
 
 export default function CharacterDetailPage() {
@@ -188,6 +190,7 @@ export default function CharacterDetailPage() {
               {activeTab === 'Missions' && <MissionsTab characterId={character.id} />}
               {activeTab === 'Titles' && <TitlesTab characterId={character.id} />}
               {activeTab === 'Key Items' && <KeyItemsTab characterId={character.id} />}
+              {activeTab === 'Linkshells' && <LinkshellsTab characterId={character.id} server={character.server} />}
             </div>
           </div>
 
@@ -375,6 +378,15 @@ export default function CharacterDetailPage() {
 
         {gearTab === 'Sessions' && (
           <SessionsTab characterId={character.id} />
+        )}
+
+        {gearTab === 'Gear Sets' && (
+          <GearSetsTab
+            character={character}
+            gear={localGear}
+            itemCache={itemCache}
+            onSaveFavorite={handleSaveFavorite}
+          />
         )}
       </section>
 

@@ -1,12 +1,14 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 using Soverance.Auth.DTOs;
+using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.Keys;
 using Vanalytics.Core.DTOs.Sync;
 using Vanalytics.Core.Enums;
@@ -197,6 +199,219 @@ public class SyncControllerTests : IAsyncLifetime
         // 21st request should be rate limited
         var limitedResp = await _client.SendAsync(CreateSyncRequest(apiKey, payload));
         Assert.Equal((HttpStatusCode)429, limitedResp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_GearWithAugments_PersistsAugmentsJson()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("syncaug@test.com", "syncauguser");
+
+        var payload = new SyncRequest
+        {
+            CharacterName = "AugChar",
+            Server = "Asura",
+            ActiveJob = "THF",
+            ActiveJobLevel = 99,
+            Gear =
+            [
+                new SyncGearEntry
+                {
+                    Slot = "Back", ItemName = "Toutatis's Cape", ItemId = 26252,
+                    Augments = ["DEX+9", "DEX+2", "Weapon skill damage +8%"]
+                },
+                new SyncGearEntry { Slot = "Main", ItemName = "Mandau", ItemId = 21003 }
+            ]
+        };
+
+        var resp = await _client.SendAsync(CreateSyncRequest(apiKey, payload));
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var gear = await db.EquippedGear
+            .Where(g => g.Character.Name == "AugChar")
+            .ToListAsync();
+
+        var cape = gear.Single(g => g.ItemName == "Toutatis's Cape");
+        var capeAugments = JsonSerializer.Deserialize<List<string>>(cape.AugmentsJson!);
+        Assert.Equal(new[] { "DEX+9", "DEX+2", "Weapon skill damage +8%" }, capeAugments);
+        var main = gear.Single(g => g.ItemName == "Mandau");
+        Assert.Null(main.AugmentsJson);
+    }
+
+    [Fact]
+    public async Task CharacterDetail_ExposesGearAugments()
+    {
+        var (jwt, apiKey) = await SetupSyncUserAsync("syncaug2@test.com", "syncaug2user");
+
+        var syncResp = await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
+        {
+            CharacterName = "AugChar2",
+            Server = "Asura",
+            ActiveJob = "THF",
+            ActiveJobLevel = 99,
+            Gear = [new SyncGearEntry
+            {
+                Slot = "Back", ItemName = "Toutatis's Cape", ItemId = 26252,
+                Augments = ["DEX+20", "Accuracy+20 Attack+20", "Weapon skill damage +10%"]
+            }]
+        }));
+        Assert.Equal(HttpStatusCode.OK, syncResp.StatusCode);
+
+        Guid charId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            charId = (await db.Characters.FirstAsync(c => c.Name == "AugChar2")).Id;
+        }
+
+        var req = new HttpRequestMessage(HttpMethod.Get, $"/api/characters/{charId}");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        var detail = (await resp.Content.ReadFromJsonAsync<CharacterDetailResponse>())!;
+        var cape = detail.Gear.Single(g => g.ItemName == "Toutatis's Cape");
+        Assert.Equal(new[] { "DEX+20", "Accuracy+20 Attack+20", "Weapon skill damage +10%" }, cape.Augments);
+    }
+
+    [Fact]
+    public async Task Sync_WithLinkshells_CreatesLinkshellsAndMemberships()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("ls1@test.com", "ls1user");
+        var payload = new SyncRequest
+        {
+            CharacterName = "LsChar1",
+            Server = "Asura",
+            ActiveJob = "WAR",
+            ActiveJobLevel = 99,
+            Linkshells =
+            [
+                new SyncLinkshellEntry { Slot = 1, LinkshellId = 1001, Name = "Alpha", ColorRgb = 0xFF0000, Rank = "leader" },
+                new SyncLinkshellEntry { Slot = 2, LinkshellId = 1002, Name = "Beta", ColorRgb = 0x00FF00, Rank = "member" },
+            ]
+        };
+
+        var resp = await _client.SendAsync(CreateSyncRequest(apiKey, payload));
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var character = await db.Characters.FirstAsync(c => c.Name == "LsChar1");
+        var memberships = await db.LinkshellMemberships
+            .Include(m => m.Linkshell)
+            .Where(m => m.CharacterId == character.Id)
+            .ToListAsync();
+
+        Assert.Equal(2, memberships.Count);
+        Assert.All(memberships, m => Assert.True(m.IsCurrent));
+        var leader = memberships.Single(m => m.Linkshell.Name == "Alpha");
+        Assert.Equal(LinkshellRank.Leader, leader.Rank);
+        Assert.Equal(1, leader.Slot);
+        Assert.Equal(0xFF0000, leader.Linkshell.ColorRgb);
+    }
+
+    [Fact]
+    public async Task Sync_LinkshellRemoved_MarksMembershipNotCurrentNotDeleted()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("ls2@test.com", "ls2user");
+        SyncRequest Make(params SyncLinkshellEntry[] ls) => new()
+        {
+            CharacterName = "LsChar2",
+            Server = "Asura",
+            ActiveJob = "WAR",
+            ActiveJobLevel = 99,
+            Linkshells = ls.ToList()
+        };
+        var a = new SyncLinkshellEntry { Slot = 1, LinkshellId = 2001, Name = "Aaa", ColorRgb = 1, Rank = "member" };
+        var b = new SyncLinkshellEntry { Slot = 2, LinkshellId = 2002, Name = "Bbb", ColorRgb = 2, Rank = "member" };
+        await _client.SendAsync(CreateSyncRequest(apiKey, Make(a, b)));
+
+        var c = new SyncLinkshellEntry { Slot = 2, LinkshellId = 2003, Name = "Ccc", ColorRgb = 3, Rank = "member" };
+        await _client.SendAsync(CreateSyncRequest(apiKey, Make(a, c)));
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var character = await db.Characters.FirstAsync(ch => ch.Name == "LsChar2");
+        var all = await db.LinkshellMemberships
+            .Include(m => m.Linkshell)
+            .Where(m => m.CharacterId == character.Id)
+            .ToListAsync();
+
+        Assert.Equal(3, all.Count);
+        Assert.True(all.Single(m => m.Linkshell.Name == "Aaa").IsCurrent);
+        Assert.False(all.Single(m => m.Linkshell.Name == "Bbb").IsCurrent);
+        Assert.True(all.Single(m => m.Linkshell.Name == "Ccc").IsCurrent);
+    }
+
+    [Fact]
+    public async Task Sync_LinkshellRenamed_RefreshesNameOnSameGameId()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("ls3@test.com", "ls3user");
+        SyncRequest Make(string name) => new()
+        {
+            CharacterName = "LsChar3",
+            Server = "Asura",
+            ActiveJob = "WAR",
+            ActiveJobLevel = 99,
+            Linkshells = [new SyncLinkshellEntry { Slot = 1, LinkshellId = 3001, Name = name, ColorRgb = 5, Rank = "leader" }]
+        };
+        await _client.SendAsync(CreateSyncRequest(apiKey, Make("OldName")));
+        await _client.SendAsync(CreateSyncRequest(apiKey, Make("NewName")));
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var rows = await db.Linkshells
+            .Where(l => l.Server == "Asura" && l.GameLinkshellId == 3001)
+            .ToListAsync();
+
+        Assert.Single(rows);
+        Assert.Equal("NewName", rows[0].Name);
+    }
+
+    [Fact]
+    public async Task Sync_PersistsSuperiorLevelAndPerJobMasterLevels()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("syncml@test.com", "syncmluser");
+
+        var payload = new SyncRequest
+        {
+            CharacterName = "MLChar",
+            Server = "Asura",
+            ActiveJob = "BLU",
+            ActiveJobLevel = 99,
+            SuperiorLevel = 5,
+            MasterLevel = 12,
+            Jobs =
+            [
+                new SyncJobEntry { Job = "BLU", Level = 99, MasterLevel = 12,
+                    MasterEpCurrent = 1840, MasterEpNeeded = 2400, MasterCapped = false },
+                new SyncJobEntry { Job = "THF", Level = 99, MasterLevel = 0 },
+                new SyncJobEntry { Job = "WAR", Level = 99 }, // null MasterLevel = no breaker
+            ],
+        };
+
+        var resp = await _client.SendAsync(CreateSyncRequest(apiKey, payload));
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var character = await db.Characters.Include(c => c.Jobs).FirstAsync(c => c.Name == "MLChar");
+
+        Assert.Equal(5, character.SuperiorLevel);
+        Assert.Equal(12, character.MasterLevel);
+
+        var blu = character.Jobs.First(j => j.JobId == JobType.BLU);
+        Assert.Equal(12, blu.MasterLevel);
+        Assert.Equal(1840, blu.MasterEpCurrent);
+        Assert.Equal(2400, blu.MasterEpNeeded);
+        Assert.False(blu.MasterCapped);
+
+        var thf = character.Jobs.First(j => j.JobId == JobType.THF);
+        Assert.Equal(0, thf.MasterLevel);
+
+        var war = character.Jobs.First(j => j.JobId == JobType.WAR);
+        Assert.Null(war.MasterLevel);
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -175,5 +176,68 @@ public class AuthControllerTests : IAsyncLifetime
         Assert.NotNull(newAuth);
         Assert.NotEmpty(newAuth.AccessToken);
         Assert.NotEqual(auth.RefreshToken, newAuth.RefreshToken);
+    }
+
+    [Fact]
+    public async Task UpdateDisplayName_WithValidName_PersistsAndReturnsIt()
+    {
+        var token = await CreateUserAndGetTokenAsync("dn1@example.com", "dn1user");
+        var response = await SendDisplayNameAsync(token, "Aldo the Brave");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var me = await GetMeAsync(token);
+        Assert.Equal("Aldo the Brave", me.DisplayName);
+    }
+
+    [Fact]
+    public async Task UpdateDisplayName_WithBlank_ClearsToNull()
+    {
+        var token = await CreateUserAndGetTokenAsync("dn2@example.com", "dn2user");
+        await SendDisplayNameAsync(token, "Temporary");
+
+        var response = await SendDisplayNameAsync(token, "   ");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var me = await GetMeAsync(token);
+        Assert.Null(me.DisplayName);
+    }
+
+    [Theory]
+    [InlineData("ab")]
+    [InlineData("bad@name")]
+    public async Task UpdateDisplayName_WithInvalidName_ReturnsBadRequest(string name)
+    {
+        var token = await CreateUserAndGetTokenAsync($"dn-{Math.Abs(name.GetHashCode())}@example.com", $"dn{Math.Abs(name.GetHashCode())}");
+
+        var response = await SendDisplayNameAsync(token, name);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateDisplayName_WithoutAuth_ReturnsUnauthorized()
+    {
+        var response = await _client.PutAsync("/api/auth/me/display-name",
+            JsonContent.Create(new { displayName = "Whoever" }));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    private async Task<HttpResponseMessage> SendDisplayNameAsync(string token, string? displayName)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Put, "/api/auth/me/display-name")
+        {
+            Content = JsonContent.Create(new { displayName })
+        };
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return await _client.SendAsync(req);
+    }
+
+    private async Task<UserProfileResponse> GetMeAsync(string token)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var resp = await _client.SendAsync(req);
+        return (await resp.Content.ReadFromJsonAsync<UserProfileResponse>())!;
     }
 }

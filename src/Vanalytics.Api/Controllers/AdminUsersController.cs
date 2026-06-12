@@ -35,6 +35,7 @@ public class AdminUsersController : ControllerBase
                 Role = u.Role.ToString(),
                 IsSystemAccount = u.IsSystemAccount,
                 HasApiKey = u.ApiKey != null,
+                HasPassword = u.PasswordHash != null,
                 OAuthProvider = u.OAuthProvider,
                 CharacterCount = _db.Set<Character>().Count(c => c.UserId == u.Id),
                 CreatedAt = u.CreatedAt,
@@ -60,6 +61,7 @@ public class AdminUsersController : ControllerBase
                 Role = u.Role.ToString(),
                 IsSystemAccount = u.IsSystemAccount,
                 HasApiKey = u.ApiKey != null,
+                HasPassword = u.PasswordHash != null,
                 OAuthProvider = u.OAuthProvider,
                 CharacterCount = _db.Set<Character>().Count(c => c.UserId == u.Id),
                 CreatedAt = u.CreatedAt,
@@ -110,6 +112,41 @@ public class AdminUsersController : ControllerBase
         await _db.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/reset-password")]
+    public async Task<IActionResult> ResetPassword(Guid id)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user is null) return NotFound();
+
+        if (user.IsSystemAccount)
+            return BadRequest(new { message = "Cannot reset the system administrator account" });
+
+        if (user.PasswordHash is null)
+            return BadRequest(new { message = $"Account has no local password to reset; it authenticates via {user.OAuthProvider ?? "an external provider"}" });
+
+        var password = GeneratePassword(16);
+        user.PasswordHash = PasswordHasher.HashPassword(password);
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+
+        // Revoke active sessions so existing tokens stop working after the reset.
+        // Done on tracked entities so the password change and revocations persist
+        // atomically in the single SaveChangesAsync below.
+        var activeTokens = await _db.RefreshTokens
+            .Where(t => t.UserId == user.Id && !t.IsRevoked)
+            .ToListAsync();
+        foreach (var token in activeTokens)
+            token.IsRevoked = true;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new ResetPasswordResponse
+        {
+            Id = user.Id,
+            Username = user.Username,
+            GeneratedPassword = password
+        });
     }
 
     [HttpPost]
@@ -207,5 +244,12 @@ public class CreateUserResponse
     public string Email { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
+    public string GeneratedPassword { get; set; } = string.Empty;
+}
+
+public class ResetPasswordResponse
+{
+    public Guid Id { get; set; }
+    public string Username { get; set; } = string.Empty;
     public string GeneratedPassword { get; set; } = string.Empty;
 }

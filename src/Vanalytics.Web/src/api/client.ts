@@ -109,7 +109,8 @@ export async function api<T>(
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }))
-    throw new ApiError(res.status, error.message ?? 'Request failed')
+    // Endpoints use both { message } (dominant) and { error } shapes; surface either.
+    throw new ApiError(res.status, error.message ?? error.error ?? 'Request failed')
   }
 
   if (res.status === 204) return undefined as T

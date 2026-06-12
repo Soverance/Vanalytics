@@ -66,7 +66,7 @@ export default function ForumEditor({ content = '', onChange, placeholder = 'Wri
     content,
     editable,
     onUpdate: ({ editor }) => {
-      onChange?.(editor.getHTML())
+      onChange?.(editor.isEmpty ? '' : editor.getHTML())
     },
     editorProps: {
       attributes: {

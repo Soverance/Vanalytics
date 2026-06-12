@@ -20,12 +20,14 @@ public class SyncRequest
     public string? SubJob { get; set; }
     public int? SubJobLevel { get; set; }
     public int? MasterLevel { get; set; }
+    public int? SuperiorLevel { get; set; }
     public int? ItemLevel { get; set; }
     public int? Hp { get; set; }
     public int? MaxHp { get; set; }
     public int? Mp { get; set; }
     public int? MaxMp { get; set; }
     public string? Linkshell { get; set; }
+    public int? LinkshellSlot { get; set; }
     public int? Nation { get; set; }
     public int? NationRank { get; set; }
     public int? RankPoints { get; set; }
@@ -74,6 +76,7 @@ public class SyncRequest
     public List<SyncGearEntry> Gear { get; set; } = [];
     public List<SyncCraftingEntry> Crafting { get; set; } = [];
     public List<SyncSkillEntry> Skills { get; set; } = [];
+    public List<SyncLinkshellEntry> Linkshells { get; set; } = [];
 }
 
 public class SyncJobEntry
@@ -83,6 +86,13 @@ public class SyncJobEntry
     public int JP { get; set; }
     public int JPSpent { get; set; }
     public int CP { get; set; }
+
+    // Master Level — null when the job has no Master Breaker (locked),
+    // 0–50 when unlocked. EP fields populated only once seen as active job.
+    public int? MasterLevel { get; set; }
+    public int? MasterEpCurrent { get; set; }
+    public int? MasterEpNeeded { get; set; }
+    public bool MasterCapped { get; set; }
 }
 
 public class SyncGearEntry
@@ -90,6 +100,7 @@ public class SyncGearEntry
     public string Slot { get; set; } = string.Empty;
     public int ItemId { get; set; }
     public string ItemName { get; set; } = string.Empty;
+    public List<string>? Augments { get; set; }
 }
 
 public class SyncCraftingEntry
@@ -104,4 +115,13 @@ public class SyncSkillEntry
     public string Skill { get; set; } = string.Empty;
     public int Level { get; set; }
     public int Cap { get; set; }
+}
+
+public class SyncLinkshellEntry
+{
+    public int? Slot { get; set; }
+    public long LinkshellId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public int ColorRgb { get; set; }
+    public string Rank { get; set; } = string.Empty; // "member" | "sackholder" | "leader"
 }

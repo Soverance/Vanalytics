@@ -9,6 +9,8 @@ using Soverance.Auth.Models;
 using Soverance.Auth.Services;
 using Soverance.Forum.Extensions;
 using Soverance.Forum.Services;
+using Soverance.Messaging.Extensions;
+using Soverance.Messaging.Services;
 using Soverance.Data.Extensions;
 using Soverance.Data.SqlServer.Extensions;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -147,6 +149,10 @@ builder.Services.AddHostedService<SessionStalenessJob>();
 builder.Services.AddForumServices();
 builder.Services.AddScoped<IForumAuthorResolver, VanalyticsForumAuthorResolver>();
 builder.Services.AddScoped<IForumSearchService, ForumSearchService>();
+
+// Messaging
+builder.Services.AddMessagingServices();
+builder.Services.AddScoped<IMessagingUserResolver, VanalyticsMessagingUserResolver>();
 
 // Run EF migrations + seeding in the background so the HTTP server starts
 // immediately and can respond to health/startup probes while the database

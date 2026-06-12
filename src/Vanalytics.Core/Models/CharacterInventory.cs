@@ -12,5 +12,11 @@ public class CharacterInventory
     public int Quantity { get; set; }
     public DateTimeOffset LastSeenAt { get; set; }
 
+    /// <summary>
+    /// JSON-serialized array of augment strings decoded from the item's extdata.
+    /// Null when the item has no augments.
+    /// </summary>
+    public string? AugmentsJson { get; set; }
+
     public Character Character { get; set; } = null!;
 }

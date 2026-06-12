@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import type { UserProfileResponse } from '../types/api'
 import UserAvatar from '../components/UserAvatar'
+import MessageButton from '../components/messages/MessageButton'
 
 export default function UserProfilePage() {
   const { username } = useParams<{ username: string }>()
@@ -39,8 +40,11 @@ export default function UserProfilePage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <UserAvatar username={profile.username} displayName={profile.displayName} avatarUrl={profile.avatarUrl} size="lg" />
-        <div>
-          <h1 className="text-xl font-bold text-gray-100">{profile.displayName ?? profile.username}</h1>
+        <div className="flex-1">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl font-bold text-gray-100">{profile.displayName ?? profile.username}</h1>
+            <MessageButton toUserId={profile.id} toName={profile.displayName ?? profile.username} />
+          </div>
           {profile.displayName && <p className="text-sm text-gray-500">@{profile.username}</p>}
           <p className="text-xs text-gray-600">
             Joined {new Date(profile.joinedAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}

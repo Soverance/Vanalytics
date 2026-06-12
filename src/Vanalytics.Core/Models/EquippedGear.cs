@@ -10,5 +10,11 @@ public class EquippedGear
     public string ItemName { get; set; } = string.Empty;
     public int ItemId { get; set; }
 
+    /// <summary>
+    /// JSON-serialized array of augment strings (e.g. ["DEX+9","Weapon skill damage +8%"]),
+    /// decoded from the item's extdata by the addon. Null when the item has no augments.
+    /// </summary>
+    public string? AugmentsJson { get; set; }
+
     public Character Character { get; set; } = null!;
 }

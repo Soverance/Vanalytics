@@ -158,6 +158,13 @@ function InstallTab() {
           <Download className="h-4 w-4" />
           Download Addon (.zip)
         </a>
+        <div className="rounded bg-blue-900/20 border border-blue-900/50 px-3 py-2 text-sm text-gray-300 mt-3">
+          <strong className="text-gray-200">Keeping it updated:</strong> the download always
+          matches the current server release. When you log in with an out-of-date copy, the addon
+          posts a warning in your chat log — just re-download from this button and replace your{' '}
+          <Code>vanalytics</Code> folder. You can check your version against the server any time
+          with <Code>//va version</Code>.
+        </div>
       </Step>
 
       <Step number={4} title="Load the Addon in Windower">
@@ -215,6 +222,7 @@ function CommandsTab() {
       <CommandTable>
         <CommandRow command="//va sync" description="Sync character data, inventory, macros, and bazaar presence immediately" />
         <CommandRow command="//va status" description="Show API URL, key status, sync interval, and last sync result" />
+        <CommandRow command="//va version" description="Compare your installed addon version against the server and report whether you're up to date" />
         <CommandRow command="//va apikey <key>" description="Set your API key (saved across sessions)" />
         <CommandRow command="//va interval <minutes>" description="Change the auto-sync interval (minimum 5 minutes, default 60)" />
         <CommandRow command="//va notify on|off" description="Toggle in-game chat notifications on successful sync (default on). Errors are always shown regardless." />

@@ -334,7 +334,7 @@ function session.start(character_name, server, zone)
     server_name = server
 
     local sessions_dir = windower.addon_path .. 'sessions/'
-    os.execute('mkdir "' .. sessions_dir:gsub('/', '\\') .. '" 2>NUL')
+    windower.create_dir(sessions_dir)
 
     local date_stamp = os.date('%Y-%m-%d_%H-%M-%S')
     file_path = sessions_dir .. character_name .. '_' .. date_stamp .. '.jsonl'
@@ -588,11 +588,11 @@ function session.cleanup()
     local max_age = 7 * 24 * 60 * 60 -- 7 days in seconds
 
     -- List files by parsing date from filenames
-    local dir_handle = io.popen('dir /b "' .. sessions_dir:gsub('/', '\\') .. '" 2>NUL')
-    if not dir_handle then return end
+    local entries = windower.get_dir(sessions_dir)
+    if not entries then return end
 
     local deleted = 0
-    for filename in dir_handle:lines() do
+    for _, filename in ipairs(entries) do
         -- Parse date from filename: charactername_YYYY-MM-DD_HH-MM-SS.jsonl
         local year, month, day, hour, min, sec = filename:match('_(%d%d%d%d)-(%d%d)-(%d%d)_(%d%d)-(%d%d)-(%d%d)%.jsonl$')
         if year then
@@ -611,7 +611,6 @@ function session.cleanup()
             end
         end
     end
-    dir_handle:close()
 
     if deleted > 0 then
         log_fn('Cleaned up ' .. deleted .. ' session file(s) older than 7 days.')

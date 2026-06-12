@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { api } from '../../api/client'
 import ForumEditor from './ForumEditor'
+import DraftStatus from './DraftStatus'
+import { useDraft } from '../../hooks/useDraft'
+import { useAuth } from '../../context/AuthContext'
 
 interface Props {
   threadId: number
@@ -12,9 +15,38 @@ interface Props {
 }
 
 export default function ForumReplyBox({ threadId, onPostCreated, replyToPostId, replyToUsername, onClearReply }: Props) {
+  const { user } = useAuth()
   const [body, setBody] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const draftKey = user ? `forum-draft:reply:${user.id}:${threadId}` : null
+  const { draft, savedAt, saving, save, clear } = useDraft<{ body: string }>(draftKey)
+  const [restored, setRestored] = useState(false)
+  const restoredOnce = useRef(false)
+
+  // Restore a saved reply draft once it (and the user) are available — runs once.
+  useEffect(() => {
+    if (restoredOnce.current) return
+    if (draft && draft.body && !body) {
+      setBody(draft.body)
+      setRestored(true)
+      restoredOnce.current = true
+    }
+  }, [draft, body])
+
+  const onBodyChange = (v: string) => {
+    setBody(v)
+    setRestored(false)
+    if (v) save({ body: v })
+    else clear()
+  }
+
+  const discardDraft = () => {
+    clear()
+    setBody('')
+    setRestored(false)
+  }
 
   const submit = async () => {
     if (!body.trim() || loading) return
@@ -29,6 +61,7 @@ export default function ForumReplyBox({ threadId, onPostCreated, replyToPostId, 
         }),
       })
       setBody('')
+      clear()
       onClearReply?.()
       onPostCreated()
     } catch {
@@ -48,7 +81,8 @@ export default function ForumReplyBox({ threadId, onPostCreated, replyToPostId, 
           </button>
         </div>
       )}
-      <ForumEditor content={body} onChange={setBody} placeholder="Write a reply..." />
+      <ForumEditor content={body} onChange={onBodyChange} placeholder="Write a reply..." />
+      <DraftStatus saving={saving} savedAt={savedAt} restored={restored} onDiscard={discardDraft} />
       {error && <p className="text-red-400 text-sm">{error}</p>}
       <button
         onClick={submit}

@@ -5,7 +5,7 @@
     "pr": ""
   },
   "permissions": {
-    "deny": [      
+    "deny": [
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(git merge *)",
@@ -36,14 +36,18 @@
       "Bash(git bisect bad *)"
     ],
     "allow": [
-      "Bash(node:*)",
-      "Bash(docker:*)",
-      "Bash(dotnet build:*)",
-      "Bash(dotnet add:*)",
-      "Bash(dotnet ef:*)",
-      "Bash(dotnet tool:*)",
-      "Bash(npm run:*)",
-      "Bash(npm install:*)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet build *)",
+      "Bash(dotnet ef *)",
+      "Bash(dotnet add *)",
+      "Bash(dotnet tool *)",
+      "Bash(dotnet run *)",
+      "Bash(dotnet --version)",
+      "Bash(dotnet ef --version)",
+      "Bash(docker build *)",
+      "Bash(docker info *)",
+      "Bash(npm install *)",
+      "Bash(curl *)",
       "Bash(git status *)",
       "Bash(git log *)",
       "Bash(git diff *)",
@@ -61,7 +65,8 @@
       "Bash(git tag -l *)",
       "Bash(git stash list *)",
       "Bash(git reflog *)",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(git show-ref *)"
     ]
   },
   "env": {
