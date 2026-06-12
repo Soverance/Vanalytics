@@ -3,7 +3,7 @@ import { api } from '../../api/client'
 import type { ProgressionResponse, JobPointEntry, MasterLevelEntry } from '../../types/api'
 import LoadingSpinner from '../LoadingSpinner'
 import Tabs from '../Tabs'
-import { WARP_CATEGORY_LABELS, WARP_CATEGORY_CAPACITY, lookupWarp, type WarpCategory } from '../../lib/warps'
+import { WARP_CATEGORY_LABELS, WARP_CATEGORY_CAPACITY, listWarps, type WarpCategory } from '../../lib/warps'
 
 const PROGRESSION_TABS = ['Job Points', 'Master Levels', 'Travel'] as const
 type ProgressionSubTab = typeof PROGRESSION_TABS[number]
@@ -188,16 +188,22 @@ function WarpSection({ category, ids }: { category: WarpCategory; ids: number[] 
                 </span>
             </button>
             {expanded && (
-                ids.length === 0 ? (
-                    <p className="px-3 py-2 text-xs text-gray-500">None unlocked.</p>
-                ) : (
-                    <ul className="px-3 py-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-300">
-                        {ids.map(id => {
-                            const entry = lookupWarp(category, id)
-                            return <li key={id} className="truncate" title={entry.region}>{entry.name}</li>
-                        })}
-                    </ul>
-                )
+                <ul className="px-3 py-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                    {listWarps(category, ids).map(({ entry, obtained }) => (
+                        <li
+                            key={entry.id}
+                            className="flex items-baseline gap-2 truncate"
+                            title={entry.region}
+                        >
+                            <span className={`w-3 text-center ${obtained ? 'text-emerald-400' : 'text-gray-700'}`}>
+                                {obtained ? '✓' : '·'}
+                            </span>
+                            <span className={`truncate ${obtained ? 'text-gray-200' : 'text-gray-500'}`}>
+                                {entry.name}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
             )}
         </div>
     )
