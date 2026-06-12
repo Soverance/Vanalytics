@@ -159,11 +159,13 @@ function InstallTab() {
           Download Addon (.zip)
         </a>
         <div className="rounded bg-blue-900/20 border border-blue-900/50 px-3 py-2 text-sm text-gray-300 mt-3">
-          <strong className="text-gray-200">Keeping it updated:</strong> the download always
-          matches the current server release. When you log in with an out-of-date copy, the addon
-          posts a warning in your chat log — just re-download from this button and replace your{' '}
-          <Code>vanalytics</Code> folder. You can check your version against the server any time
-          with <Code>//va version</Code>.
+          <strong className="text-gray-200">Keeping it updated:</strong> once installed, the addon
+          updates itself. When you log in with an out-of-date copy, it posts a warning in your chat
+          log telling you to run <Code>//va update</Code> — that command pulls the latest files from
+          the server and hot-reloads the addon in place, so you rarely need this download button
+          again. Your <Code>settings.xml</Code> (and your saved API key) is never touched by an
+          update. Check your version any time with <Code>//va version</Code>, or re-download here if
+          you ever want a clean copy.
         </div>
       </Step>
 
@@ -223,6 +225,7 @@ function CommandsTab() {
         <CommandRow command="//va sync" description="Sync character data, inventory, macros, and bazaar presence immediately" />
         <CommandRow command="//va status" description="Show API URL, key status, sync interval, and last sync result" />
         <CommandRow command="//va version" description="Compare your installed addon version against the server and report whether you're up to date" />
+        <CommandRow command="//va update" description="Download the latest addon files from the server and hot-reload in place; add --force to re-download even when already current. Your settings.xml and API key are never overwritten" />
         <CommandRow command="//va apikey <key>" description="Set your API key (saved across sessions)" />
         <CommandRow command="//va interval <minutes>" description="Change the auto-sync interval (minimum 5 minutes, default 60)" />
         <CommandRow command="//va notify on|off" description="Toggle in-game chat notifications on successful sync (default on). Errors are always shown regardless." />
@@ -263,6 +266,7 @@ function CommandsTab() {
         <CommandRow command="//va hunt nm list" description="Dump the curated NM names for the current zone to chat" />
         <CommandRow command="//va hunt sound on|off|test" description="Toggle pop-alert sounds or test playback" />
         <CommandRow command="//va hunt pos" description="Show or set overlay panel positions" />
+        <CommandRow command="//va widescan [filter]" description="List your most recent /widescan results with mob indexes (the BG-Wiki &quot;ID&quot; matches the in-game mob index); optional name filter" />
       </CommandTable>
 
       <SectionHeading>Inventory Moves</SectionHeading>
@@ -386,11 +390,12 @@ function SyncTab() {
             </dd>
           </div>
           <div>
-            <dt className="font-medium text-gray-300">Brief game freeze during sync</dt>
+            <dt className="font-medium text-gray-300">Does syncing freeze the game?</dt>
             <dd className="text-gray-500 mt-1">
-              The addon uses synchronous HTTP requests, which may cause a momentary freeze
-              (less than a second) each time it syncs. This is normal and only happens once per
-              sync interval.
+              No. The addon uses non-blocking (asynchronous) HTTP and spreads each sync's work
+              across multiple game frames, so syncing runs in the background without stalling the
+              client. (Older builds used blocking requests that caused a brief hitch — that is no
+              longer the case.)
             </dd>
           </div>
         </dl>
@@ -571,6 +576,7 @@ function HuntTab() {
         <CommandRow command="//va hunt nm list" description="Dump the curated NM names for the current zone to chat" />
         <CommandRow command="//va hunt sound on|off|test" description="Toggle pop-alert sounds or test playback" />
         <CommandRow command="//va hunt pos" description="Show or set overlay panel positions (target / widescan / watch / nm)" />
+        <CommandRow command="//va widescan [filter]" description="List your most recent /widescan results with mob indexes (the BG-Wiki &quot;ID&quot; matches the in-game mob index); optional name filter" />
       </CommandTable>
 
       <SectionHeading>Tips</SectionHeading>

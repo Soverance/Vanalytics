@@ -1027,15 +1027,15 @@ local function fetch_zone_nms(zone_id)
         label = 'zone-nms',
     }, function(result, status_code, _, body)
         if not result or status_code ~= 200 then
-            log_error(string.format('Mob info fetch failed for zone %d (status %s) — alerts default to standard sound, no countdown.',
-                zone_id, tostring(status_code)))
+            -- Silent: uncurated zones (most of them) and transient fetch
+            -- failures shouldn't spam chat. The hunt classifier degrades
+            -- gracefully — empty mob_info means standard sound, no countdown.
             mob_info = {}
             mob_info_zone = zone_id
             return
         end
         local payload = body and json_decode(body)
         if type(payload) ~= 'table' then
-            log_error('Mob info fetch: invalid response for zone ' .. zone_id)
             mob_info = {}
             mob_info_zone = zone_id
             return
@@ -1070,8 +1070,6 @@ local function fetch_zone_nms(zone_id)
             end
         end
         mob_info_zone = zone_id
-        log(string.format('Loaded mob info for zone %d: %d total names, %d classified as NM.',
-            zone_id, total, nm_count))
     end)
 end
 
@@ -2144,7 +2142,7 @@ local function check_version(report_always)
             elseif cmp == 0 then
                 log_success('You are up to date.')
             elseif cmp < 0 then
-                log_error('Your addon is OUT OF DATE. Re-download it from ' .. settings.ApiUrl)
+                log_error('Your addon is OUT OF DATE. Run //va update to update now.')
             else
                 log('Your addon is newer than the server (dev/preview build).')
             end
@@ -2152,8 +2150,104 @@ local function check_version(report_always)
             -- Silent path (login): only speak up when behind.
             log_error('Addon out of date: you have ' .. tostring(_addon.version)
                 .. ', server is ' .. tostring(server_version)
-                .. '. Re-download from the web app to update.')
+                .. '. Run //va update to update now.')
         end
+    end)
+end
+
+-----------------------------------------------------------------------
+-- Self-update: //va update
+-- Fetches the server manifest, downloads each shipped file sequentially
+-- into memory, and only after EVERY file arrives intact writes them to
+-- disk and hot-reloads. settings.xml is excluded server-side, so the
+-- player's API key and config are never touched. A failure at any point
+-- before the write phase leaves the install completely unchanged.
+-----------------------------------------------------------------------
+local function run_update(args)
+    local force = false
+    for _, a in ipairs(args or {}) do
+        if a == '--force' then force = true end
+    end
+
+    log('Checking for updates...')
+    http_request({
+        url = settings.ApiUrl .. '/api/addon/manifest',
+        method = 'GET',
+        label = 'update-manifest',
+    }, function(result, status_code, _, body)
+        if not result or status_code ~= 200 then
+            log_error('Update failed: could not fetch manifest (' .. tostring(status_code) .. ').')
+            return
+        end
+
+        local manifest = body and json_decode(body)
+        if type(manifest) ~= 'table' or type(manifest.files) ~= 'table' then
+            log_error('Update failed: malformed manifest from server.')
+            return
+        end
+
+        local server_version = manifest.version
+        local server = parse_semver(server_version)
+        local localv = parse_semver(_addon.version)
+        if not force and server and localv and compare_semver(localv, server) >= 0 then
+            log_success('Already up to date (' .. tostring(_addon.version) .. ').')
+            return
+        end
+
+        local files = manifest.files
+        if #files == 0 then
+            log_error('Update failed: manifest listed no files.')
+            return
+        end
+
+        -- In-memory staging: nothing is written to disk until every file is in.
+        local staged = {}
+        local idx = 0
+
+        local function write_all_and_reload()
+            for _, entry in ipairs(files) do
+                local f = io.open(windower.addon_path .. entry.path, 'wb')
+                if not f then
+                    log_error('Update failed while writing ' .. tostring(entry.path)
+                        .. '. The install may be partially updated; re-run //va update.')
+                    return
+                end
+                f:write(staged[entry.path])
+                f:close()
+            end
+            log_success('Updated to ' .. tostring(server_version) .. '. Reloading...')
+            windower.send_command('lua reload vanalytics')
+        end
+
+        local download_next
+        download_next = function()
+            idx = idx + 1
+            if idx > #files then
+                write_all_and_reload()
+                return
+            end
+            local entry = files[idx]
+            http_request({
+                url = settings.ApiUrl .. '/api/addon/file?path=' .. tostring(entry.path),
+                method = 'GET',
+                label = 'update-file',
+            }, function(r, sc, _, fbody)
+                if not r or sc ~= 200 or type(fbody) ~= 'string' then
+                    log_error('Update failed: could not fetch ' .. tostring(entry.path)
+                        .. ' (' .. tostring(sc) .. ') — no changes made.')
+                    return
+                end
+                if entry.size and #fbody ~= entry.size then
+                    log_error('Update failed: ' .. tostring(entry.path) .. ' size mismatch ('
+                        .. #fbody .. ' vs ' .. tostring(entry.size) .. ') — no changes made.')
+                    return
+                end
+                staged[entry.path] = fbody
+                download_next()
+            end)
+        end
+
+        download_next()
     end)
 end
 
@@ -2363,58 +2457,6 @@ end)
 -----------------------------------------------------------------------
 windower.register_event('incoming chunk', function(id, data)
     if id == 0x061 then
-        -- TEMP master-level offset probe (remove after confirming offset).
-        -- Master Level lives in the 'mastery_info' uint32 of packet 0x061 as
-        -- the job_lv byte; we don't yet know its exact offset on this server,
-        -- so dump the candidate region and Windower's own player fields to a
-        -- file so we can match the byte that equals the character's known ML.
-        -- Overwrites each 0x061 (login + every zone) so the file stays small
-        -- and always holds the latest capture.
-        do
-            local lines = {}
-            lines[#lines + 1] = '=== ML probe (packet 0x061) ==='
-
-            -- Candidate byte region. data:byte(n) is 1-based, so offset X -> X+1.
-            -- ('B' in Windower pack lib is a boolean, not a uint8 -- use :byte.)
-            local parts = {}
-            for off = 0x4A, 0x64 do
-                parts[#parts + 1] = string.format('%02X=%d', off, data:byte(off + 1))
-            end
-            lines[#lines + 1] = 'bytes ' .. table.concat(parts, ' ')
-
-            local p = windower.ffxi.get_player()
-            if p then
-                lines[#lines + 1] = 'superior_level=' .. tostring(p.superior_level)
-                    .. '  item_level=' .. tostring(p.item_level)
-                    .. '  main_job_level=' .. tostring(p.main_job_level)
-                if type(p.master_levels) == 'table' then
-                    lines[#lines + 1] = 'master_levels = {'
-                    for k, v in pairs(p.master_levels) do
-                        if type(v) == 'table' then
-                            local inner = {}
-                            for ik, iv in pairs(v) do
-                                inner[#inner + 1] = tostring(ik) .. '=' .. tostring(iv)
-                            end
-                            lines[#lines + 1] = '  ' .. tostring(k) .. ' = { ' .. table.concat(inner, ' ') .. ' }'
-                        else
-                            lines[#lines + 1] = '  ' .. tostring(k) .. ' = ' .. tostring(v)
-                        end
-                    end
-                    lines[#lines + 1] = '}'
-                else
-                    lines[#lines + 1] = 'master_levels = ' .. tostring(p.master_levels)
-                end
-            end
-
-            local probe_path = windower.addon_path .. 'ml_probe.txt'
-            local pf = io.open(probe_path, 'w')
-            if pf then
-                pf:write(table.concat(lines, '\n') .. '\n')
-                pf:close()
-                windower.add_to_chat(207, '[ML probe] wrote ' .. probe_path)
-            end
-        end
-
         current_title_id = data:unpack('H', 0x44 + 1) or 0
 
         -- Base stats (unsigned short)
@@ -2549,6 +2591,9 @@ windower.register_event('addon command', function(command, ...)
 
     elseif command == 'version' then
         check_version(true)
+
+    elseif command == 'update' then
+        run_update(args)
 
     elseif command == 'apikey' then
         local key = args[1]
@@ -3388,6 +3433,7 @@ windower.register_event('addon command', function(command, ...)
         log('//va sync         - Sync now')
         log('//va status       - Show status')
         log('//va version      - Check addon version against the server')
+        log('//va update       - Download the latest addon from the server and reload (--force to re-download)')
         log('//va interval N   - Set sync interval in minutes (min: ' .. MIN_INTERVAL .. ')')
         log('//va notify on|off - Toggle in-game chat notifications on successful sync')
         log('//va dump         - Dump player data to file')

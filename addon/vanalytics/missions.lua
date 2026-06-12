@@ -152,45 +152,19 @@ local function set_current(line_key, current_int)
     dirty = true
 end
 
--- Debug dump: log the first time each Type arrives (and the first time the
--- packet arrives at all if Type can't be extracted). Once per addon load.
-local debug_dumped = {}
-local function debug_dump(label, data)
-    if debug_dumped[label] then return end
-    debug_dumped[label] = true
-    local dir = windower.addon_path .. 'missions/'
-    windower.create_dir(dir)
-    local f = io.open(dir .. 'debug.log', 'a')
-    if not f then return end
-    local hex = {}
-    local total = #data
-    for i = 1, math.min(80, total) do
-        hex[#hex + 1] = string.format('%02X', data:byte(i))
-    end
-    f:write(string.format(
-        '[%s] 0x056 %s len=%d bytes=%s\n',
-        os.date('%H:%M:%S'), label, total, table.concat(hex, ' ')
-    ))
-    f:close()
-end
-
 function missions.handle_packet(data)
     -- Packets.parse handles the Type extraction — different incoming packets
     -- locate Type at different offsets, so trust Windower's parser rather
     -- than reading bytes manually (the approach XIchecklist takes).
     local ok, p = pcall(packets.parse, 'incoming', data)
     if not ok or not p then
-        debug_dump('parse-failed', data)
         return
     end
 
     local pkt_type = p.Type
     if not pkt_type then
-        debug_dump('no-type-field', data)
         return
     end
-
-    debug_dump(string.format('Type=0x%04X', pkt_type), data)
 
     if pkt_type == 0x00D0 then
         -- Sandy + Bastok + Windurst + Zilart completed
