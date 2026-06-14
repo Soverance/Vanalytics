@@ -1140,3 +1140,42 @@ export interface OwnedEquipmentItem {
   jobs: number | null
   augments: string[]
 }
+
+// --- GearSwap workflow editor ---
+export type WorkflowNodeType =
+  | 'trigger:status_change'
+  | 'trigger:precast'
+  | 'trigger:aftercast'
+  | 'equip'
+
+export interface WorkflowNode {
+  id: string
+  type: WorkflowNodeType
+  position: { x: number; y: number }
+  data: { gearSetId?: number | null }
+}
+
+export interface WorkflowEdge {
+  id: string
+  source: string
+  sourceHandle?: string | null
+  target: string
+  targetHandle?: string | null
+}
+
+export interface WorkflowGraph {
+  version: number
+  nodes: WorkflowNode[]
+  edges: WorkflowEdge[]
+}
+
+export interface WorkflowResponse {
+  job: string
+  graph: WorkflowGraph
+  updatedAt: string | null
+}
+
+export interface GenerateWorkflowResponse {
+  lua: string
+  warnings: string[]
+}
