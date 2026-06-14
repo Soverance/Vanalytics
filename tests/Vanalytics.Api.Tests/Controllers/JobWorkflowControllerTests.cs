@@ -1,0 +1,176 @@
+// tests/Vanalytics.Api.Tests/Controllers/JobWorkflowControllerTests.cs
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Testcontainers.MsSql;
+using Soverance.Auth.DTOs;
+using Vanalytics.Core.DTOs.GearSets;
+using Vanalytics.Core.DTOs.Keys;
+using Vanalytics.Core.DTOs.Sync;
+using Vanalytics.Core.DTOs.Workflows;
+using Vanalytics.Data;
+
+namespace Vanalytics.Api.Tests.Controllers;
+
+public class JobWorkflowControllerTests : IAsyncLifetime
+{
+    private readonly MsSqlContainer _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
+    private WebApplicationFactory<Program> _factory = null!;
+    private HttpClient _client = null!;
+
+    public async Task InitializeAsync()
+    {
+        await _container.StartAsync();
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                var desc = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<VanalyticsDbContext>));
+                if (desc != null) services.Remove(desc);
+                services.AddDbContext<VanalyticsDbContext>(o => o.UseSqlServer(_container.GetConnectionString()));
+            });
+            builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Secret"] = "TestSecretKeyThatIsAtLeast32BytesLongForHmacSha256!!",
+                ["Jwt:Issuer"] = "VanalyticsTest", ["Jwt:Audience"] = "VanalyticsTest",
+                ["Jwt:AccessTokenExpirationMinutes"] = "15", ["Jwt:RefreshTokenExpirationDays"] = "7"
+            }));
+        });
+        _client = _factory.CreateClient();
+    }
+
+    public async Task DisposeAsync()
+    {
+        _client.Dispose();
+        await _factory.DisposeAsync();
+        await _container.DisposeAsync();
+    }
+
+    private async Task<(string Token, Guid CharacterId)> SetupAsync(string email, string username, string charName)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        db.Users.Add(new Soverance.Auth.Models.User
+        {
+            Id = Guid.NewGuid(), Email = email, Username = username,
+            PasswordHash = Soverance.Auth.Services.PasswordHasher.HashPassword("Password123!"),
+            CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        var login = await (await _client.PostAsJsonAsync("/api/auth/login",
+            new LoginRequest { Email = email, Password = "Password123!" }))
+            .Content.ReadFromJsonAsync<AuthResponse>();
+
+        var keyReq = new HttpRequestMessage(HttpMethod.Post, "/api/keys/generate");
+        keyReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", login!.AccessToken);
+        var key = await (await _client.SendAsync(keyReq)).Content.ReadFromJsonAsync<ApiKeyResponse>();
+
+        var syncReq = new HttpRequestMessage(HttpMethod.Post, "/api/sync");
+        syncReq.Headers.Add("X-Api-Key", key!.ApiKey);
+        syncReq.Content = JsonContent.Create(new SyncRequest
+        {
+            CharacterName = charName, Server = "Asura", ActiveJob = "THF", ActiveJobLevel = 99,
+            Jobs = [new SyncJobEntry { Job = "THF", Level = 99 }]
+        });
+        await _client.SendAsync(syncReq);
+
+        var character = await db.Characters.FirstAsync(c => c.Name == charName);
+        return (login.AccessToken, character.Id);
+    }
+
+    [Fact]
+    public async Task Get_before_save_returns_empty_graph()
+    {
+        var (token, charId) = await SetupAsync("wf1@test.com", "wf1", "Wfone");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var wf = await _client.GetFromJsonAsync<WorkflowResponse>($"/api/characters/{charId}/workflows/THF");
+        Assert.Equal("THF", wf!.Job);
+        Assert.Empty(wf.Graph.Nodes);
+        Assert.Null(wf.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task Put_then_get_roundtrips_graph_and_upserts()
+    {
+        var (token, charId) = await SetupAsync("wf2@test.com", "wf2", "Wftwo");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var graph = new WorkflowGraphDto
+        {
+            Nodes = [ new() { Id="t", Type="trigger:status_change", Position=new(){X=1,Y=2}, Data=new() } ],
+            Edges = [],
+        };
+        var put1 = await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/THF", graph);
+        Assert.Equal(HttpStatusCode.OK, put1.StatusCode);
+
+        // Second PUT must UPDATE, not create a duplicate (unique CharacterId+Job).
+        graph.Nodes.Add(new() { Id="e", Type="equip", Data=new() { GearSetId = 7 } });
+        var put2 = await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/THF", graph);
+        Assert.Equal(HttpStatusCode.OK, put2.StatusCode);
+
+        var wf = await _client.GetFromJsonAsync<WorkflowResponse>($"/api/characters/{charId}/workflows/THF");
+        Assert.Equal(2, wf!.Graph.Nodes.Count);
+        Assert.NotNull(wf.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task Put_with_invalid_job_returns_400()
+    {
+        var (token, charId) = await SetupAsync("wf3@test.com", "wf3", "Wfthree");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var resp = await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/XYZ", new WorkflowGraphDto());
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Generate_emits_lua_from_saved_workflow_and_gear_set()
+    {
+        var (token, charId) = await SetupAsync("wf4@test.com", "wf4", "Wffour");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var set = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "TP Set", Job = "THF", Category = "Engaged",
+                Slots = [ new GearSetSlotDto { Slot = "Head", ItemId = 13892, ItemName = "Adhemar Bonnet +1", Augments = [] } ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        var graph = new WorkflowGraphDto
+        {
+            Nodes =
+            [
+                new() { Id="t", Type="trigger:status_change", Data=new() },
+                new() { Id="e", Type="equip", Data=new() { GearSetId = set!.Id } },
+            ],
+            Edges = [ new() { Id="x", Source="t", SourceHandle="Engaged", Target="e", TargetHandle="in" } ],
+        };
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/THF", graph);
+
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/workflows/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateWorkflowResponse>();
+
+        Assert.Contains("sets['TP Set'] = {", gen!.Lua);
+        Assert.Contains("head=\"Adhemar Bonnet +1\",", gen.Lua);
+        Assert.Contains("if new == 'Engaged' then equip(sets['TP Set'])", gen.Lua);
+        Assert.Empty(gen.Warnings);
+    }
+
+    [Fact]
+    public async Task Other_users_character_is_forbidden()
+    {
+        var (_, victim) = await SetupAsync("wfvic@test.com", "wfvic", "Wfvictim");
+        var (attacker, _) = await SetupAsync("wfatk@test.com", "wfatk", "Wfattacker");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", attacker);
+
+        var resp = await _client.GetAsync($"/api/characters/{victim}/workflows/THF");
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+}

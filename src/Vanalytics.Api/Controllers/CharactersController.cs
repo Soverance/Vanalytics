@@ -8,8 +8,10 @@ using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Core.DTOs.Porter;
 using Vanalytics.Core.DTOs.Sync;
+using Vanalytics.Core.DTOs.Workflows;
 using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
+using Vanalytics.Core.Services;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Controllers;
@@ -740,6 +742,100 @@ public class CharactersController : ControllerBase
         _db.CharacterGearSets.Remove(set);
         await _db.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpGet("{id:guid}/workflows/{job}")]
+    public async Task<IActionResult> GetWorkflow(Guid id, string job)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (!TryNormalizeJob(job, out var normalized) || normalized is null)
+            return BadRequest(new { message = "Invalid job." });
+
+        var wf = await _db.CharacterJobWorkflows
+            .FirstOrDefaultAsync(w => w.CharacterId == id && w.Job == normalized);
+
+        return Ok(new WorkflowResponse
+        {
+            Job = normalized,
+            Graph = wf is null
+                ? new WorkflowGraphDto()
+                : JsonSerializer.Deserialize<WorkflowGraphDto>(wf.GraphJson, JsonOpts) ?? new WorkflowGraphDto(),
+            UpdatedAt = wf?.UpdatedAt
+        });
+    }
+
+    [HttpPut("{id:guid}/workflows/{job}")]
+    public async Task<IActionResult> SaveWorkflow(Guid id, string job, [FromBody] WorkflowGraphDto graph)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (!TryNormalizeJob(job, out var normalized) || normalized is null)
+            return BadRequest(new { message = "Invalid job." });
+
+        var now = DateTimeOffset.UtcNow;
+        var json = JsonSerializer.Serialize(graph ?? new WorkflowGraphDto(), JsonOpts);
+        var wf = await _db.CharacterJobWorkflows
+            .FirstOrDefaultAsync(w => w.CharacterId == id && w.Job == normalized);
+        if (wf is null)
+        {
+            wf = new CharacterJobWorkflow
+            {
+                CharacterId = id, Job = normalized, GraphJson = json,
+                CreatedAt = now, UpdatedAt = now
+            };
+            _db.CharacterJobWorkflows.Add(wf);
+        }
+        else
+        {
+            wf.GraphJson = json;
+            wf.UpdatedAt = now;
+        }
+        await _db.SaveChangesAsync();
+
+        return Ok(new WorkflowResponse { Job = normalized, Graph = graph ?? new WorkflowGraphDto(), UpdatedAt = wf.UpdatedAt });
+    }
+
+    [HttpPost("{id:guid}/workflows/{job}/generate")]
+    public async Task<IActionResult> GenerateWorkflow(Guid id, string job)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (!TryNormalizeJob(job, out var normalized) || normalized is null)
+            return BadRequest(new { message = "Invalid job." });
+
+        var wf = await _db.CharacterJobWorkflows
+            .FirstOrDefaultAsync(w => w.CharacterId == id && w.Job == normalized);
+        var graph = wf is null
+            ? new WorkflowGraphDto()
+            : JsonSerializer.Deserialize<WorkflowGraphDto>(wf.GraphJson, JsonOpts) ?? new WorkflowGraphDto();
+
+        var referencedIds = graph.Nodes
+            .Where(n => n.Type == "equip" && n.Data.GearSetId is not null)
+            .Select(n => n.Data.GearSetId!.Value)
+            .Distinct()
+            .ToList();
+
+        var sets = await _db.CharacterGearSets
+            .Where(s => s.CharacterId == id && referencedIds.Contains(s.Id))
+            .Include(s => s.Slots)
+            .ToListAsync();
+
+        var resolved = sets.Select(s => new ResolvedGearSet(
+            s.Id, s.Name,
+            s.Slots.Select(sl => new ResolvedSlot(
+                sl.Slot, sl.ItemId, sl.ItemName,
+                DeserializeAugments(sl.AugmentsJson))).ToList()))
+            .ToList();
+
+        var result = GearSwapCodeGenerator.Generate(graph, resolved);
+        return Ok(new GenerateWorkflowResponse { Lua = result.Lua, Warnings = result.Warnings });
     }
 
     [HttpDelete("{id:guid}")]
