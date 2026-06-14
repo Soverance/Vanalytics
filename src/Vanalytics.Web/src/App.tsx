@@ -23,6 +23,7 @@ import PublicProfilePage from './pages/PublicProfilePage'
 import { FfxiFileSystemProvider } from './context/FfxiFileSystemContext'
 import ModelDebugPage from './pages/ModelDebugPage'
 import SessionReportPage from './pages/SessionReportPage'
+import WorkflowEditorPage from './pages/WorkflowEditorPage'
 import NpcBrowserPage from './pages/NpcBrowserPage'
 import ZoneBrowserPage from './pages/ZoneBrowserPage'
 import ForumCategoryListPage from './pages/ForumCategoryListPage'
@@ -150,6 +151,10 @@ export default function App() {
             <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
             <Route path="/messages/:conversationId" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
           </Route>
+
+          {/* Full-screen GearSwap workflow editor (no sidebar layout) */}
+          <Route path="/characters/:id/workflow/:job"
+            element={<ProtectedRoute><WorkflowEditorPage /></ProtectedRoute>} />
 
           {/* Public: shareable linkshell profiles (3-segment, before /:server/:name) */}
           <Route path="/:server/linkshell/:name" element={<LinkshellProfilePage />} />
