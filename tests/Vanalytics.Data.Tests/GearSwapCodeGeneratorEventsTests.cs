@@ -22,9 +22,13 @@ public class GearSwapCodeGeneratorEventsTests
     private static WorkflowEdgeDto Edge(string source, string handle, string target) =>
         new() { Id = $"{source}-{handle}-{target}", Source = source, SourceHandle = handle, Target = target, TargetHandle = "in" };
 
+    private static WorkflowNodeDto EquipNamed(string id, long setId, string action) =>
+        new() { Id = id, Type = "equip", Data = new() { GearSetId = setId, ActionName = action } };
+
     private static readonly Dictionary<long, string> Names = new()
     {
         [1] = "TP Accuracy", [2] = "Idle Default", [3] = "WS Rudra",
+        [4] = "Cure Set", [5] = "Ranged Set", [6] = "SA Set",
     };
 
     [Fact]
@@ -75,5 +79,58 @@ public class GearSwapCodeGeneratorEventsTests
         var graph = Graph([Trigger("t","trigger:precast")], []);
         var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
         Assert.DoesNotContain("function precast", lua);
+    }
+
+    [Fact]
+    public void Midcast_magic_generic_only_emits_bare_equip()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:midcast"), Equip("e",2)],
+            [Edge("t","Magic","e")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("function midcast(spell)", lua);
+        Assert.Contains("if spell.action_type == 'Magic' then equip(sets['Idle Default'])", lua);
+        Assert.DoesNotContain("spell.english", lua);
+    }
+
+    [Fact]
+    public void Midcast_magic_named_plus_generic_nests_on_spell_english()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:midcast"), EquipNamed("e1",4,"Cure IV"), Equip("e2",2)],
+            [Edge("t","Magic","e1"), Edge("t","Magic","e2")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("if spell.action_type == 'Magic' then", lua);
+        Assert.Contains("if spell.english == 'Cure IV' then equip(sets['Cure Set'])", lua);
+        Assert.Contains("else equip(sets['Idle Default'])", lua);
+    }
+
+    [Fact]
+    public void Midcast_ranged_is_terminal_flat_equip()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:midcast"), Equip("e",5)],
+            [Edge("t","Ranged","e")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("if spell.action_type == 'Ranged Attack' then equip(sets['Ranged Set'])", lua);
+    }
+
+    [Fact]
+    public void Midcast_mixes_magic_category_and_ranged_terminal()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:midcast"), Equip("e1",2), Equip("e2",5)],
+            [Edge("t","Magic","e1"), Edge("t","Ranged","e2")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("if spell.action_type == 'Magic' then equip(sets['Idle Default'])", lua);
+        Assert.Contains("elseif spell.action_type == 'Ranged Attack' then equip(sets['Ranged Set'])", lua);
     }
 }

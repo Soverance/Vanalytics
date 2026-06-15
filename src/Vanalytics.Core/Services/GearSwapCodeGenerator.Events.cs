@@ -30,6 +30,11 @@ public static partial class GearSwapCodeGenerator
             ("Engaged", "player.status == 'Engaged'", null),
             ("Idle",    "player.status ~= 'Engaged'", null),
         ]),
+        ["trigger:midcast"] = new("function midcast(spell)",
+        [
+            ("Magic",  "spell.action_type == 'Magic'",         "spell.english"),  // category
+            ("Ranged", "spell.action_type == 'Ranged Attack'", null),             // terminal, flat equip
+        ]),
     };
 
     /// <summary>
