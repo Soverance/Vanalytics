@@ -119,4 +119,35 @@ public class GearSwapCodeGeneratorModesTests
         Assert.Contains("999", Assert.Single(r.Warnings));
         Assert.Contains("TP_Set_Names = {'Accuracy'}", r.Lua);
     }
+
+    [Fact]
+    public void Mode_namespace_avoids_collision_with_a_flat_set_of_the_same_name()
+    {
+        // A flat gear set named "TP" wired to a pin AND a mode named "TP": the mode must not clobber the
+        // flat set's sets['TP']. The mode's namespace is bumped, and the event reference uses the bumped
+        // namespace too (proving both CollectModes call sites agree).
+        var graph = new WorkflowGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:status_change", Data = new() },
+                new() { Id = "e", Type = "equip", Data = new() { GearSetId = 50 } },
+                Mode("tp", "TP", 10),
+            ],
+            Edges =
+            [
+                Edge("t", "Idle", "e"),       // flat set "TP" -> sets['TP']
+                Edge("t", "Engaged", "tp"),   // mode "TP" -> bumped namespace
+            ],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(50, "TP"), Set(10, "Acc")]);
+
+        Assert.Contains("sets['TP'] = {", r.Lua);                                                  // flat set intact
+        Assert.Contains("TP2_Index = 1", r.Lua);                                                   // mode bumped
+        Assert.Contains("sets.TP2 = {}", r.Lua);
+        Assert.Contains("if new == 'Engaged' then equip(sets.TP2[TP2_Set_Names[TP2_Index]])", r.Lua); // event ref matches def
+        Assert.Contains("if command == 'cycle TP set' then", r.Lua);                               // command uses human name
+        Assert.DoesNotContain("sets.TP[", r.Lua);                                                  // no un-bumped collision
+    }
 }
