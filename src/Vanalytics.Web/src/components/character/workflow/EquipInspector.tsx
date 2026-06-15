@@ -1,13 +1,15 @@
 import type { GearSetSummary } from '../../../types/api'
 
-export default function EquipInspector({ sets, selectedSetId, onChange }: {
+export default function EquipInspector({ sets, selectedSetId, onChange, actionContext }: {
   sets: GearSetSummary[]
   selectedSetId: number | null | undefined
   onChange: (setId: number) => void
+  actionContext?: string
 }) {
   return (
     <div className="w-72 flex-none overflow-auto border-l border-gray-800 bg-gray-900 p-4">
       <h4 className="mb-1 text-[11px] uppercase tracking-wide text-gray-500">Equip Gear Set</h4>
+      {actionContext && <p className="mb-2 text-xs text-amber-300">{actionContext}</p>}
       <label className="mb-1 block text-xs text-gray-400">Gear Set</label>
       <select
         value={selectedSetId ?? ''}
