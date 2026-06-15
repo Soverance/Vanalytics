@@ -116,7 +116,9 @@ function WorkflowEditorInner() {
       return [...base, { id: `${nodeId}-${handle}-${leafId}`, source: nodeId, sourceHandle: handle, target: leafId, targetHandle: 'in' }]
     })
     // Auto-select the new leaf so its config panel (inspector) flies out immediately — no second click.
-    setSelectedId(leafId)
+    // React Flow fires onPaneClick on the same drop that ends the connection (which clears the
+    // selection), so defer one tick to ensure our selection lands LAST and the panel stays open.
+    setTimeout(() => setSelectedId(leafId), 0)
   }, [nodes])
 
   const onConnectEnd = useCallback((e: MouseEvent | TouchEvent) => {

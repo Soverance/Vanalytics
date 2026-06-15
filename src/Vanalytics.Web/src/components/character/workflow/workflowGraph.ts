@@ -12,12 +12,12 @@ export const TRIGGER_DEFS: Record<
     handleLabels: { Engaged: 'Engaged', Idle: 'Idle', Resting: 'Resting' },
   },
   'trigger:precast': {
-    label: 'precast(spell)',
+    label: 'precast',
     handles: ['WeaponSkill', 'JobAbility', 'Magic'],
     handleLabels: { WeaponSkill: 'Weapon Skill', JobAbility: 'Job Ability', Magic: 'Magic' },
   },
   'trigger:aftercast': {
-    label: 'aftercast(spell)',
+    label: 'aftercast',
     handles: ['Engaged', 'Idle'],
     handleLabels: { Engaged: 'Engaged', Idle: 'Idle (else)' },
   },
