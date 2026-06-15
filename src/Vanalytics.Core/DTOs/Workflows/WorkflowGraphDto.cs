@@ -23,8 +23,12 @@ public class WorkflowPositionDto
 
 public class WorkflowNodeDataDto
 {
-    /// <summary>Set only on equip nodes: which Gear Set this node equips.</summary>
+    /// <summary>Set only on leaf (equip) nodes: which Gear Set this node equips.</summary>
     public long? GearSetId { get; set; }
+
+    /// <summary>On a leaf wired to a category pin (precast): the specific action this leaf gears for,
+    /// e.g. "Mercy Stroke". Null = generic default ("Any Weapon Skill") or a terminal status leaf.</summary>
+    public string? ActionName { get; set; }
 }
 
 public class WorkflowEdgeDto
