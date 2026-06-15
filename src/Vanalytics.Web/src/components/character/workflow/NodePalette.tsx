@@ -4,7 +4,6 @@ const ITEMS: { type: WorkflowNodeType; label: string; group: string; color: stri
   { type: 'trigger:precast', label: 'precast', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:aftercast', label: 'aftercast', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:status_change', label: 'status_change', group: 'Triggers', color: '#b3344a' },
-  { type: 'equip', label: 'Equip Gear Set', group: 'Actions', color: '#2f4a8a' },
 ]
 
 export default function NodePalette({ x, y, onPick, onClose }: {

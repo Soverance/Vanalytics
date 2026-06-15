@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ReactFlow, Background, Controls, addEdge, applyNodeChanges, applyEdgeChanges,
+  useReactFlow, ReactFlowProvider,
   type Node, type Edge, type Connection, type NodeChange, type EdgeChange,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -9,6 +10,8 @@ import { ArrowLeft, Download } from 'lucide-react'
 import { api } from '../api/client'
 import { useJobWorkflow } from '../hooks/useJobWorkflow'
 import { wouldCreateCycle } from '../components/character/workflow/workflowGraph'
+import ActionPicker from '../components/character/workflow/ActionPicker'
+import { categoryOfHandle, hasAction, type ActionCategory } from '../components/character/workflow/workflowGraph'
 import TriggerNode from '../components/character/workflow/TriggerNode'
 import EquipGearSetNode from '../components/character/workflow/EquipGearSetNode'
 import NodePalette from '../components/character/workflow/NodePalette'
@@ -28,7 +31,7 @@ const nodeTypes = {
 let idSeq = 1
 const newId = () => `n${Date.now()}_${idSeq++}`
 
-export default function WorkflowEditorPage() {
+function WorkflowEditorInner() {
   const { id = '', job = '' } = useParams()
   const navigate = useNavigate()
   const { graph, loading, save, generate } = useJobWorkflow(id, job)
@@ -41,6 +44,9 @@ export default function WorkflowEditorPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [exportLua, setExportLua] = useState<{ lua: string; warnings: string[] } | null>(null)
   const hydrated = useRef(false)
+  const { screenToFlowPosition } = useReactFlow()
+  const connectingFrom = useRef<{ nodeId: string; handleId: string } | null>(null)
+  const [picker, setPicker] = useState<{ x: number; y: number; flowX: number; flowY: number; nodeId: string; handle: string; category: ActionCategory } | null>(null)
 
   useEffect(() => {
     api<CharacterDetail>(`/api/characters/${id}`).then(setCharacter).catch(() => {})
@@ -84,15 +90,44 @@ export default function WorkflowEditorPage() {
   const onEdgesChange = useCallback((c: EdgeChange[]) => setEdges(e => applyEdgeChanges(c, e)), [])
 
   const onConnect = useCallback((conn: Connection) => {
-    if (wouldCreateCycle(edges.map(e => ({ id: e.id, source: e.source, target: e.target })),
-        conn.source!, conn.target!)) return
+    if (wouldCreateCycle(edges.map(e => ({ id: e.id, source: e.source, target: e.target })), conn.source!, conn.target!)) return
+    const triggerType = nodes.find(n => n.id === conn.source)?.type ?? ''
+    const isCategory = categoryOfHandle(triggerType, conn.sourceHandle ?? '') !== null
     setEdges(prev => {
-      const withoutTargetDup = prev.filter(e => e.target !== conn.target)
-      const withoutSameSourceHandle = withoutTargetDup.filter(
-        e => !(e.source === conn.source && e.sourceHandle === conn.sourceHandle))
-      return addEdge(conn, withoutSameSourceHandle)
+      const noTargetDup = prev.filter(e => e.target !== conn.target)
+      const base = isCategory ? noTargetDup : noTargetDup.filter(e => !(e.source === conn.source && e.sourceHandle === conn.sourceHandle))
+      return addEdge(conn, base)
     })
-  }, [edges])
+  }, [edges, nodes])
+
+  const onConnectStart = useCallback((_: unknown, p: { nodeId: string | null; handleId: string | null }) => {
+    connectingFrom.current = p.nodeId && p.handleId ? { nodeId: p.nodeId, handleId: p.handleId } : null
+  }, [])
+
+  const spawnLeaf = useCallback((nodeId: string, handle: string, flowX: number, flowY: number, actionName: string | null) => {
+    const leafId = newId()
+    setNodes(n => [...n, { id: leafId, type: 'equip', position: { x: flowX, y: flowY }, data: { gearSetId: null, actionName } }])
+    setEdges(prev => {
+      const isCategory = categoryOfHandle(nodes.find(n => n.id === nodeId)?.type ?? '', handle) !== null
+      const base = isCategory ? prev : prev.filter(e => !(e.source === nodeId && e.sourceHandle === handle))
+      return [...base, { id: `${nodeId}-${handle}-${leafId}`, source: nodeId, sourceHandle: handle, target: leafId, targetHandle: 'in' }]
+    })
+  }, [nodes])
+
+  const onConnectEnd = useCallback((e: MouseEvent | TouchEvent) => {
+    const from = connectingFrom.current
+    connectingFrom.current = null
+    if (!from) return
+    const target = e.target as HTMLElement
+    if (!target.classList.contains('react-flow__pane')) return   // only when dropped on empty pane
+    const me = e as MouseEvent
+    const flow = screenToFlowPosition({ x: me.clientX, y: me.clientY })
+    const triggerType = nodes.find(n => n.id === from.nodeId)?.type ?? ''
+    const category = categoryOfHandle(triggerType, from.handleId)
+    if (category === null) { spawnLeaf(from.nodeId, from.handleId, flow.x, flow.y, null); return }
+    const rect = (document.querySelector('.react-flow__pane') as HTMLElement)?.getBoundingClientRect()
+    setPicker({ x: me.clientX - (rect?.left ?? 0), y: me.clientY - (rect?.top ?? 0), flowX: flow.x, flowY: flow.y, nodeId: from.nodeId, handle: from.handleId, category })
+  }, [nodes, screenToFlowPosition, spawnLeaf])
 
   const onPaneContextMenu = useCallback((e: React.MouseEvent | MouseEvent) => {
     e.preventDefault()
@@ -153,6 +188,7 @@ export default function WorkflowEditorPage() {
             nodes={nodes} edges={edges}
             nodeTypes={nodeTypes}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect}
+            onConnectStart={onConnectStart} onConnectEnd={onConnectEnd}
             onNodeClick={(_, n) => setSelectedId(n.id)}
             onPaneClick={() => { setSelectedId(null); setPalette(null) }}
             fitView>
@@ -162,12 +198,35 @@ export default function WorkflowEditorPage() {
           {palette && (
             <NodePalette x={palette.x} y={palette.y} onPick={addNode} onClose={() => setPalette(null)} />
           )}
+          {picker && (
+            <ActionPicker
+              x={picker.x} y={picker.y} category={picker.category}
+              disabledNames={new Set(
+                edges.filter(e => e.source === picker.nodeId && e.sourceHandle === picker.handle)
+                  .map(e => nodes.find(n => n.id === e.target))
+                  .map(n => (n?.data as { actionName?: string } | undefined)?.actionName)
+                  .filter((a): a is string => !!a))}
+              onPick={(actionName) => {
+                if (actionName && hasAction(nodes as never, edges as never, picker.nodeId, picker.handle, actionName)) { setPicker(null); return }
+                spawnLeaf(picker.nodeId, picker.handle, picker.flowX, picker.flowY, actionName)
+                setPicker(null)
+              }}
+              onClose={() => setPicker(null)}
+            />
+          )}
         </div>
         {selected?.type === 'equip' && (
           <EquipInspector
             sets={sets}
             selectedSetId={(selected.data as { gearSetId?: number | null }).gearSetId}
             onChange={assignSet}
+            actionContext={(() => {
+              const inEdge = edges.find(e => e.target === selected!.id)
+              const trig = nodes.find(n => n.id === inEdge?.source)
+              const a = (selected!.data as { actionName?: string }).actionName
+              if (!trig || !inEdge) return undefined
+              return `${(trig.type ?? '').replace('trigger:', '')} → ${inEdge.sourceHandle}${a ? ` → ${a}` : ''}`
+            })()}
           />
         )}
       </div>
@@ -181,5 +240,13 @@ export default function WorkflowEditorPage() {
         />
       )}
     </div>
+  )
+}
+
+export default function WorkflowEditorPage() {
+  return (
+    <ReactFlowProvider>
+      <WorkflowEditorInner />
+    </ReactFlowProvider>
   )
 }
