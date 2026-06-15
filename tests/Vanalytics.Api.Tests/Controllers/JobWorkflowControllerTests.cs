@@ -205,4 +205,44 @@ public class JobWorkflowControllerTests : IAsyncLifetime
         Assert.Contains("if spell.type == 'WeaponSkill' then", gen!.Lua);
         Assert.Contains("if spell.english == 'Mercy Stroke' then equip(sets['Mercy WS'])", gen.Lua);
     }
+
+    [Fact]
+    public async Task Generate_emits_mode_self_command_and_namespaced_sets()
+    {
+        var (token, charId) = await SetupAsync("wf6@test.com", "wf6", "Wfsix");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var set = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "Acc Set", Job = "THF", Category = "Engaged",
+                Slots = [ new GearSetSlotDto { Slot = "Head", ItemId = 13892, ItemName = "Adhemar Bonnet +1", Augments = [] } ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        var graph = new WorkflowGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:status_change", Data = new() },
+                new() { Id = "tp", Type = "mode", Data = new()
+                    { ModeName = "TP", Members = [ new WorkflowModeMemberDto { GearSetId = set!.Id } ] } },
+            ],
+            Edges = [ new() { Id = "e", Source = "t", SourceHandle = "Engaged", Target = "tp", TargetHandle = "in" } ],
+        };
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/THF", graph);
+
+        // Round-trip: the mode node + its members survive PUT/GET serialization.
+        var wf = await _client.GetFromJsonAsync<WorkflowResponse>($"/api/characters/{charId}/workflows/THF");
+        var modeNode = Assert.Single(wf!.Graph.Nodes, n => n.Type == "mode");
+        Assert.Equal("TP", modeNode.Data.ModeName);
+        Assert.Single(modeNode.Data.Members!);
+
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/workflows/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateWorkflowResponse>();
+
+        Assert.Contains("sets.TP['Acc Set'] = {", gen!.Lua);
+        Assert.Contains("if new == 'Engaged' then equip(sets.TP[TP_Set_Names[TP_Index]])", gen.Lua);
+        Assert.Contains("if command == 'cycle TP set' then", gen.Lua);
+    }
 }
