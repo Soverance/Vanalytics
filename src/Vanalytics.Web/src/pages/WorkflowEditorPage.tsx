@@ -11,11 +11,13 @@ import { api } from '../api/client'
 import { useJobWorkflow } from '../hooks/useJobWorkflow'
 import { wouldCreateCycle } from '../components/character/workflow/workflowGraph'
 import ActionPicker from '../components/character/workflow/ActionPicker'
-import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, type ActionCategory } from '../components/character/workflow/workflowGraph'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, type ActionCategory } from '../components/character/workflow/workflowGraph'
 import TriggerNode from '../components/character/workflow/TriggerNode'
 import EquipGearSetNode from '../components/character/workflow/EquipGearSetNode'
 import NodePalette from '../components/character/workflow/NodePalette'
 import EquipInspector from '../components/character/workflow/EquipInspector'
+import ModeNode, { type ModeNodeData } from '../components/character/workflow/ModeNode'
+import ModeInspector from '../components/character/workflow/ModeInspector'
 import GearSetExportModal from '../components/character/GearSetExportModal'
 import type {
   CharacterDetail, GearSetSummary, WorkflowGraph, WorkflowNodeType,
@@ -28,6 +30,7 @@ const nodeTypes = {
   'trigger:midcast': TriggerNode,
   'trigger:buff_change': TriggerNode,
   equip: EquipGearSetNode,
+  mode: ModeNode,
 }
 
 let idSeq = 1
@@ -68,6 +71,10 @@ function WorkflowEditorInner() {
         ? { gearSetId: n.data.gearSetId, actionName: n.data.actionName ?? null,
             setName: n.data.gearSetId != null ? setById.get(n.data.gearSetId)?.name : undefined,
             category: n.data.gearSetId != null ? setById.get(n.data.gearSetId)?.category : undefined }
+        : n.type === 'mode'
+        ? { modeName: n.data.modeName ?? 'Mode', modeCommand: n.data.modeCommand ?? null,
+            members: n.data.members ?? [],
+            memberNames: (n.data.members ?? []).map(m => setById.get(m.gearSetId)?.name) }
         : {},
     })))
     setEdges(graph.edges.map(e => ({ id: e.id, source: e.source, target: e.target,
@@ -78,8 +85,12 @@ function WorkflowEditorInner() {
     version: 1,
     nodes: nodes.map(n => ({
       id: n.id, type: n.type as WorkflowNodeType, position: n.position,
-      data: { gearSetId: (n.data as { gearSetId?: number | null }).gearSetId ?? null,
-        actionName: (n.data as { actionName?: string | null }).actionName ?? null },
+      data: n.type === 'mode'
+        ? { modeName: (n.data as ModeNodeData).modeName ?? 'Mode',
+            modeCommand: (n.data as ModeNodeData).modeCommand ?? null,
+            members: ((n.data as ModeNodeData).members ?? []).map(m => ({ gearSetId: m.gearSetId, label: m.label ?? null })) }
+        : { gearSetId: (n.data as { gearSetId?: number | null }).gearSetId ?? null,
+            actionName: (n.data as { actionName?: string | null }).actionName ?? null },
     })),
     edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target,
       sourceHandle: e.sourceHandle ?? null, targetHandle: e.targetHandle ?? null })),
@@ -98,6 +109,8 @@ function WorkflowEditorInner() {
     if (wouldCreateCycle(edges.map(e => ({ id: e.id, source: e.source, target: e.target })), conn.source!, conn.target!)) return
     const triggerType = nodes.find(n => n.id === conn.source)?.type ?? ''
     const isCategory = categoryOfHandle(triggerType, conn.sourceHandle ?? '') !== null
+    const targetIsMode = nodes.find(n => n.id === conn.target)?.type === 'mode'
+    if (targetIsMode && isCategory) return   // only terminal pins may target a Mode
     setEdges(prev => {
       const noTargetDup = prev.filter(e => e.target !== conn.target)
       const base = isCategory ? noTargetDup : noTargetDup.filter(e => !(e.source === conn.source && e.sourceHandle === conn.sourceHandle))
@@ -154,10 +167,15 @@ function WorkflowEditorInner() {
     const node: Node = {
       id: newId(), type,
       position: { x: palette.flowX - 260, y: palette.flowY - 120 },
-      data: type === 'equip' ? { gearSetId: null } : {},
+      data: type === 'equip'
+        ? { gearSetId: null }
+        : type === 'mode'
+        ? { modeName: 'New Mode', modeCommand: null, members: [], memberNames: [] }
+        : {},
     }
     setNodes(n => [...n, node])
     setPalette(null)
+    if (type === 'mode') setSelectedId(node.id)
   }, [palette])
 
   const selected = nodes.find(n => n.id === selectedId)
@@ -166,6 +184,25 @@ function WorkflowEditorInner() {
     setNodes(prev => prev.map(n => n.id === selectedId
       ? { ...n, data: { ...n.data, gearSetId: setId, setName: s?.name, category: s?.category } } : n))
   }, [selectedId, sets])
+
+  const updateModeData = useCallback((fn: (d: ModeNodeData) => ModeNodeData) => {
+    setNodes(prev => prev.map(n => n.id === selectedId ? { ...n, data: fn(n.data as ModeNodeData) } : n))
+  }, [selectedId])
+
+  const setModeName = useCallback((v: string) => updateModeData(d => ({ ...d, modeName: v })), [updateModeData])
+  const setModeCommand = useCallback((v: string) => updateModeData(d => ({ ...d, modeCommand: v })), [updateModeData])
+  const addModeMember = useCallback((setId: number) => updateModeData(d => {
+    const members = addMember(d.members ?? [], setId)
+    return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
+  }), [updateModeData, sets])
+  const removeModeMember = useCallback((i: number) => updateModeData(d => {
+    const members = removeMember(d.members ?? [], i)
+    return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
+  }), [updateModeData, sets])
+  const moveModeMember = useCallback((i: number, dir: -1 | 1) => updateModeData(d => {
+    const members = moveMember(d.members ?? [], i, dir)
+    return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
+  }), [updateModeData, sets])
 
   const deleteNode = useCallback((nodeId: string) => {
     setNodes(ns => ns.filter(n => n.id !== nodeId))
@@ -270,6 +307,19 @@ function WorkflowEditorInner() {
               if (!trig || !inEdge) return undefined
               return `${(trig.type ?? '').replace('trigger:', '')} → ${inEdge.sourceHandle}${a ? ` → ${labelForAction(a)}` : ''}`
             })()}
+          />
+        )}
+        {selected?.type === 'mode' && (
+          <ModeInspector
+            sets={sets}
+            name={(selected.data as ModeNodeData).modeName ?? 'Mode'}
+            command={(selected.data as ModeNodeData).modeCommand?.trim() || `cycle ${(selected.data as ModeNodeData).modeName ?? 'Mode'} set`}
+            members={(selected.data as ModeNodeData).members ?? []}
+            onNameChange={setModeName}
+            onCommandChange={setModeCommand}
+            onAddMember={addModeMember}
+            onRemoveMember={removeModeMember}
+            onMoveMember={moveModeMember}
           />
         )}
       </div>

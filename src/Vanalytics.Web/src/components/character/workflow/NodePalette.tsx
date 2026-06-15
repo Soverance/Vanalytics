@@ -6,6 +6,7 @@ const ITEMS: { type: WorkflowNodeType; label: string; group: string; color: stri
   { type: 'trigger:status_change', label: 'status_change', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:midcast', label: 'midcast', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:buff_change', label: 'buff_change', group: 'Triggers', color: '#b3344a' },
+  { type: 'mode', label: 'Mode (set cycle)', group: 'Sets', color: '#34d399' },
 ]
 
 export default function NodePalette({ x, y, onPick, onClose }: {
