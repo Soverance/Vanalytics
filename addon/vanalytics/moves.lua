@@ -165,13 +165,13 @@ function moves.check_pending(silent, on_complete)
     }, function(result, status_code, _, body)
         if not result then
             log_error_fn('Moves check: connection failed (' .. tostring(status_code) .. ')')
-            on_complete()
+            on_complete(false)
             return
         end
 
         if status_code ~= 200 then
             log_error_fn('Moves check: HTTP ' .. tostring(status_code))
-            on_complete()
+            on_complete(false)
             return
         end
 

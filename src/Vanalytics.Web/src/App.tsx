@@ -123,6 +123,7 @@ export default function App() {
             {/* Protected routes */}
             <Route path="/characters" element={<CharactersPage />} />
             <Route path="/characters/:id" element={<ProtectedRoute><CharacterDetailPage /></ProtectedRoute>} />
+            <Route path="/characters/:id/workflow/:job" element={<ProtectedRoute><WorkflowEditorPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/items" element={<ItemDatabasePage />} />
             <Route path="/items/:id" element={<ItemDetailPage />} />
@@ -151,10 +152,6 @@ export default function App() {
             <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
             <Route path="/messages/:conversationId" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
           </Route>
-
-          {/* Full-screen GearSwap workflow editor (no sidebar layout) */}
-          <Route path="/characters/:id/workflow/:job"
-            element={<ProtectedRoute><WorkflowEditorPage /></ProtectedRoute>} />
 
           {/* Public: shareable linkshell profiles (3-segment, before /:server/:name) */}
           <Route path="/:server/linkshell/:name" element={<LinkshellProfilePage />} />

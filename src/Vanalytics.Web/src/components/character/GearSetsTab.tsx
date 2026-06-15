@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Plus, Camera } from 'lucide-react'
+import { Plus, Camera, Workflow } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useCharacterGearSets } from '../../hooks/useCharacterGearSets'
 import GearSetEditor, { type WorkingSet } from './GearSetEditor'
@@ -26,6 +27,7 @@ interface Props {
 
 export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite, fetchBase, readOnly = false, initialSetId }: Props) {
   const characterId = character.id
+  const navigate = useNavigate()
   const base = fetchBase ?? `/api/characters/${characterId}`
   const { sets: hookSets, createSet, updateSet, deleteSet, getSet } = useCharacterGearSets(characterId, !readOnly)
 
@@ -188,6 +190,13 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
             <Plus className="h-3.5 w-3.5" /> Blank set
           </button>
           <span className="ml-auto text-[10px] text-gray-500">{sets.length} / {MAX_GEAR_SETS_PER_CHARACTER}</span>
+          <button
+            onClick={() => selJob && navigate(`/characters/${characterId}/workflow/${selJob}`)}
+            disabled={!selJob}
+            title={selJob ? `Open the ${selJob} workflow editor` : 'Select a job in the left nav to open its workflow editor'}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-gray-800/60 text-gray-300 border border-gray-700/40 disabled:opacity-50 disabled:cursor-not-allowed">
+            <Workflow className="h-3.5 w-3.5" /> Open Workflow Editor{selJob ? ` (${selJob})` : ''}
+          </button>
         </div>
       )}
 

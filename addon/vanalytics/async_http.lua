@@ -315,8 +315,22 @@ function M.request(params, callback)
     local timeout = params.timeout or DEFAULT_TIMEOUT
     local label = params.label or ((params.method or 'GET') .. ' ' .. (params.url or ''))
 
-    local co = coroutine.create(function()
+    -- Create the entry first so the coroutine can flip fired_callback BEFORE
+    -- it invokes the callback. Without that flag set, a callback that throws
+    -- would be re-invoked by poll()'s coroutine-error path (which only guards
+    -- on fired_callback) — firing the same callback twice and forking the
+    -- sync chain (a second on_complete → duplicate step advance).
+    local entry = {
+        callback = callback,
+        deadline = os.time() + timeout,
+        label = label,
+        fired_callback = false,
+    }
+
+    entry.co = coroutine.create(function()
         local ok, status, headers, body = run_request(params)
+        if entry.fired_callback then return end
+        entry.fired_callback = true
         if ok then
             callback(true, status, headers, body)
         else
@@ -324,13 +338,7 @@ function M.request(params, callback)
         end
     end)
 
-    table.insert(active, {
-        co = co,
-        callback = callback,
-        deadline = os.time() + timeout,
-        label = label,
-        fired_callback = false,
-    })
+    table.insert(active, entry)
 end
 
 -- Pump all in-flight coroutines once. Call from the addon's prerender hook.

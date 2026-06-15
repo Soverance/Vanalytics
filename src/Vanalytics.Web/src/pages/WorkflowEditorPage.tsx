@@ -97,7 +97,12 @@ export default function WorkflowEditorPage() {
   const onPaneContextMenu = useCallback((e: React.MouseEvent | MouseEvent) => {
     e.preventDefault()
     const me = e as React.MouseEvent
-    setPalette({ x: me.clientX, y: me.clientY, flowX: me.clientX, flowY: me.clientY })
+    // Position the palette relative to the canvas container (not the viewport) so it lands at
+    // the cursor now that the editor renders inside the app's sidebar + padded content area.
+    const rect = (me.currentTarget as HTMLElement).getBoundingClientRect()
+    const x = me.clientX - rect.left
+    const y = me.clientY - rect.top
+    setPalette({ x, y, flowX: x, flowY: y })
   }, [])
 
   const addNode = useCallback((type: WorkflowNodeType) => {
@@ -126,13 +131,13 @@ export default function WorkflowEditorPage() {
 
   const fileName = useMemo(() => `${job}.lua`, [job])
 
-  if (loading) return <div className="flex h-screen items-center justify-center text-gray-400">Loading…</div>
+  if (loading) return <div className="py-12 text-center text-gray-400">Loading…</div>
 
   return (
-    <div className="flex h-screen flex-col bg-[#0d1117] text-gray-100">
-      <div className="flex items-center gap-3 border-b border-gray-800 px-4 py-2">
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button onClick={() => navigate(`/characters/${id}`)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-200">
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4" /> Back to character
         </button>
         <span className="font-bold">{character?.name ?? '…'} · <span className="text-amber-300">{job}</span> Workflow</span>
         <span className="ml-auto text-[10px] text-gray-500">right-click the canvas to add nodes · autosaves</span>
@@ -142,7 +147,7 @@ export default function WorkflowEditorPage() {
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="flex h-[calc(100vh-13rem)] min-h-[460px] overflow-hidden rounded-lg border border-gray-800 bg-[#0d1117]">
         <div className="relative min-w-0 flex-1" onContextMenu={onPaneContextMenu}>
           <ReactFlow
             nodes={nodes} edges={edges}

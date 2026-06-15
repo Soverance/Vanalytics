@@ -246,16 +246,18 @@ function missions.sync(character_name, server, on_complete)
         body = payload,
         label = 'missions-sync',
     }, function(result, status_code, _, _)
+        local ok = false
         if not result then
             log_error_fn('Missions sync connection failed: ' .. tostring(status_code))
         elseif status_code == 200 then
+            ok = true
             dirty = false
             last_payload_hash = payload
             save_to_disk(character_name, server)
         else
             log_error_fn('Missions sync failed with status ' .. tostring(status_code))
         end
-        on_complete()
+        on_complete(ok)
     end)
 end
 

@@ -2026,14 +2026,14 @@ local function do_sync(on_complete)
 
     if settings.ApiKey == '' then
         log_error('API key not configured. Set it in addon/vanalytics/settings.xml')
-        on_complete()
+        on_complete(false)
         return
     end
 
     local state, err = read_character_state()
     if not state then
         log_error(err)
-        on_complete()
+        on_complete(false)
         return
     end
 
@@ -2050,15 +2050,17 @@ local function do_sync(on_complete)
         body = payload,
         label = 'main-sync',
     }, function(result, status_code, _, _)
+        local ok = false
         if not result then
             log_error('Connection failed: ' .. tostring(status_code))
             last_sync_status = 'Connection failed'
         elseif status_code == 200 then
+            ok = true
             last_sync_time = os.time()
             last_sync_status = 'Success'
-            if settings.NotifyOnSync then
-                log_success('Sync successful (' .. state.characterName .. ' @ ' .. state.server .. ')')
-            end
+            -- Per-step success is intentionally silent. The whole chain reports
+            -- one summary line when every step finishes (report_sync_summary);
+            -- printing here marked the sync "successful" after only step 1.
         elseif status_code == 403 then
             last_sync_status = 'Forbidden (no license)'
             log_error('Character does not have an active license. Visit the Vanalytics web app to activate.')
@@ -2072,7 +2074,7 @@ local function do_sync(on_complete)
             last_sync_status = 'Error (' .. tostring(status_code) .. ')'
             log_error('Sync failed with status ' .. tostring(status_code))
         end
-        on_complete()
+        on_complete(ok)
     end)
 end
 
@@ -2356,19 +2358,58 @@ moves_lib.init({
     end,
 })
 
--- Helper: run an array of async steps strictly in sequence. Each step is a
--- function(done) that must eventually call done(). Avoids deep nested
--- callbacks at the sync-chain call sites.
-local function run_steps(steps)
+-- Helper: run an array of async steps strictly in sequence. Each entry is
+-- { name = 'Label', fn = function(done) ... end }; fn must eventually call
+-- done(ok). ok defaults to true when omitted/nil — only an explicit false
+-- counts as a failure. Per-step results accumulate as { name, ok } and are
+-- handed to on_all_done when the chain finishes. Avoids deep nested callbacks
+-- at the sync-chain call sites.
+local function run_steps(steps, on_all_done)
+    local results = {}
     local function next_step(i)
-        if i > #steps then return end
-        local ok, err = pcall(steps[i], function() next_step(i + 1) end)
-        if not ok then
-            log_error('Sync step ' .. i .. ' threw: ' .. tostring(err))
+        if i > #steps then
+            if on_all_done then on_all_done(results) end
+            return
+        end
+        local step = steps[i]
+        local finished = false
+        local function done(ok)
+            -- Guard against a step calling done() more than once (e.g. a sub-sync
+            -- whose callback fires and then throws); the first result wins.
+            if finished then return end
+            finished = true
+            results[#results + 1] = { name = step.name, ok = ok ~= false }
             next_step(i + 1)
+        end
+        local ok, err = pcall(step.fn, done)
+        if not ok then
+            log_error('Sync step "' .. tostring(step.name) .. '" threw: ' .. tostring(err))
+            done(false)
         end
     end
     next_step(1)
+end
+
+-- Emit a single summary line when the whole sync chain finishes. Per-step
+-- successes stay silent (the old code printed "Sync successful" after only the
+-- first step); a clean run prints one success line gated on NotifyOnSync, and
+-- any failures are always surfaced by name so they stay actionable.
+local function report_sync_summary(results)
+    local ok_count, failed = 0, {}
+    for _, r in ipairs(results) do
+        if r.ok then ok_count = ok_count + 1
+        else failed[#failed + 1] = r.name end
+    end
+    local player = windower.ffxi.get_player()
+    local who = player and player.name or '?'
+    if #failed == 0 then
+        if settings.NotifyOnSync then
+            log_success(string.format('Sync complete for %s — all %d steps ok.', who, ok_count))
+        end
+    else
+        log_error(string.format('Sync finished for %s with errors: %d ok, %d failed (%s).',
+            who, ok_count, #failed, table.concat(failed, ', ')))
+    end
 end
 
 -- Mutex flag: prevents auto-timer and manual //va sync from running two
@@ -2400,16 +2441,19 @@ local function enqueue_sync_work()
     end
 
     run_steps({
-        function(done) do_sync(done) end,
-        with_player(inventory.sync),
-        with_player(porter.sync),
-        with_player(progression.sync),
-        with_player(missions_lib.sync),
-        with_player(collection_lib.sync),
-        function(done) scan_bazaars(); done() end,
-        function(done) moves_lib.check_pending(false, done) end,
-        function(done) sync_in_progress = false; done() end,
-    })
+        { name = 'Character',   fn = function(done) do_sync(done) end },
+        { name = 'Inventory',   fn = with_player(inventory.sync) },
+        { name = 'Porter',      fn = with_player(porter.sync) },
+        { name = 'Progression', fn = with_player(progression.sync) },
+        { name = 'Missions',    fn = with_player(missions_lib.sync) },
+        { name = 'Collection',  fn = with_player(collection_lib.sync) },
+        { name = 'Bazaar',      fn = function(done) scan_bazaars(); done(true) end },
+        { name = 'Moves',       fn = function(done) moves_lib.check_pending(false, done) end },
+    }, function(results)
+        -- Clear the mutex and report the whole-chain outcome in one line.
+        sync_in_progress = false
+        report_sync_summary(results)
+    end)
 end
 
 -- Single prerender handler registered once at load time
