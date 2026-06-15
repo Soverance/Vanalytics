@@ -6,7 +6,7 @@ import {
   type Node, type Edge, type Connection, type NodeChange, type EdgeChange,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft, Download } from 'lucide-react'
+import { ArrowLeft, Download, Trash2 } from 'lucide-react'
 import { api } from '../api/client'
 import { useJobWorkflow } from '../hooks/useJobWorkflow'
 import { wouldCreateCycle } from '../components/character/workflow/workflowGraph'
@@ -47,6 +47,7 @@ function WorkflowEditorInner() {
   const { screenToFlowPosition } = useReactFlow()
   const connectingFrom = useRef<{ nodeId: string; handleId: string } | null>(null)
   const [picker, setPicker] = useState<{ x: number; y: number; flowX: number; flowY: number; nodeId: string; handle: string; category: ActionCategory } | null>(null)
+  const [nodeMenu, setNodeMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null)
 
   useEffect(() => {
     api<CharacterDetail>(`/api/characters/${id}`).then(setCharacter).catch(() => {})
@@ -62,7 +63,8 @@ function WorkflowEditorInner() {
     setNodes(graph.nodes.map(n => ({
       id: n.id, type: n.type, position: n.position,
       data: n.type === 'equip'
-        ? { gearSetId: n.data.gearSetId, setName: n.data.gearSetId != null ? setById.get(n.data.gearSetId)?.name : undefined,
+        ? { gearSetId: n.data.gearSetId, actionName: n.data.actionName ?? null,
+            setName: n.data.gearSetId != null ? setById.get(n.data.gearSetId)?.name : undefined,
             category: n.data.gearSetId != null ? setById.get(n.data.gearSetId)?.category : undefined }
         : {},
     })))
@@ -74,7 +76,8 @@ function WorkflowEditorInner() {
     version: 1,
     nodes: nodes.map(n => ({
       id: n.id, type: n.type as WorkflowNodeType, position: n.position,
-      data: { gearSetId: (n.data as { gearSetId?: number | null }).gearSetId ?? null },
+      data: { gearSetId: (n.data as { gearSetId?: number | null }).gearSetId ?? null,
+        actionName: (n.data as { actionName?: string | null }).actionName ?? null },
     })),
     edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target,
       sourceHandle: e.sourceHandle ?? null, targetHandle: e.targetHandle ?? null })),
@@ -155,8 +158,26 @@ function WorkflowEditorInner() {
   const assignSet = useCallback((setId: number) => {
     const s = sets.find(x => x.id === setId)
     setNodes(prev => prev.map(n => n.id === selectedId
-      ? { ...n, data: { gearSetId: setId, setName: s?.name, category: s?.category } } : n))
+      ? { ...n, data: { ...n.data, gearSetId: setId, setName: s?.name, category: s?.category } } : n))
   }, [selectedId, sets])
+
+  const deleteNode = useCallback((nodeId: string) => {
+    setNodes(ns => ns.filter(n => n.id !== nodeId))
+    setEdges(es => es.filter(e => e.source !== nodeId && e.target !== nodeId))
+    setSelectedId(cur => (cur === nodeId ? null : cur))
+    setNodeMenu(null)
+  }, [])
+
+  // Right-click a node → small delete menu. stopPropagation so the pane's add-node palette
+  // (onPaneContextMenu on the wrapper) does NOT also open.
+  const onNodeContextMenu = useCallback((e: React.MouseEvent, n: Node) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const pane = (e.currentTarget as HTMLElement).closest('.react-flow') as HTMLElement | null
+    const rect = pane?.getBoundingClientRect()
+    setNodeMenu({ x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0), nodeId: n.id })
+    setPalette(null); setPicker(null)
+  }, [])
 
   const onGenerate = useCallback(async () => {
     await save(toGraph())
@@ -175,7 +196,7 @@ function WorkflowEditorInner() {
           <ArrowLeft className="h-4 w-4" /> Back to character
         </button>
         <span className="font-bold">{character?.name ?? '…'} · <span className="text-amber-300">{job}</span> Workflow</span>
-        <span className="ml-auto text-[10px] text-gray-500">right-click the canvas to add nodes · autosaves</span>
+        <span className="ml-auto text-[10px] text-gray-500">right-click canvas to add · Del (or right-click a node) to remove · autosaves</span>
         <button onClick={onGenerate}
           className="flex items-center gap-1.5 rounded border border-amber-700/40 bg-indigo-900/50 px-3 py-1.5 text-xs text-amber-200">
           <Download className="h-3.5 w-3.5" /> Generate GearSwap file
@@ -187,10 +208,12 @@ function WorkflowEditorInner() {
           <ReactFlow
             nodes={nodes} edges={edges}
             nodeTypes={nodeTypes}
+            deleteKeyCode={['Delete', 'Backspace']}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect}
             onConnectStart={onConnectStart} onConnectEnd={onConnectEnd}
             onNodeClick={(_, n) => setSelectedId(n.id)}
-            onPaneClick={() => { setSelectedId(null); setPalette(null) }}
+            onNodeContextMenu={onNodeContextMenu}
+            onPaneClick={() => { setSelectedId(null); setPalette(null); setNodeMenu(null) }}
             fitView>
             <Background />
             <Controls />
@@ -213,6 +236,18 @@ function WorkflowEditorInner() {
               }}
               onClose={() => setPicker(null)}
             />
+          )}
+          {nodeMenu && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setNodeMenu(null)} />
+              <div className="absolute z-20 w-40 overflow-hidden rounded-lg border border-gray-700 bg-gray-800 shadow-2xl"
+                style={{ left: nodeMenu.x, top: nodeMenu.y }}>
+                <button onClick={() => deleteNode(nodeMenu.nodeId)}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-rose-300 hover:bg-gray-700">
+                  <Trash2 className="h-3.5 w-3.5" /> Delete node
+                </button>
+              </div>
+            </>
           )}
         </div>
         {selected?.type === 'equip' && (
