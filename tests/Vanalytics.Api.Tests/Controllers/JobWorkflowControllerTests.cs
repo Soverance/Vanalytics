@@ -173,4 +173,36 @@ public class JobWorkflowControllerTests : IAsyncLifetime
         var resp = await _client.GetAsync($"/api/characters/{victim}/workflows/THF");
         Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
     }
+
+    [Fact]
+    public async Task Generate_emits_named_action_dispatch()
+    {
+        var (token, charId) = await SetupAsync("wf5@test.com", "wf5", "Wffive");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var set = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "Mercy WS", Job = "THF", Category = "WeaponSkill",
+                Slots = [ new GearSetSlotDto { Slot = "Ammo", ItemId = 1, ItemName = "Jukukik Feather", Augments = [] } ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        var graph = new WorkflowGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:precast", Data = new() },
+                new() { Id = "a", Type = "equip", Data = new() { GearSetId = set!.Id, ActionName = "Mercy Stroke" } },
+            ],
+            Edges = [ new() { Id = "e", Source = "t", SourceHandle = "WeaponSkill", Target = "a", TargetHandle = "in" } ],
+        };
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/THF", graph);
+
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/workflows/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateWorkflowResponse>();
+
+        Assert.Contains("if spell.type == 'WeaponSkill' then", gen!.Lua);
+        Assert.Contains("if spell.english == 'Mercy Stroke' then equip(sets['Mercy WS'])", gen.Lua);
+    }
 }
