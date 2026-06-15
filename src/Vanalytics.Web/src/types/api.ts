@@ -1152,7 +1152,7 @@ export interface WorkflowNode {
   id: string
   type: WorkflowNodeType
   position: { x: number; y: number }
-  data: { gearSetId?: number | null }
+  data: { gearSetId?: number | null; actionName?: string | null }
 }
 
 export interface WorkflowEdge {
