@@ -86,7 +86,7 @@ public static partial class GearSwapCodeGenerator
             sb.Append($"    {kw} command == {GearSwapLua.Key(m.Command)} then\n");
             sb.Append($"        {ns}_Index = {ns}_Index + 1\n");
             sb.Append($"        if {ns}_Index > #{ns}_Set_Names then {ns}_Index = 1 end\n");
-            sb.Append($"        send_command('@input /echo ----- {m.Name} Set changed to '..{ns}_Set_Names[{ns}_Index]..' -----')\n");
+            sb.Append($"        send_command('@input /echo ----- {GearSwapLua.EscapeSingleQuoted(m.Name)} Set changed to '..{ns}_Set_Names[{ns}_Index]..' -----')\n");
             sb.Append($"        equip(sets.{ns}[{ns}_Set_Names[{ns}_Index]])\n");
         }
         sb.Append("    end\nend\n\n");

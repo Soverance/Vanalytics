@@ -100,6 +100,16 @@ public class GearSwapCodeGeneratorModesTests
     }
 
     [Fact]
+    public void Mode_name_with_apostrophe_is_escaped_in_echo()
+    {
+        var graph = new WorkflowGraphDto { Nodes = [Mode("m", "Sam's", 10)], Edges = [] };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "RA")]);
+
+        Assert.Contains(@"----- Sam\'s Set changed to", r.Lua);   // apostrophe escaped as \' inside the literal
+    }
+
+    [Fact]
     public void Mode_member_referencing_deleted_set_warns_and_skips_that_member()
     {
         var graph = new WorkflowGraphDto { Nodes = [Mode("m", "TP", 10, 999)], Edges = [] };

@@ -23,6 +23,14 @@ public static class GearSwapLua
         "'" + Collapse(name).Replace("\\", "\\\\").Replace("'", "\\'") + "'";
 
     /// <summary>
+    /// Escapes a string for embedding INSIDE an existing single-quoted Lua literal — escapes backslash
+    /// then apostrophe, and does NOT add surrounding quotes (unlike <see cref="Key"/>). Use when
+    /// interpolating a raw name into a larger '...' string (e.g. a /echo message).
+    /// </summary>
+    public static string EscapeSingleQuoted(string s) =>
+        Collapse(s).Replace("\\", "\\\\").Replace("'", "\\'");
+
+    /// <summary>
     /// Sanitizes an arbitrary name into a valid Lua identifier for a Mode namespace
     /// (e.g. "Ranged TP" -> "RangedTP", "2H Weapons" -> "_2HWeapons"). Strips any char outside
     /// [A-Za-z0-9_], prefixes "_" if it would start with a digit, and falls back to "Mode" if nothing
