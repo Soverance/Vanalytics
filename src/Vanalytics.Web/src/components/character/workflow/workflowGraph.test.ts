@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction } from './workflowGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction } from './workflowGraph'
 import type { WorkflowEdge, WorkflowNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -27,6 +27,11 @@ describe('TRIGGER_DEFS', () => {
     expect(TRIGGER_DEFS['trigger:precast'].handles).toEqual(['WeaponSkill', 'JobAbility', 'Magic'])
     expect(TRIGGER_DEFS['trigger:aftercast'].handles).toEqual(['Engaged', 'Idle'])
   })
+
+  it('defines handles for midcast and buff_change', () => {
+    expect(TRIGGER_DEFS['trigger:midcast'].handles).toEqual(['Magic', 'Ranged'])
+    expect(TRIGGER_DEFS['trigger:buff_change'].handles).toEqual(['Gained', 'Lost'])
+  })
 })
 
 describe('action helpers', () => {
@@ -52,5 +57,31 @@ describe('action helpers', () => {
     const edges = [{ id: 'e', source: 't', sourceHandle: 'WeaponSkill', target: 'leaf', targetHandle: 'in' }]
     expect(hasAction(nodes, edges, 't', 'WeaponSkill', 'Mercy Stroke')).toBe(true)
     expect(hasAction(nodes, edges, 't', 'WeaponSkill', "Rudra's Storm")).toBe(false)
+  })
+
+  it('categorizes the new pins', () => {
+    expect(categoryOfHandle('trigger:midcast', 'Magic')).toBe('Magic')
+    expect(categoryOfHandle('trigger:midcast', 'Ranged')).toBeNull()
+    expect(categoryOfHandle('trigger:buff_change', 'Gained')).toBe('Buff')
+    expect(categoryOfHandle('trigger:buff_change', 'Lost')).toBe('Buff')
+  })
+
+  it('reports allowGeneric per pin', () => {
+    expect(allowGenericForHandle('trigger:midcast', 'Magic')).toBe(true)
+    expect(allowGenericForHandle('trigger:buff_change', 'Gained')).toBe(false)
+    expect(allowGenericForHandle('trigger:status_change', 'Engaged')).toBe(false)
+  })
+
+  it('Buff catalog uses raw en with Title-Case labels', () => {
+    const buffs = actionCatalog('Buff')
+    expect(buffs.length).toBeGreaterThan(100)
+    expect(buffs.find(b => b.name === 'doom')?.label).toBe('Doom')
+    expect(buffs.find(b => b.name === 'Sneak Attack')?.label).toBe('Sneak Attack')
+  })
+
+  it('labelForAction resolves buff labels and passes others through', () => {
+    expect(labelForAction('doom')).toBe('Doom')
+    expect(labelForAction('Mercy Stroke')).toBe('Mercy Stroke')
+    expect(labelForAction(null)).toBe('')
   })
 })
