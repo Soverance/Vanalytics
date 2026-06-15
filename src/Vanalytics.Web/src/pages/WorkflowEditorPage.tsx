@@ -190,8 +190,8 @@ function WorkflowEditorInner() {
   if (loading) return <div className="py-12 text-center text-gray-400">Loading…</div>
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3 flex-wrap">
+    <div className="fixed inset-0 lg:left-64 z-10 flex flex-col bg-[#0d1117] text-gray-100">
+      <div className="flex items-center gap-3 flex-wrap border-b border-gray-800 px-4 py-2">
         <button onClick={() => navigate(`/characters/${id}`)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-200">
           <ArrowLeft className="h-4 w-4" /> Back to character
         </button>
@@ -203,11 +203,13 @@ function WorkflowEditorInner() {
         </button>
       </div>
 
-      <div className="flex h-[calc(100vh-13rem)] min-h-[460px] overflow-hidden rounded-lg border border-gray-800 bg-[#0d1117]">
+      <div className="flex min-h-0 flex-1">
         <div className="relative min-w-0 flex-1" onContextMenu={onPaneContextMenu}>
           <ReactFlow
             nodes={nodes} edges={edges}
             nodeTypes={nodeTypes}
+            colorMode="dark"
+            proOptions={{ hideAttribution: true }}
             deleteKeyCode={['Delete', 'Backspace']}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect}
             onConnectStart={onConnectStart} onConnectEnd={onConnectEnd}
