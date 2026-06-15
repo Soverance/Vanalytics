@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction } from './workflowGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember } from './workflowGraph'
 import type { WorkflowEdge, WorkflowNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -83,5 +83,27 @@ describe('action helpers', () => {
     expect(labelForAction('doom')).toBe('Doom')
     expect(labelForAction('Mercy Stroke')).toBe('Mercy Stroke')
     expect(labelForAction(null)).toBe('')
+  })
+})
+
+describe('mode helpers', () => {
+  it('treats terminal handles as mode-targetable, category handles not', () => {
+    expect(isTerminalHandle('trigger:status_change', 'Engaged')).toBe(true)
+    expect(isTerminalHandle('trigger:aftercast', 'Idle')).toBe(true)
+    expect(isTerminalHandle('trigger:precast', 'WeaponSkill')).toBe(false)
+    expect(isTerminalHandle('trigger:buff_change', 'Gained')).toBe(false)
+  })
+
+  it('adds, reorders, and removes members immutably', () => {
+    let m = addMember([], 10)
+    m = addMember(m, 11)
+    m = addMember(m, 12)
+    expect(m.map(x => x.gearSetId)).toEqual([10, 11, 12])
+    m = moveMember(m, 0, 1)
+    expect(m.map(x => x.gearSetId)).toEqual([11, 10, 12])
+    expect(moveMember(m, 0, -1).map(x => x.gearSetId)).toEqual([11, 10, 12]) // no-op at top
+    expect(moveMember(m, 2, 1).map(x => x.gearSetId)).toEqual([11, 10, 12])  // no-op at bottom
+    m = removeMember(m, 1)
+    expect(m.map(x => x.gearSetId)).toEqual([11, 12])
   })
 })

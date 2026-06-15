@@ -1,4 +1,4 @@
-import type { WorkflowEdge, WorkflowNode, WorkflowNodeType } from '../../../types/api'
+import type { ModeMember, WorkflowEdge, WorkflowNode, WorkflowNodeType } from '../../../types/api'
 import { WEAPON_SKILLS } from '../../../lib/weaponSkills'
 import { JOB_ABILITIES } from '../../../lib/jobAbilities'
 import { SPELLS } from '../../../lib/spells'
@@ -116,4 +116,26 @@ export function wouldCreateCycle(edges: WorkflowEdge[], source: string, target: 
     for (const next of adjacency.get(node) ?? []) stack.push(next)
   }
   return false
+}
+
+// A terminal pin (no dispatch category) is the only kind allowed to target a Mode node.
+export function isTerminalHandle(triggerType: string, handle: string): boolean {
+  return categoryOfHandle(triggerType, handle) === null
+}
+
+// Pure member-list ops for Mode nodes (the editor delegates to these so they stay unit-testable).
+export function addMember(members: ModeMember[], gearSetId: number): ModeMember[] {
+  return [...members, { gearSetId }]
+}
+
+export function removeMember(members: ModeMember[], index: number): ModeMember[] {
+  return members.filter((_, i) => i !== index)
+}
+
+export function moveMember(members: ModeMember[], index: number, dir: -1 | 1): ModeMember[] {
+  const j = index + dir
+  if (j < 0 || j >= members.length) return members
+  const copy = [...members]
+  ;[copy[index], copy[j]] = [copy[j], copy[index]]
+  return copy
 }

@@ -1149,12 +1149,24 @@ export type WorkflowNodeType =
   | 'trigger:midcast'
   | 'trigger:buff_change'
   | 'equip'
+  | 'mode'
+
+export interface ModeMember {
+  gearSetId: number
+  label?: string | null
+}
 
 export interface WorkflowNode {
   id: string
   type: WorkflowNodeType
   position: { x: number; y: number }
-  data: { gearSetId?: number | null; actionName?: string | null }
+  data: {
+    gearSetId?: number | null
+    actionName?: string | null
+    modeName?: string
+    modeCommand?: string | null
+    members?: ModeMember[]
+  }
 }
 
 export interface WorkflowEdge {
