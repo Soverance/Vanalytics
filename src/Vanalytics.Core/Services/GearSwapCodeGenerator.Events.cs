@@ -6,28 +6,29 @@ namespace Vanalytics.Core.Services;
 
 public static partial class GearSwapCodeGenerator
 {
-    // Per trigger node type: function signature + per-branch Lua guard. `Nested` = the branch
-    // dispatches further on spell.english (precast category pins); otherwise a flat equip.
-    private sealed record TriggerSpec(string Signature, bool Nested, (string Handle, string Cond)[] Branches);
+    // Per trigger node type: function signature + per-branch (Lua guard, dispatch). `Dispatch` is the
+    // Lua expression a category branch switches on (e.g. "spell.english", "buff"); null = a terminal
+    // branch that flat-equips.
+    private sealed record TriggerSpec(string Signature, (string Handle, string Cond, string? Dispatch)[] Branches);
 
     private static readonly Dictionary<string, TriggerSpec> Triggers = new()
     {
-        ["trigger:status_change"] = new("function status_change(new, old)", false,
+        ["trigger:status_change"] = new("function status_change(new, old)",
         [
-            ("Engaged", "new == 'Engaged'"),
-            ("Idle",    "new == 'Idle'"),
-            ("Resting", "new == 'Resting'"),
+            ("Engaged", "new == 'Engaged'", null),
+            ("Idle",    "new == 'Idle'",    null),
+            ("Resting", "new == 'Resting'", null),
         ]),
-        ["trigger:precast"] = new("function precast(spell)", true,
+        ["trigger:precast"] = new("function precast(spell)",
         [
-            ("WeaponSkill", "spell.type == 'WeaponSkill'"),
-            ("JobAbility",  "spell.type == 'JobAbility'"),
-            ("Magic",       "spell.action_type == 'Magic'"),
+            ("WeaponSkill", "spell.type == 'WeaponSkill'",  "spell.english"),
+            ("JobAbility",  "spell.type == 'JobAbility'",   "spell.english"),
+            ("Magic",       "spell.action_type == 'Magic'", "spell.english"),
         ]),
-        ["trigger:aftercast"] = new("function aftercast(spell)", false,
+        ["trigger:aftercast"] = new("function aftercast(spell)",
         [
-            ("Engaged", "player.status == 'Engaged'"),
-            ("Idle",    "player.status ~= 'Engaged'"),
+            ("Engaged", "player.status == 'Engaged'", null),
+            ("Idle",    "player.status ~= 'Engaged'", null),
         ]),
     };
 
@@ -46,7 +47,7 @@ public static partial class GearSwapCodeGenerator
             if (!Triggers.TryGetValue(node.Type, out var spec)) continue;
 
             var arms = new List<(string Cond, string Body)>();
-            foreach (var (handle, cond) in spec.Branches)
+            foreach (var (handle, cond, dispatch) in spec.Branches)
             {
                 var leaves = graph.Edges
                     .Where(e => e.Source == node.Id && e.SourceHandle == handle)
@@ -55,7 +56,9 @@ public static partial class GearSwapCodeGenerator
                     .ToList();
                 if (leaves.Count == 0) continue;
 
-                var body = spec.Nested ? NestedBody(leaves, setNamesById) : FlatBody(leaves, setNamesById);
+                var body = dispatch is null
+                    ? FlatBody(leaves, setNamesById)
+                    : NestedBody(dispatch, leaves, setNamesById);
                 if (body is null) continue;
                 arms.Add((cond, body));
             }
@@ -87,9 +90,10 @@ public static partial class GearSwapCodeGenerator
         return null;
     }
 
-    // Category pin: dispatch on spell.english. Named leaves -> if/elseif chain; generic (no actionName)
-    // -> trailing else. Only-generic collapses to an inline equip (no nesting). Null if nothing resolves.
-    private static string? NestedBody(List<WorkflowNodeDto> leaves, IReadOnlyDictionary<long, string> names)
+    // Category pin: dispatch on <dispatch> (e.g. spell.english, buff). Named leaves -> if/elseif chain;
+    // generic (no actionName) -> trailing else. Only-generic collapses to an inline equip. Null if
+    // nothing resolves.
+    private static string? NestedBody(string dispatch, List<WorkflowNodeDto> leaves, IReadOnlyDictionary<long, string> names)
     {
         var named = leaves
             .Where(l => !string.IsNullOrEmpty(l.Data.ActionName))
@@ -107,7 +111,7 @@ public static partial class GearSwapCodeGenerator
         for (var i = 0; i < named.Count; i++)
         {
             var kw = i == 0 ? "if" : "elseif";
-            inner.Append($"        {kw} spell.english == {GearSwapLua.Key(named[i].Action)} then equip(sets[{GearSwapLua.Key(named[i].Set)}])\n");
+            inner.Append($"        {kw} {dispatch} == {GearSwapLua.Key(named[i].Action)} then equip(sets[{GearSwapLua.Key(named[i].Set)}])\n");
         }
         if (genericSet is not null)
             inner.Append($"        else equip(sets[{GearSwapLua.Key(genericSet)}])\n");
