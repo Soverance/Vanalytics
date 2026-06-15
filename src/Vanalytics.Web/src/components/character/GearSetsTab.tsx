@@ -23,9 +23,11 @@ interface Props {
   readOnly?: boolean
   /** When set (read-only mode), auto-open this set's read-only view once on mount. */
   initialSetId?: number
+  /** Pre-select this job in the nav (e.g. when returning from that job's workflow editor). */
+  initialJob?: string | null
 }
 
-export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite, fetchBase, readOnly = false, initialSetId }: Props) {
+export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite, fetchBase, readOnly = false, initialSetId, initialJob }: Props) {
   const characterId = character.id
   const navigate = useNavigate()
   const base = fetchBase ?? `/api/characters/${characterId}`
@@ -49,7 +51,7 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
   const [notice, setNotice] = useState<string | null>(null)
 
   // Discovery state.
-  const [selJob, setSelJob] = useState<string | null>(null)
+  const [selJob, setSelJob] = useState<string | null>(initialJob ?? null)
   const [selCategory, setSelCategory] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>([])

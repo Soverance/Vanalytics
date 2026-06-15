@@ -115,6 +115,8 @@ function WorkflowEditorInner() {
       const base = isCategory ? prev : prev.filter(e => !(e.source === nodeId && e.sourceHandle === handle))
       return [...base, { id: `${nodeId}-${handle}-${leafId}`, source: nodeId, sourceHandle: handle, target: leafId, targetHandle: 'in' }]
     })
+    // Auto-select the new leaf so its config panel (inspector) flies out immediately — no second click.
+    setSelectedId(leafId)
   }, [nodes])
 
   const onConnectEnd = useCallback((e: MouseEvent | TouchEvent) => {
@@ -192,7 +194,7 @@ function WorkflowEditorInner() {
   return (
     <div className="fixed inset-0 lg:left-64 z-10 flex flex-col bg-[#0d1117] text-gray-100">
       <div className="flex items-center gap-3 flex-wrap border-b border-gray-800 px-4 py-2">
-        <button onClick={() => navigate(`/characters/${id}`)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-200">
+        <button onClick={() => navigate(`/characters/${id}?tab=Gear%20Sets&job=${encodeURIComponent(job)}`)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-200">
           <ArrowLeft className="h-4 w-4" /> Back to character
         </button>
         <span className="font-bold">{character?.name ?? '…'} · <span className="text-amber-300">{job}</span> Workflow</span>
