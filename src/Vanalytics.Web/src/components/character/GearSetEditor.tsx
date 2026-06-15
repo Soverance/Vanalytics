@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { api } from '../../api/client'
 import { FFXI_JOBS } from '../../lib/jobs'
 import { toRaceId, useSlotDatPaths } from '../../lib/model-mappings'
@@ -78,18 +78,26 @@ export default function GearSetEditor({
     return m
   }, [itemCache, extraDetails])
 
-  // Fetch detail for any set item missing from both caches (tooltip stat block).
+  // Tracks detail fetches already in flight so rapid hovers don't double-fetch
+  // (extraDetails in the closure is stale until the next render).
+  const inFlight = useRef<Set<number>>(new Set())
+
+  // Fetch the GameItemDetail for one item id into the shared cache if missing.
+  // Used by both the slot prefetch below and the slot-picker hover tooltip.
+  const ensureDetail = useCallback((id: number) => {
+    if (id <= 0) return
+    if (itemCache.has(id) || extraDetails.has(id) || inFlight.current.has(id)) return
+    inFlight.current.add(id)
+    api<GameItemDetail>(`/api/items/${id}`)
+      .then(d => setExtraDetails(prev => new Map(prev).set(id, d)))
+      .catch(() => {})
+      .finally(() => { inFlight.current.delete(id) })
+  }, [itemCache, extraDetails])
+
+  // Prefetch detail for any set item so the equipment-panel tooltip has its stat block.
   useEffect(() => {
-    const missing = slots
-      .map(s => s.itemId)
-      .filter(id => id > 0 && !itemCache.has(id) && !extraDetails.has(id))
-    if (missing.length === 0) return
-    missing.forEach(id => {
-      api<GameItemDetail>(`/api/items/${id}`)
-        .then(d => setExtraDetails(prev => new Map(prev).set(id, d)))
-        .catch(() => {})
-    })
-  }, [slots, itemCache, extraDetails])
+    slots.forEach(s => ensureDetail(s.itemId))
+  }, [slots, ensureDetail])
 
   const upsertSlot = (slot: GearSetSlot) => {
     setSlots(prev => [...prev.filter(s => s.slot !== slot.slot), slot])
@@ -195,6 +203,8 @@ export default function GearSetEditor({
           onSelect={upsertSlot}
           onClose={() => setPickerSlot(null)}
           onClear={slotHasItem(pickerSlot) ? () => clearSlot(pickerSlot) : undefined}
+          itemCache={mergedCache}
+          onEnsureDetail={ensureDetail}
         />
       )}
 

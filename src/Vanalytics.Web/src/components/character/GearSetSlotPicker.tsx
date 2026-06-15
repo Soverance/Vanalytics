@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { X } from 'lucide-react'
 import { api } from '../../api/client'
 import { jobBitmask } from '../../lib/jobs'
 import { itemImageUrl } from '../../utils/imageUrl'
-import type { OwnedEquipmentItem, GameItemSummary, GearSetSlot } from '../../types/api'
+import type { OwnedEquipmentItem, GameItemSummary, GearSetSlot, GameItemDetail } from '../../types/api'
+import ItemPreviewBox from '../economy/ItemPreviewBox'
 
 // Internal grid slot -> equip-slot bitmask (matches GameItem.Slots; Ear/Ring cover both bits).
 const SLOT_BITMASK: Record<string, number> = {
@@ -34,15 +35,50 @@ interface Props {
   onSelect: (slot: GearSetSlot) => void
   onClose: () => void
   onClear?: () => void
+  itemCache: Map<number, GameItemDetail>
+  onEnsureDetail: (itemId: number) => void
 }
 
 export default function GearSetSlotPicker({
   slotName, ownedItems, job, jobFilter, onJobFilterChange, onSelect, onClose, onClear,
+  itemCache, onEnsureDetail,
 }: Props) {
   const [mode, setMode] = useState<'owned' | 'catalog'>('owned')
   const [query, setQuery] = useState('')
   const [catalog, setCatalog] = useState<GameItemSummary[]>([])
   const [loading, setLoading] = useState(false)
+
+  // Cursor-following stat tooltip (mirrors InventoryTab).
+  const [hoveredId, setHoveredId] = useState<number | null>(null)
+  const [hoveredAugments, setHoveredAugments] = useState<string[] | null>(null)
+  const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+
+  const handleRowEnter = useCallback((itemId: number, augments?: string[]) => {
+    setHoveredId(itemId)
+    setHoveredAugments(augments ?? null)
+    onEnsureDetail(itemId)
+  }, [onEnsureDetail])
+
+  const handleRowMove = useCallback((e: React.MouseEvent) => {
+    const margin = 16
+    let left = e.clientX + margin
+    let top = e.clientY + margin
+    const el = tooltipRef.current
+    if (el) {
+      if (left + el.offsetWidth > window.innerWidth) left = e.clientX - el.offsetWidth - margin
+      if (top + el.offsetHeight > window.innerHeight) top = e.clientY - el.offsetHeight - margin
+    }
+    setTooltipPos({ top, left })
+  }, [])
+
+  const handleRowLeave = useCallback(() => {
+    setHoveredId(null)
+    setHoveredAugments(null)
+    setTooltipPos(null)
+  }, [])
+
+  const hoveredDetail = hoveredId != null ? itemCache.get(hoveredId) ?? null : null
 
   // The filter only applies when the set has a real job and the toggle is on.
   const jobMask = job ? jobBitmask(job) : 0
@@ -121,6 +157,9 @@ export default function GearSetSlotPicker({
             )}
             {owned.map((i, idx) => (
               <button key={`${i.itemId}-${idx}`} onClick={() => pick(i.itemId, i.itemName, i.augments)}
+                onMouseEnter={() => handleRowEnter(i.itemId, i.augments)}
+                onMouseMove={handleRowMove}
+                onMouseLeave={handleRowLeave}
                 className="w-full flex items-center gap-3 p-2 rounded text-left bg-gray-800/50 border border-transparent hover:border-gray-600/40">
                 {i.iconPath
                   ? <img src={itemImageUrl(i.iconPath)} alt={i.itemName} className="w-8 h-8 flex-shrink-0" style={{ imageRendering: 'pixelated' }} />
@@ -135,7 +174,8 @@ export default function GearSetSlotPicker({
             ))}
           </div>
         ) : (
-          <CatalogSearch query={query} setQuery={setQuery} results={catalog} loading={loading} onPick={pick} />
+          <CatalogSearch query={query} setQuery={setQuery} results={catalog} loading={loading} onPick={pick}
+            onRowEnter={handleRowEnter} onRowMove={handleRowMove} onRowLeave={handleRowLeave} />
         )}
 
         {onClear && (
@@ -146,15 +186,25 @@ export default function GearSetSlotPicker({
             </button>
           </div>
         )}
+
+        {hoveredDetail && tooltipPos && (
+          <div ref={tooltipRef} className="fixed z-[60] pointer-events-none"
+            style={{ top: tooltipPos.top, left: tooltipPos.left }}>
+            <ItemPreviewBox item={hoveredDetail} augments={hoveredAugments ?? undefined} />
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 // Catalog search + manual augment entry for the chosen unowned item.
-function CatalogSearch({ query, setQuery, results, loading, onPick }: {
+function CatalogSearch({ query, setQuery, results, loading, onPick, onRowEnter, onRowMove, onRowLeave }: {
   query: string; setQuery: (v: string) => void; results: GameItemSummary[]
   loading: boolean; onPick: (itemId: number, itemName: string, augments: string[]) => void
+  onRowEnter: (itemId: number, augments?: string[]) => void
+  onRowMove: (e: React.MouseEvent) => void
+  onRowLeave: () => void
 }) {
   const [chosen, setChosen] = useState<GameItemSummary | null>(null)
   const [augText, setAugText] = useState('')
@@ -186,6 +236,9 @@ function CatalogSearch({ query, setQuery, results, loading, onPick }: {
         {!loading && query.length >= 2 && results.length === 0 && <div className="text-xs text-gray-500 text-center py-4">No items found</div>}
         {!loading && results.map(item => (
           <button key={item.itemId} onClick={() => setChosen(item)}
+            onMouseEnter={() => onRowEnter(item.itemId)}
+            onMouseMove={onRowMove}
+            onMouseLeave={onRowLeave}
             className="w-full flex items-center gap-3 p-2 rounded text-left bg-gray-800/50 border border-transparent hover:border-gray-600/40">
             {item.iconPath
               ? <img src={itemImageUrl(item.iconPath)} alt={item.name} className="w-8 h-8 flex-shrink-0" style={{ imageRendering: 'pixelated' }} />
