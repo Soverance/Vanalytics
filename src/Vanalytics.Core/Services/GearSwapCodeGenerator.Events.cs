@@ -51,6 +51,8 @@ public static partial class GearSwapCodeGenerator
     {
         var sb = new StringBuilder();
         var equipById = graph.Nodes.Where(n => n.Type == "equip").ToDictionary(n => n.Id);
+        // Mode nodes are valid targets for terminal pins: nodeId -> Lua namespace (only non-empty modes).
+        var modeNsById = CollectModes(graph, setNamesById).ToDictionary(m => m.NodeId, m => m.Namespace);
 
         foreach (var node in graph.Nodes)
         {
@@ -59,16 +61,25 @@ public static partial class GearSwapCodeGenerator
             var arms = new List<(string Cond, string Body)>();
             foreach (var (handle, cond, dispatch) in spec.Branches)
             {
-                var leaves = graph.Edges
+                var targetIds = graph.Edges
                     .Where(e => e.Source == node.Id && e.SourceHandle == handle)
-                    .Select(e => equipById.TryGetValue(e.Target, out var t) ? t : null)
-                    .Where(t => t is not null).Select(t => t!)
+                    .Select(e => e.Target)
                     .ToList();
-                if (leaves.Count == 0) continue;
+                if (targetIds.Count == 0) continue;
 
-                var body = dispatch is null
-                    ? FlatBody(leaves, setNamesById)
-                    : NestedBody(dispatch, leaves, setNamesById);
+                string? body;
+                if (dispatch is null)
+                {
+                    body = TerminalBody(targetIds, equipById, modeNsById, setNamesById);
+                }
+                else
+                {
+                    var leaves = targetIds
+                        .Select(t => equipById.TryGetValue(t, out var n) ? n : null)
+                        .Where(n => n is not null).Select(n => n!)
+                        .ToList();
+                    body = leaves.Count == 0 ? null : NestedBody(dispatch, leaves, setNamesById);
+                }
                 if (body is null) continue;
                 arms.Add((cond, body));
             }
@@ -89,13 +100,23 @@ public static partial class GearSwapCodeGenerator
     private static string? Resolve(WorkflowNodeDto leaf, IReadOnlyDictionary<long, string> names) =>
         leaf.Data.GearSetId is { } id && names.TryGetValue(id, out var name) ? name : null;
 
-    // Terminal pin: first resolvable leaf, inline after `then`.
-    private static string? FlatBody(List<WorkflowNodeDto> leaves, IReadOnlyDictionary<long, string> names)
+    // Terminal pin: first resolvable target wins, inline after `then`. An equip leaf -> flat
+    // sets['Name']; a mode node -> equip of the mode's current set.
+    private static string? TerminalBody(
+        List<string> targetIds,
+        IReadOnlyDictionary<string, WorkflowNodeDto> equipById,
+        IReadOnlyDictionary<string, string> modeNsById,
+        IReadOnlyDictionary<long, string> names)
     {
-        foreach (var leaf in leaves)
+        foreach (var id in targetIds)
         {
-            var name = Resolve(leaf, names);
-            if (name is not null) return $" equip(sets[{GearSwapLua.Key(name)}])";
+            if (modeNsById.TryGetValue(id, out var ns))
+                return $" equip(sets.{ns}[{ns}_Set_Names[{ns}_Index]])";
+            if (equipById.TryGetValue(id, out var leaf))
+            {
+                var name = Resolve(leaf, names);
+                if (name is not null) return $" equip(sets[{GearSwapLua.Key(name)}])";
+            }
         }
         return null;
     }

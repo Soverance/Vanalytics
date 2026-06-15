@@ -1,0 +1,95 @@
+// src/Vanalytics.Core/Services/GearSwapCodeGenerator.Modes.cs
+using System.Text;
+using Vanalytics.Core.DTOs.Workflows;
+
+namespace Vanalytics.Core.Services;
+
+public static partial class GearSwapCodeGenerator
+{
+    // A non-empty mode resolved for codegen: Namespace is a unique Lua ident; Command is the macro
+    // string; Members are (label, setId) in cycle order (index 1 = default).
+    private sealed record ModeInfo(
+        string NodeId, string Name, string Namespace, string Command,
+        IReadOnlyList<(string Label, long SetId)> Members);
+
+    // Collect non-empty mode nodes. Member label = explicit Label ?? the set's name; collisions within a
+    // mode get a numeric suffix. Members whose set isn't resolvable (deleted) are dropped. Namespaces are
+    // de-duplicated across modes (the UI enforces unique names; this is a backstop for valid Lua).
+    private static List<ModeInfo> CollectModes(WorkflowGraphDto graph, IReadOnlyDictionary<long, string> names)
+    {
+        var modes = new List<ModeInfo>();
+        var usedNs = new HashSet<string>();
+        foreach (var node in graph.Nodes.Where(n => n.Type == "mode"))
+        {
+            var name = (node.Data.ModeName ?? "").Trim();
+            if (name.Length == 0) continue;
+
+            var members = new List<(string Label, long SetId)>();
+            var usedLabels = new HashSet<string>();
+            foreach (var m in node.Data.Members ?? [])
+            {
+                if (!names.TryGetValue(m.GearSetId, out var setName)) continue;   // deleted/unresolved -> drop
+                var label = string.IsNullOrWhiteSpace(m.Label) ? setName : m.Label!.Trim();
+                var unique = label;
+                var i = 2;
+                while (!usedLabels.Add(unique)) unique = $"{label} {i++}";
+                members.Add((unique, m.GearSetId));
+            }
+            if (members.Count == 0) continue;   // zero-member -> skip
+
+            var ns = GearSwapLua.Ident(name);
+            var uniqueNs = ns;
+            var k = 2;
+            while (!usedNs.Add(uniqueNs)) uniqueNs = $"{ns}{k++}";
+
+            var command = string.IsNullOrWhiteSpace(node.Data.ModeCommand) ? $"cycle {name} set" : node.Data.ModeCommand!.Trim();
+            modes.Add(new ModeInfo(node.Id, name, uniqueNs, command, members));
+        }
+        return modes;
+    }
+
+    // get_sets body chunk per mode: index init + names array + the namespaced member sets.
+    private static string EmitModes(List<ModeInfo> modes, IReadOnlyDictionary<long, ResolvedGearSet> setsById)
+    {
+        var sb = new StringBuilder();
+        foreach (var mode in modes)
+        {
+            sb.Append($"    {mode.Namespace}_Index = 1\n");
+            var names = string.Join(", ", mode.Members.Select(m => GearSwapLua.Key(m.Label)));
+            sb.Append($"    {mode.Namespace}_Set_Names = {{{names}}}\n");
+            sb.Append($"    sets.{mode.Namespace} = {{}}\n");
+            foreach (var (label, setId) in mode.Members)
+            {
+                sb.Append($"    sets.{mode.Namespace}[{GearSwapLua.Key(label)}] = {{\n");
+                sb.Append(EmitSlots(setsById[setId]));
+                sb.Append("    }\n");
+            }
+        }
+        return sb.ToString();
+    }
+
+    // self_command(command): one cycle arm per mode — increment+wrap the index, echo, equip current.
+    // Reproduces the THF idiom verbatim, preceded by a macro-hint comment block. Empty when no modes.
+    private static string EmitSelfCommand(List<ModeInfo> modes)
+    {
+        if (modes.Count == 0) return "";
+        var sb = new StringBuilder();
+        sb.Append("-- Bind these in an in-game macro (one line each):\n");
+        foreach (var mode in modes)
+            sb.Append($"--   /console gs c {mode.Command}\n");
+        sb.Append("function self_command(command)\n");
+        for (var i = 0; i < modes.Count; i++)
+        {
+            var m = modes[i];
+            var ns = m.Namespace;
+            var kw = i == 0 ? "if" : "elseif";
+            sb.Append($"    {kw} command == {GearSwapLua.Key(m.Command)} then\n");
+            sb.Append($"        {ns}_Index = {ns}_Index + 1\n");
+            sb.Append($"        if {ns}_Index > #{ns}_Set_Names then {ns}_Index = 1 end\n");
+            sb.Append($"        send_command('@input /echo ----- {m.Name} Set changed to '..{ns}_Set_Names[{ns}_Index]..' -----')\n");
+            sb.Append($"        equip(sets.{ns}[{ns}_Set_Names[{ns}_Index]])\n");
+        }
+        sb.Append("    end\nend\n\n");
+        return sb.ToString();
+    }
+}
