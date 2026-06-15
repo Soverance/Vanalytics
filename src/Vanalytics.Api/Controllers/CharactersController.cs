@@ -816,9 +816,15 @@ public class CharactersController : ControllerBase
             ? new WorkflowGraphDto()
             : JsonSerializer.Deserialize<WorkflowGraphDto>(wf.GraphJson, JsonOpts) ?? new WorkflowGraphDto();
 
+        var modeSetIds = graph.Nodes
+            .Where(n => n.Type == "mode")
+            .SelectMany(n => n.Data.Members ?? [])
+            .Select(m => m.GearSetId);
+
         var referencedIds = graph.Nodes
             .Where(n => n.Type == "equip" && n.Data.GearSetId is not null)
             .Select(n => n.Data.GearSetId!.Value)
+            .Concat(modeSetIds)
             .Distinct()
             .ToList();
 
