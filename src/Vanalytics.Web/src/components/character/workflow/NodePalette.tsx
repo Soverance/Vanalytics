@@ -4,6 +4,8 @@ const ITEMS: { type: WorkflowNodeType; label: string; group: string; color: stri
   { type: 'trigger:precast', label: 'precast', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:aftercast', label: 'aftercast', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:status_change', label: 'status_change', group: 'Triggers', color: '#b3344a' },
+  { type: 'trigger:midcast', label: 'midcast', group: 'Triggers', color: '#b3344a' },
+  { type: 'trigger:buff_change', label: 'buff_change', group: 'Triggers', color: '#b3344a' },
 ]
 
 export default function NodePalette({ x, y, onPick, onClose }: {

@@ -1146,6 +1146,8 @@ export type WorkflowNodeType =
   | 'trigger:status_change'
   | 'trigger:precast'
   | 'trigger:aftercast'
+  | 'trigger:midcast'
+  | 'trigger:buff_change'
   | 'equip'
 
 export interface WorkflowNode {

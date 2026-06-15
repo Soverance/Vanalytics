@@ -11,7 +11,7 @@ import { api } from '../api/client'
 import { useJobWorkflow } from '../hooks/useJobWorkflow'
 import { wouldCreateCycle } from '../components/character/workflow/workflowGraph'
 import ActionPicker from '../components/character/workflow/ActionPicker'
-import { categoryOfHandle, hasAction, type ActionCategory } from '../components/character/workflow/workflowGraph'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, type ActionCategory } from '../components/character/workflow/workflowGraph'
 import TriggerNode from '../components/character/workflow/TriggerNode'
 import EquipGearSetNode from '../components/character/workflow/EquipGearSetNode'
 import NodePalette from '../components/character/workflow/NodePalette'
@@ -25,6 +25,8 @@ const nodeTypes = {
   'trigger:status_change': TriggerNode,
   'trigger:precast': TriggerNode,
   'trigger:aftercast': TriggerNode,
+  'trigger:midcast': TriggerNode,
+  'trigger:buff_change': TriggerNode,
   equip: EquipGearSetNode,
 }
 
@@ -46,7 +48,7 @@ function WorkflowEditorInner() {
   const hydrated = useRef(false)
   const { screenToFlowPosition } = useReactFlow()
   const connectingFrom = useRef<{ nodeId: string; handleId: string } | null>(null)
-  const [picker, setPicker] = useState<{ x: number; y: number; flowX: number; flowY: number; nodeId: string; handle: string; category: ActionCategory } | null>(null)
+  const [picker, setPicker] = useState<{ x: number; y: number; flowX: number; flowY: number; nodeId: string; handle: string; category: ActionCategory; allowGeneric: boolean } | null>(null)
   const [nodeMenu, setNodeMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null)
 
   useEffect(() => {
@@ -133,7 +135,7 @@ function WorkflowEditorInner() {
     const category = categoryOfHandle(triggerType, from.handleId)
     if (category === null) { spawnLeaf(from.nodeId, from.handleId, flow.x, flow.y, null); return }
     const rect = (document.querySelector('.react-flow__pane') as HTMLElement)?.getBoundingClientRect()
-    setPicker({ x: me.clientX - (rect?.left ?? 0), y: me.clientY - (rect?.top ?? 0), flowX: flow.x, flowY: flow.y, nodeId: from.nodeId, handle: from.handleId, category })
+    setPicker({ x: me.clientX - (rect?.left ?? 0), y: me.clientY - (rect?.top ?? 0), flowX: flow.x, flowY: flow.y, nodeId: from.nodeId, handle: from.handleId, category, allowGeneric: allowGenericForHandle(triggerType, from.handleId) })
   }, [nodes, screenToFlowPosition, spawnLeaf])
 
   const onPaneContextMenu = useCallback((e: React.MouseEvent | MouseEvent) => {
@@ -229,7 +231,7 @@ function WorkflowEditorInner() {
           )}
           {picker && (
             <ActionPicker
-              x={picker.x} y={picker.y} category={picker.category}
+              x={picker.x} y={picker.y} category={picker.category} allowGeneric={picker.allowGeneric}
               disabledNames={new Set(
                 edges.filter(e => e.source === picker.nodeId && e.sourceHandle === picker.handle)
                   .map(e => nodes.find(n => n.id === e.target))
@@ -266,7 +268,7 @@ function WorkflowEditorInner() {
               const trig = nodes.find(n => n.id === inEdge?.source)
               const a = (selected!.data as { actionName?: string }).actionName
               if (!trig || !inEdge) return undefined
-              return `${(trig.type ?? '').replace('trigger:', '')} → ${inEdge.sourceHandle}${a ? ` → ${a}` : ''}`
+              return `${(trig.type ?? '').replace('trigger:', '')} → ${inEdge.sourceHandle}${a ? ` → ${labelForAction(a)}` : ''}`
             })()}
           />
         )}

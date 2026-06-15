@@ -3,12 +3,13 @@ import { useMemo, useState } from 'react'
 import { actionCatalog, type ActionCategory } from './workflowGraph'
 
 const CATEGORY_LABEL: Record<ActionCategory, string> = {
-  WeaponSkill: 'Weapon Skill', JobAbility: 'Job Ability', Magic: 'Magic',
+  WeaponSkill: 'Weapon Skill', JobAbility: 'Job Ability', Magic: 'Magic', Buff: 'Buff',
 }
 
-export default function ActionPicker({ x, y, category, disabledNames, onPick, onClose }: {
+export default function ActionPicker({ x, y, category, allowGeneric, disabledNames, onPick, onClose }: {
   x: number; y: number
   category: ActionCategory
+  allowGeneric: boolean
   disabledNames: Set<string>
   onPick: (actionName: string | null) => void   // null = generic default
   onClose: () => void
@@ -30,16 +31,18 @@ export default function ActionPicker({ x, y, category, disabledNames, onPick, on
           placeholder={`Search ${CATEGORY_LABEL[category]}…`}
           className="w-full border-b border-gray-700 bg-gray-900 px-3 py-2 text-xs text-gray-200 outline-none" />
         <div className="max-h-72 overflow-y-auto">
+          {allowGeneric && (
           <button onClick={() => onPick(null)}
             className="flex w-full items-center gap-2 border-b border-gray-700/60 px-3 py-1.5 text-left text-xs font-semibold text-amber-200 hover:bg-gray-700">
             Any {CATEGORY_LABEL[category]} (default)
           </button>
+          )}
           {rows.map(a => {
             const disabled = disabledNames.has(a.name)
             return (
               <button key={a.id} disabled={disabled} onClick={() => onPick(a.name)}
                 className="flex w-full items-center px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-600 disabled:hover:bg-transparent">
-                {a.name}{disabled ? ' ✓' : ''}
+                {a.label ?? a.name}{disabled ? ' ✓' : ''}
               </button>
             )
           })}
