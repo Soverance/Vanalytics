@@ -35,6 +35,11 @@ public static partial class GearSwapCodeGenerator
             ("Magic",  "spell.action_type == 'Magic'",         "spell.english"),  // category
             ("Ranged", "spell.action_type == 'Ranged Attack'", null),             // terminal, flat equip
         ]),
+        ["trigger:buff_change"] = new("function buff_change(buff, gain)",
+        [
+            ("Gained", "gain",     "buff"),   // category, dispatch on buff name
+            ("Lost",   "not gain", "buff"),   // category, dispatch on buff name
+        ]),
     };
 
     /// <summary>

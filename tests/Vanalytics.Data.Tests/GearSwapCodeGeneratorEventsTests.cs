@@ -133,4 +133,35 @@ public class GearSwapCodeGeneratorEventsTests
         Assert.Contains("if spell.action_type == 'Magic' then equip(sets['Idle Default'])", lua);
         Assert.Contains("elseif spell.action_type == 'Ranged Attack' then equip(sets['Ranged Set'])", lua);
     }
+
+    [Fact]
+    public void BuffChange_gained_named_only_has_no_else()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:buff_change"), EquipNamed("e",6,"Sneak Attack")],
+            [Edge("t","Gained","e")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("function buff_change(buff, gain)", lua);
+        Assert.Contains("if gain then", lua);
+        Assert.Contains("if buff == 'Sneak Attack' then equip(sets['SA Set'])", lua);
+        Assert.DoesNotContain("else equip", lua);
+    }
+
+    [Fact]
+    public void BuffChange_gained_and_lost_dispatch_on_buff_verbatim()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:buff_change"), EquipNamed("e1",6,"Sneak Attack"), EquipNamed("e2",2,"doom")],
+            [Edge("t","Gained","e1"), Edge("t","Lost","e2")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("if gain then", lua);
+        Assert.Contains("if buff == 'Sneak Attack' then equip(sets['SA Set'])", lua);
+        Assert.Contains("elseif not gain then", lua);
+        Assert.Contains("if buff == 'doom' then equip(sets['Idle Default'])", lua);  // raw lowercase en
+        Assert.DoesNotContain("spell.english", lua);
+    }
 }
