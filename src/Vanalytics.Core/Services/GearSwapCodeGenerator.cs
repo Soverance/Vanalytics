@@ -30,14 +30,22 @@ public static partial class GearSwapCodeGenerator
         {
             if (!seen.Add(set.Id)) continue;
             sb.Append($"    sets[{GearSwapLua.Key(set.Name)}] = {{\n");
-            var bySlot = set.Slots.ToDictionary(s => s.Slot);
-            foreach (var (grid, key) in SlotMap)
-            {
-                if (!bySlot.TryGetValue(grid, out var s) || s.ItemId == 0 || string.IsNullOrEmpty(s.ItemName))
-                    continue;
-                sb.Append($"        {key}={SlotValue(s)},\n");
-            }
+            sb.Append(EmitSlots(set));
             sb.Append("    }\n");
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>Emits the indented `slot=value,` lines for one set's populated slots, in canonical order.</summary>
+    internal static string EmitSlots(ResolvedGearSet set)
+    {
+        var sb = new StringBuilder();
+        var bySlot = set.Slots.ToDictionary(s => s.Slot);
+        foreach (var (grid, key) in SlotMap)
+        {
+            if (!bySlot.TryGetValue(grid, out var s) || s.ItemId == 0 || string.IsNullOrEmpty(s.ItemName))
+                continue;
+            sb.Append($"        {key}={SlotValue(s)},\n");
         }
         return sb.ToString();
     }
