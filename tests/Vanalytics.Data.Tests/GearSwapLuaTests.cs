@@ -31,4 +31,31 @@ public class GearSwapLuaTests
     {
         Assert.Equal("\"a b\"", GearSwapLua.Name("a\r\nb"));
     }
+
+    [Fact]
+    public void Ident_keeps_simple_names()
+    {
+        Assert.Equal("TP", GearSwapLua.Ident("TP"));
+        Assert.Equal("Idle", GearSwapLua.Ident("Idle"));
+    }
+
+    [Fact]
+    public void Ident_strips_spaces_and_punctuation()
+    {
+        Assert.Equal("RangedTP", GearSwapLua.Ident("Ranged TP"));
+        Assert.Equal("RangedTP", GearSwapLua.Ident("Ranged-TP"));
+    }
+
+    [Fact]
+    public void Ident_prefixes_underscore_when_starting_with_digit()
+    {
+        Assert.Equal("_2HWeapons", GearSwapLua.Ident("2H Weapons"));
+    }
+
+    [Fact]
+    public void Ident_falls_back_when_empty()
+    {
+        Assert.Equal("Mode", GearSwapLua.Ident(""));
+        Assert.Equal("Mode", GearSwapLua.Ident("!!!"));
+    }
 }
