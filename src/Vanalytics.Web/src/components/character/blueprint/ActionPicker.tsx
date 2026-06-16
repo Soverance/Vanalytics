@@ -1,6 +1,6 @@
-// src/Vanalytics.Web/src/components/character/workflow/ActionPicker.tsx
+// src/Vanalytics.Web/src/components/character/blueprint/ActionPicker.tsx
 import { useMemo, useState } from 'react'
-import { actionCatalog, type ActionCategory } from './workflowGraph'
+import { actionCatalog, type ActionCategory } from './blueprintGraph'
 
 const CATEGORY_LABEL: Record<ActionCategory, string> = {
   WeaponSkill: 'Weapon Skill', JobAbility: 'Job Ability', Magic: 'Magic', Buff: 'Buff',

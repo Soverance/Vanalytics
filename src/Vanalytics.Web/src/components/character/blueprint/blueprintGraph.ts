@@ -1,4 +1,4 @@
-import type { ModeMember, WorkflowEdge, WorkflowNode, WorkflowNodeType } from '../../../types/api'
+import type { ModeMember, BlueprintEdge, BlueprintNode, BlueprintNodeType } from '../../../types/api'
 import { WEAPON_SKILLS } from '../../../lib/weaponSkills'
 import { JOB_ABILITIES } from '../../../lib/jobAbilities'
 import { SPELLS } from '../../../lib/spells'
@@ -15,7 +15,7 @@ type HandleKind = 'terminal' | { category: ActionCategory; allowGeneric: boolean
 // Branch handles + display labels + kinds per trigger. Mirrors the backend Triggers table in
 // GearSwapCodeGenerator.Events.cs — keep the handle names in sync.
 export const TRIGGER_DEFS: Record<
-  Extract<WorkflowNodeType, `trigger:${string}`>,
+  Extract<BlueprintNodeType, `trigger:${string}`>,
   { label: string; handles: string[]; handleLabels: Record<string, string>; kinds: Record<string, HandleKind> }
 > = {
   'trigger:status_change': {
@@ -88,7 +88,7 @@ export function labelForAction(name: string | null | undefined): string {
 
 // Is a leaf with this actionName already wired to this pin (source node + handle)?
 export function hasAction(
-  nodes: WorkflowNode[], edges: WorkflowEdge[],
+  nodes: BlueprintNode[], edges: BlueprintEdge[],
   sourceNodeId: string, handle: string, actionName: string,
 ): boolean {
   const targets = new Set(
@@ -97,7 +97,7 @@ export function hasAction(
 }
 
 // True if adding source->target would create a directed cycle (incl. a self-edge).
-export function wouldCreateCycle(edges: WorkflowEdge[], source: string, target: string): boolean {
+export function wouldCreateCycle(edges: BlueprintEdge[], source: string, target: string): boolean {
   if (source === target) return true
   // Is `source` reachable from `target` following existing edges? If so, the new edge closes a loop.
   const adjacency = new Map<string, string[]>()

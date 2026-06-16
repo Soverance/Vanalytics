@@ -1141,8 +1141,8 @@ export interface OwnedEquipmentItem {
   augments: string[]
 }
 
-// --- GearSwap workflow editor ---
-export type WorkflowNodeType =
+// --- GearSwap blueprint editor ---
+export type BlueprintNodeType =
   | 'trigger:status_change'
   | 'trigger:precast'
   | 'trigger:aftercast'
@@ -1156,9 +1156,9 @@ export interface ModeMember {
   label?: string | null
 }
 
-export interface WorkflowNode {
+export interface BlueprintNode {
   id: string
-  type: WorkflowNodeType
+  type: BlueprintNodeType
   position: { x: number; y: number }
   data: {
     gearSetId?: number | null
@@ -1169,7 +1169,7 @@ export interface WorkflowNode {
   }
 }
 
-export interface WorkflowEdge {
+export interface BlueprintEdge {
   id: string
   source: string
   sourceHandle?: string | null
@@ -1177,19 +1177,19 @@ export interface WorkflowEdge {
   targetHandle?: string | null
 }
 
-export interface WorkflowGraph {
+export interface BlueprintGraph {
   version: number
-  nodes: WorkflowNode[]
-  edges: WorkflowEdge[]
+  nodes: BlueprintNode[]
+  edges: BlueprintEdge[]
 }
 
-export interface WorkflowResponse {
+export interface BlueprintResponse {
   job: string
-  graph: WorkflowGraph
+  graph: BlueprintGraph
   updatedAt: string | null
 }
 
-export interface GenerateWorkflowResponse {
+export interface GenerateBlueprintResponse {
   lua: string
   warnings: string[]
 }

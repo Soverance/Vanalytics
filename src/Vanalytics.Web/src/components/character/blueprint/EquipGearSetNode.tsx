@@ -1,7 +1,7 @@
-// src/Vanalytics.Web/src/components/character/workflow/EquipGearSetNode.tsx
+// src/Vanalytics.Web/src/components/character/blueprint/EquipGearSetNode.tsx
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Shield } from 'lucide-react'
-import { labelForAction } from './workflowGraph'
+import { labelForAction } from './blueprintGraph'
 
 export interface EquipNodeData extends Record<string, unknown> {
   gearSetId?: number | null

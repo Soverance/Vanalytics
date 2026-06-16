@@ -1,11 +1,11 @@
-// src/Vanalytics.Web/src/components/character/workflow/TriggerNode.tsx
+// src/Vanalytics.Web/src/components/character/blueprint/TriggerNode.tsx
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Zap } from 'lucide-react'
-import { TRIGGER_DEFS } from './workflowGraph'
-import type { WorkflowNodeType } from '../../../types/api'
+import { TRIGGER_DEFS } from './blueprintGraph'
+import type { BlueprintNodeType } from '../../../types/api'
 
 export default function TriggerNode({ type }: NodeProps) {
-  const def = TRIGGER_DEFS[type as Extract<WorkflowNodeType, `trigger:${string}`>]
+  const def = TRIGGER_DEFS[type as Extract<BlueprintNodeType, `trigger:${string}`>]
   if (!def) return null
   return (
     <div className="rounded-lg border border-gray-700 bg-gray-900 shadow-lg min-w-[180px]">

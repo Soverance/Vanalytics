@@ -1,4 +1,4 @@
-// src/Vanalytics.Web/src/components/character/workflow/ModeNode.tsx
+// src/Vanalytics.Web/src/components/character/blueprint/ModeNode.tsx
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Repeat } from 'lucide-react'
 import type { ModeMember } from '../../../types/api'
