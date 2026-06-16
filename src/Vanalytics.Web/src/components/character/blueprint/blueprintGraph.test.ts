@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember } from './workflowGraph'
-import type { WorkflowEdge, WorkflowNode } from '../../../types/api'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember } from './blueprintGraph'
+import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
-  const edges: WorkflowEdge[] = [
+  const edges: BlueprintEdge[] = [
     { id: 'e1', source: 'a', target: 'b' },
     { id: 'e2', source: 'b', target: 'c' },
   ]
@@ -51,7 +51,7 @@ describe('action helpers', () => {
   })
 
   it('detects an already-added action on a pin', () => {
-    const nodes: WorkflowNode[] = [
+    const nodes: BlueprintNode[] = [
       { id: 'leaf', type: 'equip', position: { x: 0, y: 0 }, data: { actionName: 'Mercy Stroke' } },
     ]
     const edges = [{ id: 'e', source: 't', sourceHandle: 'WeaponSkill', target: 'leaf', targetHandle: 'in' }]

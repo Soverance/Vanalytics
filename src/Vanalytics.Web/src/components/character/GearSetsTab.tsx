@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Plus, Camera, Workflow } from 'lucide-react'
+import { Plus, Camera, Workflow as BlueprintIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useCharacterGearSets } from '../../hooks/useCharacterGearSets'
@@ -23,7 +23,7 @@ interface Props {
   readOnly?: boolean
   /** When set (read-only mode), auto-open this set's read-only view once on mount. */
   initialSetId?: number
-  /** Pre-select this job in the nav (e.g. when returning from that job's workflow editor). */
+  /** Pre-select this job in the nav (e.g. when returning from that job's blueprint editor). */
   initialJob?: string | null
 }
 
@@ -193,11 +193,11 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
           </button>
           <span className="ml-auto text-[10px] text-gray-500">{sets.length} / {MAX_GEAR_SETS_PER_CHARACTER}</span>
           <button
-            onClick={() => selJob && navigate(`/characters/${characterId}/workflow/${selJob}`)}
+            onClick={() => selJob && navigate(`/characters/${characterId}/blueprint/${selJob}`)}
             disabled={!selJob}
-            title={selJob ? `Open the ${selJob} workflow editor` : 'Select a job in the left nav to open its workflow editor'}
+            title={selJob ? `Open the ${selJob} blueprint editor` : 'Select a job in the left nav to open its blueprint editor'}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-gray-800/60 text-gray-300 border border-gray-700/40 disabled:opacity-50 disabled:cursor-not-allowed">
-            <Workflow className="h-3.5 w-3.5" /> Open Workflow Editor{selJob ? ` (${selJob})` : ''}
+            <BlueprintIcon className="h-3.5 w-3.5" /> Open Blueprint Editor{selJob ? ` (${selJob})` : ''}
           </button>
         </div>
       )}

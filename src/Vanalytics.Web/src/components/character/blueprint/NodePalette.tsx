@@ -1,6 +1,6 @@
-import type { WorkflowNodeType } from '../../../types/api'
+import type { BlueprintNodeType } from '../../../types/api'
 
-const ITEMS: { type: WorkflowNodeType; label: string; group: string; color: string }[] = [
+const ITEMS: { type: BlueprintNodeType; label: string; group: string; color: string }[] = [
   { type: 'trigger:precast', label: 'precast', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:aftercast', label: 'aftercast', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:status_change', label: 'status_change', group: 'Triggers', color: '#b3344a' },
@@ -11,7 +11,7 @@ const ITEMS: { type: WorkflowNodeType; label: string; group: string; color: stri
 
 export default function NodePalette({ x, y, onPick, onClose }: {
   x: number; y: number
-  onPick: (type: WorkflowNodeType) => void
+  onPick: (type: BlueprintNodeType) => void
   onClose: () => void
 }) {
   const groups = [...new Set(ITEMS.map(i => i.group))]

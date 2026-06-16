@@ -1,4 +1,4 @@
-// src/Vanalytics.Web/src/components/character/workflow/ModeInspector.tsx
+// src/Vanalytics.Web/src/components/character/blueprint/ModeInspector.tsx
 import type { GearSetSummary, ModeMember } from '../../../types/api'
 
 export default function ModeInspector({

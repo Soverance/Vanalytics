@@ -8,19 +8,19 @@ import {
 import '@xyflow/react/dist/style.css'
 import { ArrowLeft, Download, Trash2 } from 'lucide-react'
 import { api } from '../api/client'
-import { useJobWorkflow } from '../hooks/useJobWorkflow'
-import { wouldCreateCycle } from '../components/character/workflow/workflowGraph'
-import ActionPicker from '../components/character/workflow/ActionPicker'
-import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, type ActionCategory } from '../components/character/workflow/workflowGraph'
-import TriggerNode from '../components/character/workflow/TriggerNode'
-import EquipGearSetNode from '../components/character/workflow/EquipGearSetNode'
-import NodePalette from '../components/character/workflow/NodePalette'
-import EquipInspector from '../components/character/workflow/EquipInspector'
-import ModeNode, { type ModeNodeData } from '../components/character/workflow/ModeNode'
-import ModeInspector from '../components/character/workflow/ModeInspector'
+import { useJobBlueprint } from '../hooks/useJobBlueprint'
+import { wouldCreateCycle } from '../components/character/blueprint/blueprintGraph'
+import ActionPicker from '../components/character/blueprint/ActionPicker'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, type ActionCategory } from '../components/character/blueprint/blueprintGraph'
+import TriggerNode from '../components/character/blueprint/TriggerNode'
+import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
+import NodePalette from '../components/character/blueprint/NodePalette'
+import EquipInspector from '../components/character/blueprint/EquipInspector'
+import ModeNode, { type ModeNodeData } from '../components/character/blueprint/ModeNode'
+import ModeInspector from '../components/character/blueprint/ModeInspector'
 import GearSetExportModal from '../components/character/GearSetExportModal'
 import type {
-  CharacterDetail, GearSetSummary, WorkflowGraph, WorkflowNodeType,
+  CharacterDetail, GearSetSummary, BlueprintGraph, BlueprintNodeType,
 } from '../types/api'
 
 const nodeTypes = {
@@ -36,10 +36,10 @@ const nodeTypes = {
 let idSeq = 1
 const newId = () => `n${Date.now()}_${idSeq++}`
 
-function WorkflowEditorInner() {
+function BlueprintEditorInner() {
   const { id = '', job = '' } = useParams()
   const navigate = useNavigate()
-  const { graph, loading, save, generate } = useJobWorkflow(id, job)
+  const { graph, loading, save, generate } = useJobBlueprint(id, job)
 
   const [character, setCharacter] = useState<CharacterDetail | null>(null)
   const [sets, setSets] = useState<GearSetSummary[]>([])
@@ -81,10 +81,10 @@ function WorkflowEditorInner() {
       sourceHandle: e.sourceHandle ?? undefined, targetHandle: e.targetHandle ?? undefined })))
   }, [graph, sets])
 
-  const toGraph = useCallback((): WorkflowGraph => ({
+  const toGraph = useCallback((): BlueprintGraph => ({
     version: 1,
     nodes: nodes.map(n => ({
-      id: n.id, type: n.type as WorkflowNodeType, position: n.position,
+      id: n.id, type: n.type as BlueprintNodeType, position: n.position,
       data: n.type === 'mode'
         ? { modeName: (n.data as ModeNodeData).modeName ?? 'Mode',
             modeCommand: (n.data as ModeNodeData).modeCommand ?? null,
@@ -162,7 +162,7 @@ function WorkflowEditorInner() {
     setPalette({ x, y, flowX: x, flowY: y })
   }, [])
 
-  const addNode = useCallback((type: WorkflowNodeType) => {
+  const addNode = useCallback((type: BlueprintNodeType) => {
     if (!palette) return
     const node: Node = {
       id: newId(), type,
@@ -238,7 +238,7 @@ function WorkflowEditorInner() {
         <button onClick={() => navigate(`/characters/${id}?tab=Gear%20Sets&job=${encodeURIComponent(job)}`)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-200">
           <ArrowLeft className="h-4 w-4" /> Back to character
         </button>
-        <span className="font-bold">{character?.name ?? '…'} · <span className="text-amber-300">{job}</span> Workflow</span>
+        <span className="font-bold">{character?.name ?? '…'} · <span className="text-amber-300">{job}</span> Blueprint</span>
         <span className="ml-auto text-[10px] text-gray-500">right-click canvas to add · Del (or right-click a node) to remove · autosaves</span>
         <button onClick={onGenerate}
           className="flex items-center gap-1.5 rounded border border-amber-700/40 bg-indigo-900/50 px-3 py-1.5 text-xs text-amber-200">
@@ -336,10 +336,10 @@ function WorkflowEditorInner() {
   )
 }
 
-export default function WorkflowEditorPage() {
+export default function BlueprintEditorPage() {
   return (
     <ReactFlowProvider>
-      <WorkflowEditorInner />
+      <BlueprintEditorInner />
     </ReactFlowProvider>
   )
 }

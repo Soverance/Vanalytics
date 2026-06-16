@@ -1,4 +1,4 @@
-// Buff catalog for the GearSwap workflow editor's buff_change picker.
+// Buff catalog for the GearSwap blueprint editor's buff_change picker.
 // Source: Windower Resources buffs.lua (all status effects).
 // 'name' is the RAW en verbatim — GearSwap's buff_change(buff,gain) compares res.buffs[id].name,
 // which resolves to the raw en (no capitalization). Casing is inconsistent by source
