@@ -11,7 +11,7 @@ import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
 import { wouldCreateCycle } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
-import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, cloneSelection, pasteClone, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
 import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
 import NodePalette from '../components/character/blueprint/NodePalette'
@@ -54,9 +54,35 @@ function BlueprintEditorInner() {
   const [picker, setPicker] = useState<{ x: number; y: number; flowX: number; flowY: number; nodeId: string; handle: string; category: ActionCategory; allowGeneric: boolean } | null>(null)
   const [nodeMenu, setNodeMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null)
   const clipboard = useRef<Clipboard | null>(null)
-  const pasteCount = useRef(0)
+  const lastPointer = useRef<{ x: number; y: number } | null>(null)
   const nodesRef = useRef(nodes); nodesRef.current = nodes
   const edgesRef = useRef(edges); edgesRef.current = edges
+
+  // Copy the given node ids (+ edges internal to them) into the clipboard. Returns false if nothing
+  // copyable. Reuses the pure cloneSelection by tagging the chosen ids as selected.
+  const copyNodeIds = useCallback((ids: string[]): boolean => {
+    const idSet = new Set(ids)
+    const tagged = nodesRef.current.map(n => ({ ...n, selected: idSet.has(n.id) }))
+    const clip = cloneSelection(tagged, edgesRef.current)
+    if (clip.nodes.length === 0) return false
+    clipboard.current = clip
+    return true
+  }, [])
+
+  // Paste the clipboard so its top-left anchor lands at the given screen pointer. Returns false if
+  // nothing to paste / no pointer. Pasted nodes replace the current selection.
+  const pasteAt = useCallback((pointer: { x: number; y: number } | null): boolean => {
+    const clip = clipboard.current
+    if (!clip || clip.nodes.length === 0 || !pointer) return false
+    const flow = screenToFlowPosition({ x: pointer.x, y: pointer.y })
+    const anchor = clipboardAnchor(clip)
+    const offset = { x: flow.x - anchor.x, y: flow.y - anchor.y }
+    const { nodes: nn, edges: ee } = pasteClone(clip, newId, offset)
+    setNodes(prev => [...prev.map(n => ({ ...n, selected: false })), ...nn])
+    setEdges(prev => [...prev, ...ee])
+    setSelectedId(nn[0].id)
+    return true
+  }, [screenToFlowPosition])
 
   useEffect(() => {
     api<CharacterDetail>(`/api/characters/${id}`).then(setCharacter).catch(() => {})
@@ -106,7 +132,7 @@ function BlueprintEditorInner() {
     return () => clearTimeout(t)
   }, [nodes, edges, save, toGraph])
 
-  // Ctrl/Cmd-C copies the selected nodes (+ internal edges); Ctrl/Cmd-V pastes them offset + selected.
+  // Ctrl/Cmd-C copies the selected nodes (+ internal edges); Ctrl/Cmd-V pastes them at the cursor.
   // Ignored while editing a text field so inspector copy/paste works normally.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -115,29 +141,21 @@ function BlueprintEditorInner() {
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
       const k = e.key.toLowerCase()
       if (k === 'c') {
-        const clip = cloneSelection(nodesRef.current, edgesRef.current)
-        if (clip.nodes.length === 0) return
-        clipboard.current = clip
-        pasteCount.current = 0
-        e.preventDefault()
+        if (copyNodeIds(nodesRef.current.filter(n => n.selected).map(n => n.id))) e.preventDefault()
       } else if (k === 'v') {
-        const clip = clipboard.current
-        if (!clip || clip.nodes.length === 0) return
-        pasteCount.current += 1
-        const d = 30 * pasteCount.current
-        const { nodes: nn, edges: ee } = pasteClone(clip, newId, { x: d, y: d })
-        setNodes(prev => [...prev.map(n => ({ ...n, selected: false })), ...nn])
-        setEdges(prev => [...prev, ...ee])
-        setSelectedId(nn[0].id)
-        e.preventDefault()
+        if (pasteAt(lastPointer.current)) e.preventDefault()
       }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [])
+  }, [copyNodeIds, pasteAt])
 
   const onNodesChange = useCallback((c: NodeChange[]) => setNodes(n => applyNodeChanges(c, n)), [])
   const onEdgesChange = useCallback((c: EdgeChange[]) => setEdges(e => applyEdgeChanges(c, e)), [])
+
+  const onPaneMouseMove = useCallback((e: React.MouseEvent) => {
+    lastPointer.current = { x: e.clientX, y: e.clientY }
+  }, [])
 
   const onConnect = useCallback((conn: Connection) => {
     if (wouldCreateCycle(edges.map(e => ({ id: e.id, source: e.source, target: e.target })), conn.source!, conn.target!)) return
@@ -187,6 +205,7 @@ function BlueprintEditorInner() {
 
   const onPaneContextMenu = useCallback((e: React.MouseEvent | MouseEvent) => {
     e.preventDefault()
+    lastPointer.current = { x: (e as React.MouseEvent).clientX, y: (e as React.MouseEvent).clientY }
     const me = e as React.MouseEvent
     // Position the palette relative to the canvas container (not the viewport) so it lands at
     // the cursor now that the editor renders inside the app's sidebar + padded content area.
@@ -250,6 +269,7 @@ function BlueprintEditorInner() {
   const onNodeContextMenu = useCallback((e: React.MouseEvent, n: Node) => {
     e.preventDefault()
     e.stopPropagation()
+    lastPointer.current = { x: e.clientX, y: e.clientY }
     const pane = (e.currentTarget as HTMLElement).closest('.react-flow') as HTMLElement | null
     const rect = pane?.getBoundingClientRect()
     setNodeMenu({ x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0), nodeId: n.id })
@@ -281,7 +301,7 @@ function BlueprintEditorInner() {
       </div>
 
       <div className="flex min-h-0 flex-1">
-        <div className="relative min-w-0 flex-1" onContextMenu={onPaneContextMenu}>
+        <div className="relative min-w-0 flex-1" onContextMenu={onPaneContextMenu} onMouseMove={onPaneMouseMove}>
           <ReactFlow
             nodes={nodes} edges={edges}
             nodeTypes={nodeTypes}
