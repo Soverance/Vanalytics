@@ -44,4 +44,87 @@ public class GearSwapCodeGeneratorOverlayTests
         Assert.Null(GearSwapCodeGenerator.EquipExpr(10, [11], names));
         Assert.Null(GearSwapCodeGenerator.EquipExpr(null, null, names));
     }
+
+    [Fact]
+    public void Terminal_pin_to_layered_equip_emits_set_combine_and_top_level_sets()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ new() { Id = "t", Type = "trigger:status_change", Data = new() }, Equip("e", 10, [11]) ],
+            Edges = [ Edge("t", "Idle", "e") ],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "Idle Base"), Set(11, "MDT Swap")]);
+
+        Assert.Contains("sets['Idle Base'] = {", r.Lua);
+        Assert.Contains("sets['MDT Swap'] = {", r.Lua);
+        Assert.Contains("if new == 'Idle' then equip(set_combine(sets['Idle Base'], sets['MDT Swap']))", r.Lua);
+        Assert.Empty(r.Warnings);
+    }
+
+    [Fact]
+    public void Plain_terminal_equip_is_unchanged()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ new() { Id = "t", Type = "trigger:status_change", Data = new() }, Equip("e", 10) ],
+            Edges = [ Edge("t", "Idle", "e") ],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "Idle Base")]);
+
+        Assert.Contains("if new == 'Idle' then equip(sets['Idle Base'])", r.Lua);
+        Assert.DoesNotContain("set_combine", r.Lua);
+    }
+
+    [Fact]
+    public void Category_pin_action_leaf_with_overlay_emits_set_combine_in_dispatch()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ new() { Id = "t", Type = "trigger:precast", Data = new() }, Equip("a", 10, [11], action: "Sneak Attack") ],
+            Edges = [ Edge("t", "JobAbility", "a") ],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "TP"), Set(11, "SA Gloves")]);
+
+        Assert.Contains("sets['TP'] = {", r.Lua);
+        Assert.Contains("sets['SA Gloves'] = {", r.Lua);
+        Assert.Contains("if spell.type == 'JobAbility' then", r.Lua);
+        Assert.Contains("if spell.english == 'Sneak Attack' then equip(set_combine(sets['TP'], sets['SA Gloves']))", r.Lua);
+        Assert.Empty(r.Warnings);
+    }
+
+    [Fact]
+    public void Mode_member_with_overlay_emits_set_combine_assignment()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new()
+                {
+                    Id = "tp", Type = "mode",
+                    Data = new()
+                    {
+                        ModeName = "TP",
+                        Members =
+                        [
+                            new BlueprintModeMemberDto { GearSetId = 10 },
+                            new BlueprintModeMemberDto { GearSetId = 10, OverlaySetIds = [11], Label = "Treasure Hunter" },
+                        ],
+                    },
+                },
+            ],
+            Edges = [],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "Accuracy"), Set(11, "TH Swap")]);
+
+        Assert.Contains("sets['Accuracy'] = {", r.Lua);
+        Assert.Contains("sets['TH Swap'] = {", r.Lua);
+        Assert.Contains("sets.TP['Accuracy'] = {", r.Lua);
+        Assert.Contains("sets.TP['Treasure Hunter'] = set_combine(sets['Accuracy'], sets['TH Swap'])", r.Lua);
+        Assert.Empty(r.Warnings);
+    }
 }

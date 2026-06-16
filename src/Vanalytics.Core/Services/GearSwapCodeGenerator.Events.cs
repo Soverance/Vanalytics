@@ -99,9 +99,6 @@ public static partial class GearSwapCodeGenerator
         return sb.ToString();
     }
 
-    private static string? Resolve(BlueprintNodeDto leaf, IReadOnlyDictionary<long, string> names) =>
-        leaf.Data.GearSetId is { } id && names.TryGetValue(id, out var name) ? name : null;
-
     // Terminal pin: first resolvable target wins, inline after `then`. An equip leaf -> flat
     // sets['Name']; a mode node -> equip of the mode's current set; a combine node -> set_combine(...).
     private static string? TerminalBody(
@@ -122,8 +119,8 @@ public static partial class GearSwapCodeGenerator
             }
             if (equipById.TryGetValue(id, out var leaf))
             {
-                var name = Resolve(leaf, names);
-                if (name is not null) return $" equip(sets[{GearSwapLua.Key(name)}])";
+                var expr = EquipExpr(leaf.Data.GearSetId, leaf.Data.OverlaySetIds, names);
+                if (expr is not null) return $" equip({expr})";
             }
         }
         return null;
@@ -136,24 +133,24 @@ public static partial class GearSwapCodeGenerator
     {
         var named = leaves
             .Where(l => !string.IsNullOrEmpty(l.Data.ActionName))
-            .Select(l => (Action: l.Data.ActionName!, Set: Resolve(l, names)))
-            .Where(x => x.Set is not null)
-            .Select(x => (x.Action, Set: x.Set!))
+            .Select(l => (Action: l.Data.ActionName!, Expr: EquipExpr(l.Data.GearSetId, l.Data.OverlaySetIds, names)))
+            .Where(x => x.Expr is not null)
+            .Select(x => (x.Action, Expr: x.Expr!))
             .ToList();
         var generic = leaves.FirstOrDefault(l => string.IsNullOrEmpty(l.Data.ActionName));
-        var genericSet = generic is null ? null : Resolve(generic, names);
+        var genericExpr = generic is null ? null : EquipExpr(generic.Data.GearSetId, generic.Data.OverlaySetIds, names);
 
         if (named.Count == 0)
-            return genericSet is null ? null : $" equip(sets[{GearSwapLua.Key(genericSet)}])";
+            return genericExpr is null ? null : $" equip({genericExpr})";
 
         var inner = new StringBuilder("\n");
         for (var i = 0; i < named.Count; i++)
         {
             var kw = i == 0 ? "if" : "elseif";
-            inner.Append($"        {kw} {dispatch} == {GearSwapLua.Key(named[i].Action)} then equip(sets[{GearSwapLua.Key(named[i].Set)}])\n");
+            inner.Append($"        {kw} {dispatch} == {GearSwapLua.Key(named[i].Action)} then equip({named[i].Expr})\n");
         }
-        if (genericSet is not null)
-            inner.Append($"        else equip(sets[{GearSwapLua.Key(genericSet)}])\n");
+        if (genericExpr is not null)
+            inner.Append($"        else equip({genericExpr})\n");
         inner.Append("        end");
         return inner.ToString();
     }

@@ -56,6 +56,14 @@ public static partial class GearSwapCodeGenerator
                     components = comp;
                     label = string.IsNullOrWhiteSpace(m.Label) ? names[comp[0]] : m.Label!.Trim();
                 }
+                else if (m.OverlaySetIds is { Count: > 0 })
+                {
+                    if (!names.TryGetValue(m.GearSetId, out var setName)) continue;   // base deleted -> drop member
+                    var comp = new List<long> { m.GearSetId };
+                    comp.AddRange(m.OverlaySetIds.Where(names.ContainsKey));
+                    components = comp;
+                    label = string.IsNullOrWhiteSpace(m.Label) ? setName : m.Label!.Trim();
+                }
                 else
                 {
                     if (!names.TryGetValue(m.GearSetId, out var setName)) continue;   // deleted/unresolved -> drop

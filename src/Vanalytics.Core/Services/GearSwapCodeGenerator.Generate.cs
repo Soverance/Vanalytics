@@ -36,12 +36,33 @@ public static partial class GearSwapCodeGenerator
             if (!flatSetIds.Contains(setId.Value)) flatSetIds.Add(setId.Value);
         }
 
+        // Overlay layers (equip leaves wired to a pin, and mode members) emit as top-level sets['Name']
+        // so their set_combine(...) call can reference them by name.
+        void AddOverlayIds(long? baseId, IReadOnlyList<long>? overlays)
+        {
+            if (overlays is not { Count: > 0 }) return;
+            var ids = baseId is { } b ? new List<long> { b } : new List<long>();
+            ids.AddRange(overlays);
+            foreach (var sid in ids.Where(setsById.ContainsKey))
+                if (!flatSetIds.Contains(sid)) flatSetIds.Add(sid);
+        }
+        foreach (var edge in graph.Edges)
+        {
+            if (!Triggers.ContainsKey(NodeType(graph, edge.Source))) continue;
+            if (equipById.TryGetValue(edge.Target, out var leaf))
+                AddOverlayIds(leaf.Data.GearSetId, leaf.Data.OverlaySetIds);
+        }
+        foreach (var node in graph.Nodes.Where(n => n.Type == "mode"))
+            foreach (var m in node.Data.Members ?? [])
+                AddOverlayIds(m.GearSetId, m.OverlaySetIds);
+
         // Sets used as mode members — emitted even for cycle-only modes (no terminal pin wired).
         var modeMemberIds = new List<long>();
         foreach (var node in graph.Nodes.Where(n => n.Type == "mode"))
             foreach (var m in node.Data.Members ?? [])
             {
                 if (m.CombineNodeId is not null) continue;   // combine-backed member: handled via combine reachability
+                if (m.OverlaySetIds is { Count: > 0 }) continue;    // layered member -> emitted via set_combine, not inline
                 if (!setsById.ContainsKey(m.GearSetId))
                 {
                     warnings.Add($"Gear set #{m.GearSetId} is referenced by the blueprint but no longer exists; that step was skipped.");
