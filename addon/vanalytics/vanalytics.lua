@@ -1132,7 +1132,7 @@ local function poll_watch_entry(entry)
         local is_nm = classify_as_nm(current_name)
         play_alert(is_nm)
         local label = is_nm and 'NM POP' or 'Respawn'
-        log_success(string.format('[%s] %s (idx %d / 0x%03X) alive — %d%% HP',
+        log_success(string.format('[%s] %s (idx %d / 0x%03X) alive: %d%% HP',
             label, current_name, entry.idx, entry.idx, current_hpp))
     end
 
@@ -2404,7 +2404,7 @@ local function report_sync_summary(results)
     local who = player and player.name or '?'
     if #failed == 0 then
         if settings.NotifyOnSync then
-            log_success(string.format('Sync complete for %s — all %d steps ok.', who, ok_count))
+            log_success(string.format('Sync complete for %s. all %d steps ok.', who, ok_count))
         end
     else
         log_error(string.format('Sync finished for %s with errors: %d ok, %d failed (%s).',
@@ -2420,7 +2420,7 @@ local sync_in_progress = false
 
 local function enqueue_sync_work()
     if sync_in_progress then
-        log('Sync already in progress — skipping duplicate trigger.')
+        log('Sync already in progress. skipping duplicate trigger...')
         return
     end
     sync_in_progress = true
@@ -3252,7 +3252,7 @@ windower.register_event('addon command', function(command, ...)
                     log(string.format('  %s  [respawn %s]', n, format_respawn(mob_info[n].respawn)))
                 end
             else
-                log_error(string.format('Usage: //va hunt nm [pin|list]  (no args = show for %ds)', NM_BROWSE_SECONDS))
+                log_error(string.format('Usage: //va hunt nm [pin|list]  (no args: show for %ds)', NM_BROWSE_SECONDS))
             end
         elseif arg == 'sound' then
             local s = args[2] and args[2]:lower() or nil
