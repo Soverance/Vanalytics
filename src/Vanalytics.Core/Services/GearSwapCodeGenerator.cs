@@ -64,4 +64,19 @@ public static partial class GearSwapCodeGenerator
             .ToList();
         return parts.Count < 2 ? null : $"set_combine({string.Join(", ", parts)})";
     }
+
+    /// <summary>
+    /// The Lua expression to equip a target made of a base set plus optional override layers:
+    /// <c>sets['Only']</c> for one resolvable set, <c>set_combine(sets['A'], sets['B'], …)</c> for two or
+    /// more (base first, right-most wins), or null if nothing resolves. Unresolved (deleted) ids are
+    /// dropped — a target whose overlays all vanish degrades to a plain equip of its base.
+    /// </summary>
+    public static string? EquipExpr(long? baseId, IReadOnlyList<long>? overlayIds, IReadOnlyDictionary<long, string> names)
+    {
+        var ids = new List<long>();
+        if (baseId is { } b) ids.Add(b);
+        if (overlayIds is not null) ids.AddRange(overlayIds);
+        var parts = ids.Where(names.ContainsKey).Select(id => $"sets[{GearSwapLua.Key(names[id])}]").ToList();
+        return parts.Count switch { 0 => null, 1 => parts[0], _ => $"set_combine({string.Join(", ", parts)})" };
+    }
 }

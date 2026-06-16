@@ -43,6 +43,10 @@ public class BlueprintNodeDataDto
     /// <summary>Set only on `combine` nodes: ordered component Gear Set ids merged via set_combine.
     /// Index 0 is the base; the last id wins on any slot it fills (set_combine is right-most-wins).</summary>
     public List<long>? CombineSetIds { get; set; }
+
+    /// <summary>On an `equip` leaf: ordered override layers applied on top of <see cref="GearSetId"/>
+    /// (the base). Appended after the base in set_combine; the last entry wins. Empty/null = a plain equip.</summary>
+    public List<long>? OverlaySetIds { get; set; }
 }
 
 public class BlueprintEdgeDto
@@ -65,4 +69,8 @@ public class BlueprintModeMemberDto
     /// <summary>When set, this member IS the referenced `combine` node (set_combine of its components)
     /// instead of a single Gear Set. When null, <see cref="GearSetId"/> is used as today.</summary>
     public string? CombineNodeId { get; set; }
+
+    /// <summary>Override layers applied on top of <see cref="GearSetId"/> for this member; empty/null =
+    /// a plain inline member. With overlays the member emits sets.&lt;NS&gt;['label'] = set_combine(...).</summary>
+    public List<long>? OverlaySetIds { get; set; }
 }
