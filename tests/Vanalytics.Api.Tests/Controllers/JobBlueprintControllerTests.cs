@@ -1,4 +1,4 @@
-// tests/Vanalytics.Api.Tests/Controllers/JobWorkflowControllerTests.cs
+// tests/Vanalytics.Api.Tests/Controllers/JobBlueprintControllerTests.cs
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -16,7 +16,7 @@ using Vanalytics.Data;
 
 namespace Vanalytics.Api.Tests.Controllers;
 
-public class JobWorkflowControllerTests : IAsyncLifetime
+public class JobBlueprintControllerTests : IAsyncLifetime
 {
     private readonly MsSqlContainer _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
     private WebApplicationFactory<Program> _factory = null!;
@@ -130,7 +130,7 @@ public class JobWorkflowControllerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Generate_emits_lua_from_saved_workflow_and_gear_set()
+    public async Task Generate_emits_lua_from_saved_blueprint_and_gear_set()
     {
         var (token, charId) = await SetupAsync("wf4@test.com", "wf4", "Wffour");
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
