@@ -1154,7 +1154,7 @@ export type BlueprintNodeType =
 export interface ModeMember {
   gearSetId: number
   label?: string | null
-  overlaySetIds?: number[]
+  overlaySetIds?: number[] | null
 }
 
 export interface BlueprintNode {
@@ -1167,7 +1167,7 @@ export interface BlueprintNode {
     modeName?: string
     modeCommand?: string | null
     members?: ModeMember[]
-    overlaySetIds?: number[]
+    overlaySetIds?: number[] | null
   }
 }
 
