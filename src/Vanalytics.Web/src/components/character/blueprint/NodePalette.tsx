@@ -8,6 +8,7 @@ const ITEMS: { type: BlueprintNodeType; label: string; group: string; color: str
   { type: 'trigger:midcast', label: 'midcast', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:buff_change', label: 'buff_change', group: 'Triggers', color: '#b3344a' },
   { type: 'mode', label: 'Mode (set cycle)', group: 'Sets', color: '#34d399' },
+  { type: 'combine', label: 'Combine (set_combine)', group: 'Sets', color: '#c084fc' },
 ]
 
 export default function NodePalette({ x, y, onPick, onClose, onPaste }: {
