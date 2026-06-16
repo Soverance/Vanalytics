@@ -30,7 +30,7 @@ public static partial class GearSwapCodeGenerator
             if (setId is null) continue;
             if (!setsById.ContainsKey(setId.Value))
             {
-                warnings.Add($"Gear set #{setId.Value} is referenced by the workflow but no longer exists; that step was skipped.");
+                warnings.Add($"Gear set #{setId.Value} is referenced by the blueprint but no longer exists; that step was skipped.");
                 continue;
             }
             if (!flatSetIds.Contains(setId.Value)) flatSetIds.Add(setId.Value);
@@ -43,7 +43,7 @@ public static partial class GearSwapCodeGenerator
             {
                 if (!setsById.ContainsKey(m.GearSetId))
                 {
-                    warnings.Add($"Gear set #{m.GearSetId} is referenced by the workflow but no longer exists; that step was skipped.");
+                    warnings.Add($"Gear set #{m.GearSetId} is referenced by the blueprint but no longer exists; that step was skipped.");
                     continue;
                 }
                 if (!modeMemberIds.Contains(m.GearSetId)) modeMemberIds.Add(m.GearSetId);
