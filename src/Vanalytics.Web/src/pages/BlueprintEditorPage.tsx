@@ -182,7 +182,7 @@ function BlueprintEditorInner() {
 
   const spawnLeaf = useCallback((nodeId: string, handle: string, flowX: number, flowY: number, actionName: string | null) => {
     const leafId = newId()
-    setNodes(n => [...n, { id: leafId, type: 'equip', position: { x: flowX, y: flowY }, data: { gearSetId: null, actionName } }])
+    setNodes(n => [...n, { id: leafId, type: 'equip', position: { x: flowX, y: flowY }, data: { gearSetId: null, actionName, overlaySetIds: [] } }])
     setEdges(prev => {
       const isCategory = categoryOfHandle(nodes.find(n => n.id === nodeId)?.type ?? '', handle) !== null
       const base = isCategory ? prev : prev.filter(e => !(e.source === nodeId && e.sourceHandle === handle))
@@ -228,7 +228,7 @@ function BlueprintEditorInner() {
       id: newId(), type,
       position: { x: palette.flowX, y: palette.flowY },
       data: type === 'equip'
-        ? { gearSetId: null }
+        ? { gearSetId: null, overlaySetIds: [] }
         : type === 'mode'
         ? { modeName: 'New Mode', modeCommand: null, members: [], memberNames: [] }
         : {},
@@ -263,6 +263,14 @@ function BlueprintEditorInner() {
     const members = moveMember(d.members ?? [], i, dir)
     return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
   }), [updateModeData, sets])
+
+  const mutateMemberOverlay = useCallback((mi: number, fn: (ids: number[]) => number[]) => updateModeData(d => {
+    const members = (d.members ?? []).map((m, i) => i === mi ? { ...m, overlaySetIds: fn(m.overlaySetIds ?? []) } : m)
+    return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
+  }), [updateModeData, sets])
+  const addMemberOverlay = useCallback((mi: number, setId: number) => mutateMemberOverlay(mi, ids => addOverlay(ids, setId)), [mutateMemberOverlay])
+  const removeMemberOverlay = useCallback((mi: number, oi: number) => mutateMemberOverlay(mi, ids => removeOverlay(ids, oi)), [mutateMemberOverlay])
+  const moveMemberOverlay = useCallback((mi: number, oi: number, dir: -1 | 1) => mutateMemberOverlay(mi, ids => moveOverlay(ids, oi, dir)), [mutateMemberOverlay])
 
   const updateEquipData = useCallback((fn: (d: Record<string, unknown>) => Record<string, unknown>) => {
     setNodes(prev => prev.map(n => n.id === selectedId ? { ...n, data: fn(n.data) } : n))
@@ -414,6 +422,9 @@ function BlueprintEditorInner() {
             onAddMember={addModeMember}
             onRemoveMember={removeModeMember}
             onMoveMember={moveModeMember}
+            onAddMemberOverlay={addMemberOverlay}
+            onRemoveMemberOverlay={removeMemberOverlay}
+            onMoveMemberOverlay={moveMemberOverlay}
           />
         )}
       </div>
