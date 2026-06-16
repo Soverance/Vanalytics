@@ -1,0 +1,11 @@
+/* Blueprint editor: make node selection clearly visible — React Flow's default selection style is
+   nearly invisible on the dark theme. Gold ring + soft glow following the node's rounded corners.
+   The custom node root (a div with rounded-lg) is the direct child of the .react-flow__node wrapper,
+   which gets the .selected class when the node is selected (single or shift-multi). */
+.react-flow__node.selected {
+  box-shadow: none;
+}
+.react-flow__node.selected > div {
+  box-shadow: 0 0 0 2px #f5c451, 0 0 12px 2px rgba(245, 196, 81, 0.35);
+  border-radius: 0.5rem;
+}

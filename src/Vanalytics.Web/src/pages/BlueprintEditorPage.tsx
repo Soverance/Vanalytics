@@ -6,6 +6,7 @@ import {
   type Node, type Edge, type Connection, type NodeChange, type EdgeChange,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import './BlueprintEditor.css'
 import { ArrowLeft, Download, Trash2, Copy, ClipboardPaste } from 'lucide-react'
 import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
