@@ -41,10 +41,16 @@ public static partial class GearSwapCodeGenerator
         void AddOverlayIds(long? baseId, IReadOnlyList<long>? overlays)
         {
             if (overlays is not { Count: > 0 }) return;
-            var ids = baseId is { } b ? new List<long> { b } : new List<long>();
-            ids.AddRange(overlays);
-            foreach (var sid in ids.Where(setsById.ContainsKey))
-                if (!flatSetIds.Contains(sid)) flatSetIds.Add(sid);
+            foreach (var o in overlays)
+            {
+                if (!setsById.ContainsKey(o))
+                {
+                    warnings.Add($"Gear set #{o} is referenced by the blueprint but no longer exists; that step was skipped.");
+                    continue;
+                }
+                if (!flatSetIds.Contains(o)) flatSetIds.Add(o);
+            }
+            if (baseId is { } b && setsById.ContainsKey(b) && !flatSetIds.Contains(b)) flatSetIds.Add(b);
         }
         foreach (var edge in graph.Edges)
         {

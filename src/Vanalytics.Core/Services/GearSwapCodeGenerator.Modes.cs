@@ -61,8 +61,9 @@ public static partial class GearSwapCodeGenerator
                     if (!names.TryGetValue(m.GearSetId, out var setName)) continue;   // base deleted -> drop member
                     var comp = new List<long> { m.GearSetId };
                     comp.AddRange(m.OverlaySetIds.Where(names.ContainsKey));
-                    components = comp;
                     label = string.IsNullOrWhiteSpace(m.Label) ? setName : m.Label!.Trim();
+                    if (comp.Count >= 2) components = comp;   // >=2 resolvable -> set_combine; else degrade to plain inline
+                    else setId = m.GearSetId;
                 }
                 else
                 {

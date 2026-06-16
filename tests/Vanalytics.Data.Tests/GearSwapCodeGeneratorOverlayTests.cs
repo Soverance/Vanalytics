@@ -127,4 +127,41 @@ public class GearSwapCodeGeneratorOverlayTests
         Assert.Contains("sets.TP['Treasure Hunter'] = set_combine(sets['Accuracy'], sets['TH Swap'])", r.Lua);
         Assert.Empty(r.Warnings);
     }
+
+    [Fact]
+    public void Layered_equip_with_deleted_overlay_warns_and_degrades_to_plain()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ new() { Id = "t", Type = "trigger:status_change", Data = new() }, Equip("e", 10, [999]) ],
+            Edges = [ Edge("t", "Idle", "e") ],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "Idle Base")]);   // overlay 999 missing
+
+        Assert.Contains(r.Warnings, w => w.Contains("999"));
+        Assert.Contains("if new == 'Idle' then equip(sets['Idle Base'])", r.Lua);   // degraded to plain
+        Assert.DoesNotContain("set_combine", r.Lua);
+    }
+
+    [Fact]
+    public void Mode_member_with_all_overlays_deleted_warns_and_degrades_to_inline()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "tp", Type = "mode", Data = new()
+                    { ModeName = "TP", Members = [ new BlueprintModeMemberDto { GearSetId = 10, OverlaySetIds = [999], Label = "Treasure Hunter" } ] } },
+            ],
+            Edges = [],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "Accuracy")]);   // overlay 999 missing
+
+        Assert.Contains(r.Warnings, w => w.Contains("999"));
+        Assert.Contains("sets.TP['Treasure Hunter'] = {", r.Lua);   // degraded to inline slot table, not broken set_combine
+        Assert.DoesNotContain("sets.TP['Treasure Hunter'] = set_combine", r.Lua);
+        Assert.DoesNotContain("sets.TP['Treasure Hunter'] = \n", r.Lua);   // not a broken empty RHS
+    }
 }
