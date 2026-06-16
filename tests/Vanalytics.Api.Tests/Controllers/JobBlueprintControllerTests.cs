@@ -299,4 +299,51 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         Assert.Contains("sets.TP['Treasure Hunter'] = set_combine(sets['Accuracy'], sets['TH Swap'])", gen.Lua);
         Assert.Empty(gen.Warnings);
     }
+
+    [Fact]
+    public async Task Generate_emits_set_combine_for_layered_action_leaf()
+    {
+        var (token, charId) = await SetupAsync("wf9@test.com", "wf9", "Wfnine");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        async Task<long> MakeSet(string name, string slot, int itemId, string itemName)
+        {
+            var s = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+                new SaveGearSetRequest
+                {
+                    Name = name, Job = "THF", Category = "Engaged",
+                    Slots = [ new GearSetSlotDto { Slot = slot, ItemId = itemId, ItemName = itemName, Augments = [] } ]
+                }))
+                .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+            return s!.Id;
+        }
+
+        var tpId = await MakeSet("TP", "Head", 13892, "Adhemar Bonnet +1");
+        var saId = await MakeSet("SA Gloves", "Hands", 14000, "Plun. Armlets +1");
+
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:precast", Data = new() },
+                new() { Id = "a", Type = "equip", Data = new() { GearSetId = tpId, ActionName = "Sneak Attack", OverlaySetIds = [saId] } },
+            ],
+            Edges = [ new() { Id = "e", Source = "t", SourceHandle = "JobAbility", Target = "a", TargetHandle = "in" } ],
+        };
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+
+        // Round-trip: the overlay survives PUT->GET.
+        var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
+        var leaf = Assert.Single(wf!.Graph.Nodes, n => n.Type == "equip");
+        Assert.Equal("Sneak Attack", leaf.Data.ActionName);
+        Assert.Equal([saId], leaf.Data.OverlaySetIds);
+
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+
+        Assert.Contains("sets['TP'] = {", gen!.Lua);
+        Assert.Contains("sets['SA Gloves'] = {", gen.Lua);
+        Assert.Contains("if spell.english == 'Sneak Attack' then equip(set_combine(sets['TP'], sets['SA Gloves']))", gen.Lua);
+        Assert.Empty(gen.Warnings);
+    }
 }

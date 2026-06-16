@@ -6,7 +6,7 @@ namespace Vanalytics.Core.Services;
 
 public static partial class GearSwapCodeGenerator
 {
-    // A resolved mode member: a flat set (SetId) inlined as a slot table, OR a combine (Components)
+    // A resolved mode member: a flat set (SetId) inlined as a slot table, OR an overlay stack (Components)
     // emitted as set_combine(...). Exactly one of SetId/Components is non-null.
     private sealed record ModeMemberInfo(string Label, long? SetId, IReadOnlyList<long>? Components);
 
