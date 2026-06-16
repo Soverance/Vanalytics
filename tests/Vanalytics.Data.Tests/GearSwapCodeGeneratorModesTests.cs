@@ -1,5 +1,5 @@
 // tests/Vanalytics.Data.Tests/GearSwapCodeGeneratorModesTests.cs
-using Vanalytics.Core.DTOs.Workflows;
+using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Core.Services;
 
 namespace Vanalytics.Data.Tests;
@@ -9,20 +9,20 @@ public class GearSwapCodeGeneratorModesTests
     private static ResolvedGearSet Set(long id, string name) =>
         new(id, name, [new ResolvedSlot("Head", 100 + (int)id, $"Hat{id}", [])]);
 
-    private static WorkflowNodeDto Mode(string id, string name, params long[] memberSetIds) =>
+    private static BlueprintNodeDto Mode(string id, string name, params long[] memberSetIds) =>
         new()
         {
             Id = id, Type = "mode",
-            Data = new() { ModeName = name, Members = [.. memberSetIds.Select(s => new WorkflowModeMemberDto { GearSetId = s })] },
+            Data = new() { ModeName = name, Members = [.. memberSetIds.Select(s => new BlueprintModeMemberDto { GearSetId = s })] },
         };
 
-    private static WorkflowEdgeDto Edge(string src, string handle, string tgt) =>
+    private static BlueprintEdgeDto Edge(string src, string handle, string tgt) =>
         new() { Id = $"{src}-{handle}-{tgt}", Source = src, SourceHandle = handle, Target = tgt, TargetHandle = "in" };
 
     [Fact]
     public void Mode_wired_to_status_change_emits_scaffolding_and_current_set_equip()
     {
-        var graph = new WorkflowGraphDto
+        var graph = new BlueprintGraphDto
         {
             Nodes = [ new() { Id = "t", Type = "trigger:status_change", Data = new() }, Mode("tp", "TP", 10, 11) ],
             Edges = [ Edge("t", "Engaged", "tp") ],
@@ -45,7 +45,7 @@ public class GearSwapCodeGeneratorModesTests
     [Fact]
     public void Cycle_only_mode_emits_even_without_a_terminal_pin()
     {
-        var graph = new WorkflowGraphDto { Nodes = [Mode("w", "Weapon", 20, 21)], Edges = [] };
+        var graph = new BlueprintGraphDto { Nodes = [Mode("w", "Weapon", 20, 21)], Edges = [] };
 
         var r = GearSwapCodeGenerator.Generate(graph, [Set(20, "Mandau"), Set(21, "Twashtar")]);
 
@@ -58,7 +58,7 @@ public class GearSwapCodeGeneratorModesTests
     [Fact]
     public void Mode_namespace_sanitizes_name_but_command_keeps_spaces()
     {
-        var graph = new WorkflowGraphDto { Nodes = [Mode("m", "Ranged TP", 30)], Edges = [] };
+        var graph = new BlueprintGraphDto { Nodes = [Mode("m", "Ranged TP", 30)], Edges = [] };
 
         var r = GearSwapCodeGenerator.Generate(graph, [Set(30, "RA")]);
 
@@ -70,7 +70,7 @@ public class GearSwapCodeGeneratorModesTests
     [Fact]
     public void Two_modes_emit_two_self_command_arms_and_two_terminal_equips()
     {
-        var graph = new WorkflowGraphDto
+        var graph = new BlueprintGraphDto
         {
             Nodes = [ new() { Id = "t", Type = "trigger:status_change", Data = new() }, Mode("tp", "TP", 10), Mode("idle", "Idle", 20) ],
             Edges = [ Edge("t", "Engaged", "tp"), Edge("t", "Idle", "idle") ],
@@ -87,7 +87,7 @@ public class GearSwapCodeGeneratorModesTests
     [Fact]
     public void Zero_member_mode_is_skipped_entirely()
     {
-        var graph = new WorkflowGraphDto
+        var graph = new BlueprintGraphDto
         {
             Nodes = [ new() { Id = "m", Type = "mode", Data = new() { ModeName = "Empty", Members = [] } } ],
             Edges = [],
@@ -102,7 +102,7 @@ public class GearSwapCodeGeneratorModesTests
     [Fact]
     public void Mode_name_with_apostrophe_is_escaped_in_echo()
     {
-        var graph = new WorkflowGraphDto { Nodes = [Mode("m", "Sam's", 10)], Edges = [] };
+        var graph = new BlueprintGraphDto { Nodes = [Mode("m", "Sam's", 10)], Edges = [] };
 
         var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "RA")]);
 
@@ -112,7 +112,7 @@ public class GearSwapCodeGeneratorModesTests
     [Fact]
     public void Mode_member_referencing_deleted_set_warns_and_skips_that_member()
     {
-        var graph = new WorkflowGraphDto { Nodes = [Mode("m", "TP", 10, 999)], Edges = [] };
+        var graph = new BlueprintGraphDto { Nodes = [Mode("m", "TP", 10, 999)], Edges = [] };
 
         var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "Accuracy")]);
 
@@ -126,7 +126,7 @@ public class GearSwapCodeGeneratorModesTests
         // A flat gear set named "TP" wired to a pin AND a mode named "TP": the mode must not clobber the
         // flat set's sets['TP']. The mode's namespace is bumped, and the event reference uses the bumped
         // namespace too (proving both CollectModes call sites agree).
-        var graph = new WorkflowGraphDto
+        var graph = new BlueprintGraphDto
         {
             Nodes =
             [

@@ -8,7 +8,7 @@ using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Core.DTOs.Porter;
 using Vanalytics.Core.DTOs.Sync;
-using Vanalytics.Core.DTOs.Workflows;
+using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 using Vanalytics.Core.Services;
@@ -744,8 +744,8 @@ public class CharactersController : ControllerBase
         return NoContent();
     }
 
-    [HttpGet("{id:guid}/workflows/{job}")]
-    public async Task<IActionResult> GetWorkflow(Guid id, string job)
+    [HttpGet("{id:guid}/blueprints/{job}")]
+    public async Task<IActionResult> GetBlueprint(Guid id, string job)
     {
         var userId = GetUserId();
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
@@ -754,21 +754,21 @@ public class CharactersController : ControllerBase
         if (!TryNormalizeJob(job, out var normalized) || normalized is null)
             return BadRequest(new { message = "Invalid job." });
 
-        var wf = await _db.CharacterJobWorkflows
+        var wf = await _db.CharacterJobBlueprints
             .FirstOrDefaultAsync(w => w.CharacterId == id && w.Job == normalized);
 
-        return Ok(new WorkflowResponse
+        return Ok(new BlueprintResponse
         {
             Job = normalized,
             Graph = wf is null
-                ? new WorkflowGraphDto()
-                : JsonSerializer.Deserialize<WorkflowGraphDto>(wf.GraphJson, JsonOpts) ?? new WorkflowGraphDto(),
+                ? new BlueprintGraphDto()
+                : JsonSerializer.Deserialize<BlueprintGraphDto>(wf.GraphJson, JsonOpts) ?? new BlueprintGraphDto(),
             UpdatedAt = wf?.UpdatedAt
         });
     }
 
-    [HttpPut("{id:guid}/workflows/{job}")]
-    public async Task<IActionResult> SaveWorkflow(Guid id, string job, [FromBody] WorkflowGraphDto graph)
+    [HttpPut("{id:guid}/blueprints/{job}")]
+    public async Task<IActionResult> SaveBlueprint(Guid id, string job, [FromBody] BlueprintGraphDto graph)
     {
         var userId = GetUserId();
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
@@ -778,17 +778,17 @@ public class CharactersController : ControllerBase
             return BadRequest(new { message = "Invalid job." });
 
         var now = DateTimeOffset.UtcNow;
-        var json = JsonSerializer.Serialize(graph ?? new WorkflowGraphDto(), JsonOpts);
-        var wf = await _db.CharacterJobWorkflows
+        var json = JsonSerializer.Serialize(graph ?? new BlueprintGraphDto(), JsonOpts);
+        var wf = await _db.CharacterJobBlueprints
             .FirstOrDefaultAsync(w => w.CharacterId == id && w.Job == normalized);
         if (wf is null)
         {
-            wf = new CharacterJobWorkflow
+            wf = new CharacterJobBlueprint
             {
                 CharacterId = id, Job = normalized, GraphJson = json,
                 CreatedAt = now, UpdatedAt = now
             };
-            _db.CharacterJobWorkflows.Add(wf);
+            _db.CharacterJobBlueprints.Add(wf);
         }
         else
         {
@@ -797,11 +797,11 @@ public class CharactersController : ControllerBase
         }
         await _db.SaveChangesAsync();
 
-        return Ok(new WorkflowResponse { Job = normalized, Graph = graph ?? new WorkflowGraphDto(), UpdatedAt = wf.UpdatedAt });
+        return Ok(new BlueprintResponse { Job = normalized, Graph = graph ?? new BlueprintGraphDto(), UpdatedAt = wf.UpdatedAt });
     }
 
-    [HttpPost("{id:guid}/workflows/{job}/generate")]
-    public async Task<IActionResult> GenerateWorkflow(Guid id, string job)
+    [HttpPost("{id:guid}/blueprints/{job}/generate")]
+    public async Task<IActionResult> GenerateBlueprint(Guid id, string job)
     {
         var userId = GetUserId();
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
@@ -810,11 +810,11 @@ public class CharactersController : ControllerBase
         if (!TryNormalizeJob(job, out var normalized) || normalized is null)
             return BadRequest(new { message = "Invalid job." });
 
-        var wf = await _db.CharacterJobWorkflows
+        var wf = await _db.CharacterJobBlueprints
             .FirstOrDefaultAsync(w => w.CharacterId == id && w.Job == normalized);
         var graph = wf is null
-            ? new WorkflowGraphDto()
-            : JsonSerializer.Deserialize<WorkflowGraphDto>(wf.GraphJson, JsonOpts) ?? new WorkflowGraphDto();
+            ? new BlueprintGraphDto()
+            : JsonSerializer.Deserialize<BlueprintGraphDto>(wf.GraphJson, JsonOpts) ?? new BlueprintGraphDto();
 
         var modeSetIds = graph.Nodes
             .Where(n => n.Type == "mode")
@@ -841,7 +841,7 @@ public class CharactersController : ControllerBase
             .ToList();
 
         var result = GearSwapCodeGenerator.Generate(graph, resolved);
-        return Ok(new GenerateWorkflowResponse { Lua = result.Lua, Warnings = result.Warnings });
+        return Ok(new GenerateBlueprintResponse { Lua = result.Lua, Warnings = result.Warnings });
     }
 
     [HttpDelete("{id:guid}")]

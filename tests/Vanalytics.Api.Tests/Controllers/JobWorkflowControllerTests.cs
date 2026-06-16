@@ -11,7 +11,7 @@ using Soverance.Auth.DTOs;
 using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Core.DTOs.Keys;
 using Vanalytics.Core.DTOs.Sync;
-using Vanalytics.Core.DTOs.Workflows;
+using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Tests.Controllers;
@@ -89,7 +89,7 @@ public class JobWorkflowControllerTests : IAsyncLifetime
         var (token, charId) = await SetupAsync("wf1@test.com", "wf1", "Wfone");
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var wf = await _client.GetFromJsonAsync<WorkflowResponse>($"/api/characters/{charId}/workflows/THF");
+        var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
         Assert.Equal("THF", wf!.Job);
         Assert.Empty(wf.Graph.Nodes);
         Assert.Null(wf.UpdatedAt);
@@ -101,20 +101,20 @@ public class JobWorkflowControllerTests : IAsyncLifetime
         var (token, charId) = await SetupAsync("wf2@test.com", "wf2", "Wftwo");
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var graph = new WorkflowGraphDto
+        var graph = new BlueprintGraphDto
         {
             Nodes = [ new() { Id="t", Type="trigger:status_change", Position=new(){X=1,Y=2}, Data=new() } ],
             Edges = [],
         };
-        var put1 = await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/THF", graph);
+        var put1 = await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
         Assert.Equal(HttpStatusCode.OK, put1.StatusCode);
 
         // Second PUT must UPDATE, not create a duplicate (unique CharacterId+Job).
         graph.Nodes.Add(new() { Id="e", Type="equip", Data=new() { GearSetId = 7 } });
-        var put2 = await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/THF", graph);
+        var put2 = await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
         Assert.Equal(HttpStatusCode.OK, put2.StatusCode);
 
-        var wf = await _client.GetFromJsonAsync<WorkflowResponse>($"/api/characters/{charId}/workflows/THF");
+        var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
         Assert.Equal(2, wf!.Graph.Nodes.Count);
         Assert.NotNull(wf.UpdatedAt);
     }
@@ -125,7 +125,7 @@ public class JobWorkflowControllerTests : IAsyncLifetime
         var (token, charId) = await SetupAsync("wf3@test.com", "wf3", "Wfthree");
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var resp = await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/XYZ", new WorkflowGraphDto());
+        var resp = await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/XYZ", new BlueprintGraphDto());
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
@@ -143,7 +143,7 @@ public class JobWorkflowControllerTests : IAsyncLifetime
             }))
             .Content.ReadFromJsonAsync<GearSetDetailResponse>();
 
-        var graph = new WorkflowGraphDto
+        var graph = new BlueprintGraphDto
         {
             Nodes =
             [
@@ -152,10 +152,10 @@ public class JobWorkflowControllerTests : IAsyncLifetime
             ],
             Edges = [ new() { Id="x", Source="t", SourceHandle="Engaged", Target="e", TargetHandle="in" } ],
         };
-        await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/THF", graph);
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
 
-        var gen = await (await _client.PostAsync($"/api/characters/{charId}/workflows/THF/generate", null))
-            .Content.ReadFromJsonAsync<GenerateWorkflowResponse>();
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
 
         Assert.Contains("sets['TP Set'] = {", gen!.Lua);
         Assert.Contains("head=\"Adhemar Bonnet +1\",", gen.Lua);
@@ -170,7 +170,7 @@ public class JobWorkflowControllerTests : IAsyncLifetime
         var (attacker, _) = await SetupAsync("wfatk@test.com", "wfatk", "Wfattacker");
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", attacker);
 
-        var resp = await _client.GetAsync($"/api/characters/{victim}/workflows/THF");
+        var resp = await _client.GetAsync($"/api/characters/{victim}/blueprints/THF");
         Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
     }
 
@@ -188,7 +188,7 @@ public class JobWorkflowControllerTests : IAsyncLifetime
             }))
             .Content.ReadFromJsonAsync<GearSetDetailResponse>();
 
-        var graph = new WorkflowGraphDto
+        var graph = new BlueprintGraphDto
         {
             Nodes =
             [
@@ -197,10 +197,10 @@ public class JobWorkflowControllerTests : IAsyncLifetime
             ],
             Edges = [ new() { Id = "e", Source = "t", SourceHandle = "WeaponSkill", Target = "a", TargetHandle = "in" } ],
         };
-        await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/THF", graph);
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
 
-        var gen = await (await _client.PostAsync($"/api/characters/{charId}/workflows/THF/generate", null))
-            .Content.ReadFromJsonAsync<GenerateWorkflowResponse>();
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
 
         Assert.Contains("if spell.type == 'WeaponSkill' then", gen!.Lua);
         Assert.Contains("if spell.english == 'Mercy Stroke' then equip(sets['Mercy WS'])", gen.Lua);
@@ -220,26 +220,26 @@ public class JobWorkflowControllerTests : IAsyncLifetime
             }))
             .Content.ReadFromJsonAsync<GearSetDetailResponse>();
 
-        var graph = new WorkflowGraphDto
+        var graph = new BlueprintGraphDto
         {
             Nodes =
             [
                 new() { Id = "t", Type = "trigger:status_change", Data = new() },
                 new() { Id = "tp", Type = "mode", Data = new()
-                    { ModeName = "TP", Members = [ new WorkflowModeMemberDto { GearSetId = set!.Id } ] } },
+                    { ModeName = "TP", Members = [ new BlueprintModeMemberDto { GearSetId = set!.Id } ] } },
             ],
             Edges = [ new() { Id = "e", Source = "t", SourceHandle = "Engaged", Target = "tp", TargetHandle = "in" } ],
         };
-        await _client.PutAsJsonAsync($"/api/characters/{charId}/workflows/THF", graph);
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
 
         // Round-trip: the mode node + its members survive PUT/GET serialization.
-        var wf = await _client.GetFromJsonAsync<WorkflowResponse>($"/api/characters/{charId}/workflows/THF");
+        var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
         var modeNode = Assert.Single(wf!.Graph.Nodes, n => n.Type == "mode");
         Assert.Equal("TP", modeNode.Data.ModeName);
         Assert.Single(modeNode.Data.Members!);
 
-        var gen = await (await _client.PostAsync($"/api/characters/{charId}/workflows/THF/generate", null))
-            .Content.ReadFromJsonAsync<GenerateWorkflowResponse>();
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
 
         Assert.Contains("sets.TP['Acc Set'] = {", gen!.Lua);
         Assert.Contains("if new == 'Engaged' then equip(sets.TP[TP_Set_Names[TP_Index]])", gen.Lua);

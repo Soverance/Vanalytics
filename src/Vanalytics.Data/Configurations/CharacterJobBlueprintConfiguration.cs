@@ -4,9 +4,9 @@ using Vanalytics.Core.Models;
 
 namespace Vanalytics.Data.Configurations;
 
-public class CharacterJobWorkflowConfiguration : IEntityTypeConfiguration<CharacterJobWorkflow>
+public class CharacterJobBlueprintConfiguration : IEntityTypeConfiguration<CharacterJobBlueprint>
 {
-    public void Configure(EntityTypeBuilder<CharacterJobWorkflow> builder)
+    public void Configure(EntityTypeBuilder<CharacterJobBlueprint> builder)
     {
         builder.HasKey(w => w.Id);
 
@@ -14,9 +14,9 @@ public class CharacterJobWorkflowConfiguration : IEntityTypeConfiguration<Charac
         builder.Property(w => w.GraphJson)
             .HasColumnType("nvarchar(max)")
             .IsRequired()
-            .HasDefaultValue(CharacterJobWorkflow.EmptyGraphJson);
+            .HasDefaultValue(CharacterJobBlueprint.EmptyGraphJson);
 
-        // One workflow per (character, job) — this constraint IS the "one workflow per job" rule.
+        // One blueprint per (character, job) — this constraint IS the "one blueprint per job" rule.
         builder.HasIndex(w => new { w.CharacterId, w.Job }).IsUnique();
 
         builder.HasOne(w => w.Character)

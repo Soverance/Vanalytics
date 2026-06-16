@@ -1,5 +1,5 @@
 // tests/Vanalytics.Data.Tests/GearSwapCodeGeneratorGenerateTests.cs
-using Vanalytics.Core.DTOs.Workflows;
+using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Core.Services;
 
 namespace Vanalytics.Data.Tests;
@@ -10,7 +10,7 @@ public class GearSwapCodeGeneratorGenerateTests
     public void Empty_graph_emits_valid_minimal_file_with_no_warnings()
     {
         var result = GearSwapCodeGenerator.Generate(
-            new WorkflowGraphDto(), sets: []);
+            new BlueprintGraphDto(), sets: []);
 
         Assert.Contains("function get_sets()", result.Lua);
         Assert.Contains("end", result.Lua);
@@ -21,7 +21,7 @@ public class GearSwapCodeGeneratorGenerateTests
     [Fact]
     public void Equip_node_referencing_missing_set_is_skipped_with_warning()
     {
-        var graph = new WorkflowGraphDto
+        var graph = new BlueprintGraphDto
         {
             Nodes =
             [
@@ -41,7 +41,7 @@ public class GearSwapCodeGeneratorGenerateTests
     [Fact]
     public void Full_graph_emits_get_sets_and_wired_events()
     {
-        var graph = new WorkflowGraphDto
+        var graph = new BlueprintGraphDto
         {
             Nodes =
             [

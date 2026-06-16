@@ -1,28 +1,28 @@
 // tests/Vanalytics.Data.Tests/GearSwapCodeGeneratorEventsTests.cs
-using Vanalytics.Core.DTOs.Workflows;
+using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Core.Services;
 
 namespace Vanalytics.Data.Tests;
 
 public class GearSwapCodeGeneratorEventsTests
 {
-    private static WorkflowGraphDto Graph(WorkflowNodeDto[] nodes, WorkflowEdgeDto[] edges) =>
+    private static BlueprintGraphDto Graph(BlueprintNodeDto[] nodes, BlueprintEdgeDto[] edges) =>
         new() { Version = 1, Nodes = [.. nodes], Edges = [.. edges] };
 
-    private static WorkflowNodeDto Trigger(string id, string type) =>
+    private static BlueprintNodeDto Trigger(string id, string type) =>
         new() { Id = id, Type = type, Data = new() };
 
-    private static WorkflowNodeDto Equip(string id, long setId) =>
+    private static BlueprintNodeDto Equip(string id, long setId) =>
         new() { Id = id, Type = "equip", Data = new() { GearSetId = setId } };
 
     // Overload: allows passing set id as a parseable string (e.g. "3") — string→long is not implicit in C#.
-    private static WorkflowNodeDto Equip(string id, string setId) =>
+    private static BlueprintNodeDto Equip(string id, string setId) =>
         Equip(id, long.Parse(setId));
 
-    private static WorkflowEdgeDto Edge(string source, string handle, string target) =>
+    private static BlueprintEdgeDto Edge(string source, string handle, string target) =>
         new() { Id = $"{source}-{handle}-{target}", Source = source, SourceHandle = handle, Target = target, TargetHandle = "in" };
 
-    private static WorkflowNodeDto EquipNamed(string id, long setId, string action) =>
+    private static BlueprintNodeDto EquipNamed(string id, long setId, string action) =>
         new() { Id = id, Type = "equip", Data = new() { GearSetId = setId, ActionName = action } };
 
     private static readonly Dictionary<long, string> Names = new()

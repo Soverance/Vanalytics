@@ -1,6 +1,6 @@
 // src/Vanalytics.Core/Services/GearSwapCodeGenerator.Generate.cs
 using System.Text;
-using Vanalytics.Core.DTOs.Workflows;
+using Vanalytics.Core.DTOs.Blueprints;
 
 namespace Vanalytics.Core.Services;
 
@@ -9,12 +9,12 @@ public static partial class GearSwapCodeGenerator
     public record GenerateResult(string Lua, List<string> Warnings);
 
     /// <summary>
-    /// Generates a complete GearSwap .lua file from a workflow graph and the resolved Gear Sets it
+    /// Generates a complete GearSwap .lua file from a blueprint graph and the resolved Gear Sets it
     /// references. Only sets actually wired to a trigger are emitted into get_sets(). Equip nodes
     /// referencing a set not present in <paramref name="sets"/> (e.g. deleted) are skipped and
     /// reported in Warnings. An empty graph still produces a valid (minimal) file.
     /// </summary>
-    public static GenerateResult Generate(WorkflowGraphDto graph, IReadOnlyCollection<ResolvedGearSet> sets)
+    public static GenerateResult Generate(BlueprintGraphDto graph, IReadOnlyCollection<ResolvedGearSet> sets)
     {
         var warnings = new List<string>();
         var setsById = sets.GroupBy(s => s.Id).ToDictionary(g => g.Key, g => g.First());
@@ -64,6 +64,6 @@ public static partial class GearSwapCodeGenerator
         return new GenerateResult(sb.ToString().TrimEnd() + "\n", warnings);
     }
 
-    private static string NodeType(WorkflowGraphDto graph, string nodeId) =>
+    private static string NodeType(BlueprintGraphDto graph, string nodeId) =>
         graph.Nodes.FirstOrDefault(n => n.Id == nodeId)?.Type ?? string.Empty;
 }

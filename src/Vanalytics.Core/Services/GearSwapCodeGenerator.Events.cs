@@ -1,6 +1,6 @@
 // src/Vanalytics.Core/Services/GearSwapCodeGenerator.Events.cs
 using System.Text;
-using Vanalytics.Core.DTOs.Workflows;
+using Vanalytics.Core.DTOs.Blueprints;
 
 namespace Vanalytics.Core.Services;
 
@@ -47,7 +47,7 @@ public static partial class GearSwapCodeGenerator
     /// with at least one resolvable leaf contributes an if/elseif arm. Terminal pins equip flat;
     /// category (precast) pins dispatch on spell.english (named leaves) with the generic leaf as else.
     /// </summary>
-    public static string EmitEvents(WorkflowGraphDto graph, IReadOnlyDictionary<long, string> setNamesById)
+    public static string EmitEvents(BlueprintGraphDto graph, IReadOnlyDictionary<long, string> setNamesById)
     {
         var sb = new StringBuilder();
         var equipById = graph.Nodes.Where(n => n.Type == "equip").ToDictionary(n => n.Id);
@@ -97,14 +97,14 @@ public static partial class GearSwapCodeGenerator
         return sb.ToString();
     }
 
-    private static string? Resolve(WorkflowNodeDto leaf, IReadOnlyDictionary<long, string> names) =>
+    private static string? Resolve(BlueprintNodeDto leaf, IReadOnlyDictionary<long, string> names) =>
         leaf.Data.GearSetId is { } id && names.TryGetValue(id, out var name) ? name : null;
 
     // Terminal pin: first resolvable target wins, inline after `then`. An equip leaf -> flat
     // sets['Name']; a mode node -> equip of the mode's current set.
     private static string? TerminalBody(
         List<string> targetIds,
-        IReadOnlyDictionary<string, WorkflowNodeDto> equipById,
+        IReadOnlyDictionary<string, BlueprintNodeDto> equipById,
         IReadOnlyDictionary<string, string> modeNsById,
         IReadOnlyDictionary<long, string> names)
     {
@@ -124,7 +124,7 @@ public static partial class GearSwapCodeGenerator
     // Category pin: dispatch on <dispatch> (e.g. spell.english, buff). Named leaves -> if/elseif chain;
     // generic (no actionName) -> trailing else. Only-generic collapses to an inline equip. Null if
     // nothing resolves.
-    private static string? NestedBody(string dispatch, List<WorkflowNodeDto> leaves, IReadOnlyDictionary<long, string> names)
+    private static string? NestedBody(string dispatch, List<BlueprintNodeDto> leaves, IReadOnlyDictionary<long, string> names)
     {
         var named = leaves
             .Where(l => !string.IsNullOrEmpty(l.Data.ActionName))

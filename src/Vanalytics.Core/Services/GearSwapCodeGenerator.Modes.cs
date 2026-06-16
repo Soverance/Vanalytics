@@ -1,6 +1,6 @@
 // src/Vanalytics.Core/Services/GearSwapCodeGenerator.Modes.cs
 using System.Text;
-using Vanalytics.Core.DTOs.Workflows;
+using Vanalytics.Core.DTOs.Blueprints;
 
 namespace Vanalytics.Core.Services;
 
@@ -15,7 +15,7 @@ public static partial class GearSwapCodeGenerator
     // Collect non-empty mode nodes. Member label = explicit Label ?? the set's name; collisions within a
     // mode get a numeric suffix. Members whose set isn't resolvable (deleted) are dropped. Namespaces are
     // de-duplicated across modes (the UI enforces unique names; this is a backstop for valid Lua).
-    private static List<ModeInfo> CollectModes(WorkflowGraphDto graph, IReadOnlyDictionary<long, string> names)
+    private static List<ModeInfo> CollectModes(BlueprintGraphDto graph, IReadOnlyDictionary<long, string> names)
     {
         var modes = new List<ModeInfo>();
         // Seed namespace de-dup with flat-set names — those a flat equip leaf emits as top-level
