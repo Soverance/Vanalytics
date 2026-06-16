@@ -245,4 +245,61 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         Assert.Contains("if new == 'Engaged' then equip(sets.TP[TP_Set_Names[TP_Index]])", gen.Lua);
         Assert.Contains("if command == 'cycle TP set' then", gen.Lua);
     }
+
+    [Fact]
+    public async Task Generate_emits_set_combine_for_combine_node_and_layered_member()
+    {
+        var (token, charId) = await SetupAsync("wf7@test.com", "wf7", "Wfseven");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        async Task<long> MakeSet(string name, string slot, int itemId, string itemName)
+        {
+            var s = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+                new SaveGearSetRequest
+                {
+                    Name = name, Job = "THF", Category = "Engaged",
+                    Slots = [ new GearSetSlotDto { Slot = slot, ItemId = itemId, ItemName = itemName, Augments = [] } ]
+                }))
+                .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+            return s!.Id;
+        }
+
+        var accId = await MakeSet("Accuracy", "Head", 13892, "Adhemar Bonnet +1");
+        var thId = await MakeSet("TH Swap", "Hands", 14000, "Plun. Armlets +1");
+
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:status_change", Data = new() },
+                new() { Id = "c", Type = "combine", Data = new() { CombineSetIds = [accId, thId] } },
+                new() { Id = "tp", Type = "mode", Data = new()
+                    {
+                        ModeName = "TP",
+                        Members =
+                        [
+                            new BlueprintModeMemberDto { GearSetId = accId },
+                            new BlueprintModeMemberDto { CombineNodeId = "c", Label = "Treasure Hunter" },
+                        ],
+                    } },
+            ],
+            Edges = [ new() { Id = "e", Source = "t", SourceHandle = "Engaged", Target = "tp", TargetHandle = "in" } ],
+        };
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+
+        // Round-trip: combine node + combine-backed member survive serialization.
+        var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
+        var combineNode = Assert.Single(wf!.Graph.Nodes, n => n.Type == "combine");
+        Assert.Equal(2, combineNode.Data.CombineSetIds!.Count);
+        var modeNode = Assert.Single(wf.Graph.Nodes, n => n.Type == "mode");
+        Assert.Contains(modeNode.Data.Members!, m => m.CombineNodeId == "c");
+
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+
+        Assert.Contains("sets['Accuracy'] = {", gen!.Lua);
+        Assert.Contains("sets['TH Swap'] = {", gen.Lua);
+        Assert.Contains("sets.TP['Treasure Hunter'] = set_combine(sets['Accuracy'], sets['TH Swap'])", gen.Lua);
+        Assert.Empty(gen.Warnings);
+    }
 }

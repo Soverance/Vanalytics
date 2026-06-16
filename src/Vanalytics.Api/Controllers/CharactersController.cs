@@ -821,10 +821,17 @@ public class CharactersController : ControllerBase
             .SelectMany(n => n.Data.Members ?? [])
             .Select(m => m.GearSetId);
 
+        // Combine nodes reference their component sets via CombineSetIds; these must be resolved too,
+        // otherwise a set used only inside a set_combine (and nowhere as an equip/mode leaf) is missing.
+        var combineSetIds = graph.Nodes
+            .Where(n => n.Type == "combine")
+            .SelectMany(n => n.Data.CombineSetIds ?? []);
+
         var referencedIds = graph.Nodes
             .Where(n => n.Type == "equip" && n.Data.GearSetId is not null)
             .Select(n => n.Data.GearSetId!.Value)
             .Concat(modeSetIds)
+            .Concat(combineSetIds)
             .Distinct()
             .ToList();
 
