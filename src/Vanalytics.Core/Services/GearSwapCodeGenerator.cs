@@ -49,4 +49,19 @@ public static partial class GearSwapCodeGenerator
         }
         return sb.ToString();
     }
+
+    /// <summary>
+    /// Lua expression for a combine reference: <c>set_combine(sets['A'], sets['B'], …)</c>, components in
+    /// list order so the right-most wins (matching GearSwap's right-most-wins set_combine). Components
+    /// whose name is unknown (deleted set) are dropped. Returns null if fewer than 2 resolve — a combine
+    /// of &lt;2 sets is meaningless and the caller skips it.
+    /// </summary>
+    public static string? CombineExpr(IReadOnlyList<long> componentIds, IReadOnlyDictionary<long, string> names)
+    {
+        var parts = componentIds
+            .Where(names.ContainsKey)
+            .Select(id => $"sets[{GearSwapLua.Key(names[id])}]")
+            .ToList();
+        return parts.Count < 2 ? null : $"set_combine({string.Join(", ", parts)})";
+    }
 }
