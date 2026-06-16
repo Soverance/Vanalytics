@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone } from './blueprintGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -148,5 +148,27 @@ describe('copy/paste transforms', () => {
     expect(out.edges[0].target).toBe('new2')
     expect(out.edges[0].selected).toBe(true)
     expect(clip.nodes[0].id).toBe('a')                              // original untouched
+  })
+})
+
+describe('clipboardAnchor', () => {
+  it('returns the min-x/min-y corner of the clipboard nodes', () => {
+    const clip = {
+      nodes: [
+        { id: 'a', type: 'equip', position: { x: 30, y: 80 }, data: {} },
+        { id: 'b', type: 'mode', position: { x: 10, y: 120 }, data: {} },
+      ],
+      edges: [],
+    }
+    expect(clipboardAnchor(clip)).toEqual({ x: 10, y: 80 })
+  })
+
+  it('returns the single node position for a one-node clipboard', () => {
+    const clip = { nodes: [{ id: 'a', type: 'equip', position: { x: 42, y: 7 }, data: {} }], edges: [] }
+    expect(clipboardAnchor(clip)).toEqual({ x: 42, y: 7 })
+  })
+
+  it('returns {0,0} for an empty clipboard', () => {
+    expect(clipboardAnchor({ nodes: [], edges: [] })).toEqual({ x: 0, y: 0 })
   })
 })

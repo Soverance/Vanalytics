@@ -161,6 +161,16 @@ export function cloneSelection(
   }
 }
 
+// Top-left corner (min x, min y) of a clipboard's nodes; {0,0} for an empty clipboard. Used to
+// translate a pasted group so its anchor lands at the paste cursor.
+export function clipboardAnchor(clip: Clipboard): { x: number; y: number } {
+  if (clip.nodes.length === 0) return { x: 0, y: 0 }
+  return {
+    x: Math.min(...clip.nodes.map(n => n.position.x)),
+    y: Math.min(...clip.nodes.map(n => n.position.y)),
+  }
+}
+
 // Build pasted nodes/edges from a clipboard: fresh ids (via newId), internal edges remapped through the
 // id map, positions offset by (dx,dy), all marked selected. Data is deep-copied so paste is independent.
 export function pasteClone(
