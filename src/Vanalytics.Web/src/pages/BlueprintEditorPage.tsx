@@ -242,8 +242,7 @@ function BlueprintEditorInner() {
     }
     setNodes(n => [...n, node])
     setPalette(null)
-    if (type === 'mode') setSelectedId(node.id)
-    if (type === 'combine') setSelectedId(node.id)
+    if (type === 'mode' || type === 'combine') setSelectedId(node.id)
   }, [palette])
 
   const selected = nodes.find(n => n.id === selectedId)
@@ -280,11 +279,11 @@ function BlueprintEditorInner() {
     ({ combineSetIds: ids, setNames: ids.map(id => sets.find(s => s.id === id)?.name) }), [sets])
 
   const addCombine = useCallback((setId: number) =>
-    updateCombineData(d => withNames(addCombineSet(d.combineSetIds ?? [], setId))), [updateCombineData, withNames])
+    updateCombineData(d => ({ ...d, ...withNames(addCombineSet(d.combineSetIds ?? [], setId)) })), [updateCombineData, withNames])
   const removeCombine = useCallback((i: number) =>
-    updateCombineData(d => withNames(removeCombineSet(d.combineSetIds ?? [], i))), [updateCombineData, withNames])
+    updateCombineData(d => ({ ...d, ...withNames(removeCombineSet(d.combineSetIds ?? [], i)) })), [updateCombineData, withNames])
   const moveCombine = useCallback((i: number, dir: -1 | 1) =>
-    updateCombineData(d => withNames(moveCombineSet(d.combineSetIds ?? [], i, dir))), [updateCombineData, withNames])
+    updateCombineData(d => ({ ...d, ...withNames(moveCombineSet(d.combineSetIds ?? [], i, dir)) })), [updateCombineData, withNames])
 
   const deleteNode = useCallback((nodeId: string) => {
     setNodes(ns => ns.filter(n => n.id !== nodeId))
