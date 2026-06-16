@@ -1,3 +1,4 @@
+import { ClipboardPaste } from 'lucide-react'
 import type { BlueprintNodeType } from '../../../types/api'
 
 const ITEMS: { type: BlueprintNodeType; label: string; group: string; color: string }[] = [
@@ -9,10 +10,11 @@ const ITEMS: { type: BlueprintNodeType; label: string; group: string; color: str
   { type: 'mode', label: 'Mode (set cycle)', group: 'Sets', color: '#34d399' },
 ]
 
-export default function NodePalette({ x, y, onPick, onClose }: {
+export default function NodePalette({ x, y, onPick, onClose, onPaste }: {
   x: number; y: number
   onPick: (type: BlueprintNodeType) => void
   onClose: () => void
+  onPaste?: () => void
 }) {
   const groups = [...new Set(ITEMS.map(i => i.group))]
   return (
@@ -20,6 +22,15 @@ export default function NodePalette({ x, y, onPick, onClose }: {
       <div className="fixed inset-0 z-10" onClick={onClose} />
       <div className="absolute z-20 w-56 overflow-hidden rounded-lg border border-gray-700 bg-gray-800 shadow-2xl"
         style={{ left: x, top: y }}>
+        {onPaste && (
+          <>
+            <button onClick={onPaste}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-gray-700">
+              <ClipboardPaste className="h-3.5 w-3.5" /> Paste here
+            </button>
+            <div className="border-t border-gray-700" />
+          </>
+        )}
         {groups.map(g => (
           <div key={g}>
             <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wide text-gray-500">{g}</div>

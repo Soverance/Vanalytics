@@ -6,7 +6,7 @@ import {
   type Node, type Edge, type Connection, type NodeChange, type EdgeChange,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft, Download, Trash2 } from 'lucide-react'
+import { ArrowLeft, Download, Trash2, Copy, ClipboardPaste } from 'lucide-react'
 import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
 import { wouldCreateCycle } from '../components/character/blueprint/blueprintGraph'
@@ -264,6 +264,13 @@ function BlueprintEditorInner() {
     setNodeMenu(null)
   }, [])
 
+  // Menu Copy: copy the right-clicked node, or the whole selection if that node is part of it.
+  const copyFromMenu = useCallback((nodeId: string) => {
+    const sel = nodesRef.current.filter(n => n.selected).map(n => n.id)
+    copyNodeIds(sel.includes(nodeId) ? sel : [nodeId])
+    setNodeMenu(null)
+  }, [copyNodeIds])
+
   // Right-click a node → small delete menu. stopPropagation so the pane's add-node palette
   // (onPaneContextMenu on the wrapper) does NOT also open.
   const onNodeContextMenu = useCallback((e: React.MouseEvent, n: Node) => {
@@ -318,7 +325,8 @@ function BlueprintEditorInner() {
             <Controls />
           </ReactFlow>
           {palette && (
-            <NodePalette x={palette.x} y={palette.y} onPick={addNode} onClose={() => setPalette(null)} />
+            <NodePalette x={palette.x} y={palette.y} onPick={addNode} onClose={() => setPalette(null)}
+              onPaste={clipboard.current?.nodes.length ? () => { pasteAt(lastPointer.current); setPalette(null) } : undefined} />
           )}
           {picker && (
             <ActionPicker
@@ -341,6 +349,16 @@ function BlueprintEditorInner() {
               <div className="fixed inset-0 z-10" onClick={() => setNodeMenu(null)} />
               <div className="absolute z-20 w-40 overflow-hidden rounded-lg border border-gray-700 bg-gray-800 shadow-2xl"
                 style={{ left: nodeMenu.x, top: nodeMenu.y }}>
+                <button onClick={() => copyFromMenu(nodeMenu.nodeId)}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-gray-700">
+                  <Copy className="h-3.5 w-3.5" /> Copy
+                </button>
+                {clipboard.current?.nodes.length ? (
+                  <button onClick={() => { pasteAt(lastPointer.current); setNodeMenu(null) }}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-gray-700">
+                    <ClipboardPaste className="h-3.5 w-3.5" /> Paste
+                  </button>
+                ) : null}
                 <button onClick={() => deleteNode(nodeMenu.nodeId)}
                   className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-rose-300 hover:bg-gray-700">
                   <Trash2 className="h-3.5 w-3.5" /> Delete node
