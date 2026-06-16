@@ -110,7 +110,7 @@ function BlueprintEditorInner() {
         : n.type === 'mode'
         ? { modeName: n.data.modeName ?? 'Mode', modeCommand: n.data.modeCommand ?? null,
             members: n.data.members ?? [],
-            memberNames: (n.data.members ?? []).map(m => setById.get(m.gearSetId)?.name) }
+            memberNames: (n.data.members ?? []).map(m => m.combineNodeId ? 'Combine' : setById.get(m.gearSetId)?.name) }
         : n.type === 'combine'
         ? { combineSetIds: n.data.combineSetIds ?? [],
             setNames: (n.data.combineSetIds ?? []).map(sid => setById.get(sid)?.name) }
@@ -260,15 +260,15 @@ function BlueprintEditorInner() {
   const setModeCommand = useCallback((v: string) => updateModeData(d => ({ ...d, modeCommand: v })), [updateModeData])
   const addModeMember = useCallback((setId: number) => updateModeData(d => {
     const members = addMember(d.members ?? [], setId)
-    return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
+    return { ...d, members, memberNames: members.map(m => m.combineNodeId ? 'Combine' : sets.find(s => s.id === m.gearSetId)?.name) }
   }), [updateModeData, sets])
   const removeModeMember = useCallback((i: number) => updateModeData(d => {
     const members = removeMember(d.members ?? [], i)
-    return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
+    return { ...d, members, memberNames: members.map(m => m.combineNodeId ? 'Combine' : sets.find(s => s.id === m.gearSetId)?.name) }
   }), [updateModeData, sets])
   const moveModeMember = useCallback((i: number, dir: -1 | 1) => updateModeData(d => {
     const members = moveMember(d.members ?? [], i, dir)
-    return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
+    return { ...d, members, memberNames: members.map(m => m.combineNodeId ? 'Combine' : sets.find(s => s.id === m.gearSetId)?.name) }
   }), [updateModeData, sets])
   const addModeCombineMember = useCallback((combineNodeId: string) => updateModeData(d => {
     const members = [...(d.members ?? []), { gearSetId: 0, combineNodeId }]
@@ -322,6 +322,12 @@ function BlueprintEditorInner() {
     const result = await generate()
     setExportLua(result)
   }, [save, toGraph, generate])
+
+  const combineOptions = useMemo(() =>
+    nodes.filter(n => n.type === 'combine').map(n => {
+      const names = ((n.data as CombineNodeData).setNames ?? []).filter(Boolean)
+      return { id: n.id, label: names.length ? names.join(' + ') : 'Combine' }
+    }), [nodes])
 
   const fileName = useMemo(() => `${job}.lua`, [job])
 
@@ -419,7 +425,7 @@ function BlueprintEditorInner() {
         {selected?.type === 'mode' && (
           <ModeInspector
             sets={sets}
-            combines={nodes.filter(n => n.type === 'combine').map(n => { const names = ((n.data as CombineNodeData).setNames ?? []).filter(Boolean); return { id: n.id, label: names.length ? names.join(' + ') : 'Combine' } })}
+            combines={combineOptions}
             name={(selected.data as ModeNodeData).modeName ?? 'Mode'}
             command={(selected.data as ModeNodeData).modeCommand?.trim() || `cycle ${(selected.data as ModeNodeData).modeName ?? 'Mode'} set`}
             members={(selected.data as ModeNodeData).members ?? []}
