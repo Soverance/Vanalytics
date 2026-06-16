@@ -6,11 +6,15 @@ namespace Vanalytics.Core.Services;
 
 public static partial class GearSwapCodeGenerator
 {
+    // A resolved mode member: a flat set (SetId) inlined as a slot table, OR a combine (Components)
+    // emitted as set_combine(...). Exactly one of SetId/Components is non-null.
+    private sealed record ModeMemberInfo(string Label, long? SetId, IReadOnlyList<long>? Components);
+
     // A non-empty mode resolved for codegen: Namespace is a unique Lua ident; Command is the macro
-    // string; Members are (label, setId) in cycle order (index 1 = default).
+    // string; Members are in cycle order (index 1 = default).
     private sealed record ModeInfo(
         string NodeId, string Name, string Namespace, string Command,
-        IReadOnlyList<(string Label, long SetId)> Members);
+        IReadOnlyList<ModeMemberInfo> Members);
 
     // Collect non-empty mode nodes. Member label = explicit Label ?? the set's name; collisions within a
     // mode get a numeric suffix. Members whose set isn't resolvable (deleted) are dropped. Namespaces are
@@ -36,16 +40,33 @@ public static partial class GearSwapCodeGenerator
             var name = (node.Data.ModeName ?? "").Trim();
             if (name.Length == 0) continue;
 
-            var members = new List<(string Label, long SetId)>();
+            var members = new List<ModeMemberInfo>();
             var usedLabels = new HashSet<string>();
             foreach (var m in node.Data.Members ?? [])
             {
-                if (!names.TryGetValue(m.GearSetId, out var setName)) continue;   // deleted/unresolved -> drop
-                var label = string.IsNullOrWhiteSpace(m.Label) ? setName : m.Label!.Trim();
+                string label;
+                long? setId = null;
+                IReadOnlyList<long>? components = null;
+
+                if (m.CombineNodeId is { } cid)
+                {
+                    var combine = graph.Nodes.FirstOrDefault(n => n.Id == cid && n.Type == "combine");
+                    var comp = (combine?.Data.CombineSetIds ?? []).Where(names.ContainsKey).Distinct().ToList();
+                    if (comp.Count < 2) continue;   // unresolvable combine member -> drop (warned in Generate)
+                    components = comp;
+                    label = string.IsNullOrWhiteSpace(m.Label) ? names[comp[0]] : m.Label!.Trim();
+                }
+                else
+                {
+                    if (!names.TryGetValue(m.GearSetId, out var setName)) continue;   // deleted/unresolved -> drop
+                    setId = m.GearSetId;
+                    label = string.IsNullOrWhiteSpace(m.Label) ? setName : m.Label!.Trim();
+                }
+
                 var unique = label;
                 var i = 2;
                 while (!usedLabels.Add(unique)) unique = $"{label} {i++}";
-                members.Add((unique, m.GearSetId));
+                members.Add(new ModeMemberInfo(unique, setId, components));
             }
             if (members.Count == 0) continue;   // zero-member -> skip
 
@@ -63,18 +84,26 @@ public static partial class GearSwapCodeGenerator
     // get_sets body chunk per mode: index init + names array + the namespaced member sets.
     private static string EmitModes(List<ModeInfo> modes, IReadOnlyDictionary<long, ResolvedGearSet> setsById)
     {
+        var setNamesById = setsById.ToDictionary(kv => kv.Key, kv => kv.Value.Name);
         var sb = new StringBuilder();
         foreach (var mode in modes)
         {
             sb.Append($"    {mode.Namespace}_Index = 1\n");
-            var names = string.Join(", ", mode.Members.Select(m => GearSwapLua.Key(m.Label)));
-            sb.Append($"    {mode.Namespace}_Set_Names = {{{names}}}\n");
+            var setNamesLua = string.Join(", ", mode.Members.Select(m => GearSwapLua.Key(m.Label)));
+            sb.Append($"    {mode.Namespace}_Set_Names = {{{setNamesLua}}}\n");
             sb.Append($"    sets.{mode.Namespace} = {{}}\n");
-            foreach (var (label, setId) in mode.Members)
+            foreach (var m in mode.Members)
             {
-                sb.Append($"    sets.{mode.Namespace}[{GearSwapLua.Key(label)}] = {{\n");
-                sb.Append(EmitSlots(setsById[setId]));
-                sb.Append("    }\n");
+                if (m.Components is { } comp)
+                {
+                    sb.Append($"    sets.{mode.Namespace}[{GearSwapLua.Key(m.Label)}] = {CombineExpr(comp, setNamesById)}\n");
+                }
+                else
+                {
+                    sb.Append($"    sets.{mode.Namespace}[{GearSwapLua.Key(m.Label)}] = {{\n");
+                    sb.Append(EmitSlots(setsById[m.SetId!.Value]));
+                    sb.Append("    }\n");
+                }
             }
         }
         return sb.ToString();

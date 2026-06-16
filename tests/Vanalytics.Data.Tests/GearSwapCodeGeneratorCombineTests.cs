@@ -72,4 +72,62 @@ public class GearSwapCodeGeneratorCombineTests
         Assert.DoesNotContain("set_combine", r.Lua);
         Assert.DoesNotContain("sets['Idle Base']", r.Lua);
     }
+
+    [Fact]
+    public void Mode_member_referencing_combine_emits_set_combine_assignment()
+    {
+        // TP mode: member 1 = flat "Accuracy"; member 2 = combine(Accuracy, TH Swap) labelled "Treasure Hunter".
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                Combine("c", 10, 11),
+                new()
+                {
+                    Id = "tp", Type = "mode",
+                    Data = new()
+                    {
+                        ModeName = "TP",
+                        Members =
+                        [
+                            new BlueprintModeMemberDto { GearSetId = 10 },
+                            new BlueprintModeMemberDto { CombineNodeId = "c", Label = "Treasure Hunter" },
+                        ],
+                    },
+                },
+            ],
+            Edges = [],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "Accuracy"), Set(11, "TH Swap")]);
+
+        // Components emitted as top-level sets (so set_combine can reference them).
+        Assert.Contains("sets['Accuracy'] = {", r.Lua);
+        Assert.Contains("sets['TH Swap'] = {", r.Lua);
+        // Flat member inlines its slots; combine member is an assignment to set_combine.
+        Assert.Contains("sets.TP['Accuracy'] = {", r.Lua);
+        Assert.Contains("sets.TP['Treasure Hunter'] = set_combine(sets['Accuracy'], sets['TH Swap'])", r.Lua);
+        Assert.Contains("TP_Set_Names = {'Accuracy', 'Treasure Hunter'}", r.Lua);
+        Assert.Empty(r.Warnings);
+    }
+
+    [Fact]
+    public void Combine_member_label_falls_back_to_base_set_name()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                Combine("c", 10, 11),
+                new() { Id = "tp", Type = "mode", Data = new()
+                    { ModeName = "TP", Members = [ new BlueprintModeMemberDto { CombineNodeId = "c" } ] } },
+            ],
+            Edges = [],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "Accuracy"), Set(11, "TH Swap")]);
+
+        // No explicit label -> uses the base (first) component's set name.
+        Assert.Contains("sets.TP['Accuracy'] = set_combine(sets['Accuracy'], sets['TH Swap'])", r.Lua);
+    }
 }
