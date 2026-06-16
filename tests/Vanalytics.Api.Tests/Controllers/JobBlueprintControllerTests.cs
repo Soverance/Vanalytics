@@ -247,7 +247,7 @@ public class JobBlueprintControllerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Generate_emits_set_combine_for_combine_node_and_layered_member()
+    public async Task Generate_emits_set_combine_for_layered_member()
     {
         var (token, charId) = await SetupAsync("wf7@test.com", "wf7", "Wfseven");
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -272,14 +272,13 @@ public class JobBlueprintControllerTests : IAsyncLifetime
             Nodes =
             [
                 new() { Id = "t", Type = "trigger:status_change", Data = new() },
-                new() { Id = "c", Type = "combine", Data = new() { CombineSetIds = [accId, thId] } },
                 new() { Id = "tp", Type = "mode", Data = new()
                     {
                         ModeName = "TP",
                         Members =
                         [
                             new BlueprintModeMemberDto { GearSetId = accId },
-                            new BlueprintModeMemberDto { CombineNodeId = "c", Label = "Treasure Hunter" },
+                            new BlueprintModeMemberDto { GearSetId = accId, OverlaySetIds = [thId], Label = "Treasure Hunter" },
                         ],
                     } },
             ],
@@ -287,12 +286,10 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         };
         await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
 
-        // Round-trip: combine node + combine-backed member survive serialization.
+        // Round-trip: layered mode member survives serialization.
         var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
-        var combineNode = Assert.Single(wf!.Graph.Nodes, n => n.Type == "combine");
-        Assert.Equal(2, combineNode.Data.CombineSetIds!.Count);
-        var modeNode = Assert.Single(wf.Graph.Nodes, n => n.Type == "mode");
-        Assert.Contains(modeNode.Data.Members!, m => m.CombineNodeId == "c");
+        var modeNode = Assert.Single(wf!.Graph.Nodes, n => n.Type == "mode");
+        Assert.Contains(modeNode.Data.Members!, m => m.OverlaySetIds is [var o] && o == thId);
 
         var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
             .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();

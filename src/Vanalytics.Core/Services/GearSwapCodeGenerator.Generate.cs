@@ -67,7 +67,6 @@ public static partial class GearSwapCodeGenerator
         foreach (var node in graph.Nodes.Where(n => n.Type == "mode"))
             foreach (var m in node.Data.Members ?? [])
             {
-                if (m.CombineNodeId is not null) continue;   // combine-backed member: handled via combine reachability
                 if (m.OverlaySetIds is { Count: > 0 }) continue;    // layered member -> emitted via set_combine, not inline
                 if (!setsById.ContainsKey(m.GearSetId))
                 {
@@ -76,34 +75,6 @@ public static partial class GearSwapCodeGenerator
                 }
                 if (!modeMemberIds.Contains(m.GearSetId)) modeMemberIds.Add(m.GearSetId);
             }
-
-        // Combine nodes and which of them are "used" (a terminal pin targets it, or a mode member
-        // references it). A used combine's component sets are emitted as top-level sets['Name'] so the
-        // set_combine(...) call can reference them by name. An unused combine emits nothing.
-        var combineById = graph.Nodes.Where(n => n.Type == "combine").ToDictionary(n => n.Id);
-        var usedCombineIds = new HashSet<string>();
-        foreach (var edge in graph.Edges)
-            if (Triggers.ContainsKey(NodeType(graph, edge.Source)) && combineById.ContainsKey(edge.Target))
-                usedCombineIds.Add(edge.Target);
-        foreach (var node in graph.Nodes.Where(n => n.Type == "mode"))
-            foreach (var m in node.Data.Members ?? [])
-                if (m.CombineNodeId is { } cid && combineById.ContainsKey(cid))
-                    usedCombineIds.Add(cid);
-
-        foreach (var cid in usedCombineIds)
-        {
-            var comp = combineById[cid].Data.CombineSetIds ?? [];
-            foreach (var missing in comp.Where(s => !setsById.ContainsKey(s)).Distinct())
-                warnings.Add($"Gear set #{missing} is referenced by the blueprint but no longer exists; that step was skipped.");
-            var resolved = comp.Where(setsById.ContainsKey).Distinct().ToList();
-            if (resolved.Count < 2)
-            {
-                warnings.Add("A Combine step needs at least 2 gear sets; it was skipped.");
-                continue;
-            }
-            foreach (var setId in resolved)
-                if (!flatSetIds.Contains(setId)) flatSetIds.Add(setId);
-        }
 
         var allIds = flatSetIds.Concat(modeMemberIds).Distinct().ToList();
         var setNamesById = allIds.ToDictionary(id => id, id => setsById[id].Name);

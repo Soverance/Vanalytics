@@ -821,17 +821,21 @@ public class CharactersController : ControllerBase
             .SelectMany(n => n.Data.Members ?? [])
             .Select(m => m.GearSetId);
 
-        // Combine nodes reference their component sets via CombineSetIds; these must be resolved too,
-        // otherwise a set used only inside a set_combine (and nowhere as an equip/mode leaf) is missing.
-        var combineSetIds = graph.Nodes
-            .Where(n => n.Type == "combine")
-            .SelectMany(n => n.Data.CombineSetIds ?? []);
+        // Overlay layers reference extra sets via OverlaySetIds; these must be resolved too, otherwise a
+        // set used only inside a set_combine (and nowhere as a plain equip/mode leaf) is missing.
+        var overlaySetIds = graph.Nodes
+            .Where(n => n.Type == "equip")
+            .SelectMany(n => n.Data.OverlaySetIds ?? [])
+            .Concat(graph.Nodes
+                .Where(n => n.Type == "mode")
+                .SelectMany(n => n.Data.Members ?? [])
+                .SelectMany(m => m.OverlaySetIds ?? []));
 
         var referencedIds = graph.Nodes
             .Where(n => n.Type == "equip" && n.Data.GearSetId is not null)
             .Select(n => n.Data.GearSetId!.Value)
             .Concat(modeSetIds)
-            .Concat(combineSetIds)
+            .Concat(overlaySetIds)
             .Distinct()
             .ToList();
 

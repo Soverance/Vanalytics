@@ -164,4 +164,40 @@ public class GearSwapCodeGeneratorOverlayTests
         Assert.DoesNotContain("sets.TP['Treasure Hunter'] = set_combine", r.Lua);
         Assert.DoesNotContain("sets.TP['Treasure Hunter'] = \n", r.Lua);   // not a broken empty RHS
     }
+
+    [Fact]
+    public void Layered_mode_member_and_layered_precast_ability_generate_correctly()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "p", Type = "trigger:precast", Data = new() },
+                Equip("sa", 10, [11], action: "Sneak Attack"),
+                new()
+                {
+                    Id = "tp", Type = "mode",
+                    Data = new()
+                    {
+                        ModeName = "TP",
+                        Members =
+                        [
+                            new BlueprintModeMemberDto { GearSetId = 10 },
+                            new BlueprintModeMemberDto { GearSetId = 10, OverlaySetIds = [11], Label = "Treasure Hunter" },
+                        ],
+                    },
+                },
+            ],
+            Edges = [ Edge("p", "JobAbility", "sa") ],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "TP"), Set(11, "SA Gloves")]);
+
+        Assert.Contains("sets['TP'] = {", r.Lua);
+        Assert.Contains("sets['SA Gloves'] = {", r.Lua);
+        // Mode is also named "TP", so it collides with the flat set "TP" and dedups to namespace TP2.
+        Assert.Contains("sets.TP2['Treasure Hunter'] = set_combine(sets['TP'], sets['SA Gloves'])", r.Lua);
+        Assert.Contains("if spell.english == 'Sneak Attack' then equip(set_combine(sets['TP'], sets['SA Gloves']))", r.Lua);
+        Assert.Empty(r.Warnings);
+    }
 }

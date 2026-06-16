@@ -48,15 +48,7 @@ public static partial class GearSwapCodeGenerator
                 long? setId = null;
                 IReadOnlyList<long>? components = null;
 
-                if (m.CombineNodeId is { } cid)
-                {
-                    var combine = graph.Nodes.FirstOrDefault(n => n.Id == cid && n.Type == "combine");
-                    var comp = (combine?.Data.CombineSetIds ?? []).Where(names.ContainsKey).Distinct().ToList();
-                    if (comp.Count < 2) continue;   // unresolvable combine member -> drop (warned in Generate)
-                    components = comp;
-                    label = string.IsNullOrWhiteSpace(m.Label) ? names[comp[0]] : m.Label!.Trim();
-                }
-                else if (m.OverlaySetIds is { Count: > 0 })
+                if (m.OverlaySetIds is { Count: > 0 })
                 {
                     if (!names.TryGetValue(m.GearSetId, out var setName)) continue;   // base deleted -> drop member
                     var comp = new List<long> { m.GearSetId };
@@ -105,7 +97,7 @@ public static partial class GearSwapCodeGenerator
             {
                 if (m.Components is { } comp)
                 {
-                    sb.Append($"    sets.{mode.Namespace}[{GearSwapLua.Key(m.Label)}] = {CombineExpr(comp, setNamesById)}\n");
+                    sb.Append($"    sets.{mode.Namespace}[{GearSwapLua.Key(m.Label)}] = {EquipExpr(comp[0], comp.Skip(1).ToList(), setNamesById)}\n");
                 }
                 else
                 {
