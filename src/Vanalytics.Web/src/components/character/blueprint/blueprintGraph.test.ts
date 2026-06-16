@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember } from './blueprintGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone } from './blueprintGraph'
+import type { Clipboard } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -105,5 +106,48 @@ describe('mode helpers', () => {
     expect(moveMember(m, 2, 1).map(x => x.gearSetId)).toEqual([11, 10, 12])  // no-op at bottom
     m = removeMember(m, 1)
     expect(m.map(x => x.gearSetId)).toEqual([11, 12])
+  })
+})
+
+describe('copy/paste transforms', () => {
+  const nodes = [
+    { id: 'a', type: 'equip', selected: true, position: { x: 0, y: 0 }, data: { gearSetId: 1 } },
+    { id: 'b', type: 'mode', selected: true, position: { x: 10, y: 10 }, data: { members: [{ gearSetId: 2 }] } },
+    { id: 'c', type: 'equip', selected: false, position: { x: 99, y: 99 }, data: { gearSetId: 3 } },
+  ]
+  const edges = [
+    { id: 'a-in-b', source: 'a', target: 'b', sourceHandle: 'out', targetHandle: 'in' }, // internal (a,b both selected)
+    { id: 'b-in-c', source: 'b', target: 'c', sourceHandle: 'out', targetHandle: 'in' }, // crosses to unselected c
+  ]
+
+  it('cloneSelection keeps only selected nodes + edges internal to them, deep-copying data', () => {
+    const clip = cloneSelection(nodes, edges)
+    expect(clip.nodes.map(n => n.id)).toEqual(['a', 'b'])
+    expect(clip.edges.map(e => e.id)).toEqual(['a-in-b'])           // crossing edge dropped
+    ;(clip.nodes[1].data as { members: { gearSetId: number }[] }).members[0].gearSetId = 999
+    expect((nodes[1].data as { members: { gearSetId: number }[] }).members[0].gearSetId).toBe(2)
+  })
+
+  it('cloneSelection returns empty when nothing is selected', () => {
+    const clip = cloneSelection(nodes.map(n => ({ ...n, selected: false })), edges)
+    expect(clip.nodes).toEqual([])
+    expect(clip.edges).toEqual([])
+  })
+
+  it('pasteClone remaps ids consistently, offsets positions, marks selected', () => {
+    const clip = cloneSelection(nodes, edges)
+    let i = 0
+    const newId = () => `new${++i}`
+    const out = pasteClone(clip, newId, { x: 40, y: 40 })
+
+    expect(out.nodes.map(n => n.id)).toEqual(['new1', 'new2'])
+    expect(out.nodes.every(n => n.selected)).toBe(true)
+    expect(out.nodes[0].position).toEqual({ x: 40, y: 40 })
+    expect(out.nodes[1].position).toEqual({ x: 50, y: 50 })
+    expect(out.edges).toHaveLength(1)
+    expect(out.edges[0].source).toBe('new1')
+    expect(out.edges[0].target).toBe('new2')
+    expect(out.edges[0].selected).toBe(true)
+    expect(clip.nodes[0].id).toBe('a')                              // original untouched
   })
 })

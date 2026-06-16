@@ -139,3 +139,48 @@ export function moveMember(members: ModeMember[], index: number, dir: -1 | 1): M
   ;[copy[index], copy[j]] = [copy[j], copy[index]]
   return copy
 }
+
+// ---- Copy/paste transforms (pure; the editor wires Ctrl-C/V to these) ----
+
+export interface ClipboardNode { id: string; type: string; position: { x: number; y: number }; data: Record<string, unknown> }
+export interface ClipboardEdge { id: string; source: string; target: string; sourceHandle?: string | null; targetHandle?: string | null }
+export interface Clipboard { nodes: ClipboardNode[]; edges: ClipboardEdge[] }
+
+// Snapshot the selected nodes (projected to a serializable shape, data deep-copied) plus the edges
+// whose BOTH endpoints are selected. Edges crossing to unselected nodes are dropped.
+export function cloneSelection(
+  nodes: { id: string; selected?: boolean; type?: string; position: { x: number; y: number }; data: Record<string, unknown> }[],
+  edges: { id: string; source: string; target: string; sourceHandle?: string | null; targetHandle?: string | null }[],
+): Clipboard {
+  const sel = nodes.filter(n => n.selected)
+  const ids = new Set(sel.map(n => n.id))
+  return {
+    nodes: sel.map(n => ({ id: n.id, type: n.type ?? '', position: { ...n.position }, data: structuredClone(n.data) })),
+    edges: edges.filter(e => ids.has(e.source) && ids.has(e.target))
+      .map(e => ({ id: e.id, source: e.source, target: e.target, sourceHandle: e.sourceHandle ?? null, targetHandle: e.targetHandle ?? null })),
+  }
+}
+
+// Build pasted nodes/edges from a clipboard: fresh ids (via newId), internal edges remapped through the
+// id map, positions offset by (dx,dy), all marked selected. Data is deep-copied so paste is independent.
+export function pasteClone(
+  clip: Clipboard, newId: () => string, offset: { x: number; y: number },
+): {
+  nodes: { id: string; type: string; position: { x: number; y: number }; data: Record<string, unknown>; selected: boolean }[]
+  edges: { id: string; source: string; target: string; sourceHandle: string | null; targetHandle: string | null; selected: boolean }[]
+} {
+  const idMap = new Map<string, string>()
+  for (const n of clip.nodes) idMap.set(n.id, newId())
+  return {
+    nodes: clip.nodes.map(n => ({
+      id: idMap.get(n.id)!, type: n.type,
+      position: { x: n.position.x + offset.x, y: n.position.y + offset.y },
+      data: structuredClone(n.data), selected: true,
+    })),
+    edges: clip.edges.map(e => ({
+      id: `${idMap.get(e.source)}-${e.sourceHandle ?? ''}-${idMap.get(e.target)}`,
+      source: idMap.get(e.source)!, target: idMap.get(e.target)!,
+      sourceHandle: e.sourceHandle ?? null, targetHandle: e.targetHandle ?? null, selected: true,
+    })),
+  }
+}
