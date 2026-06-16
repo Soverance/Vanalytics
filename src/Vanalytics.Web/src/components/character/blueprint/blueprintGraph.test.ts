@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor } from './blueprintGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addCombineSet, removeCombineSet, moveCombineSet, isFullSet, canConnect } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -170,5 +170,38 @@ describe('clipboardAnchor', () => {
 
   it('returns {0,0} for an empty clipboard', () => {
     expect(clipboardAnchor({ nodes: [], edges: [] })).toEqual({ x: 0, y: 0 })
+  })
+})
+
+describe('combine list helpers', () => {
+  it('adds, removes, and reorders component sets immutably', () => {
+    let c = addCombineSet([], 10)
+    c = addCombineSet(c, 11)
+    expect(c).toEqual([10, 11])
+    expect(moveCombineSet(c, 1, -1)).toEqual([11, 10])
+    expect(moveCombineSet(c, 1, 1)).toEqual([10, 11])   // out of range -> unchanged
+    expect(removeCombineSet(c, 0)).toEqual([11])
+  })
+})
+
+describe('isFullSet', () => {
+  it('is true only when all 16 slots are filled', () => {
+    expect(isFullSet(16)).toBe(true)
+    expect(isFullSet(15)).toBe(false)
+    expect(isFullSet(0)).toBe(false)
+  })
+})
+
+describe('canConnect', () => {
+  it('lets terminal pins reach equip, mode, and combine', () => {
+    expect(canConnect('trigger:status_change', 'Engaged', 'equip')).toBe(true)
+    expect(canConnect('trigger:status_change', 'Engaged', 'mode')).toBe(true)
+    expect(canConnect('trigger:status_change', 'Engaged', 'combine')).toBe(true)
+  })
+
+  it('blocks category pins from mode and combine targets', () => {
+    expect(canConnect('trigger:precast', 'WeaponSkill', 'mode')).toBe(false)
+    expect(canConnect('trigger:precast', 'WeaponSkill', 'combine')).toBe(false)
+    expect(canConnect('trigger:precast', 'WeaponSkill', 'equip')).toBe(true)
   })
 })

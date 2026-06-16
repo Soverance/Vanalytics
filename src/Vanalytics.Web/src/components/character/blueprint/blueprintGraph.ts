@@ -140,6 +140,38 @@ export function moveMember(members: ModeMember[], index: number, dir: -1 | 1): M
   return copy
 }
 
+// Pure ordered-list ops for a Combine node's component set ids (index 0 = base, last wins).
+export function addCombineSet(ids: number[], gearSetId: number): number[] {
+  return [...ids, gearSetId]
+}
+
+export function removeCombineSet(ids: number[], index: number): number[] {
+  return ids.filter((_, i) => i !== index)
+}
+
+export function moveCombineSet(ids: number[], index: number, dir: -1 | 1): number[] {
+  const j = index + dir
+  if (j < 0 || j >= ids.length) return ids
+  const copy = [...ids]
+  ;[copy[index], copy[j]] = [copy[j], copy[index]]
+  return copy
+}
+
+// A 16-slot gear set is "full"; used only to warn that a full set as an upper combine layer fully
+// replaces the layers above it (the value of set_combine comes from sparse override layers).
+export function isFullSet(filledSlotCount: number): boolean {
+  return filledSlotCount >= 16
+}
+
+// May a trigger pin (sourceHandle on triggerType) connect to a node of targetType? Terminal pins reach
+// equip | mode | combine; category pins (precast WS/JA/Magic, buff, midcast Magic) reach only equip
+// (mode/combine need a flat applied set, not action dispatch). Mirrors the backend topology guardrails.
+export function canConnect(triggerType: string, handle: string, targetType: string): boolean {
+  const isCategory = categoryOfHandle(triggerType, handle) !== null
+  if (targetType === 'mode' || targetType === 'combine') return !isCategory
+  return true
+}
+
 // ---- Copy/paste transforms (pure; the editor wires Ctrl-C/V to these) ----
 
 export interface ClipboardNode { id: string; type: string; position: { x: number; y: number }; data: Record<string, unknown> }
