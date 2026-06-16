@@ -11,7 +11,7 @@ import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
 import { wouldCreateCycle } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
-import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, type ActionCategory } from '../components/character/blueprint/blueprintGraph'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, cloneSelection, pasteClone, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
 import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
 import NodePalette from '../components/character/blueprint/NodePalette'
@@ -53,6 +53,10 @@ function BlueprintEditorInner() {
   const connectingFrom = useRef<{ nodeId: string; handleId: string } | null>(null)
   const [picker, setPicker] = useState<{ x: number; y: number; flowX: number; flowY: number; nodeId: string; handle: string; category: ActionCategory; allowGeneric: boolean } | null>(null)
   const [nodeMenu, setNodeMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null)
+  const clipboard = useRef<Clipboard | null>(null)
+  const pasteCount = useRef(0)
+  const nodesRef = useRef(nodes); nodesRef.current = nodes
+  const edgesRef = useRef(edges); edgesRef.current = edges
 
   useEffect(() => {
     api<CharacterDetail>(`/api/characters/${id}`).then(setCharacter).catch(() => {})
@@ -101,6 +105,36 @@ function BlueprintEditorInner() {
     const t = setTimeout(() => { save(toGraph()).catch(() => {}) }, 800)
     return () => clearTimeout(t)
   }, [nodes, edges, save, toGraph])
+
+  // Ctrl/Cmd-C copies the selected nodes (+ internal edges); Ctrl/Cmd-V pastes them offset + selected.
+  // Ignored while editing a text field so inspector copy/paste works normally.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      const k = e.key.toLowerCase()
+      if (k === 'c') {
+        const clip = cloneSelection(nodesRef.current, edgesRef.current)
+        if (clip.nodes.length === 0) return
+        clipboard.current = clip
+        pasteCount.current = 0
+        e.preventDefault()
+      } else if (k === 'v') {
+        const clip = clipboard.current
+        if (!clip || clip.nodes.length === 0) return
+        pasteCount.current += 1
+        const d = 30 * pasteCount.current
+        const { nodes: nn, edges: ee } = pasteClone(clip, newId, { x: d, y: d })
+        setNodes(prev => [...prev.map(n => ({ ...n, selected: false })), ...nn])
+        setEdges(prev => [...prev, ...ee])
+        setSelectedId(nn[0].id)
+        e.preventDefault()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   const onNodesChange = useCallback((c: NodeChange[]) => setNodes(n => applyNodeChanges(c, n)), [])
   const onEdgesChange = useCallback((c: EdgeChange[]) => setEdges(e => applyEdgeChanges(c, e)), [])
