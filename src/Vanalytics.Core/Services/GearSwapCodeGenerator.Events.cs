@@ -53,6 +53,8 @@ public static partial class GearSwapCodeGenerator
         var equipById = graph.Nodes.Where(n => n.Type == "equip").ToDictionary(n => n.Id);
         // Mode nodes are valid targets for terminal pins: nodeId -> Lua namespace (only non-empty modes).
         var modeNsById = CollectModes(graph, setNamesById).ToDictionary(m => m.NodeId, m => m.Namespace);
+        var combineById = graph.Nodes.Where(n => n.Type == "combine")
+            .ToDictionary(n => n.Id, n => (IReadOnlyList<long>)(n.Data.CombineSetIds ?? []));
 
         foreach (var node in graph.Nodes)
         {
@@ -70,7 +72,7 @@ public static partial class GearSwapCodeGenerator
                 string? body;
                 if (dispatch is null)
                 {
-                    body = TerminalBody(targetIds, equipById, modeNsById, setNamesById);
+                    body = TerminalBody(targetIds, equipById, modeNsById, combineById, setNamesById);
                 }
                 else
                 {
@@ -101,17 +103,23 @@ public static partial class GearSwapCodeGenerator
         leaf.Data.GearSetId is { } id && names.TryGetValue(id, out var name) ? name : null;
 
     // Terminal pin: first resolvable target wins, inline after `then`. An equip leaf -> flat
-    // sets['Name']; a mode node -> equip of the mode's current set.
+    // sets['Name']; a mode node -> equip of the mode's current set; a combine node -> set_combine(...).
     private static string? TerminalBody(
         List<string> targetIds,
         IReadOnlyDictionary<string, BlueprintNodeDto> equipById,
         IReadOnlyDictionary<string, string> modeNsById,
+        IReadOnlyDictionary<string, IReadOnlyList<long>> combineById,
         IReadOnlyDictionary<long, string> names)
     {
         foreach (var id in targetIds)
         {
             if (modeNsById.TryGetValue(id, out var ns))
                 return $" equip(sets.{ns}[{ns}_Set_Names[{ns}_Index]])";
+            if (combineById.TryGetValue(id, out var comp))
+            {
+                var expr = CombineExpr(comp, names);
+                if (expr is not null) return $" equip({expr})";
+            }
             if (equipById.TryGetValue(id, out var leaf))
             {
                 var name = Resolve(leaf, names);

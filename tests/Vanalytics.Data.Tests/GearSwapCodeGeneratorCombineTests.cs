@@ -38,4 +38,38 @@ public class GearSwapCodeGeneratorCombineTests
         Assert.Equal("set_combine(sets['A'], sets['B'], sets['C'])",
             GearSwapCodeGenerator.CombineExpr([1, 2, 3], names));
     }
+
+    [Fact]
+    public void Terminal_pin_to_combine_emits_set_combine_and_component_sets()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:status_change", Data = new() },
+                Combine("c", 10, 11),
+            ],
+            Edges = [ Edge("t", "Idle", "c") ],
+        };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "Idle Base"), Set(11, "MDT Swap")]);
+
+        // Components emitted as top-level named sets so set_combine can reference them.
+        Assert.Contains("sets['Idle Base'] = {", r.Lua);
+        Assert.Contains("sets['MDT Swap'] = {", r.Lua);
+        // Terminal handler equips the merged set.
+        Assert.Contains("if new == 'Idle' then equip(set_combine(sets['Idle Base'], sets['MDT Swap']))", r.Lua);
+        Assert.Empty(r.Warnings);
+    }
+
+    [Fact]
+    public void Unused_combine_emits_nothing()
+    {
+        var graph = new BlueprintGraphDto { Nodes = [Combine("c", 10, 11)], Edges = [] };
+
+        var r = GearSwapCodeGenerator.Generate(graph, [Set(10, "Idle Base"), Set(11, "MDT Swap")]);
+
+        Assert.DoesNotContain("set_combine", r.Lua);
+        Assert.DoesNotContain("sets['Idle Base']", r.Lua);
+    }
 }
