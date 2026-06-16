@@ -2,18 +2,16 @@
 import type { GearSetSummary, ModeMember } from '../../../types/api'
 
 export default function ModeInspector({
-  sets, combines, name, command, members,
-  onNameChange, onCommandChange, onAddMember, onAddCombineMember, onRemoveMember, onMoveMember,
+  sets, name, command, members,
+  onNameChange, onCommandChange, onAddMember, onRemoveMember, onMoveMember,
 }: {
   sets: GearSetSummary[]
-  combines: { id: string; label: string }[]
   name: string
   command: string
   members: ModeMember[]
   onNameChange: (v: string) => void
   onCommandChange: (v: string) => void
   onAddMember: (setId: number) => void
-  onAddCombineMember: (combineNodeId: string) => void
   onRemoveMember: (index: number) => void
   onMoveMember: (index: number, dir: -1 | 1) => void
 }) {
@@ -36,9 +34,7 @@ export default function ModeInspector({
           <li key={i} className="flex items-center gap-1 rounded border border-gray-800 bg-gray-800/60 px-2 py-1 text-xs text-gray-200">
             <span className="text-gray-500">{i + 1}.</span>
             <span className="flex-1 truncate">
-              {m.combineNodeId
-                ? (combines.find(c => c.id === m.combineNodeId)?.label ?? 'Combine')
-                : (setById.get(m.gearSetId)?.name ?? `#${m.gearSetId}`)}
+              {setById.get(m.gearSetId)?.name ?? `#${m.gearSetId}`}
             </span>
             <button onClick={() => onMoveMember(i, -1)} disabled={i === 0} className="px-1 text-gray-400 disabled:opacity-30">↑</button>
             <button onClick={() => onMoveMember(i, 1)} disabled={i === members.length - 1} className="px-1 text-gray-400 disabled:opacity-30">↓</button>
@@ -59,19 +55,6 @@ export default function ModeInspector({
           </option>
         ))}
       </select>
-
-      {combines.length > 0 && (
-        <>
-          <label className="mb-1 block text-xs text-gray-400">Add a combine</label>
-          <select
-            value=""
-            onChange={e => { if (e.target.value) onAddCombineMember(e.target.value) }}
-            className="mb-3 w-full rounded border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200">
-            <option value="">— add a combine —</option>
-            {combines.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-          </select>
-        </>
-      )}
 
       <details className="text-xs text-gray-400">
         <summary className="cursor-pointer select-none">Advanced</summary>

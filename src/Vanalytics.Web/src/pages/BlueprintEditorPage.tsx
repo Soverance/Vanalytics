@@ -12,15 +12,13 @@ import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
 import { wouldCreateCycle } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
-import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addCombineSet, removeCombineSet, moveCombineSet, canConnect, cloneSelection, pasteClone, clipboardAnchor, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, canConnect, cloneSelection, pasteClone, clipboardAnchor, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
 import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
 import NodePalette from '../components/character/blueprint/NodePalette'
 import EquipInspector from '../components/character/blueprint/EquipInspector'
 import ModeNode, { type ModeNodeData } from '../components/character/blueprint/ModeNode'
 import ModeInspector from '../components/character/blueprint/ModeInspector'
-import CombineNode, { type CombineNodeData } from '../components/character/blueprint/CombineNode'
-import CombineInspector from '../components/character/blueprint/CombineInspector'
 import GearSetExportModal from '../components/character/GearSetExportModal'
 import type {
   CharacterDetail, GearSetSummary, BlueprintGraph, BlueprintNodeType,
@@ -34,7 +32,6 @@ const nodeTypes = {
   'trigger:buff_change': TriggerNode,
   equip: EquipGearSetNode,
   mode: ModeNode,
-  combine: CombineNode,
 }
 
 let idSeq = 1
@@ -105,15 +102,13 @@ function BlueprintEditorInner() {
       id: n.id, type: n.type, position: n.position,
       data: n.type === 'equip'
         ? { gearSetId: n.data.gearSetId, actionName: n.data.actionName ?? null,
+            overlaySetIds: n.data.overlaySetIds ?? [],
             setName: n.data.gearSetId != null ? setById.get(n.data.gearSetId)?.name : undefined,
             category: n.data.gearSetId != null ? setById.get(n.data.gearSetId)?.category : undefined }
         : n.type === 'mode'
         ? { modeName: n.data.modeName ?? 'Mode', modeCommand: n.data.modeCommand ?? null,
             members: n.data.members ?? [],
-            memberNames: (n.data.members ?? []).map(m => m.combineNodeId ? 'Combine' : setById.get(m.gearSetId)?.name) }
-        : n.type === 'combine'
-        ? { combineSetIds: n.data.combineSetIds ?? [],
-            setNames: (n.data.combineSetIds ?? []).map(sid => setById.get(sid)?.name) }
+            memberNames: (n.data.members ?? []).map(m => setById.get(m.gearSetId)?.name) }
         : {},
     })))
     setEdges(graph.edges.map(e => ({ id: e.id, source: e.source, target: e.target,
@@ -128,11 +123,10 @@ function BlueprintEditorInner() {
         ? { modeName: (n.data as ModeNodeData).modeName ?? 'Mode',
             modeCommand: (n.data as ModeNodeData).modeCommand ?? null,
             members: ((n.data as ModeNodeData).members ?? []).map(m => ({
-              gearSetId: m.gearSetId, label: m.label ?? null, combineNodeId: m.combineNodeId ?? null })) }
-        : n.type === 'combine'
-        ? { combineSetIds: (n.data as CombineNodeData).combineSetIds ?? [] }
+              gearSetId: m.gearSetId, label: m.label ?? null, overlaySetIds: m.overlaySetIds ?? null })) }
         : { gearSetId: (n.data as { gearSetId?: number | null }).gearSetId ?? null,
-            actionName: (n.data as { actionName?: string | null }).actionName ?? null },
+            actionName: (n.data as { actionName?: string | null }).actionName ?? null,
+            overlaySetIds: (n.data as { overlaySetIds?: number[] }).overlaySetIds ?? null },
     })),
     edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target,
       sourceHandle: e.sourceHandle ?? null, targetHandle: e.targetHandle ?? null })),
@@ -224,25 +218,24 @@ function BlueprintEditorInner() {
     const rect = (me.currentTarget as HTMLElement).getBoundingClientRect()
     const x = me.clientX - rect.left
     const y = me.clientY - rect.top
-    setPalette({ x, y, flowX: x, flowY: y })
-  }, [])
+    const flow = screenToFlowPosition({ x: me.clientX, y: me.clientY })
+    setPalette({ x, y, flowX: flow.x, flowY: flow.y })
+  }, [screenToFlowPosition])
 
   const addNode = useCallback((type: BlueprintNodeType) => {
     if (!palette) return
     const node: Node = {
       id: newId(), type,
-      position: { x: palette.flowX - 260, y: palette.flowY - 120 },
+      position: { x: palette.flowX, y: palette.flowY },
       data: type === 'equip'
         ? { gearSetId: null }
         : type === 'mode'
         ? { modeName: 'New Mode', modeCommand: null, members: [], memberNames: [] }
-        : type === 'combine'
-        ? { combineSetIds: [], setNames: [] }
         : {},
     }
     setNodes(n => [...n, node])
     setPalette(null)
-    if (type === 'mode' || type === 'combine') setSelectedId(node.id)
+    if (type === 'mode') setSelectedId(node.id)
   }, [palette])
 
   const selected = nodes.find(n => n.id === selectedId)
@@ -260,36 +253,26 @@ function BlueprintEditorInner() {
   const setModeCommand = useCallback((v: string) => updateModeData(d => ({ ...d, modeCommand: v })), [updateModeData])
   const addModeMember = useCallback((setId: number) => updateModeData(d => {
     const members = addMember(d.members ?? [], setId)
-    return { ...d, members, memberNames: members.map(m => m.combineNodeId ? 'Combine' : sets.find(s => s.id === m.gearSetId)?.name) }
+    return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
   }), [updateModeData, sets])
   const removeModeMember = useCallback((i: number) => updateModeData(d => {
     const members = removeMember(d.members ?? [], i)
-    return { ...d, members, memberNames: members.map(m => m.combineNodeId ? 'Combine' : sets.find(s => s.id === m.gearSetId)?.name) }
+    return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
   }), [updateModeData, sets])
   const moveModeMember = useCallback((i: number, dir: -1 | 1) => updateModeData(d => {
     const members = moveMember(d.members ?? [], i, dir)
-    return { ...d, members, memberNames: members.map(m => m.combineNodeId ? 'Combine' : sets.find(s => s.id === m.gearSetId)?.name) }
-  }), [updateModeData, sets])
-  const addModeCombineMember = useCallback((combineNodeId: string) => updateModeData(d => {
-    const members = [...(d.members ?? []), { gearSetId: 0, combineNodeId }]
-    return { ...d, members, memberNames: members.map(m => m.combineNodeId
-      ? 'Combine'
-      : sets.find(s => s.id === m.gearSetId)?.name) }
+    return { ...d, members, memberNames: members.map(m => sets.find(s => s.id === m.gearSetId)?.name) }
   }), [updateModeData, sets])
 
-  const updateCombineData = useCallback((fn: (d: CombineNodeData) => CombineNodeData) => {
-    setNodes(prev => prev.map(n => n.id === selectedId ? { ...n, data: fn(n.data as CombineNodeData) } : n))
+  const updateEquipData = useCallback((fn: (d: Record<string, unknown>) => Record<string, unknown>) => {
+    setNodes(prev => prev.map(n => n.id === selectedId ? { ...n, data: fn(n.data) } : n))
   }, [selectedId])
-
-  const withNames = useCallback((ids: number[]): CombineNodeData =>
-    ({ combineSetIds: ids, setNames: ids.map(id => sets.find(s => s.id === id)?.name) }), [sets])
-
-  const addCombine = useCallback((setId: number) =>
-    updateCombineData(d => ({ ...d, ...withNames(addCombineSet(d.combineSetIds ?? [], setId)) })), [updateCombineData, withNames])
-  const removeCombine = useCallback((i: number) =>
-    updateCombineData(d => ({ ...d, ...withNames(removeCombineSet(d.combineSetIds ?? [], i)) })), [updateCombineData, withNames])
-  const moveCombine = useCallback((i: number, dir: -1 | 1) =>
-    updateCombineData(d => ({ ...d, ...withNames(moveCombineSet(d.combineSetIds ?? [], i, dir)) })), [updateCombineData, withNames])
+  const addEquipOverlay = useCallback((setId: number) =>
+    updateEquipData(d => ({ ...d, overlaySetIds: addOverlay((d.overlaySetIds as number[]) ?? [], setId) })), [updateEquipData])
+  const removeEquipOverlay = useCallback((i: number) =>
+    updateEquipData(d => ({ ...d, overlaySetIds: removeOverlay((d.overlaySetIds as number[]) ?? [], i) })), [updateEquipData])
+  const moveEquipOverlay = useCallback((i: number, dir: -1 | 1) =>
+    updateEquipData(d => ({ ...d, overlaySetIds: moveOverlay((d.overlaySetIds as number[]) ?? [], i, dir) })), [updateEquipData])
 
   const deleteNode = useCallback((nodeId: string) => {
     setNodes(ns => ns.filter(n => n.id !== nodeId))
@@ -322,12 +305,6 @@ function BlueprintEditorInner() {
     const result = await generate()
     setExportLua(result)
   }, [save, toGraph, generate])
-
-  const combineOptions = useMemo(() =>
-    nodes.filter(n => n.type === 'combine').map(n => {
-      const names = ((n.data as CombineNodeData).setNames ?? []).filter(Boolean)
-      return { id: n.id, label: names.length ? names.join(' + ') : 'Combine' }
-    }), [nodes])
 
   const fileName = useMemo(() => `${job}.lua`, [job])
 
@@ -420,30 +397,23 @@ function BlueprintEditorInner() {
               if (!trig || !inEdge) return undefined
               return `${(trig.type ?? '').replace('trigger:', '')} → ${inEdge.sourceHandle}${a ? ` → ${labelForAction(a)}` : ''}`
             })()}
+            overlayIds={(selected.data as { overlaySetIds?: number[] }).overlaySetIds ?? []}
+            onAddOverlay={addEquipOverlay}
+            onRemoveOverlay={removeEquipOverlay}
+            onMoveOverlay={moveEquipOverlay}
           />
         )}
         {selected?.type === 'mode' && (
           <ModeInspector
             sets={sets}
-            combines={combineOptions}
             name={(selected.data as ModeNodeData).modeName ?? 'Mode'}
             command={(selected.data as ModeNodeData).modeCommand?.trim() || `cycle ${(selected.data as ModeNodeData).modeName ?? 'Mode'} set`}
             members={(selected.data as ModeNodeData).members ?? []}
             onNameChange={setModeName}
             onCommandChange={setModeCommand}
             onAddMember={addModeMember}
-            onAddCombineMember={addModeCombineMember}
             onRemoveMember={removeModeMember}
             onMoveMember={moveModeMember}
-          />
-        )}
-        {selected?.type === 'combine' && (
-          <CombineInspector
-            sets={sets}
-            ids={(selected.data as CombineNodeData).combineSetIds ?? []}
-            onAdd={addCombine}
-            onRemove={removeCombine}
-            onMove={moveCombine}
           />
         )}
       </div>

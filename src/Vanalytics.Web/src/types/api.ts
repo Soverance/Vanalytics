@@ -1150,12 +1150,11 @@ export type BlueprintNodeType =
   | 'trigger:buff_change'
   | 'equip'
   | 'mode'
-  | 'combine'
 
 export interface ModeMember {
   gearSetId: number
   label?: string | null
-  combineNodeId?: string | null
+  overlaySetIds?: number[]
 }
 
 export interface BlueprintNode {
@@ -1168,7 +1167,7 @@ export interface BlueprintNode {
     modeName?: string
     modeCommand?: string | null
     members?: ModeMember[]
-    combineSetIds?: number[]
+    overlaySetIds?: number[]
   }
 }
 

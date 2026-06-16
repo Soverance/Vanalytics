@@ -8,6 +8,7 @@ export interface EquipNodeData extends Record<string, unknown> {
   setName?: string
   category?: string
   actionName?: string | null
+  overlaySetIds?: number[]
 }
 
 export default function EquipGearSetNode({ data }: NodeProps) {
@@ -35,6 +36,9 @@ export default function EquipGearSetNode({ data }: NodeProps) {
           </div>
         ) : (
           <span className="text-gray-500">Pick a gear set →</span>
+        )}
+        {(d.overlaySetIds?.length ?? 0) > 0 && (
+          <div className="mt-1 text-[10px] text-purple-300">⊕ {d.overlaySetIds!.length} layer{d.overlaySetIds!.length === 1 ? '' : 's'}</div>
         )}
       </div>
     </div>

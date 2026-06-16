@@ -140,16 +140,16 @@ export function moveMember(members: ModeMember[], index: number, dir: -1 | 1): M
   return copy
 }
 
-// Pure ordered-list ops for a Combine node's component set ids (index 0 = base, last wins).
-export function addCombineSet(ids: number[], gearSetId: number): number[] {
+// Pure ordered-list ops for an equip leaf's overlay set ids (applied over the base, last wins).
+export function addOverlay(ids: number[], gearSetId: number): number[] {
   return [...ids, gearSetId]
 }
 
-export function removeCombineSet(ids: number[], index: number): number[] {
+export function removeOverlay(ids: number[], index: number): number[] {
   return ids.filter((_, i) => i !== index)
 }
 
-export function moveCombineSet(ids: number[], index: number, dir: -1 | 1): number[] {
+export function moveOverlay(ids: number[], index: number, dir: -1 | 1): number[] {
   const j = index + dir
   if (j < 0 || j >= ids.length) return ids
   const copy = [...ids]
@@ -164,11 +164,11 @@ export function isFullSet(filledSlotCount: number): boolean {
 }
 
 // May a trigger pin (sourceHandle on triggerType) connect to a node of targetType? Terminal pins reach
-// equip | mode | combine; category pins (precast WS/JA/Magic, buff, midcast Magic) reach only equip
-// (mode/combine need a flat applied set, not action dispatch). Mirrors the backend topology guardrails.
+// equip | mode; category pins (precast WS/JA/Magic, buff, midcast Magic) reach only equip
+// (mode needs a flat applied set, not action dispatch). Mirrors the backend topology guardrails.
 export function canConnect(triggerType: string, handle: string, targetType: string): boolean {
   const isCategory = categoryOfHandle(triggerType, handle) !== null
-  if (targetType === 'mode' || targetType === 'combine') return !isCategory
+  if (targetType === 'mode') return !isCategory
   return true
 }
 

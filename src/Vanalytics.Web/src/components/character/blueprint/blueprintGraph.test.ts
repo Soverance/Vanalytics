@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addCombineSet, removeCombineSet, moveCombineSet, isFullSet, canConnect } from './blueprintGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -173,14 +173,14 @@ describe('clipboardAnchor', () => {
   })
 })
 
-describe('combine list helpers', () => {
-  it('adds, removes, and reorders component sets immutably', () => {
-    let c = addCombineSet([], 10)
-    c = addCombineSet(c, 11)
+describe('overlay list helpers', () => {
+  it('adds, removes, and reorders overlay set ids immutably', () => {
+    let c = addOverlay([], 10)
+    c = addOverlay(c, 11)
     expect(c).toEqual([10, 11])
-    expect(moveCombineSet(c, 1, -1)).toEqual([11, 10])
-    expect(moveCombineSet(c, 1, 1)).toEqual([10, 11])   // out of range -> unchanged
-    expect(removeCombineSet(c, 0)).toEqual([11])
+    expect(moveOverlay(c, 1, -1)).toEqual([11, 10])
+    expect(moveOverlay(c, 1, 1)).toEqual([10, 11])   // out of range -> unchanged
+    expect(removeOverlay(c, 0)).toEqual([11])
   })
 })
 
@@ -193,15 +193,10 @@ describe('isFullSet', () => {
 })
 
 describe('canConnect', () => {
-  it('lets terminal pins reach equip, mode, and combine', () => {
+  it('lets terminal pins reach equip and mode; blocks category pins from mode', () => {
     expect(canConnect('trigger:status_change', 'Engaged', 'equip')).toBe(true)
     expect(canConnect('trigger:status_change', 'Engaged', 'mode')).toBe(true)
-    expect(canConnect('trigger:status_change', 'Engaged', 'combine')).toBe(true)
-  })
-
-  it('blocks category pins from mode and combine targets', () => {
     expect(canConnect('trigger:precast', 'WeaponSkill', 'mode')).toBe(false)
-    expect(canConnect('trigger:precast', 'WeaponSkill', 'combine')).toBe(false)
     expect(canConnect('trigger:precast', 'WeaponSkill', 'equip')).toBe(true)
   })
 })
