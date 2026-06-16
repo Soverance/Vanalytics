@@ -53,6 +53,7 @@ function BlueprintEditorInner() {
   const connectingFrom = useRef<{ nodeId: string; handleId: string } | null>(null)
   const [picker, setPicker] = useState<{ x: number; y: number; flowX: number; flowY: number; nodeId: string; handle: string; category: ActionCategory; allowGeneric: boolean } | null>(null)
   const [nodeMenu, setNodeMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null)
+  const [hasClip, setHasClip] = useState(false)
   const clipboard = useRef<Clipboard | null>(null)
   const lastPointer = useRef<{ x: number; y: number } | null>(null)
   const nodesRef = useRef(nodes); nodesRef.current = nodes
@@ -66,6 +67,7 @@ function BlueprintEditorInner() {
     const clip = cloneSelection(tagged, edgesRef.current)
     if (clip.nodes.length === 0) return false
     clipboard.current = clip
+    setHasClip(true)
     return true
   }, [])
 
@@ -326,7 +328,7 @@ function BlueprintEditorInner() {
           </ReactFlow>
           {palette && (
             <NodePalette x={palette.x} y={palette.y} onPick={addNode} onClose={() => setPalette(null)}
-              onPaste={clipboard.current?.nodes.length ? () => { pasteAt(lastPointer.current); setPalette(null) } : undefined} />
+              onPaste={hasClip ? () => { pasteAt(lastPointer.current); setPalette(null) } : undefined} />
           )}
           {picker && (
             <ActionPicker
@@ -353,12 +355,13 @@ function BlueprintEditorInner() {
                   className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-gray-700">
                   <Copy className="h-3.5 w-3.5" /> Copy
                 </button>
-                {clipboard.current?.nodes.length ? (
+                {hasClip ? (
                   <button onClick={() => { pasteAt(lastPointer.current); setNodeMenu(null) }}
                     className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-gray-700">
                     <ClipboardPaste className="h-3.5 w-3.5" /> Paste
                   </button>
                 ) : null}
+                <div className="border-t border-gray-700" />
                 <button onClick={() => deleteNode(nodeMenu.nodeId)}
                   className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-rose-300 hover:bg-gray-700">
                   <Trash2 className="h-3.5 w-3.5" /> Delete node
