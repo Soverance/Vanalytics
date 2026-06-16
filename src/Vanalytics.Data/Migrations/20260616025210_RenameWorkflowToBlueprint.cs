@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -26,7 +25,7 @@ namespace Vanalytics.Data.Migrations
         {
             migrationBuilder.RenameIndex(
                 name: "IX_CharacterJobBlueprints_CharacterId_Job",
-                table: "CharacterJobWorkflows",
+                table: "CharacterJobBlueprints",
                 newName: "IX_CharacterJobWorkflows_CharacterId_Job");
 
             migrationBuilder.RenameTable(
