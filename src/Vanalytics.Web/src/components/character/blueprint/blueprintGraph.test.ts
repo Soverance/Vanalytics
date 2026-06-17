@@ -238,6 +238,12 @@ describe('condition helpers', () => {
     expect(isSingleTargetSource('cond:buff', 'out')).toBe(false)
   })
 
+  it('branch keeps its exec input when a condition input is added (handle-aware dedup)', () => {
+    expect(isSingleTargetSource('cond:buff', 'out')).toBe(false)
+    expect(isValidConnection('trigger:status_change', 'Idle', 'branch', 'in')).toBe(true)
+    expect(isValidConnection('cond:buff', 'out', 'branch', 'cond')).toBe(true)
+  })
+
   it('collects the connected edge ids around a node (undirected)', () => {
     const edges = [
       { id: 'e1', source: 'a', target: 'b' },

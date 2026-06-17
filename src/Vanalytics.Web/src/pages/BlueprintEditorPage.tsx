@@ -10,9 +10,9 @@ import './BlueprintEditor.css'
 import { ArrowLeft, Download, Trash2, Copy, ClipboardPaste } from 'lucide-react'
 import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
-import { wouldCreateCycle } from '../components/character/blueprint/blueprintGraph'
+import { wouldCreateCycle, isValidConnection, isSingleTargetSource } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
-import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, canConnect, cloneSelection, pasteClone, clipboardAnchor, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
 import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
 import NodePalette from '../components/character/blueprint/NodePalette'
@@ -187,13 +187,18 @@ function BlueprintEditorInner() {
 
   const onConnect = useCallback((conn: Connection) => {
     if (wouldCreateCycle(edges.map(e => ({ id: e.id, source: e.source, target: e.target })), conn.source!, conn.target!)) return
-    const triggerType = nodes.find(n => n.id === conn.source)?.type ?? ''
-    const isCategory = categoryOfHandle(triggerType, conn.sourceHandle ?? '') !== null
+    const sourceType = nodes.find(n => n.id === conn.source)?.type ?? ''
     const targetType = nodes.find(n => n.id === conn.target)?.type ?? ''
-    if (!canConnect(triggerType, conn.sourceHandle ?? '', targetType)) return
+    if (!isValidConnection(sourceType, conn.sourceHandle, targetType, conn.targetHandle)) return
     setEdges(prev => {
-      const noTargetDup = prev.filter(e => e.target !== conn.target)
-      const base = isCategory ? noTargetDup : noTargetDup.filter(e => !(e.source === conn.source && e.sourceHandle === conn.sourceHandle))
+      // One incoming edge per (target, targetHandle) — branch has two inputs ('in' and 'cond'), so
+      // dedup must be handle-aware, not whole-node.
+      const noInputDup = prev.filter(e => !(e.target === conn.target && e.targetHandle === conn.targetHandle))
+      // Single-target exec outputs (trigger terminal, branch true/false) replace their prior edge;
+      // category pins and cond 'out' fan out.
+      const base = isSingleTargetSource(sourceType, conn.sourceHandle)
+        ? noInputDup.filter(e => !(e.source === conn.source && e.sourceHandle === conn.sourceHandle))
+        : noInputDup
       return addEdge(conn, base)
     })
   }, [edges, nodes])
@@ -371,6 +376,11 @@ function BlueprintEditorInner() {
             proOptions={{ hideAttribution: true }}
             deleteKeyCode={['Delete', 'Backspace']}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect}
+            isValidConnection={(conn) => {
+              const st = nodes.find(n => n.id === conn.source)?.type ?? ''
+              const tt = nodes.find(n => n.id === conn.target)?.type ?? ''
+              return isValidConnection(st, conn.sourceHandle, tt, conn.targetHandle)
+            }}
             onConnectStart={onConnectStart} onConnectEnd={onConnectEnd}
             onNodeClick={(_, n) => setSelectedId(n.id)}
             onNodeContextMenu={onNodeContextMenu}
