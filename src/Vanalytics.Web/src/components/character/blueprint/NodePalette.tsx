@@ -8,6 +8,9 @@ const ITEMS: { type: BlueprintNodeType; label: string; group: string; color: str
   { type: 'trigger:midcast', label: 'midcast', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:buff_change', label: 'buff_change', group: 'Triggers', color: '#b3344a' },
   { type: 'mode', label: 'Mode (set cycle)', group: 'Sets', color: '#34d399' },
+  { type: 'branch', label: 'Branch (if/else)', group: 'Flow Control', color: '#94a3b8' },
+  { type: 'cond:buff', label: 'Condition: Buff active', group: 'Flow Control', color: '#34d399' },
+  { type: 'cond:stat', label: 'Condition: HP/MP/TP', group: 'Flow Control', color: '#f59e0b' },
 ]
 
 export default function NodePalette({ x, y, onPick, onClose, onPaste }: {
@@ -42,7 +45,6 @@ export default function NodePalette({ x, y, onPick, onClose, onPaste }: {
             ))}
           </div>
         ))}
-        <div className="border-t border-gray-700 px-3 py-1.5 text-[10px] text-gray-600">Conditions — coming soon</div>
       </div>
     </>
   )

@@ -19,6 +19,11 @@ import NodePalette from '../components/character/blueprint/NodePalette'
 import EquipInspector from '../components/character/blueprint/EquipInspector'
 import ModeNode, { type ModeNodeData } from '../components/character/blueprint/ModeNode'
 import ModeInspector from '../components/character/blueprint/ModeInspector'
+import BranchNode from '../components/character/blueprint/BranchNode'
+import CondBuffNode from '../components/character/blueprint/CondBuffNode'
+import CondStatNode from '../components/character/blueprint/CondStatNode'
+import CondBuffInspector from '../components/character/blueprint/CondBuffInspector'
+import CondStatInspector from '../components/character/blueprint/CondStatInspector'
 import GearSetExportModal from '../components/character/GearSetExportModal'
 import type {
   CharacterDetail, GearSetSummary, BlueprintGraph, BlueprintNodeType,
@@ -32,6 +37,9 @@ const nodeTypes = {
   'trigger:buff_change': TriggerNode,
   equip: EquipGearSetNode,
   mode: ModeNode,
+  branch: BranchNode,
+  'cond:buff': CondBuffNode,
+  'cond:stat': CondStatNode,
 }
 
 let idSeq = 1
@@ -109,7 +117,11 @@ function BlueprintEditorInner() {
         ? { modeName: n.data.modeName ?? 'Mode', modeCommand: n.data.modeCommand ?? null,
             members: n.data.members ?? [],
             memberNames: (n.data.members ?? []).map(m => setById.get(m.gearSetId)?.name) }
-        : {},
+        : n.type === 'cond:buff'
+        ? { buffName: n.data.buffName ?? null }
+        : n.type === 'cond:stat'
+        ? { resource: n.data.resource ?? 'hpp', op: n.data.op ?? '<', value: n.data.value ?? 25 }
+        : {},   // branch: no data
     })))
     setEdges(graph.edges.map(e => ({ id: e.id, source: e.source, target: e.target,
       sourceHandle: e.sourceHandle ?? undefined, targetHandle: e.targetHandle ?? undefined })))
@@ -117,17 +129,27 @@ function BlueprintEditorInner() {
 
   const toGraph = useCallback((): BlueprintGraph => ({
     version: 1,
-    nodes: nodes.map(n => ({
-      id: n.id, type: n.type as BlueprintNodeType, position: n.position,
-      data: n.type === 'mode'
-        ? { modeName: (n.data as ModeNodeData).modeName ?? 'Mode',
-            modeCommand: (n.data as ModeNodeData).modeCommand ?? null,
-            members: ((n.data as ModeNodeData).members ?? []).map(m => ({
-              gearSetId: m.gearSetId, label: m.label ?? null, overlaySetIds: m.overlaySetIds ?? null })) }
-        : { gearSetId: (n.data as { gearSetId?: number | null }).gearSetId ?? null,
-            actionName: (n.data as { actionName?: string | null }).actionName ?? null,
-            overlaySetIds: (n.data as { overlaySetIds?: number[] }).overlaySetIds ?? null },
-    })),
+    nodes: nodes.map(n => {
+      const t = n.type as BlueprintNodeType
+      let data
+      if (t === 'mode') {
+        const m = n.data as ModeNodeData
+        data = { modeName: m.modeName ?? 'Mode', modeCommand: m.modeCommand ?? null,
+          members: (m.members ?? []).map(mm => ({ gearSetId: mm.gearSetId, label: mm.label ?? null, overlaySetIds: mm.overlaySetIds ?? null })) }
+      } else if (t === 'cond:buff') {
+        data = { buffName: (n.data as { buffName?: string | null }).buffName ?? null }
+      } else if (t === 'cond:stat') {
+        const d = n.data as { resource?: string | null; op?: string | null; value?: number | null }
+        data = { resource: d.resource ?? 'hpp', op: d.op ?? '<', value: d.value ?? 25 }
+      } else if (t === 'branch') {
+        data = {}
+      } else {
+        data = { gearSetId: (n.data as { gearSetId?: number | null }).gearSetId ?? null,
+          actionName: (n.data as { actionName?: string | null }).actionName ?? null,
+          overlaySetIds: (n.data as { overlaySetIds?: number[] }).overlaySetIds ?? null }
+      }
+      return { id: n.id, type: t, position: n.position, data }
+    }),
     edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target,
       sourceHandle: e.sourceHandle ?? null, targetHandle: e.targetHandle ?? null })),
   }), [nodes, edges])
@@ -231,11 +253,15 @@ function BlueprintEditorInner() {
         ? { gearSetId: null, overlaySetIds: [] }
         : type === 'mode'
         ? { modeName: 'New Mode', modeCommand: null, members: [], memberNames: [] }
-        : {},
+        : type === 'cond:buff'
+        ? { buffName: null }
+        : type === 'cond:stat'
+        ? { resource: 'hpp', op: '<', value: 25 }
+        : {},   // branch
     }
     setNodes(n => [...n, node])
     setPalette(null)
-    if (type === 'mode') setSelectedId(node.id)
+    if (type === 'mode' || type === 'cond:buff' || type === 'cond:stat') setSelectedId(node.id)
   }, [palette])
 
   const selected = nodes.find(n => n.id === selectedId)
@@ -274,6 +300,10 @@ function BlueprintEditorInner() {
 
   const updateEquipData = useCallback((fn: (d: Record<string, unknown>) => Record<string, unknown>) => {
     setNodes(prev => prev.map(n => n.id === selectedId ? { ...n, data: fn(n.data) } : n))
+  }, [selectedId])
+
+  const updateCondData = useCallback((patch: Record<string, unknown>) => {
+    setNodes(prev => prev.map(n => n.id === selectedId ? { ...n, data: { ...n.data, ...patch } } : n))
   }, [selectedId])
   const addEquipOverlay = useCallback((setId: number) =>
     updateEquipData(d => ({ ...d, overlaySetIds: addOverlay((d.overlaySetIds as number[]) ?? [], setId) })), [updateEquipData])
@@ -425,6 +455,20 @@ function BlueprintEditorInner() {
             onAddMemberOverlay={addMemberOverlay}
             onRemoveMemberOverlay={removeMemberOverlay}
             onMoveMemberOverlay={moveMemberOverlay}
+          />
+        )}
+        {selected?.type === 'cond:buff' && (
+          <CondBuffInspector
+            buffName={(selected.data as { buffName?: string | null }).buffName}
+            onChange={(raw) => updateCondData({ buffName: raw })}
+          />
+        )}
+        {selected?.type === 'cond:stat' && (
+          <CondStatInspector
+            resource={(selected.data as { resource?: string | null }).resource}
+            op={(selected.data as { op?: string | null }).op}
+            value={(selected.data as { value?: number | null }).value}
+            onChange={(patch) => updateCondData(patch)}
           />
         )}
       </div>
