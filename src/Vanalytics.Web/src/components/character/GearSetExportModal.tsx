@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { X, Copy, Check } from 'lucide-react'
+import { X, Copy, Check, Download as DownloadIcon } from 'lucide-react'
 import { toGearSwapLua, type GearSetSlot } from '../../utils/gearSwapExport'
+import './GearSetExportModal.css'
 
 interface Props {
   name: string
@@ -13,6 +14,9 @@ interface Props {
 export default function GearSetExportModal({ name, slots, luaOverride, warnings, onClose }: Props) {
   const [copied, setCopied] = useState(false)
   const lua = luaOverride ?? (slots ? toGearSwapLua(name, slots) : '')
+  const fileName = name.endsWith('.lua') ? name : `${name}.lua`
+  const lineCount = lua ? lua.split('\n').length : 0
+  const kb = (new Blob([lua]).size / 1024).toFixed(1)
 
   const copy = async () => {
     await navigator.clipboard.writeText(lua)
@@ -25,33 +29,41 @@ export default function GearSetExportModal({ name, slots, luaOverride, warnings,
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = name.endsWith('.lua') ? name : `${name}.lua`
+    a.download = fileName
     a.click()
     URL.revokeObjectURL(url)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
-      <div className="bg-gray-900 border-2 border-amber-800/50 rounded-lg w-full max-w-lg mx-4 overflow-hidden"
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg border-2 border-amber-800/50 bg-gray-900"
         onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+        {/* header (fixed) */}
+        <div className="flex flex-none items-center justify-between border-b border-gray-800 px-4 py-3">
           <span className="text-sm text-gray-200">Export "{name}" to GearSwap</span>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-300"><X className="h-4 w-4" /></button>
         </div>
-        <div className="p-3">
+
+        {/* body: warnings (fixed) + scrollable code area */}
+        <div className="flex min-h-0 flex-1 flex-col p-3">
           {warnings && warnings.length > 0 && (
-            <div className="mb-2 rounded border border-amber-800/40 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
+            <div className="mb-2 flex-none rounded border border-amber-800/40 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
               {warnings.map((w, i) => <div key={i}>⚠ {w}</div>)}
             </div>
           )}
-          <pre className="bg-gray-950 border border-gray-800 rounded p-3 text-xs text-green-300 overflow-x-auto whitespace-pre">{lua}</pre>
-          <div className="flex justify-end gap-2 mt-3">
+          <pre className="lua-scroll min-h-0 flex-1 overflow-auto whitespace-pre rounded border border-gray-800 bg-gray-950 p-3 text-xs text-green-300">{lua}</pre>
+        </div>
+
+        {/* footer (fixed): count + actions always visible */}
+        <div className="flex flex-none items-center justify-between gap-2 border-t border-gray-800 px-4 py-3">
+          <span className="text-[11px] text-gray-500">{lineCount} line{lineCount === 1 ? '' : 's'} · {kb} KB</span>
+          <div className="flex gap-2">
             <button onClick={download}
-              className="text-xs px-3 py-1.5 rounded bg-gray-800/60 text-gray-300 border border-gray-700/40">
-              Download {name.endsWith('.lua') ? name : `${name}.lua`}
+              className="flex items-center gap-1.5 rounded border border-gray-700/40 bg-gray-800/60 px-3 py-1.5 text-xs text-gray-300">
+              <DownloadIcon className="h-3.5 w-3.5" /> Download {fileName}
             </button>
             <button onClick={copy}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-indigo-900/50 text-amber-200 border border-amber-700/40">
+              className="flex items-center gap-1.5 rounded border border-amber-700/40 bg-indigo-900/50 px-3 py-1.5 text-xs text-amber-200">
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? 'Copied' : 'Copy'}
             </button>
