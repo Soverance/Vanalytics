@@ -54,6 +54,9 @@ public static partial class GearSwapCodeGenerator
         // Mode nodes are valid targets for terminal pins: nodeId -> Lua namespace (only non-empty modes).
         var modeNsById = CollectModes(graph, setNamesById).ToDictionary(m => m.NodeId, m => m.Namespace);
 
+        var byId = graph.Nodes.ToDictionary(n => n.Id);
+        var ctx = new ExecCtx(graph, byId, setNamesById, modeNsById);
+
         foreach (var node in graph.Nodes)
         {
             if (!Triggers.TryGetValue(node.Type, out var spec)) continue;
@@ -68,7 +71,14 @@ public static partial class GearSwapCodeGenerator
                 if (targetIds.Count == 0) continue;
 
                 string? body;
-                if (dispatch is null)
+                // A handle wired to a Branch node enters single-target recursive flow (flat leaves).
+                var branchId = targetIds.FirstOrDefault(t => byId.TryGetValue(t, out var n) && n.Type == "branch");
+                if (branchId is not null)
+                {
+                    var flow = EmitExec(ctx, branchId, 2);
+                    body = flow is null ? null : "\n" + flow;
+                }
+                else if (dispatch is null)
                 {
                     body = TerminalBody(targetIds, equipById, modeNsById, setNamesById);
                 }

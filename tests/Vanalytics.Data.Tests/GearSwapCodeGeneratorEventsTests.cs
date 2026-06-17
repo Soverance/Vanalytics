@@ -25,6 +25,23 @@ public class GearSwapCodeGeneratorEventsTests
     private static BlueprintNodeDto EquipNamed(string id, long setId, string action) =>
         new() { Id = id, Type = "equip", Data = new() { GearSetId = setId, ActionName = action } };
 
+    private static BlueprintNodeDto Branch(string id) =>
+        new() { Id = id, Type = "branch", Data = new() };
+
+    private static BlueprintNodeDto CondBuff(string id, string buffName) =>
+        new() { Id = id, Type = "cond:buff", Data = new() { BuffName = buffName } };
+
+    private static BlueprintNodeDto CondStat(string id, string resource, string op, int value) =>
+        new() { Id = id, Type = "cond:stat", Data = new() { Resource = resource, Op = op, Value = value } };
+
+    // Exec edge from a branch True/False (or any) out handle to a target's 'in'.
+    private static BlueprintEdgeDto ExecEdge(string source, string handle, string target) =>
+        new() { Id = $"{source}-{handle}-{target}", Source = source, SourceHandle = handle, Target = target, TargetHandle = "in" };
+
+    // Condition (data) edge: a cond node's 'out' into a branch's 'cond' input.
+    private static BlueprintEdgeDto CondEdge(string condId, string branchId) =>
+        new() { Id = $"{condId}-cond-{branchId}", Source = condId, SourceHandle = "out", Target = branchId, TargetHandle = "cond" };
+
     private static readonly Dictionary<long, string> Names = new()
     {
         [1] = "TP Accuracy", [2] = "Idle Default", [3] = "WS Rudra",
@@ -163,5 +180,25 @@ public class GearSwapCodeGeneratorEventsTests
         Assert.Contains("elseif not gain then", lua);
         Assert.Contains("if buff == 'doom' then equip(sets['Idle Default'])", lua);  // raw lowercase en
         Assert.DoesNotContain("spell.english", lua);
+    }
+
+    [Fact]
+    public void Branch_with_buff_condition_emits_if_else()
+    {
+        // status_change Idle -> Branch(buffactive['sneak attack']) ? Defense : Idle
+        var graph = Graph(
+            [Trigger("t","trigger:status_change"), Branch("b"), CondBuff("c","Sneak Attack"),
+             Equip("e1",1), Equip("e2",2)],
+            [Edge("t","Idle","b"), CondEdge("c","b"),
+             ExecEdge("b","true","e1"), ExecEdge("b","false","e2")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, new Dictionary<long,string>{[1]="Defense",[2]="Idle"});
+
+        Assert.Contains("    if new == 'Idle' then", lua);
+        Assert.Contains("        if buffactive['sneak attack'] then", lua);
+        Assert.Contains("            equip(sets['Defense'])", lua);
+        Assert.Contains("        else", lua);
+        Assert.Contains("            equip(sets['Idle'])", lua);
+        Assert.Contains("        end", lua);
     }
 }
