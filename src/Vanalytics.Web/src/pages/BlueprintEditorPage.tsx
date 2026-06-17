@@ -10,7 +10,7 @@ import './BlueprintEditor.css'
 import { ArrowLeft, Download, Trash2, Copy, ClipboardPaste } from 'lucide-react'
 import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
-import { wouldCreateCycle, isValidConnection, isSingleTargetSource } from '../components/character/blueprint/blueprintGraph'
+import { wouldCreateCycle, isValidConnection, isSingleTargetSource, connectedEdgeIds } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
 import ConnectMenu from '../components/character/blueprint/ConnectMenu'
 import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
@@ -302,6 +302,12 @@ function BlueprintEditorInner() {
   }, [palette])
 
   const selected = nodes.find(n => n.id === selectedId)
+  const chainEdgeIds = useMemo(
+    () => (selectedId ? connectedEdgeIds(edges.map(e => ({ id: e.id, source: e.source, target: e.target })), selectedId) : new Set<string>()),
+    [selectedId, edges])
+  const displayEdges = useMemo(
+    () => edges.map(e => chainEdgeIds.has(e.id) ? { ...e, className: 'is-chain' } : (e.className ? { ...e, className: undefined } : e)),
+    [edges, chainEdgeIds])
   const assignSet = useCallback((setId: number) => {
     const s = sets.find(x => x.id === setId)
     setNodes(prev => prev.map(n => n.id === selectedId
@@ -402,7 +408,7 @@ function BlueprintEditorInner() {
       <div className="flex min-h-0 flex-1">
         <div className="relative min-w-0 flex-1" onContextMenu={onPaneContextMenu} onMouseMove={onPaneMouseMove}>
           <ReactFlow
-            nodes={nodes} edges={edges}
+            nodes={nodes} edges={displayEdges}
             nodeTypes={nodeTypes}
             colorMode="dark"
             proOptions={{ hideAttribution: true }}
