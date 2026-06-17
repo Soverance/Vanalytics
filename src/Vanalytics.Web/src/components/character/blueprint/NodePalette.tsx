@@ -8,18 +8,21 @@ const ITEMS: { type: BlueprintNodeType; label: string; group: string; color: str
   { type: 'trigger:midcast', label: 'midcast', group: 'Triggers', color: '#b3344a' },
   { type: 'trigger:buff_change', label: 'buff_change', group: 'Triggers', color: '#b3344a' },
   { type: 'mode', label: 'Mode (set cycle)', group: 'Sets', color: '#34d399' },
+  { type: 'equip', label: 'Equip Gear Set', group: 'Equip', color: '#6366f1' },
   { type: 'branch', label: 'Branch (if/else)', group: 'Flow Control', color: '#94a3b8' },
   { type: 'cond:buff', label: 'Condition: Buff active', group: 'Flow Control', color: '#34d399' },
   { type: 'cond:stat', label: 'Condition: HP/MP/TP', group: 'Flow Control', color: '#f59e0b' },
 ]
 
-export default function NodePalette({ x, y, onPick, onClose, onPaste }: {
+export default function NodePalette({ x, y, onPick, onClose, onPaste, filter }: {
   x: number; y: number
   onPick: (type: BlueprintNodeType) => void
   onClose: () => void
   onPaste?: () => void
+  filter?: (type: BlueprintNodeType) => boolean
 }) {
-  const groups = [...new Set(ITEMS.map(i => i.group))]
+  const items = ITEMS.filter(i => !filter || filter(i.type))
+  const groups = [...new Set(items.map(i => i.group))]
   return (
     <>
       <div className="fixed inset-0 z-10" onClick={onClose} />
@@ -37,7 +40,7 @@ export default function NodePalette({ x, y, onPick, onClose, onPaste }: {
         {groups.map(g => (
           <div key={g}>
             <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wide text-gray-500">{g}</div>
-            {ITEMS.filter(i => i.group === g).map(i => (
+            {items.filter(i => i.group === g).map(i => (
               <button key={i.type} onClick={() => onPick(i.type)}
                 className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-gray-700">
                 <span className="h-2 w-2 rounded-sm" style={{ background: i.color }} /> {i.label}

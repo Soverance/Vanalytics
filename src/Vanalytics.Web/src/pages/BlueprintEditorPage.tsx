@@ -12,7 +12,6 @@ import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
 import { wouldCreateCycle, isValidConnection, isSingleTargetSource, connectedEdgeIds } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
-import ConnectMenu from '../components/character/blueprint/ConnectMenu'
 import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
 import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
@@ -55,14 +54,13 @@ function BlueprintEditorInner() {
   const [sets, setSets] = useState<GearSetSummary[]>([])
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
-  const [palette, setPalette] = useState<{ x: number; y: number; flowX: number; flowY: number } | null>(null)
+  const [palette, setPalette] = useState<{ x: number; y: number; flowX: number; flowY: number; connect?: { nodeId: string; handle: string; kind: 'exec' | 'cond' } } | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [exportLua, setExportLua] = useState<{ lua: string; warnings: string[] } | null>(null)
   const hydrated = useRef(false)
   const { screenToFlowPosition } = useReactFlow()
   const connectingFrom = useRef<{ nodeId: string; handleId: string } | null>(null)
   const [picker, setPicker] = useState<{ x: number; y: number; flowX: number; flowY: number; nodeId: string; handle: string; category: ActionCategory; allowGeneric: boolean } | null>(null)
-  const [connectMenu, setConnectMenu] = useState<{ x: number; y: number; kind: 'exec' | 'cond'; nodeId: string; handle: string; flowX: number; flowY: number } | null>(null)
   const [nodeMenu, setNodeMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null)
   const [hasClip, setHasClip] = useState(false)
   const clipboard = useRef<Clipboard | null>(null)
@@ -248,6 +246,20 @@ function BlueprintEditorInner() {
     setTimeout(() => setSelectedId(cId), 0)
   }, [])
 
+  // Create a Mode node wired from (sourceNodeId, sourceHandle) → mode 'in'. Single-target sources
+  // replace their prior edge. Opens its inspector.
+  const spawnModeWired = useCallback((sourceNodeId: string, sourceHandle: string, flowX: number, flowY: number) => {
+    const mId = newId()
+    const sType = nodesRef.current.find(n => n.id === sourceNodeId)?.type ?? ''
+    setNodes(n => [...n, { id: mId, type: 'mode', position: { x: flowX, y: flowY }, data: { modeName: 'New Mode', modeCommand: null, members: [], memberNames: [] } }])
+    setEdges(prev => {
+      const base = isSingleTargetSource(sType, sourceHandle)
+        ? prev.filter(e => !(e.source === sourceNodeId && e.sourceHandle === sourceHandle)) : prev
+      return [...base, { id: `${sourceNodeId}-${sourceHandle}-${mId}`, source: sourceNodeId, sourceHandle, target: mId, targetHandle: 'in' }]
+    })
+    setTimeout(() => setSelectedId(mId), 0)
+  }, [])
+
   const onConnectEnd = useCallback((e: MouseEvent | TouchEvent) => {
     const from = connectingFrom.current
     connectingFrom.current = null
@@ -261,11 +273,11 @@ function BlueprintEditorInner() {
     const menuY = me.clientY - (rect?.top ?? 0)
     // Dragged from a Branch's condition input → offer condition nodes.
     if (from.handleId === 'cond') {
-      setConnectMenu({ x: menuX, y: menuY, kind: 'cond', nodeId: from.nodeId, handle: from.handleId, flowX: flow.x, flowY: flow.y })
+      setPalette({ x: menuX, y: menuY, flowX: flow.x, flowY: flow.y, connect: { nodeId: from.nodeId, handle: from.handleId, kind: 'cond' } })
       return
     }
     // Dragged from an exec output → offer Branch or Equip.
-    setConnectMenu({ x: menuX, y: menuY, kind: 'exec', nodeId: from.nodeId, handle: from.handleId, flowX: flow.x, flowY: flow.y })
+    setPalette({ x: menuX, y: menuY, flowX: flow.x, flowY: flow.y, connect: { nodeId: from.nodeId, handle: from.handleId, kind: 'exec' } })
   }, [screenToFlowPosition])
 
   const onPaneContextMenu = useCallback((e: React.MouseEvent | MouseEvent) => {
@@ -300,6 +312,33 @@ function BlueprintEditorInner() {
     setPalette(null)
     if (type === 'mode' || type === 'cond:buff' || type === 'cond:stat') setSelectedId(node.id)
   }, [palette])
+
+  // Unified menu pick: if the menu was opened by dragging a tether (palette.connect set), spawn the
+  // chosen node AND auto-wire it to the dragged pin; otherwise create an unwired node (addNode).
+  const onMenuPick = useCallback((type: BlueprintNodeType) => {
+    if (!palette) return
+    const c = palette.connect
+    if (!c) { addNode(type); return }
+    const { nodeId, handle, kind } = c
+    const { flowX, flowY } = palette
+    if (kind === 'cond') {
+      if (type === 'cond:buff' || type === 'cond:stat') spawnCondition(nodeId, type, flowX, flowY)
+    } else if (type === 'branch') {
+      spawnBranch(nodeId, handle, flowX, flowY)
+    } else if (type === 'mode') {
+      spawnModeWired(nodeId, handle, flowX, flowY)
+    } else if (type === 'equip') {
+      const sType = nodes.find(n => n.id === nodeId)?.type ?? ''
+      const category = sType.startsWith('trigger:') ? categoryOfHandle(sType, handle) : null
+      if (category !== null) {
+        setPalette(null)
+        setPicker({ x: palette.x, y: palette.y, flowX, flowY, nodeId, handle, category, allowGeneric: allowGenericForHandle(sType, handle) })
+        return
+      }
+      spawnLeaf(nodeId, handle, flowX, flowY, null)
+    }
+    setPalette(null)
+  }, [palette, nodes, addNode, spawnBranch, spawnCondition, spawnModeWired, spawnLeaf])
 
   const selected = nodes.find(n => n.id === selectedId)
   const chainEdgeIds = useMemo(
@@ -389,6 +428,16 @@ function BlueprintEditorInner() {
 
   const fileName = useMemo(() => `${job}.lua`, [job])
 
+  // Which palette items are offered: right-click (no connect) shows everything except Equip (equips
+  // are created by dragging from a pin); a drag-connect shows only nodes the dragged pin can wire to.
+  const menuFilter = (type: BlueprintNodeType): boolean => {
+    const c = palette?.connect
+    if (!c) return type !== 'equip'
+    if (c.kind === 'cond') return isValidConnection(type, 'out', 'branch', 'cond')
+    const sType = nodes.find(n => n.id === c.nodeId)?.type ?? ''
+    return isValidConnection(sType, c.handle, type, 'in')
+  }
+
   if (loading) return <div className="py-12 text-center text-gray-400">Loading…</div>
 
   return (
@@ -422,14 +471,15 @@ function BlueprintEditorInner() {
             onConnectStart={onConnectStart} onConnectEnd={onConnectEnd}
             onNodeClick={(_, n) => setSelectedId(n.id)}
             onNodeContextMenu={onNodeContextMenu}
-            onPaneClick={() => { setSelectedId(null); setPalette(null); setNodeMenu(null); setConnectMenu(null) }}
+            onPaneClick={() => { setSelectedId(null); setPalette(null); setNodeMenu(null) }}
             fitView>
             <Background />
             <Controls />
           </ReactFlow>
           {palette && (
-            <NodePalette x={palette.x} y={palette.y} onPick={addNode} onClose={() => setPalette(null)}
-              onPaste={hasClip ? () => { pasteAt(lastPointer.current); setPalette(null) } : undefined} />
+            <NodePalette x={palette.x} y={palette.y} onPick={onMenuPick} onClose={() => setPalette(null)}
+              filter={menuFilter}
+              onPaste={!palette.connect && hasClip ? () => { pasteAt(lastPointer.current); setPalette(null) } : undefined} />
           )}
           {picker && (
             <ActionPicker
@@ -447,23 +497,7 @@ function BlueprintEditorInner() {
               onClose={() => setPicker(null)}
             />
           )}
-          {connectMenu && (
-            <ConnectMenu x={connectMenu.x} y={connectMenu.y} kind={connectMenu.kind}
-              onClose={() => setConnectMenu(null)}
-              onPick={(choice) => {
-                const { nodeId, handle, flowX, flowY } = connectMenu
-                if (choice === 'branch') spawnBranch(nodeId, handle, flowX, flowY)
-                else if (choice === 'cond:buff' || choice === 'cond:stat') spawnCondition(nodeId, choice, flowX, flowY)
-                else {
-                  // 'equip' — reuse the existing terminal/category leaf flow.
-                  const sType = nodes.find(n => n.id === nodeId)?.type ?? ''
-                  const category = sType.startsWith('trigger:') ? categoryOfHandle(sType, handle) : null
-                  if (category === null) spawnLeaf(nodeId, handle, flowX, flowY, null)
-                  else setPicker({ x: connectMenu.x, y: connectMenu.y, flowX, flowY, nodeId, handle, category, allowGeneric: allowGenericForHandle(sType, handle) })
-                }
-                setConnectMenu(null)
-              }} />
-          )}
+
           {nodeMenu && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setNodeMenu(null)} />
