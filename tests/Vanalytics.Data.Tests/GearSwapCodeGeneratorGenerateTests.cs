@@ -92,4 +92,56 @@ public class GearSwapCodeGeneratorGenerateTests
         Assert.Contains("equip(sets['Defensive'])", result.Lua);
         Assert.Empty(result.Warnings);
     }
+
+    [Fact]
+    public void Golden_sata_precast_full_file()
+    {
+        // precast WeaponSkill -> Branch(SA) ? (Branch(TA) ? SATA : SA) : WSdefault
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id="t", Type="trigger:precast" },
+                new() { Id="bSA", Type="branch" }, new() { Id="cSA", Type="cond:buff", Data=new(){ BuffName="Sneak Attack" } },
+                new() { Id="bTA", Type="branch" }, new() { Id="cTA", Type="cond:buff", Data=new(){ BuffName="Trick Attack" } },
+                new() { Id="eSATA", Type="equip", Data=new(){ GearSetId=1 } },
+                new() { Id="eSA",   Type="equip", Data=new(){ GearSetId=2 } },
+                new() { Id="eDef",  Type="equip", Data=new(){ GearSetId=3 } },
+            ],
+            Edges =
+            [
+                new() { Id="t-WeaponSkill-bSA", Source="t", SourceHandle="WeaponSkill", Target="bSA", TargetHandle="in" },
+                new() { Id="cSA-cond-bSA", Source="cSA", SourceHandle="out", Target="bSA", TargetHandle="cond" },
+                new() { Id="bSA-true-bTA",  Source="bSA", SourceHandle="true",  Target="bTA",  TargetHandle="in" },
+                new() { Id="bSA-false-eDef", Source="bSA", SourceHandle="false", Target="eDef", TargetHandle="in" },
+                new() { Id="cTA-cond-bTA", Source="cTA", SourceHandle="out", Target="bTA", TargetHandle="cond" },
+                new() { Id="bTA-true-eSATA", Source="bTA", SourceHandle="true",  Target="eSATA", TargetHandle="in" },
+                new() { Id="bTA-false-eSA",  Source="bTA", SourceHandle="false", Target="eSA",   TargetHandle="in" },
+            ],
+        };
+        var sets = new List<ResolvedGearSet>
+        {
+            new(1, "WS SATA", [ new ResolvedSlot("Hands", 10, "Adhemar Wristbands", []) ]),
+            new(2, "WS SA",   [ new ResolvedSlot("Hands", 11, "Plunderer's Armlets", []) ]),
+            new(3, "WS",      [ new ResolvedSlot("Head", 12, "Adhemar Bonnet", []) ]),
+        };
+
+        var lua = GearSwapCodeGenerator.Generate(graph, sets).Lua;
+
+        var expected =
+@"function precast(spell)
+    if spell.type == 'WeaponSkill' then
+        if buffactive['sneak attack'] then
+            if buffactive['trick attack'] then
+                equip(sets['WS SATA'])
+            else
+                equip(sets['WS SA'])
+            end
+        else
+            equip(sets['WS'])
+        end
+    end
+end";
+        Assert.Contains(expected.Replace("\r\n", "\n"), lua.Replace("\r\n", "\n"));
+    }
 }
