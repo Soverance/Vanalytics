@@ -346,4 +346,60 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         Assert.Contains("if spell.english == 'Sneak Attack' then equip(set_combine(sets['TP'], sets['SA Gloves']))", gen.Lua);
         Assert.Empty(gen.Warnings);
     }
+
+    [Fact]
+    public async Task Blueprint_with_branch_and_stat_condition_roundtrips_and_generates()
+    {
+        var (token, charId) = await SetupAsync("wf10@test.com", "wf10", "Wften");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Seed one gear set and capture its real db id + name.
+        const string setName = "Low HP Set";
+        var set = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = setName, Job = "THF", Category = "Idle",
+                Slots = [ new GearSetSlotDto { Slot = "Body", ItemId = 10001, ItemName = "Twilight Cloak", Augments = [] } ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+        var setId = set!.Id;
+
+        // Build the graph: trigger:status_change -[Idle]-> branch -[cond]<- cond:stat; branch -[true]-> equip
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:status_change", Position = new() { X = 0, Y = 0 }, Data = new() },
+                new() { Id = "b", Type = "branch",                Position = new() { X = 200, Y = 0 }, Data = new() },
+                new() { Id = "c", Type = "cond:stat",             Position = new() { X = 200, Y = 150 }, Data = new()
+                    { Resource = "hpp", Op = "<", Value = 25 } },
+                new() { Id = "e", Type = "equip",                 Position = new() { X = 400, Y = 0 }, Data = new()
+                    { GearSetId = setId } },
+            ],
+            Edges =
+            [
+                new() { Id = "e1", Source = "t", SourceHandle = "Idle",  Target = "b", TargetHandle = "in" },
+                new() { Id = "e2", Source = "c", SourceHandle = "out",   Target = "b", TargetHandle = "cond" },
+                new() { Id = "e3", Source = "b", SourceHandle = "true",  Target = "e", TargetHandle = "in" },
+            ],
+        };
+        var putResp = await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+        Assert.Equal(HttpStatusCode.OK, putResp.StatusCode);
+
+        // Round-trip: GET and assert that the cond:stat node survives with all its data fields.
+        var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
+        Assert.NotNull(wf);
+        var condNode = Assert.Single(wf.Graph.Nodes, n => n.Type == "cond:stat");
+        Assert.Equal("hpp", condNode.Data.Resource);
+        Assert.Equal("<",   condNode.Data.Op);
+        Assert.Equal(25,    condNode.Data.Value);
+        Assert.Single(wf.Graph.Nodes, n => n.Type == "branch");
+
+        // Generate: assert the Lua contains the expected if-condition and equip call.
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+        Assert.NotNull(gen);
+        Assert.Contains("if player.hpp < 25 then", gen.Lua);
+        Assert.Contains($"equip(sets['{setName}'])", gen.Lua);
+    }
 }
