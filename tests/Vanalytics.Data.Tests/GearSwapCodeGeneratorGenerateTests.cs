@@ -59,4 +59,37 @@ public class GearSwapCodeGeneratorGenerateTests
         Assert.Contains("if new == 'Engaged' then equip(sets['TP'])", result.Lua);
         Assert.Empty(result.Warnings);
     }
+
+    [Fact]
+    public void Set_referenced_only_through_a_branch_is_emitted_in_get_sets()
+    {
+        // status_change Idle -> Branch(HP%<25) ? Defensive : (no false)
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id="t", Type="trigger:status_change" },
+                new() { Id="b", Type="branch" },
+                new() { Id="c", Type="cond:stat", Data=new(){ Resource="hpp", Op="<", Value=25 } },
+                new() { Id="e", Type="equip", Data=new(){ GearSetId=42 } },
+            ],
+            Edges =
+            [
+                new() { Id="t-Idle-b", Source="t", SourceHandle="Idle", Target="b", TargetHandle="in" },
+                new() { Id="c-cond-b", Source="c", SourceHandle="out", Target="b", TargetHandle="cond" },
+                new() { Id="b-true-e", Source="b", SourceHandle="true", Target="e", TargetHandle="in" },
+            ],
+        };
+        var sets = new List<ResolvedGearSet>
+        {
+            new(42, "Defensive", [ new ResolvedSlot("Body", 100, "Twilight Mail", []) ]),
+        };
+
+        var result = GearSwapCodeGenerator.Generate(graph, sets);
+
+        Assert.Contains("sets['Defensive'] = {", result.Lua);
+        Assert.Contains("if player.hpp < 25 then", result.Lua);
+        Assert.Contains("equip(sets['Defensive'])", result.Lua);
+        Assert.Empty(result.Warnings);
+    }
 }

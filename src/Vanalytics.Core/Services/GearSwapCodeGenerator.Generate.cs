@@ -18,14 +18,13 @@ public static partial class GearSwapCodeGenerator
     {
         var warnings = new List<string>();
         var setsById = sets.GroupBy(s => s.Id).ToDictionary(g => g.Key, g => g.First());
-        var equipById = graph.Nodes.Where(n => n.Type == "equip").ToDictionary(n => n.Id);
+
+        var reachable = ReachableEquips(graph);
 
         // Sets reached via a wired trigger branch (equip leaves).
         var flatSetIds = new List<long>();
-        foreach (var edge in graph.Edges)
+        foreach (var target in reachable)
         {
-            if (!Triggers.ContainsKey(NodeType(graph, edge.Source))) continue;
-            if (!equipById.TryGetValue(edge.Target, out var target)) continue;
             var setId = target.Data.GearSetId;
             if (setId is null) continue;
             if (!setsById.ContainsKey(setId.Value))
@@ -52,12 +51,8 @@ public static partial class GearSwapCodeGenerator
             }
             if (baseId is { } b && setsById.ContainsKey(b) && !flatSetIds.Contains(b)) flatSetIds.Add(b);
         }
-        foreach (var edge in graph.Edges)
-        {
-            if (!Triggers.ContainsKey(NodeType(graph, edge.Source))) continue;
-            if (equipById.TryGetValue(edge.Target, out var leaf))
-                AddOverlayIds(leaf.Data.GearSetId, leaf.Data.OverlaySetIds);
-        }
+        foreach (var leaf in reachable)
+            AddOverlayIds(leaf.Data.GearSetId, leaf.Data.OverlaySetIds);
         foreach (var node in graph.Nodes.Where(n => n.Type == "mode"))
             foreach (var m in node.Data.Members ?? [])
                 AddOverlayIds(m.GearSetId, m.OverlaySetIds);
@@ -93,4 +88,34 @@ public static partial class GearSwapCodeGenerator
 
     private static string NodeType(BlueprintGraphDto graph, string nodeId) =>
         graph.Nodes.FirstOrDefault(n => n.Id == nodeId)?.Type ?? string.Empty;
+
+    // Equip leaves reachable from any trigger via exec flow (through branch True/False), in
+    // deterministic order: trigger edges in graph order, each branch expands true-subtree then
+    // false-subtree. For a graph with no branches this equals the direct trigger->equip children
+    // in edge order, so get_sets() emission order (and existing golden output) is preserved.
+    private static List<BlueprintNodeDto> ReachableEquips(BlueprintGraphDto graph)
+    {
+        var byId = graph.Nodes.ToDictionary(n => n.Id);
+        var result = new List<BlueprintNodeDto>();
+        var visited = new HashSet<string>();
+
+        void Walk(string nodeId)
+        {
+            if (!visited.Add(nodeId)) return;
+            if (!byId.TryGetValue(nodeId, out var node)) return;
+            if (node.Type == "equip") { result.Add(node); return; }
+            if (node.Type == "branch")
+                foreach (var h in new[] { "true", "false" })
+                    foreach (var e in graph.Edges.Where(e => e.Source == nodeId && e.SourceHandle == h))
+                        Walk(e.Target);
+            // mode/cond/other: not an equip leaf, stop.
+        }
+
+        foreach (var edge in graph.Edges)
+        {
+            if (!Triggers.ContainsKey(NodeType(graph, edge.Source))) continue;
+            Walk(edge.Target);
+        }
+        return result;
+    }
 }

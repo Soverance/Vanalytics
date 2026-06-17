@@ -27,14 +27,9 @@ public static partial class GearSwapCodeGenerator
         // named "TP" would silently clobber a flat set named "TP". Computed from graph+names, which are
         // identical at both CollectModes call sites (Generate + EmitEvents), so the chosen namespaces stay
         // consistent between get_sets definitions and the equip(sets.<NS>[...]) event references.
-        var equipById = graph.Nodes.Where(n => n.Type == "equip").ToDictionary(n => n.Id);
         var usedNs = new HashSet<string>();
-        foreach (var edge in graph.Edges)
-        {
-            if (!Triggers.ContainsKey(NodeType(graph, edge.Source))) continue;
-            if (!equipById.TryGetValue(edge.Target, out var leaf)) continue;
+        foreach (var leaf in ReachableEquips(graph))
             if (leaf.Data.GearSetId is { } gid && names.TryGetValue(gid, out var flatName)) usedNs.Add(flatName);
-        }
         foreach (var node in graph.Nodes.Where(n => n.Type == "mode"))
         {
             var name = (node.Data.ModeName ?? "").Trim();
