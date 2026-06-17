@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect } from './blueprintGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, isConditionType, condFace, statResourceLabel, isValidConnection, isSingleTargetSource, connectedEdgeIds } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -198,5 +198,53 @@ describe('canConnect', () => {
     expect(canConnect('trigger:status_change', 'Engaged', 'mode')).toBe(true)
     expect(canConnect('trigger:precast', 'WeaponSkill', 'mode')).toBe(false)
     expect(canConnect('trigger:precast', 'WeaponSkill', 'equip')).toBe(true)
+  })
+})
+
+describe('condition helpers', () => {
+  it('identifies condition node types', () => {
+    expect(isConditionType('cond:buff')).toBe(true)
+    expect(isConditionType('cond:stat')).toBe(true)
+    expect(isConditionType('branch')).toBe(false)
+    expect(isConditionType('equip')).toBe(false)
+  })
+
+  it('builds a node face for stat and buff', () => {
+    expect(statResourceLabel('hpp')).toBe('HP%')
+    expect(condFace('cond:stat', { resource: 'hpp', op: '<', value: 25 })).toBe('HP% < 25')
+    expect(condFace('cond:buff', { buffName: 'Sneak Attack' })).toBe('Sneak Attack')
+    expect(condFace('cond:buff', { buffName: null })).toMatch(/pick/i)
+  })
+
+  it('validates condition wires only into a branch cond input', () => {
+    expect(isValidConnection('cond:buff', 'out', 'branch', 'cond')).toBe(true)
+    expect(isValidConnection('cond:buff', 'out', 'equip', 'cond')).toBe(false)
+    expect(isValidConnection('cond:buff', 'out', 'branch', 'in')).toBe(false)
+  })
+
+  it('validates exec wires from trigger/branch into branch|equip|mode', () => {
+    expect(isValidConnection('trigger:status_change', 'Idle', 'branch', 'in')).toBe(true)
+    expect(isValidConnection('trigger:status_change', 'Idle', 'mode', 'in')).toBe(true)
+    expect(isValidConnection('trigger:precast', 'WeaponSkill', 'branch', 'in')).toBe(true)
+    expect(isValidConnection('trigger:precast', 'WeaponSkill', 'mode', 'in')).toBe(false)
+    expect(isValidConnection('branch', 'true', 'equip', 'in')).toBe(true)
+    expect(isValidConnection('branch', 'false', 'branch', 'in')).toBe(true)
+  })
+
+  it('knows which sources are single-target', () => {
+    expect(isSingleTargetSource('trigger:status_change', 'Idle')).toBe(true)
+    expect(isSingleTargetSource('trigger:precast', 'WeaponSkill')).toBe(false)
+    expect(isSingleTargetSource('branch', 'true')).toBe(true)
+    expect(isSingleTargetSource('cond:buff', 'out')).toBe(false)
+  })
+
+  it('collects the connected edge ids around a node (undirected)', () => {
+    const edges = [
+      { id: 'e1', source: 'a', target: 'b' },
+      { id: 'e2', source: 'b', target: 'c' },
+      { id: 'e3', source: 'x', target: 'y' },
+    ]
+    expect(connectedEdgeIds(edges, 'a')).toEqual(new Set(['e1', 'e2']))
+    expect(connectedEdgeIds(edges, 'y')).toEqual(new Set(['e3']))
   })
 })

@@ -172,6 +172,94 @@ export function canConnect(triggerType: string, handle: string, targetType: stri
   return true
 }
 
+// ---- Condition / branch helpers ----
+
+export function isConditionType(t: string): boolean {
+  return t === 'cond:buff' || t === 'cond:stat'
+}
+
+// Stat resource metadata: label shown to the user ↔ the Lua player.<value> field.
+export const STAT_RESOURCES: { value: string; label: string }[] = [
+  { value: 'hp', label: 'HP' },
+  { value: 'hpp', label: 'HP%' },
+  { value: 'mp', label: 'MP' },
+  { value: 'mpp', label: 'MP%' },
+  { value: 'tp', label: 'TP' },
+]
+export const STAT_OPS = ['<', '<=', '>', '>=', '==', '~='] as const
+
+export function statResourceLabel(r?: string | null): string {
+  return STAT_RESOURCES.find(x => x.value === r)?.label ?? r ?? '?'
+}
+
+// The text shown on a condition node's face.
+export function condFace(
+  type: string,
+  data: { buffName?: string | null; resource?: string | null; op?: string | null; value?: number | null },
+): string {
+  if (type === 'cond:buff') return data.buffName ? labelForAction(data.buffName) : 'pick a buff…'
+  if (type === 'cond:stat') return `${statResourceLabel(data.resource)} ${data.op ?? '<'} ${data.value ?? 0}`
+  return ''
+}
+
+// May a connection (sourceType.sourceHandle -> targetType.targetHandle) exist? Two wire kinds:
+//  - condition wire: target handle 'cond' accepts only a cond:* node's 'out'.
+//  - exec wire: target handle 'in' accepts a trigger pin or a branch true/false; target is
+//    branch|equip|mode. A category trigger pin may not target a mode (existing rule).
+export function isValidConnection(
+  sourceType: string, sourceHandle: string | null | undefined,
+  targetType: string, targetHandle: string | null | undefined,
+): boolean {
+  if (targetHandle === 'cond')
+    return isConditionType(sourceType) && sourceHandle === 'out' && targetType === 'branch'
+
+  // exec wire (target 'in', or unspecified)
+  if (isConditionType(sourceType)) return false  // a boolean value can't drive exec flow
+  const execTarget = targetType === 'branch' || targetType === 'equip' || targetType === 'mode'
+  if (sourceType.startsWith('trigger:')) {
+    const isCategory = categoryOfHandle(sourceType, sourceHandle ?? '') !== null
+    if (targetType === 'mode' && isCategory) return false
+    return execTarget
+  }
+  if (sourceType === 'branch') return execTarget  // true/false outs
+  return false
+}
+
+// Exec outputs that hold a single target (rewire replaces): trigger terminal pins and branch
+// true/false. Category trigger pins fan out (named leaves); a cond 'out' fans out (reuse across
+// branches).
+export function isSingleTargetSource(sourceType: string, sourceHandle: string | null | undefined): boolean {
+  if (isConditionType(sourceType)) return false
+  if (sourceType === 'branch') return true
+  if (sourceType.startsWith('trigger:')) return categoryOfHandle(sourceType, sourceHandle ?? '') === null
+  return true
+}
+
+// All edge ids in the connected component containing nodeId (edges treated as undirected). Used to
+// animate the whole wiring chain when a node is selected.
+export function connectedEdgeIds(
+  edges: { id: string; source: string; target: string }[], nodeId: string,
+): Set<string> {
+  const adj = new Map<string, { other: string; edgeId: string }[]>()
+  const link = (from: string, other: string, edgeId: string) => {
+    const list = adj.get(from) ?? []
+    list.push({ other, edgeId })
+    adj.set(from, list)
+  }
+  for (const e of edges) { link(e.source, e.target, e.id); link(e.target, e.source, e.id) }
+  const out = new Set<string>()
+  const seen = new Set<string>([nodeId])
+  const stack = [nodeId]
+  while (stack.length) {
+    const n = stack.pop()!
+    for (const { other, edgeId } of adj.get(n) ?? []) {
+      out.add(edgeId)
+      if (!seen.has(other)) { seen.add(other); stack.push(other) }
+    }
+  }
+  return out
+}
+
 // ---- Copy/paste transforms (pure; the editor wires Ctrl-C/V to these) ----
 
 export interface ClipboardNode { id: string; type: string; position: { x: number; y: number }; data: Record<string, unknown> }

@@ -1150,6 +1150,9 @@ export type BlueprintNodeType =
   | 'trigger:buff_change'
   | 'equip'
   | 'mode'
+  | 'branch'
+  | 'cond:buff'
+  | 'cond:stat'
 
 export interface ModeMember {
   gearSetId: number
@@ -1168,6 +1171,10 @@ export interface BlueprintNode {
     modeCommand?: string | null
     members?: ModeMember[]
     overlaySetIds?: number[] | null
+    buffName?: string | null
+    resource?: string | null
+    op?: string | null
+    value?: number | null
   }
 }
 
