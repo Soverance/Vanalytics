@@ -5,6 +5,8 @@ namespace Vanalytics.Core.Services;
 
 public static partial class GearSwapCodeGenerator
 {
+    private static readonly HashSet<string> StatResources = new() { "hp", "hpp", "mp", "mpp", "tp" };
+    private static readonly HashSet<string> StatOps = new() { "<", "<=", ">", ">=", "==", "~=" };
     // Everything EmitExec needs to walk the exec graph, resolved once per EmitEvents call.
     private sealed record ExecCtx(
         BlueprintGraphDto Graph,
@@ -34,6 +36,7 @@ public static partial class GearSwapCodeGenerator
             case "cond:stat":
                 if (string.IsNullOrWhiteSpace(cond.Data.Resource) ||
                     string.IsNullOrWhiteSpace(cond.Data.Op) || cond.Data.Value is null) return null;
+                if (!StatResources.Contains(cond.Data.Resource) || !StatOps.Contains(cond.Data.Op)) return null;
                 return $"player.{cond.Data.Resource} {cond.Data.Op} {cond.Data.Value}";
             default:
                 return null;
@@ -43,8 +46,9 @@ public static partial class GearSwapCodeGenerator
     // Recursively emits the exec flow at <targetId> as indented Lua statements (4*indent leading
     // spaces, no leading/trailing newline). branch -> if/else; equip -> equip(...); mode -> equip
     // current. Null when nothing resolves (skip).
-    private static string? EmitExec(ExecCtx ctx, string targetId, int indent)
+    private static string? EmitExec(ExecCtx ctx, string targetId, int indent, HashSet<string> visited)
     {
+        if (!visited.Add(targetId)) return null;
         if (!ctx.ById.TryGetValue(targetId, out var node)) return null;
         var pad = new string(' ', indent * 4);
 
@@ -54,10 +58,10 @@ public static partial class GearSwapCodeGenerator
             if (cond is null) return null;
             var tId = ExecTargetOf(ctx, targetId, "true");
             var fId = ExecTargetOf(ctx, targetId, "false");
-            var tBody = tId is null ? null : EmitExec(ctx, tId, indent + 1);
-            var fBody = fId is null ? null : EmitExec(ctx, fId, indent + 1);
+            var tBody = tId is null ? null : EmitExec(ctx, tId, indent + 1, visited);
+            var fBody = fId is null ? null : EmitExec(ctx, fId, indent + 1, visited);
             if (tBody is null && fBody is null) return null;
-            var s = $"{pad}if {cond} then\n{tBody ?? ""}\n";
+            var s = tBody is not null ? $"{pad}if {cond} then\n{tBody}\n" : $"{pad}if {cond} then\n";
             if (fBody is not null) s += $"{pad}else\n{fBody}\n";
             s += $"{pad}end";
             return s;

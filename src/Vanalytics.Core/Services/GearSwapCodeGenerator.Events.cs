@@ -75,7 +75,7 @@ public static partial class GearSwapCodeGenerator
                 var branchId = targetIds.FirstOrDefault(t => byId.TryGetValue(t, out var n) && n.Type == "branch");
                 if (branchId is not null)
                 {
-                    var flow = EmitExec(ctx, branchId, 2);
+                    var flow = EmitExec(ctx, branchId, 2, new HashSet<string>());
                     body = flow is null ? null : "\n" + flow;
                 }
                 else if (dispatch is null)
