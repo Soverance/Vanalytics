@@ -201,4 +201,74 @@ public class GearSwapCodeGeneratorEventsTests
         Assert.Contains("            equip(sets['Idle'])", lua);
         Assert.Contains("        end", lua);
     }
+
+    [Fact]
+    public void Chained_branches_nest_as_logical_and()
+    {
+        // precast WeaponSkill -> Branch(SA) ? [ Branch(TA) ? SATA : SA ] : WSdefault
+        var graph = Graph(
+            [Trigger("t","trigger:precast"),
+             Branch("bSA"), CondBuff("cSA","Sneak Attack"),
+             Branch("bTA"), CondBuff("cTA","Trick Attack"),
+             Equip("eSATA",6), Equip("eSA",1), Equip("eDef",2)],
+            [Edge("t","WeaponSkill","bSA"), CondEdge("cSA","bSA"),
+             ExecEdge("bSA","true","bTA"), ExecEdge("bSA","false","eDef"),
+             CondEdge("cTA","bTA"),
+             ExecEdge("bTA","true","eSATA"), ExecEdge("bTA","false","eSA")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph,
+            new Dictionary<long,string>{[6]="SATA",[1]="SA",[2]="WS"});
+
+        Assert.Contains("    if spell.type == 'WeaponSkill' then", lua);
+        Assert.Contains("        if buffactive['sneak attack'] then", lua);
+        Assert.Contains("            if buffactive['trick attack'] then", lua);
+        Assert.Contains("                equip(sets['SATA'])", lua);
+        Assert.Contains("                equip(sets['SA'])", lua);   // inner else
+        Assert.Contains("        else", lua);                          // outer else (SA false)
+        Assert.Contains("            equip(sets['WS'])", lua);
+    }
+
+    [Fact]
+    public void Branch_with_stat_condition_emits_player_comparison()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:status_change"), Branch("b"), CondStat("c","hpp","<",25),
+             Equip("e1",1), Equip("e2",2)],
+            [Edge("t","Idle","b"), CondEdge("c","b"),
+             ExecEdge("b","true","e1"), ExecEdge("b","false","e2")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, new Dictionary<long,string>{[1]="Def",[2]="Idle"});
+
+        Assert.Contains("if player.hpp < 25 then", lua);
+        Assert.Contains("equip(sets['Def'])", lua);
+        Assert.Contains("equip(sets['Idle'])", lua);
+    }
+
+    [Fact]
+    public void Branch_without_condition_is_skipped()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:status_change"), Branch("b"), Equip("e1",1)],
+            [Edge("t","Idle","b"), ExecEdge("b","true","e1")]);   // no CondEdge
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, new Dictionary<long,string>{[1]="Def"});
+
+        Assert.DoesNotContain("function status_change", lua);   // the only handle yields nothing
+    }
+
+    [Fact]
+    public void Branch_true_only_omits_else_clause()
+    {
+        // Only a True target -> no else clause (False is "do nothing / keep current gear").
+        var graph = Graph(
+            [Trigger("t","trigger:status_change"), Branch("b"), CondStat("c","hp",">",99),
+             Equip("e1",1)],
+            [Edge("t","Idle","b"), CondEdge("c","b"), ExecEdge("b","true","e1")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, new Dictionary<long,string>{[1]="Frenzy"});
+
+        Assert.Contains("if player.hp > 99 then", lua);
+        Assert.Contains("equip(sets['Frenzy'])", lua);
+        Assert.DoesNotContain("else", lua);
+    }
 }
