@@ -271,13 +271,13 @@ function BlueprintEditorInner() {
     const rect = (document.querySelector('.react-flow__pane') as HTMLElement)?.getBoundingClientRect()
     const menuX = me.clientX - (rect?.left ?? 0)
     const menuY = me.clientY - (rect?.top ?? 0)
-    // Dragged from a Branch's condition input → offer condition nodes.
-    if (from.handleId === 'cond') {
-      setPalette({ x: menuX, y: menuY, flowX: flow.x, flowY: flow.y, connect: { nodeId: from.nodeId, handle: from.handleId, kind: 'cond' } })
-      return
-    }
-    // Dragged from an exec output → offer Branch or Equip.
-    setPalette({ x: menuX, y: menuY, flowX: flow.x, flowY: flow.y, connect: { nodeId: from.nodeId, handle: from.handleId, kind: 'exec' } })
+    // Open the unified node menu at the cursor, pre-wired to the dragged pin. A 'cond' handle offers
+    // condition nodes; any exec output offers Branch/Equip/Mode. Defer one tick: React Flow fires
+    // onPaneClick on the SAME connection drop (see spawnLeaf above), whose setPalette(null) would
+    // otherwise clobber this open in the same React batch — setTimeout lands the open AFTER it.
+    const kind: 'exec' | 'cond' = from.handleId === 'cond' ? 'cond' : 'exec'
+    const open = { x: menuX, y: menuY, flowX: flow.x, flowY: flow.y, connect: { nodeId: from.nodeId, handle: from.handleId, kind } }
+    setTimeout(() => setPalette(open), 0)
   }, [screenToFlowPosition])
 
   const onPaneContextMenu = useCallback((e: React.MouseEvent | MouseEvent) => {
