@@ -12,6 +12,7 @@ import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
 import { wouldCreateCycle, isValidConnection, isSingleTargetSource } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
+import ConnectMenu from '../components/character/blueprint/ConnectMenu'
 import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
 import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
@@ -61,6 +62,7 @@ function BlueprintEditorInner() {
   const { screenToFlowPosition } = useReactFlow()
   const connectingFrom = useRef<{ nodeId: string; handleId: string } | null>(null)
   const [picker, setPicker] = useState<{ x: number; y: number; flowX: number; flowY: number; nodeId: string; handle: string; category: ActionCategory; allowGeneric: boolean } | null>(null)
+  const [connectMenu, setConnectMenu] = useState<{ x: number; y: number; kind: 'exec' | 'cond'; nodeId: string; handle: string; flowX: number; flowY: number } | null>(null)
   const [nodeMenu, setNodeMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null)
   const [hasClip, setHasClip] = useState(false)
   const clipboard = useRef<Clipboard | null>(null)
@@ -221,20 +223,50 @@ function BlueprintEditorInner() {
     setTimeout(() => setSelectedId(leafId), 0)
   }, [nodes])
 
+  // Create a Branch wired from (sourceNodeId, sourceHandle) → branch 'in'. Single-target sources
+  // replace their prior edge.
+  const spawnBranch = useCallback((sourceNodeId: string, sourceHandle: string, flowX: number, flowY: number) => {
+    const bId = newId()
+    const sType = nodesRef.current.find(n => n.id === sourceNodeId)?.type ?? ''
+    setNodes(n => [...n, { id: bId, type: 'branch', position: { x: flowX, y: flowY }, data: {} }])
+    setEdges(prev => {
+      const base = isSingleTargetSource(sType, sourceHandle)
+        ? prev.filter(e => !(e.source === sourceNodeId && e.sourceHandle === sourceHandle)) : prev
+      return [...base, { id: `${sourceNodeId}-${sourceHandle}-${bId}`, source: sourceNodeId, sourceHandle, target: bId, targetHandle: 'in' }]
+    })
+  }, [])
+
+  // Create a condition node wired into branch 'cond'. Replaces any existing condition on that branch.
+  const spawnCondition = useCallback((branchId: string, condType: 'cond:buff' | 'cond:stat', flowX: number, flowY: number) => {
+    const cId = newId()
+    const data = condType === 'cond:buff' ? { buffName: null } : { resource: 'hpp', op: '<', value: 25 }
+    setNodes(n => [...n, { id: cId, type: condType, position: { x: flowX, y: flowY }, data }])
+    setEdges(prev => [
+      ...prev.filter(e => !(e.target === branchId && e.targetHandle === 'cond')),
+      { id: `${cId}-cond-${branchId}`, source: cId, sourceHandle: 'out', target: branchId, targetHandle: 'cond' },
+    ])
+    setTimeout(() => setSelectedId(cId), 0)
+  }, [])
+
   const onConnectEnd = useCallback((e: MouseEvent | TouchEvent) => {
     const from = connectingFrom.current
     connectingFrom.current = null
     if (!from) return
     const target = e.target as HTMLElement
-    if (!target.classList.contains('react-flow__pane')) return   // only when dropped on empty pane
+    if (!target.classList.contains('react-flow__pane')) return
     const me = e as MouseEvent
     const flow = screenToFlowPosition({ x: me.clientX, y: me.clientY })
-    const triggerType = nodes.find(n => n.id === from.nodeId)?.type ?? ''
-    const category = categoryOfHandle(triggerType, from.handleId)
-    if (category === null) { spawnLeaf(from.nodeId, from.handleId, flow.x, flow.y, null); return }
     const rect = (document.querySelector('.react-flow__pane') as HTMLElement)?.getBoundingClientRect()
-    setPicker({ x: me.clientX - (rect?.left ?? 0), y: me.clientY - (rect?.top ?? 0), flowX: flow.x, flowY: flow.y, nodeId: from.nodeId, handle: from.handleId, category, allowGeneric: allowGenericForHandle(triggerType, from.handleId) })
-  }, [nodes, screenToFlowPosition, spawnLeaf])
+    const menuX = me.clientX - (rect?.left ?? 0)
+    const menuY = me.clientY - (rect?.top ?? 0)
+    // Dragged from a Branch's condition input → offer condition nodes.
+    if (from.handleId === 'cond') {
+      setConnectMenu({ x: menuX, y: menuY, kind: 'cond', nodeId: from.nodeId, handle: from.handleId, flowX: flow.x, flowY: flow.y })
+      return
+    }
+    // Dragged from an exec output → offer Branch or Equip.
+    setConnectMenu({ x: menuX, y: menuY, kind: 'exec', nodeId: from.nodeId, handle: from.handleId, flowX: flow.x, flowY: flow.y })
+  }, [screenToFlowPosition])
 
   const onPaneContextMenu = useCallback((e: React.MouseEvent | MouseEvent) => {
     e.preventDefault()
@@ -384,7 +416,7 @@ function BlueprintEditorInner() {
             onConnectStart={onConnectStart} onConnectEnd={onConnectEnd}
             onNodeClick={(_, n) => setSelectedId(n.id)}
             onNodeContextMenu={onNodeContextMenu}
-            onPaneClick={() => { setSelectedId(null); setPalette(null); setNodeMenu(null) }}
+            onPaneClick={() => { setSelectedId(null); setPalette(null); setNodeMenu(null); setConnectMenu(null) }}
             fitView>
             <Background />
             <Controls />
@@ -408,6 +440,23 @@ function BlueprintEditorInner() {
               }}
               onClose={() => setPicker(null)}
             />
+          )}
+          {connectMenu && (
+            <ConnectMenu x={connectMenu.x} y={connectMenu.y} kind={connectMenu.kind}
+              onClose={() => setConnectMenu(null)}
+              onPick={(choice) => {
+                const { nodeId, handle, flowX, flowY } = connectMenu
+                if (choice === 'branch') spawnBranch(nodeId, handle, flowX, flowY)
+                else if (choice === 'cond:buff' || choice === 'cond:stat') spawnCondition(nodeId, choice, flowX, flowY)
+                else {
+                  // 'equip' — reuse the existing terminal/category leaf flow.
+                  const sType = nodes.find(n => n.id === nodeId)?.type ?? ''
+                  const category = sType.startsWith('trigger:') ? categoryOfHandle(sType, handle) : null
+                  if (category === null) spawnLeaf(nodeId, handle, flowX, flowY, null)
+                  else setPicker({ x: connectMenu.x, y: connectMenu.y, flowX, flowY, nodeId, handle, category, allowGeneric: allowGenericForHandle(sType, handle) })
+                }
+                setConnectMenu(null)
+              }} />
           )}
           {nodeMenu && (
             <>
