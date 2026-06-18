@@ -172,6 +172,44 @@ export function canConnect(triggerType: string, handle: string, targetType: stri
   return true
 }
 
+// ---- Handle type inventory (drives connection validity + the context menu) ----
+
+export type HandleValueType = 'exec' | 'bool' | 'num'
+interface HandleDef { id: string; type: HandleValueType; dir: 'in' | 'out' }
+
+// Static handles per non-trigger node type. Triggers are derived from TRIGGER_DEFS (every trigger pin
+// is an exec output). Phase 2 extends this with value/buff/operator nodes.
+const NODE_HANDLES: Record<string, HandleDef[]> = {
+  branch: [
+    { id: 'in', type: 'exec', dir: 'in' },
+    { id: 'cond', type: 'bool', dir: 'in' },
+    { id: 'true', type: 'exec', dir: 'out' },
+    { id: 'false', type: 'exec', dir: 'out' },
+  ],
+  equip: [{ id: 'in', type: 'exec', dir: 'in' }],
+  mode: [{ id: 'in', type: 'exec', dir: 'in' }],
+  'cond:buff': [{ id: 'out', type: 'bool', dir: 'out' }],
+  'cond:stat': [{ id: 'out', type: 'bool', dir: 'out' }],
+}
+
+export function handlesOf(nodeType: string): HandleDef[] {
+  if (nodeType.startsWith('trigger:')) {
+    const def = TRIGGER_DEFS[nodeType as keyof typeof TRIGGER_DEFS]
+    return def ? def.handles.map(h => ({ id: h, type: 'exec' as const, dir: 'out' as const })) : []
+  }
+  return NODE_HANDLES[nodeType] ?? []
+}
+
+export function handleType(nodeType: string, handleId: string | null | undefined): HandleValueType | null {
+  if (!handleId) return null
+  return handlesOf(nodeType).find(h => h.id === handleId)?.type ?? null
+}
+
+export function handleInfo(nodeType: string, handleId: string | null | undefined): HandleDef | null {
+  if (!handleId) return null
+  return handlesOf(nodeType).find(h => h.id === handleId) ?? null
+}
+
 // ---- Condition / branch helpers ----
 
 export function isConditionType(t: string): boolean {

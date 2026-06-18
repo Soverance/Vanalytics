@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, isConditionType, condFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers } from './blueprintGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, isConditionType, condFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers, handleType, handleInfo } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -279,5 +279,32 @@ describe('condition helpers', () => {
       [{ id: 'a', type: 'trigger:aftercast' }], [], new Set(['trigger:precast']))
     expect(out.nodes.map(n => n.id)).toEqual(['a'])
     expect(out.edges).toEqual([])
+  })
+})
+
+describe('handle type inventory', () => {
+  it('resolves value types for existing node handles', () => {
+    expect(handleType('trigger:precast', 'Magic')).toBe('exec')
+    expect(handleType('trigger:status_change', 'Engaged')).toBe('exec')
+    expect(handleType('branch', 'in')).toBe('exec')
+    expect(handleType('branch', 'true')).toBe('exec')
+    expect(handleType('branch', 'false')).toBe('exec')
+    expect(handleType('branch', 'cond')).toBe('bool')
+    expect(handleType('equip', 'in')).toBe('exec')
+    expect(handleType('mode', 'in')).toBe('exec')
+    expect(handleType('cond:buff', 'out')).toBe('bool')
+    expect(handleType('cond:stat', 'out')).toBe('bool')
+  })
+
+  it('returns null for unknown handles or nodes', () => {
+    expect(handleType('branch', 'nope')).toBeNull()
+    expect(handleType('equip', null)).toBeNull()
+    expect(handleType('does-not-exist', 'in')).toBeNull()
+  })
+
+  it('handleInfo carries direction', () => {
+    expect(handleInfo('branch', 'cond')).toEqual({ id: 'cond', type: 'bool', dir: 'in' })
+    expect(handleInfo('branch', 'true')).toEqual({ id: 'true', type: 'exec', dir: 'out' })
+    expect(handleInfo('trigger:precast', 'Magic')).toEqual({ id: 'Magic', type: 'exec', dir: 'out' })
   })
 })

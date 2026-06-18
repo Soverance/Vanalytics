@@ -10,7 +10,7 @@ import './BlueprintEditor.css'
 import { ArrowLeft, Download, Trash2, Copy, ClipboardPaste } from 'lucide-react'
 import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
-import { wouldCreateCycle, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds } from '../components/character/blueprint/blueprintGraph'
+import { wouldCreateCycle, isValidConnection, isSingleTargetSource, isConditionType, upstreamChainEdgeIds } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
 import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, dropDuplicateTriggers, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
@@ -54,7 +54,7 @@ function BlueprintEditorInner() {
   const [sets, setSets] = useState<GearSetSummary[]>([])
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
-  const [palette, setPalette] = useState<{ x: number; y: number; flowX: number; flowY: number; connect?: { nodeId: string; handle: string; kind: 'exec' | 'cond' } } | null>(null)
+  const [palette, setPalette] = useState<{ x: number; y: number; flowX: number; flowY: number; connect?: { nodeId: string; handle: string; kind: 'exec' | 'cond' | 'condout' } } | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [exportLua, setExportLua] = useState<{ lua: string; warnings: string[] } | null>(null)
   const hydrated = useRef(false)
@@ -263,6 +263,17 @@ function BlueprintEditorInner() {
     setTimeout(() => setSelectedId(cId), 0)
   }, [])
 
+  // Create a Branch wired from a condition node's 'out' → branch 'cond'. Used when dragging out of a
+  // standalone condition node onto empty canvas. A condition 'out' fans out (reusable across branches),
+  // so no prior edge is removed.
+  const spawnBranchFromCondition = useCallback((condId: string, flowX: number, flowY: number) => {
+    const bId = newId()
+    setNodes(n => [...n, { id: bId, type: 'branch', position: { x: flowX, y: flowY }, data: {} }])
+    setEdges(prev => [...prev,
+      { id: `${condId}-cond-${bId}`, source: condId, sourceHandle: 'out', target: bId, targetHandle: 'cond' }])
+    setTimeout(() => setSelectedId(bId), 0)
+  }, [])
+
   // Create a Mode node wired from (sourceNodeId, sourceHandle) → mode 'in'. Single-target sources
   // replace their prior edge. Opens its inspector.
   const spawnModeWired = useCallback((sourceNodeId: string, sourceHandle: string, flowX: number, flowY: number) => {
@@ -292,7 +303,13 @@ function BlueprintEditorInner() {
     // condition nodes; any exec output offers Branch/Equip/Mode. Defer one tick: React Flow fires
     // onPaneClick on the SAME connection drop (see spawnLeaf above), whose setPalette(null) would
     // otherwise clobber this open in the same React batch — setTimeout lands the open AFTER it.
-    const kind: 'exec' | 'cond' = from.handleId === 'cond' ? 'cond' : 'exec'
+    // Which wire is being dragged decides what the menu offers:
+    //  - from a condition node's 'out'  → 'condout' (offer a Branch, wire cond.out → branch.cond)
+    //  - from a branch's 'cond' input   → 'cond'    (offer a condition node)
+    //  - from any exec output           → 'exec'    (offer Branch/Equip/Mode, wire into 'in')
+    const fromType = nodesRef.current.find(n => n.id === from.nodeId)?.type ?? ''
+    const kind: 'exec' | 'cond' | 'condout' =
+      isConditionType(fromType) ? 'condout' : from.handleId === 'cond' ? 'cond' : 'exec'
     const open = { x: menuX, y: menuY, flowX: flow.x, flowY: flow.y, connect: { nodeId: from.nodeId, handle: from.handleId, kind } }
     setTimeout(() => setPalette(open), 0)
   }, [screenToFlowPosition])
@@ -347,6 +364,8 @@ function BlueprintEditorInner() {
     const { flowX, flowY } = palette
     if (kind === 'cond') {
       if (type === 'cond:buff' || type === 'cond:stat') spawnCondition(nodeId, type, flowX, flowY)
+    } else if (kind === 'condout') {
+      if (type === 'branch') spawnBranchFromCondition(nodeId, flowX, flowY)
     } else if (type === 'branch') {
       spawnBranch(nodeId, handle, flowX, flowY)
     } else if (type === 'mode') {
@@ -362,7 +381,7 @@ function BlueprintEditorInner() {
       spawnLeaf(nodeId, handle, flowX, flowY, null)
     }
     setPalette(null)
-  }, [palette, nodes, addNode, spawnBranch, spawnCondition, spawnModeWired, spawnLeaf])
+  }, [palette, nodes, addNode, spawnBranch, spawnCondition, spawnBranchFromCondition, spawnModeWired, spawnLeaf])
 
   const selected = nodes.find(n => n.id === selectedId)
   const chainEdgeIds = useMemo(
@@ -458,6 +477,10 @@ function BlueprintEditorInner() {
     const c = palette?.connect
     if (!c) return type !== 'equip'
     if (c.kind === 'cond') return isValidConnection(type, 'out', 'branch', 'cond')
+    if (c.kind === 'condout') {
+      const sType = nodes.find(n => n.id === c.nodeId)?.type ?? ''
+      return isValidConnection(sType, 'out', type, 'cond')
+    }
     const sType = nodes.find(n => n.id === c.nodeId)?.type ?? ''
     return isValidConnection(sType, c.handle, type, 'in')
   }
