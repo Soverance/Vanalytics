@@ -46,4 +46,35 @@ public class GearSwapCodeGeneratorValidateTests
         Assert.Equal("error", d.Severity);
         Assert.Contains("gear set", d.Message);
     }
+
+    [Fact]
+    public void Branch_with_no_condition_is_an_error()
+    {
+        // trigger -> branch -> equip(set), but nothing wired to branch.cond
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ Node("t", "trigger:status_change"), Node("b", "branch"), Node("e", "equip", new() { GearSetId = 1 }) ],
+            Edges = [ Edge("t", "Idle", "b", "in"), Edge("b", "true", "e", "in") ],
+        };
+
+        var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "TP")]);
+
+        Assert.Contains(diags, d => d.NodeId == "b" && d.Severity == "error" && d.Message.Contains("condition"));
+    }
+
+    [Fact]
+    public void Branch_with_no_outcome_is_an_error()
+    {
+        // trigger -> branch with a condition, but no true/false wired
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ Node("t", "trigger:status_change"), Node("b", "branch"),
+                      Node("c", "op:compare", new() { Resource = "hpp", Op = "<", Value = 25 }) ],
+            Edges = [ Edge("t", "Idle", "b", "in"), Edge("c", "out", "b", "cond") ],
+        };
+
+        var diags = GearSwapCodeGenerator.Validate(graph, []);
+
+        Assert.Contains(diags, d => d.NodeId == "b" && d.Severity == "error" && d.Message.Contains("outcome"));
+    }
 }

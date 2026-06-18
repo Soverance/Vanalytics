@@ -34,6 +34,7 @@ public static partial class GearSwapCodeGenerator
 
         var diags = new List<Diagnostic>();
         CheckEquipNoSet(ctx, diags);
+        CheckBranches(ctx, diags);
         return diags;
     }
 
@@ -42,6 +43,20 @@ public static partial class GearSwapCodeGenerator
         foreach (var n in ctx.Graph.Nodes.Where(n => n.Type == "equip" && ctx.ExecReachable.Contains(n.Id)))
             if (n.Data.GearSetId is null && (n.Data.OverlaySetIds is null || n.Data.OverlaySetIds.Count == 0))
                 diags.Add(Err("Equip node has no gear set selected.", n.Id));
+    }
+
+    private static void CheckBranches(ValCtx ctx, List<Diagnostic> diags)
+    {
+        foreach (var n in ctx.Graph.Nodes.Where(n => n.Type == "branch" && ctx.ExecReachable.Contains(n.Id)))
+        {
+            var hasCond = ctx.Graph.Edges.Any(e => e.Target == n.Id && e.TargetHandle == "cond");
+            if (!hasCond)
+                diags.Add(Err("Branch has no condition connected.", n.Id));
+
+            var hasOutcome = ctx.Graph.Edges.Any(e => e.Source == n.Id && (e.SourceHandle == "true" || e.SourceHandle == "false"));
+            if (!hasOutcome)
+                diags.Add(Err("Branch has no outcome connected (neither True nor False).", n.Id));
+        }
     }
 
     // exec = nodes reachable from any trigger pin via exec flow (equip/branch/mode); a branch expands
