@@ -188,8 +188,26 @@ const NODE_HANDLES: Record<string, HandleDef[]> = {
   ],
   equip: [{ id: 'in', type: 'exec', dir: 'in' }],
   mode: [{ id: 'in', type: 'exec', dir: 'in' }],
-  'cond:buff': [{ id: 'out', type: 'bool', dir: 'out' }],
-  'cond:stat': [{ id: 'out', type: 'bool', dir: 'out' }],
+  value: [{ id: 'out', type: 'num', dir: 'out' }],
+  buff: [{ id: 'out', type: 'bool', dir: 'out' }],
+  'op:compare': [
+    { id: 'in', type: 'num', dir: 'in' },
+    { id: 'out', type: 'bool', dir: 'out' },
+  ],
+  'op:and': [
+    { id: 'a', type: 'bool', dir: 'in' },
+    { id: 'b', type: 'bool', dir: 'in' },
+    { id: 'out', type: 'bool', dir: 'out' },
+  ],
+  'op:or': [
+    { id: 'a', type: 'bool', dir: 'in' },
+    { id: 'b', type: 'bool', dir: 'in' },
+    { id: 'out', type: 'bool', dir: 'out' },
+  ],
+  'op:not': [
+    { id: 'in', type: 'bool', dir: 'in' },
+    { id: 'out', type: 'bool', dir: 'out' },
+  ],
 }
 
 export function handlesOf(nodeType: string): HandleDef[] {
@@ -212,10 +230,6 @@ export function handleInfo(nodeType: string, handleId: string | null | undefined
 
 // ---- Condition / branch helpers ----
 
-export function isConditionType(t: string): boolean {
-  return t === 'cond:buff' || t === 'cond:stat'
-}
-
 // Stat resource metadata: label shown to the user ↔ the Lua player.<value> field.
 export const STAT_RESOURCES: { value: string; label: string }[] = [
   { value: 'hp', label: 'HP' },
@@ -230,21 +244,20 @@ export function statResourceLabel(r?: string | null): string {
   return STAT_RESOURCES.find(x => x.value === r)?.label ?? r ?? '?'
 }
 
-// The text shown on a condition node's face.
-export function condFace(
-  type: string,
-  data: { buffName?: string | null; resource?: string | null; op?: string | null; value?: number | null },
+// The text shown on an op:compare node's face. With a wired numeric input the resource is overridden
+// at codegen; the face still shows the inline resource (or "value" when none is set).
+export function compareFace(
+  data: { resource?: string | null; op?: string | null; value?: number | null },
 ): string {
-  if (type === 'cond:buff') return data.buffName ? labelForAction(data.buffName) : 'pick a buff…'
-  if (type === 'cond:stat') return `${statResourceLabel(data.resource)} ${data.op ?? '<'} ${data.value ?? 0}`
-  return ''
+  return `${data.resource ? statResourceLabel(data.resource) : 'value'} ${data.op ?? '<'} ${data.value ?? 0}`
 }
 
 // May a connection (sourceType.sourceHandle -> targetType.targetHandle) exist? Both endpoints must
 // carry the same handle value type (exec/bool/num). One domain rule on top: category trigger pins
-// (precast WS/JA/Magic, midcast Magic, buff Gained/Lost) dispatch on action name, so they reach only
-// an action-bound Equip leaf — a Branch or Mode would silently discard the dispatch. Terminal pins
-// (exec, no category) still reach branch | equip | mode.
+// (precast WS/JA/Magic, midcast Magic, buff Gained/Lost) reach an action-bound Equip leaf OR a Branch
+// (which runs under the category's `spell.type == X` guard) — but NOT a Mode: the codegen's category
+// path only emits equip leaves, so a Mode target would be silently dropped. Terminal pins (exec, no
+// category) still reach branch | equip | mode.
 export function isValidConnection(
   sourceType: string, sourceHandle: string | null | undefined,
   targetType: string, targetHandle: string | null | undefined,
@@ -253,7 +266,7 @@ export function isValidConnection(
   const t = handleType(targetType, targetHandle)
   if (s === null || t === null || s !== t) return false
   if (sourceType.startsWith('trigger:') && categoryOfHandle(sourceType, sourceHandle ?? '') !== null
-      && targetType !== 'equip') return false
+      && targetType !== 'equip' && targetType !== 'branch') return false
   return true
 }
 
@@ -271,14 +284,13 @@ export function menuCandidateValid(fromType: string, fromHandle: string, candida
     : isValidConnection(candidateType, cand.id, fromType, fromHandle)
 }
 
-// Exec outputs that hold a single target (rewire replaces): trigger terminal pins and branch
-// true/false. Category trigger pins fan out (named leaves); a cond 'out' fans out (reuse across
-// branches).
+// Exec/value outputs that hold a single target (rewire replaces): trigger terminal pins and branch
+// true/false. Category trigger pins fan out (named leaves); value/buff/operator bool|num outs fan out
+// (a condition can be reused across branches and operators).
 export function isSingleTargetSource(sourceType: string, sourceHandle: string | null | undefined): boolean {
-  if (isConditionType(sourceType)) return false
   if (sourceType === 'branch') return true
   if (sourceType.startsWith('trigger:')) return categoryOfHandle(sourceType, sourceHandle ?? '') === null
-  return true
+  return false
 }
 
 // Edge ids on the upstream execution lineage of nodeId: walk BACKWARD along exec wires

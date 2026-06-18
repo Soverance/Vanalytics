@@ -10,7 +10,7 @@ import './BlueprintEditor.css'
 import { ArrowLeft, Download, Trash2, Copy, ClipboardPaste } from 'lucide-react'
 import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
-import { wouldCreateCycle, isValidConnection, isSingleTargetSource, isConditionType, upstreamChainEdgeIds } from '../components/character/blueprint/blueprintGraph'
+import { wouldCreateCycle, isValidConnection, isSingleTargetSource, handleInfo, handlesOf, upstreamChainEdgeIds } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
 import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, dropDuplicateTriggers, menuCandidateValid, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
@@ -20,10 +20,11 @@ import EquipInspector from '../components/character/blueprint/EquipInspector'
 import ModeNode, { type ModeNodeData } from '../components/character/blueprint/ModeNode'
 import ModeInspector from '../components/character/blueprint/ModeInspector'
 import BranchNode from '../components/character/blueprint/BranchNode'
-import CondBuffNode from '../components/character/blueprint/CondBuffNode'
-import CondStatNode from '../components/character/blueprint/CondStatNode'
-import CondBuffInspector from '../components/character/blueprint/CondBuffInspector'
-import CondStatInspector from '../components/character/blueprint/CondStatInspector'
+import ValueNode from '../components/character/blueprint/ValueNode'
+import BuffNode from '../components/character/blueprint/BuffNode'
+import CompareNode from '../components/character/blueprint/CompareNode'
+import OperatorNode from '../components/character/blueprint/OperatorNode'
+import CompareInspector from '../components/character/blueprint/CompareInspector'
 import GearSetExportModal from '../components/character/GearSetExportModal'
 import type {
   CharacterDetail, GearSetSummary, BlueprintGraph, BlueprintNodeType,
@@ -38,12 +39,28 @@ const nodeTypes = {
   equip: EquipGearSetNode,
   mode: ModeNode,
   branch: BranchNode,
-  'cond:buff': CondBuffNode,
-  'cond:stat': CondStatNode,
+  value: ValueNode,
+  buff: BuffNode,
+  'op:compare': CompareNode,
+  'op:and': OperatorNode,
+  'op:or': OperatorNode,
+  'op:not': OperatorNode,
 }
 
 let idSeq = 1
 const newId = () => `n${Date.now()}_${idSeq++}`
+
+// Default data for a freshly created node of the given type.
+const defaultData = (type: BlueprintNodeType): Record<string, unknown> => {
+  switch (type) {
+    case 'equip': return { gearSetId: null, overlaySetIds: [] }
+    case 'mode': return { modeName: 'New Mode', modeCommand: null, members: [], memberNames: [] }
+    case 'value': return { resource: 'hpp' }
+    case 'buff': return { buffName: null }
+    case 'op:compare': return { resource: 'hpp', op: '<', value: 25 }
+    default: return {}   // branch, op:and/op:or/op:not, triggers
+  }
+}
 
 function BlueprintEditorInner() {
   const { id = '', job = '' } = useParams()
@@ -54,7 +71,7 @@ function BlueprintEditorInner() {
   const [sets, setSets] = useState<GearSetSummary[]>([])
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
-  const [palette, setPalette] = useState<{ x: number; y: number; flowX: number; flowY: number; connect?: { nodeId: string; handle: string; kind: 'exec' | 'cond' | 'condout' } } | null>(null)
+  const [palette, setPalette] = useState<{ x: number; y: number; flowX: number; flowY: number; connect?: { nodeId: string; handle: string } } | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [exportLua, setExportLua] = useState<{ lua: string; warnings: string[] } | null>(null)
   const hydrated = useRef(false)
@@ -134,11 +151,13 @@ function BlueprintEditorInner() {
         ? { modeName: n.data.modeName ?? 'Mode', modeCommand: n.data.modeCommand ?? null,
             members: n.data.members ?? [],
             memberNames: (n.data.members ?? []).map(m => setById.get(m.gearSetId)?.name) }
-        : n.type === 'cond:buff'
+        : n.type === 'buff'
         ? { buffName: n.data.buffName ?? null }
-        : n.type === 'cond:stat'
+        : n.type === 'value'
+        ? { resource: n.data.resource ?? 'hpp' }
+        : n.type === 'op:compare'
         ? { resource: n.data.resource ?? 'hpp', op: n.data.op ?? '<', value: n.data.value ?? 25 }
-        : {},   // branch: no data
+        : {},   // branch, op:and/op:or/op:not: no data
     })))
     setEdges(graph.edges.map(e => ({ id: e.id, source: e.source, target: e.target,
       sourceHandle: e.sourceHandle ?? undefined, targetHandle: e.targetHandle ?? undefined })))
@@ -153,12 +172,14 @@ function BlueprintEditorInner() {
         const m = n.data as ModeNodeData
         data = { modeName: m.modeName ?? 'Mode', modeCommand: m.modeCommand ?? null,
           members: (m.members ?? []).map(mm => ({ gearSetId: mm.gearSetId, label: mm.label ?? null, overlaySetIds: mm.overlaySetIds ?? null })) }
-      } else if (t === 'cond:buff') {
+      } else if (t === 'buff') {
         data = { buffName: (n.data as { buffName?: string | null }).buffName ?? null }
-      } else if (t === 'cond:stat') {
+      } else if (t === 'value') {
+        data = { resource: (n.data as { resource?: string | null }).resource ?? 'hpp' }
+      } else if (t === 'op:compare') {
         const d = n.data as { resource?: string | null; op?: string | null; value?: number | null }
         data = { resource: d.resource ?? 'hpp', op: d.op ?? '<', value: d.value ?? 25 }
-      } else if (t === 'branch') {
+      } else if (t === 'branch' || t === 'op:and' || t === 'op:or' || t === 'op:not') {
         data = {}
       } else {
         data = { gearSetId: (n.data as { gearSetId?: number | null }).gearSetId ?? null,
@@ -238,54 +259,29 @@ function BlueprintEditorInner() {
     setTimeout(() => setSelectedId(leafId), 0)
   }, [nodes])
 
-  // Create a Branch wired from (sourceNodeId, sourceHandle) → branch 'in'. Single-target sources
-  // replace their prior edge.
-  const spawnBranch = useCallback((sourceNodeId: string, sourceHandle: string, flowX: number, flowY: number) => {
-    const bId = newId()
-    const sType = nodesRef.current.find(n => n.id === sourceNodeId)?.type ?? ''
-    setNodes(n => [...n, { id: bId, type: 'branch', position: { x: flowX, y: flowY }, data: {} }])
+  // Create a node of `type` (seeded with `data` or its defaults) and wire it to the tether dragged
+  // from (fromId, fromHandle): the new node's same-type, opposite-direction handle connects to the
+  // dragged pin. Single-target source outputs replace their prior edge; one edge per target handle.
+  const spawnAndWire = useCallback((fromId: string, fromHandle: string, type: BlueprintNodeType, data: Record<string, unknown> | undefined, x: number, y: number) => {
+    const fromType = nodesRef.current.find(n => n.id === fromId)?.type ?? ''
+    const from = handleInfo(fromType, fromHandle)
+    if (!from) return
+    const wantDir = from.dir === 'out' ? 'in' : 'out'
+    const match = handlesOf(type).find(h => h.type === from.type && h.dir === wantDir)
+    if (!match) return
+    const nid = newId()
+    setNodes(n => [...n, { id: nid, type, position: { x, y }, data: data ?? defaultData(type) }])
     setEdges(prev => {
-      const base = isSingleTargetSource(sType, sourceHandle)
-        ? prev.filter(e => !(e.source === sourceNodeId && e.sourceHandle === sourceHandle)) : prev
-      return [...base, { id: `${sourceNodeId}-${sourceHandle}-${bId}`, source: sourceNodeId, sourceHandle, target: bId, targetHandle: 'in' }]
+      const [src, srcH, tgt, tgtH] = from.dir === 'out'
+        ? [fromId, fromHandle, nid, match.id]
+        : [nid, match.id, fromId, fromHandle]
+      const srcType = src === fromId ? fromType : type
+      const base = isSingleTargetSource(srcType, srcH)
+        ? prev.filter(e => !(e.source === src && e.sourceHandle === srcH)) : prev
+      const noInputDup = base.filter(e => !(e.target === tgt && e.targetHandle === tgtH))
+      return [...noInputDup, { id: `${src}-${srcH}-${tgt}`, source: src, sourceHandle: srcH, target: tgt, targetHandle: tgtH }]
     })
-  }, [])
-
-  // Create a condition node wired into branch 'cond'. Replaces any existing condition on that branch.
-  const spawnCondition = useCallback((branchId: string, condType: 'cond:buff' | 'cond:stat', flowX: number, flowY: number) => {
-    const cId = newId()
-    const data = condType === 'cond:buff' ? { buffName: null } : { resource: 'hpp', op: '<', value: 25 }
-    setNodes(n => [...n, { id: cId, type: condType, position: { x: flowX, y: flowY }, data }])
-    setEdges(prev => [
-      ...prev.filter(e => !(e.target === branchId && e.targetHandle === 'cond')),
-      { id: `${cId}-cond-${branchId}`, source: cId, sourceHandle: 'out', target: branchId, targetHandle: 'cond' },
-    ])
-    setTimeout(() => setSelectedId(cId), 0)
-  }, [])
-
-  // Create a Branch wired from a condition node's 'out' → branch 'cond'. Used when dragging out of a
-  // standalone condition node onto empty canvas. A condition 'out' fans out (reusable across branches),
-  // so no prior edge is removed.
-  const spawnBranchFromCondition = useCallback((condId: string, flowX: number, flowY: number) => {
-    const bId = newId()
-    setNodes(n => [...n, { id: bId, type: 'branch', position: { x: flowX, y: flowY }, data: {} }])
-    setEdges(prev => [...prev,
-      { id: `${condId}-cond-${bId}`, source: condId, sourceHandle: 'out', target: bId, targetHandle: 'cond' }])
-    setTimeout(() => setSelectedId(bId), 0)
-  }, [])
-
-  // Create a Mode node wired from (sourceNodeId, sourceHandle) → mode 'in'. Single-target sources
-  // replace their prior edge. Opens its inspector.
-  const spawnModeWired = useCallback((sourceNodeId: string, sourceHandle: string, flowX: number, flowY: number) => {
-    const mId = newId()
-    const sType = nodesRef.current.find(n => n.id === sourceNodeId)?.type ?? ''
-    setNodes(n => [...n, { id: mId, type: 'mode', position: { x: flowX, y: flowY }, data: { modeName: 'New Mode', modeCommand: null, members: [], memberNames: [] } }])
-    setEdges(prev => {
-      const base = isSingleTargetSource(sType, sourceHandle)
-        ? prev.filter(e => !(e.source === sourceNodeId && e.sourceHandle === sourceHandle)) : prev
-      return [...base, { id: `${sourceNodeId}-${sourceHandle}-${mId}`, source: sourceNodeId, sourceHandle, target: mId, targetHandle: 'in' }]
-    })
-    setTimeout(() => setSelectedId(mId), 0)
+    setTimeout(() => setSelectedId(nid), 0)
   }, [])
 
   const onConnectEnd = useCallback((e: MouseEvent | TouchEvent) => {
@@ -299,18 +295,11 @@ function BlueprintEditorInner() {
     const rect = (document.querySelector('.react-flow__pane') as HTMLElement)?.getBoundingClientRect()
     const menuX = me.clientX - (rect?.left ?? 0)
     const menuY = me.clientY - (rect?.top ?? 0)
-    // Open the unified node menu at the cursor, pre-wired to the dragged pin. A 'cond' handle offers
-    // condition nodes; any exec output offers Branch/Equip/Mode. Defer one tick: React Flow fires
-    // onPaneClick on the SAME connection drop (see spawnLeaf above), whose setPalette(null) would
-    // otherwise clobber this open in the same React batch — setTimeout lands the open AFTER it.
-    // Which wire is being dragged decides what the menu offers:
-    //  - from a condition node's 'out'  → 'condout' (offer a Branch, wire cond.out → branch.cond)
-    //  - from a branch's 'cond' input   → 'cond'    (offer a condition node)
-    //  - from any exec output           → 'exec'    (offer Branch/Equip/Mode, wire into 'in')
-    const fromType = nodesRef.current.find(n => n.id === from.nodeId)?.type ?? ''
-    const kind: 'exec' | 'cond' | 'condout' =
-      isConditionType(fromType) ? 'condout' : from.handleId === 'cond' ? 'cond' : 'exec'
-    const open = { x: menuX, y: menuY, flowX: flow.x, flowY: flow.y, connect: { nodeId: from.nodeId, handle: from.handleId, kind } }
+    // Open the node menu at the cursor, pre-wired to the dragged pin. menuFilter (menuCandidateValid)
+    // filters it to type-compatible nodes. Defer one tick: React Flow fires onPaneClick on the SAME
+    // connection drop, whose setPalette(null) would otherwise clobber this open in the same React
+    // batch — setTimeout lands the open AFTER it.
+    const open = { x: menuX, y: menuY, flowX: flow.x, flowY: flow.y, connect: { nodeId: from.nodeId, handle: from.handleId } }
     setTimeout(() => setPalette(open), 0)
   }, [screenToFlowPosition])
 
@@ -327,7 +316,7 @@ function BlueprintEditorInner() {
     setPalette({ x, y, flowX: flow.x, flowY: flow.y })
   }, [screenToFlowPosition])
 
-  const addNode = useCallback((type: BlueprintNodeType) => {
+  const addNode = useCallback((type: BlueprintNodeType, data?: Record<string, unknown>) => {
     if (!palette) return
     // Triggers are singletons per type: each maps 1:1 to a Lua event function (precast/aftercast/…),
     // so a second one would emit a duplicate `function precast(spell)` that silently overwrites the
@@ -336,41 +325,23 @@ function BlueprintEditorInner() {
       const existing = nodes.find(n => n.type === type)
       if (existing) { focusNode(existing.id); setPalette(null); return }
     }
-    const node: Node = {
-      id: newId(), type,
-      position: { x: palette.flowX, y: palette.flowY },
-      data: type === 'equip'
-        ? { gearSetId: null, overlaySetIds: [] }
-        : type === 'mode'
-        ? { modeName: 'New Mode', modeCommand: null, members: [], memberNames: [] }
-        : type === 'cond:buff'
-        ? { buffName: null }
-        : type === 'cond:stat'
-        ? { resource: 'hpp', op: '<', value: 25 }
-        : {},   // branch
-    }
+    const node: Node = { id: newId(), type, position: { x: palette.flowX, y: palette.flowY }, data: data ?? defaultData(type) }
     setNodes(n => [...n, node])
     setPalette(null)
-    if (type === 'mode' || type === 'cond:buff' || type === 'cond:stat') setSelectedId(node.id)
+    // Open the inspector for configurable nodes (mode, compare); value/buff are static.
+    if (type === 'mode' || type === 'op:compare') setSelectedId(node.id)
   }, [palette, nodes, focusNode])
 
   // Unified menu pick: if the menu was opened by dragging a tether (palette.connect set), spawn the
   // chosen node AND auto-wire it to the dragged pin; otherwise create an unwired node (addNode).
-  const onMenuPick = useCallback((type: BlueprintNodeType) => {
+  const onMenuPick = useCallback((type: BlueprintNodeType, data?: Record<string, unknown>) => {
     if (!palette) return
     const c = palette.connect
-    if (!c) { addNode(type); return }
-    const { nodeId, handle, kind } = c
+    if (!c) { addNode(type, data); return }
+    const { nodeId, handle } = c
     const { flowX, flowY } = palette
-    if (kind === 'cond') {
-      if (type === 'cond:buff' || type === 'cond:stat') spawnCondition(nodeId, type, flowX, flowY)
-    } else if (kind === 'condout') {
-      if (type === 'branch') spawnBranchFromCondition(nodeId, flowX, flowY)
-    } else if (type === 'branch') {
-      spawnBranch(nodeId, handle, flowX, flowY)
-    } else if (type === 'mode') {
-      spawnModeWired(nodeId, handle, flowX, flowY)
-    } else if (type === 'equip') {
+    // Equip dragged from a category trigger pin → open the action picker (pick the spell/buff first).
+    if (type === 'equip') {
       const sType = nodes.find(n => n.id === nodeId)?.type ?? ''
       const category = sType.startsWith('trigger:') ? categoryOfHandle(sType, handle) : null
       if (category !== null) {
@@ -378,10 +349,10 @@ function BlueprintEditorInner() {
         setPicker({ x: palette.x, y: palette.y, flowX, flowY, nodeId, handle, category, allowGeneric: allowGenericForHandle(sType, handle) })
         return
       }
-      spawnLeaf(nodeId, handle, flowX, flowY, null)
     }
+    spawnAndWire(nodeId, handle, type, data, flowX, flowY)
     setPalette(null)
-  }, [palette, nodes, addNode, spawnBranch, spawnCondition, spawnBranchFromCondition, spawnModeWired, spawnLeaf])
+  }, [palette, nodes, addNode, spawnAndWire])
 
   const selected = nodes.find(n => n.id === selectedId)
   const chainEdgeIds = useMemo(
@@ -600,17 +571,12 @@ function BlueprintEditorInner() {
             onMoveMemberOverlay={moveMemberOverlay}
           />
         )}
-        {selected?.type === 'cond:buff' && (
-          <CondBuffInspector
-            buffName={(selected.data as { buffName?: string | null }).buffName}
-            onChange={(raw) => updateCondData({ buffName: raw })}
-          />
-        )}
-        {selected?.type === 'cond:stat' && (
-          <CondStatInspector
+        {selected?.type === 'op:compare' && (
+          <CompareInspector
             resource={(selected.data as { resource?: string | null }).resource}
             op={(selected.data as { op?: string | null }).op}
             value={(selected.data as { value?: number | null }).value}
+            valueWired={edges.some(e => e.target === selected!.id && e.targetHandle === 'in')}
             onChange={(patch) => updateCondData(patch)}
           />
         )}

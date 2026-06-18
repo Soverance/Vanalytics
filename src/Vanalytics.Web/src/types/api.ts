@@ -1151,8 +1151,12 @@ export type BlueprintNodeType =
   | 'equip'
   | 'mode'
   | 'branch'
-  | 'cond:buff'
-  | 'cond:stat'
+  | 'value'
+  | 'buff'
+  | 'op:compare'
+  | 'op:and'
+  | 'op:or'
+  | 'op:not'
 
 export interface ModeMember {
   gearSetId: number

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, isConditionType, condFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers, handleType, handleInfo, menuCandidateValid } from './blueprintGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, compareFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers, handleType, handleInfo, menuCandidateValid } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -202,43 +202,35 @@ describe('canConnect', () => {
 })
 
 describe('condition helpers', () => {
-  it('identifies condition node types', () => {
-    expect(isConditionType('cond:buff')).toBe(true)
-    expect(isConditionType('cond:stat')).toBe(true)
-    expect(isConditionType('branch')).toBe(false)
-    expect(isConditionType('equip')).toBe(false)
-  })
-
-  it('builds a node face for stat and buff', () => {
+  it('builds the compare node face', () => {
     expect(statResourceLabel('hpp')).toBe('HP%')
-    expect(condFace('cond:stat', { resource: 'hpp', op: '<', value: 25 })).toBe('HP% < 25')
-    expect(condFace('cond:buff', { buffName: 'Sneak Attack' })).toBe('Sneak Attack')
-    expect(condFace('cond:buff', { buffName: null })).toMatch(/pick/i)
+    expect(compareFace({ resource: 'hpp', op: '<', value: 25 })).toBe('HP% < 25')
+    expect(compareFace({ resource: null, op: '>', value: 50 })).toBe('value > 50')
   })
 
   it('validates condition wires only into a branch cond input', () => {
-    expect(isValidConnection('cond:buff', 'out', 'branch', 'cond')).toBe(true)
-    expect(isValidConnection('cond:buff', 'out', 'equip', 'cond')).toBe(false)
-    expect(isValidConnection('cond:buff', 'out', 'branch', 'in')).toBe(false)
+    expect(isValidConnection('buff', 'out', 'branch', 'cond')).toBe(true)
+    expect(isValidConnection('buff', 'out', 'equip', 'cond')).toBe(false)
+    expect(isValidConnection('buff', 'out', 'branch', 'in')).toBe(false)
   })
 
-  it('validates exec wires by type; category pins reach only Equip', () => {
+  it('validates exec wires by type; category pins reach equip + branch but not mode', () => {
     // terminal exec pins reach branch | equip | mode
     expect(isValidConnection('trigger:status_change', 'Idle', 'branch', 'in')).toBe(true)
     expect(isValidConnection('trigger:status_change', 'Idle', 'mode', 'in')).toBe(true)
     expect(isValidConnection('trigger:status_change', 'Engaged', 'equip', 'in')).toBe(true)
     expect(isValidConnection('branch', 'true', 'equip', 'in')).toBe(true)
     expect(isValidConnection('branch', 'false', 'branch', 'in')).toBe(true)
-    // category pins (precast WS/Magic, buff Gained/Lost) reach ONLY equip — branch/mode would
-    // discard the per-action dispatch
+    // category pins (precast WS/Magic, buff Gained/Lost) reach equip (dispatch) or branch (runs under
+    // the spell.type guard) — but NOT mode (codegen would drop it).
     expect(isValidConnection('trigger:precast', 'WeaponSkill', 'equip', 'in')).toBe(true)
-    expect(isValidConnection('trigger:precast', 'WeaponSkill', 'branch', 'in')).toBe(false)
+    expect(isValidConnection('trigger:precast', 'WeaponSkill', 'branch', 'in')).toBe(true)
     expect(isValidConnection('trigger:precast', 'WeaponSkill', 'mode', 'in')).toBe(false)
-    expect(isValidConnection('trigger:buff_change', 'Gained', 'branch', 'in')).toBe(false)
+    expect(isValidConnection('trigger:buff_change', 'Gained', 'branch', 'in')).toBe(true)
   })
 
   it('rejects cross-type wires', () => {
-    expect(isValidConnection('cond:buff', 'out', 'equip', 'in')).toBe(false)        // bool -> exec
+    expect(isValidConnection('buff', 'out', 'equip', 'in')).toBe(false)        // bool -> exec
     expect(isValidConnection('trigger:precast', 'Magic', 'branch', 'cond')).toBe(false) // exec -> bool
     expect(isValidConnection('branch', 'true', 'branch', 'cond')).toBe(false)        // exec -> bool
   })
@@ -247,13 +239,13 @@ describe('condition helpers', () => {
     expect(isSingleTargetSource('trigger:status_change', 'Idle')).toBe(true)
     expect(isSingleTargetSource('trigger:precast', 'WeaponSkill')).toBe(false)
     expect(isSingleTargetSource('branch', 'true')).toBe(true)
-    expect(isSingleTargetSource('cond:buff', 'out')).toBe(false)
+    expect(isSingleTargetSource('buff', 'out')).toBe(false)
   })
 
   it('branch keeps its exec input when a condition input is added (handle-aware dedup)', () => {
-    expect(isSingleTargetSource('cond:buff', 'out')).toBe(false)
+    expect(isSingleTargetSource('buff', 'out')).toBe(false)
     expect(isValidConnection('trigger:status_change', 'Idle', 'branch', 'in')).toBe(true)
-    expect(isValidConnection('cond:buff', 'out', 'branch', 'cond')).toBe(true)
+    expect(isValidConnection('buff', 'out', 'branch', 'cond')).toBe(true)
   })
 
   it('collects only the upstream exec lineage of a node (directed, stops at triggers, skips cond + downstream)', () => {
@@ -304,8 +296,14 @@ describe('handle type inventory', () => {
     expect(handleType('branch', 'cond')).toBe('bool')
     expect(handleType('equip', 'in')).toBe('exec')
     expect(handleType('mode', 'in')).toBe('exec')
-    expect(handleType('cond:buff', 'out')).toBe('bool')
-    expect(handleType('cond:stat', 'out')).toBe('bool')
+    expect(handleType('value', 'out')).toBe('num')
+    expect(handleType('buff', 'out')).toBe('bool')
+    expect(handleType('op:compare', 'in')).toBe('num')
+    expect(handleType('op:compare', 'out')).toBe('bool')
+    expect(handleType('op:and', 'a')).toBe('bool')
+    expect(handleType('op:and', 'b')).toBe('bool')
+    expect(handleType('op:not', 'in')).toBe('bool')
+    expect(handleType('op:or', 'out')).toBe('bool')
   })
 
   it('returns null for unknown handles or nodes', () => {
@@ -326,26 +324,34 @@ describe('menuCandidateValid (context-sensitive menu)', () => {
     expect(menuCandidateValid('trigger:status_change', 'Engaged', 'branch')).toBe(true)
     expect(menuCandidateValid('trigger:status_change', 'Engaged', 'equip')).toBe(true)
     expect(menuCandidateValid('trigger:status_change', 'Engaged', 'mode')).toBe(true)
-    expect(menuCandidateValid('trigger:status_change', 'Engaged', 'cond:buff')).toBe(false)
+    expect(menuCandidateValid('trigger:status_change', 'Engaged', 'buff')).toBe(false)
   })
 
-  it('category pin offers only equip', () => {
+  it('category pin offers equip + branch but not mode', () => {
     expect(menuCandidateValid('trigger:precast', 'Magic', 'equip')).toBe(true)
-    expect(menuCandidateValid('trigger:precast', 'Magic', 'branch')).toBe(false)
+    expect(menuCandidateValid('trigger:precast', 'Magic', 'branch')).toBe(true)
     expect(menuCandidateValid('trigger:precast', 'Magic', 'mode')).toBe(false)
-    expect(menuCandidateValid('trigger:buff_change', 'Gained', 'branch')).toBe(false)
+    expect(menuCandidateValid('trigger:buff_change', 'Gained', 'branch')).toBe(true)
   })
 
-  it('dragging from a branch cond input offers condition nodes', () => {
-    expect(menuCandidateValid('branch', 'cond', 'cond:buff')).toBe(true)
-    expect(menuCandidateValid('branch', 'cond', 'cond:stat')).toBe(true)
+  it('dragging from a branch cond input offers boolean producers', () => {
+    expect(menuCandidateValid('branch', 'cond', 'buff')).toBe(true)
+    expect(menuCandidateValid('branch', 'cond', 'op:compare')).toBe(true)
+    expect(menuCandidateValid('branch', 'cond', 'op:and')).toBe(true)
     expect(menuCandidateValid('branch', 'cond', 'equip')).toBe(false)
-    expect(menuCandidateValid('branch', 'cond', 'branch')).toBe(false)
+    expect(menuCandidateValid('branch', 'cond', 'value')).toBe(false)   // num, not bool
   })
 
-  it('dragging from a condition out offers a branch', () => {
-    expect(menuCandidateValid('cond:buff', 'out', 'branch')).toBe(true)
-    expect(menuCandidateValid('cond:buff', 'out', 'equip')).toBe(false)
-    expect(menuCandidateValid('cond:buff', 'out', 'mode')).toBe(false)
+  it('value/operator drags offer the right nodes', () => {
+    // num out -> compare (num in)
+    expect(menuCandidateValid('value', 'out', 'op:compare')).toBe(true)
+    expect(menuCandidateValid('value', 'out', 'branch')).toBe(false)
+    // bool out -> branch.cond and boolean operators
+    expect(menuCandidateValid('buff', 'out', 'branch')).toBe(true)
+    expect(menuCandidateValid('buff', 'out', 'op:and')).toBe(true)
+    expect(menuCandidateValid('buff', 'out', 'op:not')).toBe(true)
+    expect(menuCandidateValid('buff', 'out', 'op:compare')).toBe(false)  // bool != num in
+    // compare 'in' (num input) -> value
+    expect(menuCandidateValid('op:compare', 'in', 'value')).toBe(true)
   })
 })

@@ -1,31 +1,43 @@
 import { useState } from 'react'
 import { ClipboardPaste, Search } from 'lucide-react'
 import type { BlueprintNodeType } from '../../../types/api'
+import { STAT_RESOURCES } from './blueprintGraph'
+import { BUFFS } from '../../../lib/buffs'
 
-const ITEMS: { type: BlueprintNodeType; label: string; group: string; color: string }[] = [
-  { type: 'trigger:precast', label: 'precast', group: 'Triggers', color: '#b3344a' },
-  { type: 'trigger:aftercast', label: 'aftercast', group: 'Triggers', color: '#b3344a' },
-  { type: 'trigger:status_change', label: 'status_change', group: 'Triggers', color: '#b3344a' },
-  { type: 'trigger:midcast', label: 'midcast', group: 'Triggers', color: '#b3344a' },
-  { type: 'trigger:buff_change', label: 'buff_change', group: 'Triggers', color: '#b3344a' },
-  { type: 'mode', label: 'Mode (set cycle)', group: 'Sets', color: '#34d399' },
-  { type: 'equip', label: 'Equip Gear Set', group: 'Equip', color: '#6366f1' },
-  { type: 'branch', label: 'Branch (if/else)', group: 'Flow Control', color: '#94a3b8' },
-  { type: 'cond:buff', label: 'Condition: Buff active', group: 'Flow Control', color: '#34d399' },
-  { type: 'cond:stat', label: 'Condition: HP/MP/TP', group: 'Flow Control', color: '#f59e0b' },
+interface Item { key: string; type: BlueprintNodeType; label: string; group: string; color: string; data?: Record<string, unknown> }
+
+const STATIC_ITEMS: Item[] = [
+  { key: 'trigger:precast', type: 'trigger:precast', label: 'precast', group: 'Triggers', color: '#b3344a' },
+  { key: 'trigger:aftercast', type: 'trigger:aftercast', label: 'aftercast', group: 'Triggers', color: '#b3344a' },
+  { key: 'trigger:status_change', type: 'trigger:status_change', label: 'status_change', group: 'Triggers', color: '#b3344a' },
+  { key: 'trigger:midcast', type: 'trigger:midcast', label: 'midcast', group: 'Triggers', color: '#b3344a' },
+  { key: 'trigger:buff_change', type: 'trigger:buff_change', label: 'buff_change', group: 'Triggers', color: '#b3344a' },
+  { key: 'mode', type: 'mode', label: 'Mode (set cycle)', group: 'Sets', color: '#34d399' },
+  { key: 'equip', type: 'equip', label: 'Equip Gear Set', group: 'Equip', color: '#6366f1' },
+  { key: 'branch', type: 'branch', label: 'Branch (if/else)', group: 'Flow Control', color: '#94a3b8' },
+  { key: 'op:and', type: 'op:and', label: 'AND', group: 'Flow Control', color: '#a78bfa' },
+  { key: 'op:or', type: 'op:or', label: 'OR', group: 'Flow Control', color: '#a78bfa' },
+  { key: 'op:not', type: 'op:not', label: 'NOT', group: 'Flow Control', color: '#a78bfa' },
+  { key: 'op:compare', type: 'op:compare', label: 'Compare (≷)', group: 'Flow Control', color: '#f59e0b' },
+  ...STAT_RESOURCES.map(r => ({ key: `value:${r.value}`, type: 'value' as const, label: r.label, group: 'Values', color: '#38bdf8', data: { resource: r.value } })),
 ]
+
+const BUFF_ITEMS: Item[] = BUFFS.map(b => ({ key: `buff:${b.id}`, type: 'buff' as const, label: b.label, group: 'Buffs', color: '#34d399', data: { buffName: b.name } }))
 
 export default function NodePalette({ x, y, onPick, onClose, onPaste, filter }: {
   x: number; y: number
-  onPick: (type: BlueprintNodeType) => void
+  onPick: (type: BlueprintNodeType, data?: Record<string, unknown>) => void
   onClose: () => void
   onPaste?: () => void
   filter?: (type: BlueprintNodeType) => boolean
 }) {
   const [query, setQuery] = useState('')
   const q = query.trim().toLowerCase()
-  const items = ITEMS.filter(i => (!filter || filter(i.type)) && (!q || i.label.toLowerCase().includes(q)))
+  // Buffs are a huge catalog — only surface them once the user searches, to keep the menu snappy.
+  const pool = q ? [...STATIC_ITEMS, ...BUFF_ITEMS] : STATIC_ITEMS
+  const items = pool.filter(i => (!filter || filter(i.type)) && (!q || i.label.toLowerCase().includes(q)))
   const groups = [...new Set(items.map(i => i.group))]
+  const buffsAvailable = !filter || filter('buff')
   return (
     <>
       <div className="fixed inset-0 z-10" onClick={onClose} />
@@ -54,13 +66,18 @@ export default function NodePalette({ x, y, onPick, onClose, onPaste, filter }: 
             <div key={g}>
               <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wide text-gray-500">{g}</div>
               {items.filter(i => i.group === g).map(i => (
-                <button key={i.type} onClick={() => onPick(i.type)}
+                <button key={i.key} onClick={() => onPick(i.type, i.data)}
                   className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-gray-700">
                   <span className="h-2 w-2 rounded-sm" style={{ background: i.color }} /> {i.label}
                 </button>
               ))}
             </div>
           ))}
+          {!q && buffsAvailable && (
+            <div className="px-3 pt-2 pb-2 text-[10px] uppercase tracking-wide text-gray-500">
+              Buffs — type to search
+            </div>
+          )}
         </div>
       </div>
     </>
