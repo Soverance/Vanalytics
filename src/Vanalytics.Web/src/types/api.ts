@@ -1157,6 +1157,7 @@ export type BlueprintNodeType =
   | 'op:and'
   | 'op:or'
   | 'op:not'
+  | 'comment'
 
 export interface ModeMember {
   gearSetId: number
@@ -1179,6 +1180,9 @@ export interface BlueprintNode {
     resource?: string | null
     op?: string | null
     value?: number | null
+    text?: string | null
+    width?: number | null
+    height?: number | null
   }
 }
 

@@ -24,6 +24,7 @@ import ValueNode from '../components/character/blueprint/ValueNode'
 import BuffNode from '../components/character/blueprint/BuffNode'
 import CompareNode from '../components/character/blueprint/CompareNode'
 import OperatorNode from '../components/character/blueprint/OperatorNode'
+import CommentNode from '../components/character/blueprint/CommentNode'
 import CompareInspector from '../components/character/blueprint/CompareInspector'
 import GearSetExportModal from '../components/character/GearSetExportModal'
 import type {
@@ -45,6 +46,7 @@ const nodeTypes = {
   'op:and': OperatorNode,
   'op:or': OperatorNode,
   'op:not': OperatorNode,
+  comment: CommentNode,
 }
 
 let idSeq = 1
@@ -58,9 +60,17 @@ const defaultData = (type: BlueprintNodeType): Record<string, unknown> => {
     case 'value': return { resource: 'hpp' }
     case 'buff': return { buffName: null }
     case 'op:compare': return { resource: 'hpp', op: '<', value: 25 }
+    case 'comment': return { text: '', width: 320, height: 180 }
     default: return {}   // branch, op:and/op:or/op:not, triggers
   }
 }
+
+// Node-level fields (beyond data) a freshly created/hydrated node needs. Comments carry an explicit
+// size; layering (comment behind real nodes) is applied at render time via displayNodes, not here.
+const nodeExtras = (type: BlueprintNodeType, data: Record<string, unknown>): Partial<Node> =>
+  type === 'comment'
+    ? { width: (data.width as number) ?? 320, height: (data.height as number) ?? 180 }
+    : {}
 
 function BlueprintEditorInner() {
   const { id = '', job = '' } = useParams()
@@ -83,6 +93,9 @@ function BlueprintEditorInner() {
   const clipboard = useRef<Clipboard | null>(null)
   const lastPointer = useRef<{ x: number; y: number } | null>(null)
   const rightDownPos = useRef<{ x: number; y: number } | null>(null)
+  // Set while dragging a lone comment frame: the comment's start position + the nodes captured inside
+  // it (with their start positions) so onNodeDrag can shift them by the same delta (UE-style).
+  const commentDrag = useRef<{ startX: number; startY: number; captured: { id: string; x: number; y: number }[] } | null>(null)
   const nodesRef = useRef(nodes); nodesRef.current = nodes
   const edgesRef = useRef(edges); edgesRef.current = edges
 
@@ -141,9 +154,8 @@ function BlueprintEditorInner() {
     if (!graph || hydrated.current) return
     hydrated.current = true
     const setById = new Map(sets.map(s => [s.id, s]))
-    setNodes(graph.nodes.map(n => ({
-      id: n.id, type: n.type, position: n.position,
-      data: n.type === 'equip'
+    setNodes(graph.nodes.map(n => {
+      const data = n.type === 'equip'
         ? { gearSetId: n.data.gearSetId, actionName: n.data.actionName ?? null,
             overlaySetIds: n.data.overlaySetIds ?? [],
             setName: n.data.gearSetId != null ? setById.get(n.data.gearSetId)?.name : undefined,
@@ -158,8 +170,11 @@ function BlueprintEditorInner() {
         ? { resource: n.data.resource ?? 'hpp' }
         : n.type === 'op:compare'
         ? { resource: n.data.resource ?? 'hpp', op: n.data.op ?? '<', value: n.data.value ?? 25 }
-        : {},   // branch, op:and/op:or/op:not: no data
-    })))
+        : n.type === 'comment'
+        ? { text: n.data.text ?? '', width: n.data.width ?? 320, height: n.data.height ?? 180 }
+        : {}   // branch, op:and/op:or/op:not: no data
+      return { id: n.id, type: n.type, position: n.position, data, ...nodeExtras(n.type, data) }
+    }))
     setEdges(graph.edges.map(e => ({ id: e.id, source: e.source, target: e.target,
       sourceHandle: e.sourceHandle ?? undefined, targetHandle: e.targetHandle ?? undefined })))
   }, [graph, sets])
@@ -180,6 +195,11 @@ function BlueprintEditorInner() {
       } else if (t === 'op:compare') {
         const d = n.data as { resource?: string | null; op?: string | null; value?: number | null }
         data = { resource: d.resource ?? 'hpp', op: d.op ?? '<', value: d.value ?? 25 }
+      } else if (t === 'comment') {
+        const d = n.data as { text?: string | null; width?: number | null; height?: number | null }
+        // node.width/height are the live RF dims (NodeResizer writes them); data mirrors them via
+        // onResize. Prefer the live node dims, fall back to data, then the default.
+        data = { text: d.text ?? '', width: n.width ?? d.width ?? 320, height: n.height ?? d.height ?? 180 }
       } else if (t === 'branch' || t === 'op:and' || t === 'op:or' || t === 'op:not') {
         data = {}
       } else {
@@ -220,14 +240,51 @@ function BlueprintEditorInner() {
   const onNodesChange = useCallback((c: NodeChange[]) => setNodes(n => applyNodeChanges(c, n)), [])
   const onEdgesChange = useCallback((c: EdgeChange[]) => setEdges(e => applyEdgeChanges(c, e)), [])
 
+  // UE-style comment containment: when a LONE comment frame starts dragging, capture every node fully
+  // inside its bounds (+ their start positions) so they move with it. Guarding on a single dragged
+  // node avoids fighting a multi-select drag (where React Flow already moves the whole selection).
+  const onNodeDragStart = useCallback((_: unknown, node: Node, dragged: Node[]) => {
+    if (node.type !== 'comment' || dragged.length !== 1) { commentDrag.current = null; return }
+    const cx = node.position.x, cy = node.position.y
+    const cw = node.width ?? node.measured?.width ?? 0
+    const ch = node.height ?? node.measured?.height ?? 0
+    const captured = nodesRef.current
+      .filter(n => n.id !== node.id)
+      .filter(n => {
+        const nw = n.measured?.width ?? n.width ?? 0
+        const nh = n.measured?.height ?? n.height ?? 0
+        return n.position.x >= cx && n.position.y >= cy
+          && n.position.x + nw <= cx + cw && n.position.y + nh <= cy + ch
+      })
+      .map(n => ({ id: n.id, x: n.position.x, y: n.position.y }))
+    commentDrag.current = { startX: cx, startY: cy, captured }
+  }, [])
+
+  const onNodeDrag = useCallback((_: unknown, node: Node) => {
+    const cap = commentDrag.current
+    if (!cap || node.type !== 'comment' || cap.captured.length === 0) return
+    const dx = node.position.x - cap.startX, dy = node.position.y - cap.startY
+    const byId = new Map(cap.captured.map(c => [c.id, c]))
+    setNodes(ns => ns.map(n => {
+      const c = byId.get(n.id)
+      return c ? { ...n, position: { x: c.x + dx, y: c.y + dy } } : n
+    }))
+  }, [])
+
+  const onNodeDragStop = useCallback(() => { commentDrag.current = null }, [])
+
   const onPaneMouseMove = useCallback((e: React.MouseEvent) => {
     lastPointer.current = { x: e.clientX, y: e.clientY }
   }, [])
 
   // Record where a right-button press started so onPaneContextMenu can tell a right-CLICK (open the
   // add menu) from a right-DRAG (pan the canvas — panOnDrag={[2]}), which also fires contextmenu.
-  const onPaneMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button === 2) rightDownPos.current = { x: e.clientX, y: e.clientY }
+  // Must be a document CAPTURE listener: React Flow handles the right-button mousedown for panning and
+  // stops it propagating, so a synthetic onMouseDown on the wrapper never fires.
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => { if (e.button === 2) rightDownPos.current = { x: e.clientX, y: e.clientY } }
+    document.addEventListener('mousedown', onDown, true)
+    return () => document.removeEventListener('mousedown', onDown, true)
   }, [])
 
   const onConnect = useCallback((conn: Connection) => {
@@ -338,10 +395,11 @@ function BlueprintEditorInner() {
       const existing = nodes.find(n => n.type === type)
       if (existing) { focusNode(existing.id); setPalette(null); return }
     }
-    const node: Node = { id: newId(), type, position: { x: palette.flowX, y: palette.flowY }, data: data ?? defaultData(type) }
+    const nodeData = data ?? defaultData(type)
+    const node: Node = { id: newId(), type, position: { x: palette.flowX, y: palette.flowY }, data: nodeData, ...nodeExtras(type, nodeData) }
     setNodes(n => [...n, node])
     setPalette(null)
-    // Open the inspector for configurable nodes (mode, compare); value/buff are static.
+    // Open the inspector for configurable nodes (mode, compare); value/buff/comment are static.
     if (type === 'mode' || type === 'op:compare') setSelectedId(node.id)
   }, [palette, nodes, focusNode])
 
@@ -374,6 +432,11 @@ function BlueprintEditorInner() {
   const displayEdges = useMemo(
     () => edges.map(e => chainEdgeIds.has(e.id) ? { ...e, className: 'is-chain' } : (e.className ? { ...e, className: undefined } : e)),
     [edges, chainEdgeIds])
+  // Layering: comments sit behind real nodes. Injected at render (non-negative z) rather than stored,
+  // and paired with elevateNodesOnSelect={false} so selecting a comment doesn't pop it in front.
+  const displayNodes = useMemo(
+    () => nodes.map(n => { const z = n.type === 'comment' ? 0 : 1; return n.zIndex === z ? n : { ...n, zIndex: z } }),
+    [nodes])
   const assignSet = useCallback((setId: number) => {
     const s = sets.find(x => x.id === setId)
     setNodes(prev => prev.map(n => n.id === selectedId
@@ -483,10 +546,11 @@ function BlueprintEditorInner() {
       </div>
 
       <div className="flex min-h-0 flex-1">
-        <div className="relative min-w-0 flex-1" onContextMenu={onPaneContextMenu} onMouseMove={onPaneMouseMove} onMouseDown={onPaneMouseDown}>
+        <div className="relative min-w-0 flex-1" onContextMenu={onPaneContextMenu} onMouseMove={onPaneMouseMove}>
           <ReactFlow
-            nodes={nodes} edges={displayEdges}
+            nodes={displayNodes} edges={displayEdges}
             nodeTypes={nodeTypes}
+            elevateNodesOnSelect={false}
             colorMode="dark"
             proOptions={{ hideAttribution: true }}
             deleteKeyCode={['Delete', 'Backspace']}
@@ -500,6 +564,7 @@ function BlueprintEditorInner() {
               return isValidConnection(st, conn.sourceHandle, tt, conn.targetHandle)
             }}
             onConnectStart={onConnectStart} onConnectEnd={onConnectEnd}
+            onNodeDragStart={onNodeDragStart} onNodeDrag={onNodeDrag} onNodeDragStop={onNodeDragStop}
             onNodeClick={(_, n) => setSelectedId(n.id)}
             onNodeContextMenu={onNodeContextMenu}
             onPaneClick={() => { setSelectedId(null); setPalette(null); setNodeMenu(null) }}

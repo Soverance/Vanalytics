@@ -10,6 +10,15 @@
   border-radius: 0.5rem;
 }
 
+/* After a box-select, React Flow draws a group bounding box around the selection — redundant with the
+   per-node gold ring, so hide it. Dragging any selected node still moves the whole group. (The
+   transient drag-rectangle, .react-flow__selection, already disappears on mouse release.) */
+.react-flow__nodesselection-rect { display: none; }
+
+/* Closed-fist cursor while panning (right-drag). Overrides base.css's .selection { cursor: pointer },
+   which otherwise wins by source order since we enable both selectionOnDrag and panOnDrag. */
+.react-flow__pane.dragging { cursor: grabbing; }
+
 /* UE convention: all wires white. */
 .react-flow__edge-path { stroke: #e5e7eb; stroke-width: 2; }
 

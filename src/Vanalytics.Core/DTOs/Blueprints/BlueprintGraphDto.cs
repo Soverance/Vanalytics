@@ -10,7 +10,7 @@ public class BlueprintGraphDto
 public class BlueprintNodeDto
 {
     public string Id { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;      // trigger:* | equip | mode | branch | cond:buff | cond:stat
+    public string Type { get; set; } = string.Empty;      // trigger:* | equip | mode | branch | value | buff | op:compare | op:and | op:or | op:not | comment
     public BlueprintPositionDto Position { get; set; } = new();
     public BlueprintNodeDataDto Data { get; set; } = new();
 }
@@ -57,6 +57,15 @@ public class BlueprintNodeDataDto
 
     /// <summary>On a `cond:stat` node: the numeric threshold (e.g. 25 for player.hpp &lt; 25).</summary>
     public int? Value { get; set; }
+
+    /// <summary>On a `comment` node: the free-text label (documentation only — never emitted to Lua).</summary>
+    public string? Text { get; set; }
+
+    /// <summary>On a `comment` node: the frame width in flow units (persisted so resize survives reload).</summary>
+    public double? Width { get; set; }
+
+    /// <summary>On a `comment` node: the frame height in flow units.</summary>
+    public double? Height { get; set; }
 }
 
 public class BlueprintEdgeDto

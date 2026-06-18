@@ -20,6 +20,7 @@ const STATIC_ITEMS: Item[] = [
   { key: 'op:not', type: 'op:not', label: 'NOT', group: 'Flow Control', color: '#a78bfa' },
   { key: 'op:compare', type: 'op:compare', label: 'Compare (≷)', group: 'Flow Control', color: '#f59e0b' },
   ...STAT_RESOURCES.map(r => ({ key: `value:${r.value}`, type: 'value' as const, label: r.label, group: 'Values', color: '#38bdf8', data: { resource: r.value } })),
+  { key: 'comment', type: 'comment', label: 'Comment', group: 'Annotation', color: '#e5e7eb' },
 ]
 
 const BUFF_ITEMS: Item[] = BUFFS.map(b => ({ key: `buff:${b.id}`, type: 'buff' as const, label: b.label, group: 'Buffs', color: '#34d399', data: { buffName: b.name } }))
