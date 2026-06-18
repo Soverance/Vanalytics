@@ -851,8 +851,12 @@ public class CharactersController : ControllerBase
                 DeserializeAugments(sl.AugmentsJson))).ToList()))
             .ToList();
 
+        var diagnostics = GearSwapCodeGenerator.Validate(graph, resolved);
+        if (diagnostics.Any(d => d.Severity == "error"))
+            return Ok(new GenerateBlueprintResponse { Lua = "", Diagnostics = diagnostics });
+
         var result = GearSwapCodeGenerator.Generate(graph, resolved);
-        return Ok(new GenerateBlueprintResponse { Lua = result.Lua, Warnings = result.Warnings });
+        return Ok(new GenerateBlueprintResponse { Lua = result.Lua, Diagnostics = diagnostics });
     }
 
     [HttpDelete("{id:guid}")]

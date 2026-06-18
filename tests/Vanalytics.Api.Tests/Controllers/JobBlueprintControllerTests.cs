@@ -160,7 +160,7 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         Assert.Contains("sets['TP Set'] = {", gen!.Lua);
         Assert.Contains("head=\"Adhemar Bonnet +1\",", gen.Lua);
         Assert.Contains("if new == 'Engaged' then equip(sets['TP Set'])", gen.Lua);
-        Assert.Empty(gen.Warnings);
+        Assert.Empty(gen.Diagnostics);
     }
 
     [Fact]
@@ -297,7 +297,7 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         Assert.Contains("sets['Accuracy'] = {", gen!.Lua);
         Assert.Contains("sets['TH Swap'] = {", gen.Lua);
         Assert.Contains("sets.TP['Treasure Hunter'] = set_combine(sets['Accuracy'], sets['TH Swap'])", gen.Lua);
-        Assert.Empty(gen.Warnings);
+        Assert.Empty(gen.Diagnostics);
     }
 
     [Fact]
@@ -344,7 +344,66 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         Assert.Contains("sets['TP'] = {", gen!.Lua);
         Assert.Contains("sets['SA Gloves'] = {", gen.Lua);
         Assert.Contains("if spell.english == 'Sneak Attack' then equip(set_combine(sets['TP'], sets['SA Gloves']))", gen.Lua);
-        Assert.Empty(gen.Warnings);
+        Assert.Empty(gen.Diagnostics);
+    }
+
+    [Fact]
+    public async Task Generate_with_validation_error_returns_empty_lua_and_error_diagnostic()
+    {
+        var (token, charId) = await SetupAsync("wf8e@test.com", "wf8e", "Wfeight");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Blueprint: status_change Engaged -> equip with NO gear set (an error)
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:status_change", Position = new() { X = 0, Y = 0 }, Data = new() },
+                new() { Id = "e", Type = "equip",                 Position = new() { X = 200, Y = 0 }, Data = new() },
+            ],
+            Edges =
+            [
+                new() { Id = "t-Engaged-e", Source = "t", SourceHandle = "Engaged", Target = "e", TargetHandle = "in" },
+            ],
+        };
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+
+        Assert.NotNull(gen);
+        Assert.Equal("", gen!.Lua);
+        Assert.Contains(gen.Diagnostics, d => d.Severity == "error" && d.NodeId == "e");
+    }
+
+    [Fact]
+    public async Task Generate_with_warning_only_returns_lua_and_warning_diagnostic()
+    {
+        var (token, charId) = await SetupAsync("wf8w@test.com", "wf8w", "Wfeightw");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Blueprint: status_change Engaged -> equip(set 999 that doesn't exist) -> warning, but still generates
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:status_change", Position = new() { X = 0, Y = 0 }, Data = new() },
+                new() { Id = "e", Type = "equip",                 Position = new() { X = 200, Y = 0 }, Data = new() { GearSetId = 999 } },
+            ],
+            Edges =
+            [
+                new() { Id = "t-Engaged-e", Source = "t", SourceHandle = "Engaged", Target = "e", TargetHandle = "in" },
+            ],
+        };
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+
+        Assert.NotNull(gen);
+        Assert.Contains("function get_sets()", gen!.Lua);   // still generated
+        Assert.Contains(gen.Diagnostics, d => d.Severity == "warning" && d.NodeId == "e");
+        Assert.DoesNotContain(gen.Diagnostics, d => d.Severity == "error");
     }
 
     [Fact]
