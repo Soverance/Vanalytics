@@ -423,14 +423,14 @@ public class JobBlueprintControllerTests : IAsyncLifetime
             .Content.ReadFromJsonAsync<GearSetDetailResponse>();
         var setId = set!.Id;
 
-        // Build the graph: trigger:status_change -[Idle]-> branch -[cond]<- cond:stat; branch -[true]-> equip
+        // Build the graph: trigger:status_change -[Idle]-> branch -[cond]<- op:compare; branch -[true]-> equip
         var graph = new BlueprintGraphDto
         {
             Nodes =
             [
                 new() { Id = "t", Type = "trigger:status_change", Position = new() { X = 0, Y = 0 }, Data = new() },
                 new() { Id = "b", Type = "branch",                Position = new() { X = 200, Y = 0 }, Data = new() },
-                new() { Id = "c", Type = "cond:stat",             Position = new() { X = 200, Y = 150 }, Data = new()
+                new() { Id = "c", Type = "op:compare",            Position = new() { X = 200, Y = 150 }, Data = new()
                     { Resource = "hpp", Op = "<", Value = 25 } },
                 new() { Id = "e", Type = "equip",                 Position = new() { X = 400, Y = 0 }, Data = new()
                     { GearSetId = setId } },
@@ -445,10 +445,10 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         var putResp = await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
         Assert.Equal(HttpStatusCode.OK, putResp.StatusCode);
 
-        // Round-trip: GET and assert that the cond:stat node survives with all its data fields.
+        // Round-trip: GET and assert that the op:compare node survives with all its data fields.
         var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
         Assert.NotNull(wf);
-        var condNode = Assert.Single(wf.Graph.Nodes, n => n.Type == "cond:stat");
+        var condNode = Assert.Single(wf.Graph.Nodes, n => n.Type == "op:compare");
         Assert.Equal("hpp", condNode.Data.Resource);
         Assert.Equal("<",   condNode.Data.Op);
         Assert.Equal(25,    condNode.Data.Value);
