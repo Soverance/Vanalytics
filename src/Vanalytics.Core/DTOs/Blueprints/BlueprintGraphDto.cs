@@ -44,18 +44,18 @@ public class BlueprintNodeDataDto
     /// (the base). Appended after the base in set_combine; the last entry wins. Empty/null = a plain equip.</summary>
     public List<long>? OverlaySetIds { get; set; }
 
-    /// <summary>On a `cond:buff` node: the buff's RAW en (e.g. "Sneak Attack", "doom"). Lowercased at
+    /// <summary>On a `buff` node: the buff's RAW en (e.g. "Sneak Attack", "doom"). Lowercased at
     /// codegen for the buffactive[...] key. Display uses the Title-Case label.</summary>
     public string? BuffName { get; set; }
 
-    /// <summary>On a `cond:stat` node: the player field to test — one of hp, hpp, mp, mpp, tp
-    /// (used verbatim as player.&lt;Resource&gt;).</summary>
+    /// <summary>On a `value` node, or an `op:compare` node's own (unwired) source: the player field to
+    /// test — one of hp, hpp, mp, mpp, tp (used verbatim as player.&lt;Resource&gt;).</summary>
     public string? Resource { get; set; }
 
-    /// <summary>On a `cond:stat` node: the Lua comparison operator, one of &lt; &lt;= &gt; &gt;= == ~=.</summary>
+    /// <summary>On an `op:compare` node: the Lua comparison operator, one of &lt; &lt;= &gt; &gt;= == ~=.</summary>
     public string? Op { get; set; }
 
-    /// <summary>On a `cond:stat` node: the numeric threshold (e.g. 25 for player.hpp &lt; 25).</summary>
+    /// <summary>On an `op:compare` node: the numeric threshold (e.g. 25 for player.hpp &lt; 25).</summary>
     public int? Value { get; set; }
 
     /// <summary>On a `comment` node: the free-text label (documentation only — never emitted to Lua).</summary>
