@@ -41,6 +41,7 @@ public static partial class GearSwapCodeGenerator
         CheckOrphans(ctx, diags);
         CheckEmpty(ctx, diags);
         CheckFullOverlay(ctx, diags);
+        CheckDeadTriggerPins(ctx, diags);
         return diags;
     }
 
@@ -207,4 +208,54 @@ public static partial class GearSwapCodeGenerator
         var ownResOk = !string.IsNullOrWhiteSpace(n.Data.Resource) && StatResources.Contains(n.Data.Resource!);
         return wiredOk || ownResOk;
     }
+
+    private static void CheckDeadTriggerPins(ValCtx ctx, List<Diagnostic> diags)
+    {
+        var errorNodeIds = diags.Where(d => d.Severity == "error" && d.NodeId is not null)
+                                .Select(d => d.NodeId!).ToHashSet();
+
+        foreach (var trig in ctx.Graph.Nodes.Where(n => Triggers.ContainsKey(n.Type)))
+        {
+            var pins = ctx.Graph.Edges.Where(e => e.Source == trig.Id)
+                          .Select(e => e.SourceHandle).Where(h => h is not null).Distinct();
+            foreach (var pin in pins)
+            {
+                var targets = ctx.Graph.Edges
+                    .Where(e => e.Source == trig.Id && e.SourceHandle == pin)
+                    .Select(e => e.Target).ToList();
+                if (targets.Count == 0) continue;
+
+                var subtree = new HashSet<string>();
+                void Walk(string id)
+                {
+                    if (!subtree.Add(id)) return;
+                    if (!ctx.ById.TryGetValue(id, out var n)) return;
+                    if (n.Type == "branch")
+                        foreach (var h in new[] { "true", "false" })
+                            foreach (var e in ctx.Graph.Edges.Where(e => e.Source == id && e.SourceHandle == h))
+                                Walk(e.Target);
+                }
+                foreach (var t in targets) Walk(t);
+
+                var producesOutput = subtree.Any(id => ctx.ById.TryGetValue(id, out var n) && ProducesOutput(ctx, n));
+                var hasSpecificError = subtree.Any(errorNodeIds.Contains);
+                if (!producesOutput && !hasSpecificError)
+                {
+                    var label = trig.Type.Replace("trigger:", "");
+                    diags.Add(Err($"The {label} '{pin}' branch is wired but produces nothing to equip.", trig.Id));
+                }
+            }
+        }
+    }
+
+    // A node that would contribute at least one equip to the generated file.
+    // For dead-pin purposes, an equip with any set ID assigned (even a deleted one) is "intended" to
+    // produce output — the deleted-set warning already covers that case specifically.
+    private static bool ProducesOutput(ValCtx ctx, BlueprintNodeDto n) => n.Type switch
+    {
+        "equip" => (n.Data.GearSetId is { } b && b != 0)
+                   || (n.Data.OverlaySetIds ?? []).Any(id => id != 0),
+        "mode"  => (n.Data.Members?.Count ?? 0) > 0,
+        _ => false,
+    };
 }

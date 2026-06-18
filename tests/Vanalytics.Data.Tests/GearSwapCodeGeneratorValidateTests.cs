@@ -236,4 +236,35 @@ public class GearSwapCodeGeneratorValidateTests
 
         Assert.Contains(diags, d => d.NodeId == "e" && d.Severity == "warning" && d.Message.Contains("override layer"));
     }
+
+    [Fact]
+    public void Trigger_pin_wired_only_to_zero_member_mode_is_a_dead_pin_error()
+    {
+        // status_change Engaged -> mode with no members (mode itself only warns; the pin produces nothing)
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ Node("t", "trigger:status_change"), Node("m", "mode", new() { ModeName = "TP", Members = [] }) ],
+            Edges = [ Edge("t", "Engaged", "m", "in") ],
+        };
+
+        var diags = GearSwapCodeGenerator.Validate(graph, []);
+
+        Assert.Contains(diags, d => d.NodeId == "t" && d.Severity == "error" && d.Message.Contains("produces nothing"));
+    }
+
+    [Fact]
+    public void Dead_pin_is_suppressed_when_a_specific_error_already_covers_the_subtree()
+    {
+        // status_change Engaged -> equip with no set: only the equip's specific error, no dead-pin error
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ Node("t", "trigger:status_change"), Node("e", "equip") ],
+            Edges = [ Edge("t", "Engaged", "e", "in") ],
+        };
+
+        var diags = GearSwapCodeGenerator.Validate(graph, []);
+
+        Assert.Contains(diags, d => d.NodeId == "e" && d.Severity == "error");
+        Assert.DoesNotContain(diags, d => d.NodeId == "t");   // no dead-pin error on the trigger
+    }
 }
