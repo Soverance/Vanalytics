@@ -30,4 +30,20 @@ public class GearSwapCodeGeneratorValidateTests
 
         Assert.Empty(diags);
     }
+
+    [Fact]
+    public void Equip_node_with_no_gear_set_is_an_error()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ Node("t", "trigger:status_change"), Node("e", "equip") ],   // no GearSetId
+            Edges = [ Edge("t", "Engaged", "e", "in") ],
+        };
+
+        var diags = GearSwapCodeGenerator.Validate(graph, []);
+
+        var d = Assert.Single(diags, x => x.NodeId == "e");
+        Assert.Equal("error", d.Severity);
+        Assert.Contains("gear set", d.Message);
+    }
 }

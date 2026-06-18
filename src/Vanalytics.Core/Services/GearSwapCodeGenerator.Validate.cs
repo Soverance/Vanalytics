@@ -33,8 +33,15 @@ public static partial class GearSwapCodeGenerator
         var ctx = new ValCtx(graph, byId, setsById, exec, cond);
 
         var diags = new List<Diagnostic>();
-        // Rule checks are added in later tasks.
+        CheckEquipNoSet(ctx, diags);
         return diags;
+    }
+
+    private static void CheckEquipNoSet(ValCtx ctx, List<Diagnostic> diags)
+    {
+        foreach (var n in ctx.Graph.Nodes.Where(n => n.Type == "equip" && ctx.ExecReachable.Contains(n.Id)))
+            if (n.Data.GearSetId is null && (n.Data.OverlaySetIds is null || n.Data.OverlaySetIds.Count == 0))
+                diags.Add(Err("Equip node has no gear set selected.", n.Id));
     }
 
     // exec = nodes reachable from any trigger pin via exec flow (equip/branch/mode); a branch expands
