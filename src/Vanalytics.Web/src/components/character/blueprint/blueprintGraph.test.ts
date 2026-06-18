@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, isConditionType, condFace, statResourceLabel, isValidConnection, isSingleTargetSource, connectedEdgeIds } from './blueprintGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, isConditionType, condFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -244,13 +244,40 @@ describe('condition helpers', () => {
     expect(isValidConnection('cond:buff', 'out', 'branch', 'cond')).toBe(true)
   })
 
-  it('collects the connected edge ids around a node (undirected)', () => {
+  it('collects only the upstream exec lineage of a node (directed, stops at triggers, skips cond + downstream)', () => {
     const edges = [
-      { id: 'e1', source: 'a', target: 'b' },
-      { id: 'e2', source: 'b', target: 'c' },
-      { id: 'e3', source: 'x', target: 'y' },
+      { id: 't-b', source: 'trig', target: 'branch', targetHandle: 'in' },     // trigger -> branch (exec)
+      { id: 'b-e', source: 'branch', target: 'equip', targetHandle: 'in' },     // branch -> selected leaf
+      { id: 'c-b', source: 'cond', target: 'branch', targetHandle: 'cond' },    // condition feeder (excluded)
+      { id: 'b-e2', source: 'branch', target: 'equip2', targetHandle: 'in' },   // sibling leaf (downstream, excluded)
+      { id: 'far', source: 'x', target: 'y', targetHandle: 'in' },              // unrelated component
     ]
-    expect(connectedEdgeIds(edges, 'a')).toEqual(new Set(['e1', 'e2']))
-    expect(connectedEdgeIds(edges, 'y')).toEqual(new Set(['e3']))
+    // From the leaf: walk up through the branch to the trigger; skip the cond feeder, the sibling
+    // leaf, and the unrelated edge.
+    expect(upstreamChainEdgeIds(edges, 'equip')).toEqual(new Set(['b-e', 't-b']))
+    // A trigger has nothing upstream.
+    expect(upstreamChainEdgeIds(edges, 'trig')).toEqual(new Set())
+  })
+
+  it('dropDuplicateTriggers removes pasted triggers whose type already exists, plus their edges', () => {
+    const nodes = [
+      { id: 'p', type: 'trigger:precast' },   // duplicate -> dropped
+      { id: 'b', type: 'branch' },
+      { id: 'e', type: 'equip' },
+    ]
+    const edges = [
+      { source: 'p', target: 'b' },   // touches dropped 'p' -> dropped
+      { source: 'b', target: 'e' },   // survives
+    ]
+    const out = dropDuplicateTriggers(nodes, edges, new Set(['trigger:precast']))
+    expect(out.nodes.map(n => n.id)).toEqual(['b', 'e'])
+    expect(out.edges).toEqual([{ source: 'b', target: 'e' }])
+  })
+
+  it('dropDuplicateTriggers keeps a pasted trigger whose type is not yet on the canvas', () => {
+    const out = dropDuplicateTriggers(
+      [{ id: 'a', type: 'trigger:aftercast' }], [], new Set(['trigger:precast']))
+    expect(out.nodes.map(n => n.id)).toEqual(['a'])
+    expect(out.edges).toEqual([])
   })
 })

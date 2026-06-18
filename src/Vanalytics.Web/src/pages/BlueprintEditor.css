@@ -13,7 +13,7 @@
 /* UE convention: all wires white. */
 .react-flow__edge-path { stroke: #e5e7eb; stroke-width: 2; }
 
-/* Animated flow along the whole chain of the selected node. */
+/* Animated flow along the selected node's upstream exec lineage (back to its trigger origin). */
 .react-flow__edge.is-chain .react-flow__edge-path {
   stroke: #ffffff;
   stroke-dasharray: 6 4;

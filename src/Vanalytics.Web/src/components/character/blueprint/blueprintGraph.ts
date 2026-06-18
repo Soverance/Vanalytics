@@ -235,29 +235,49 @@ export function isSingleTargetSource(sourceType: string, sourceHandle: string | 
   return true
 }
 
-// All edge ids in the connected component containing nodeId (edges treated as undirected). Used to
-// animate the whole wiring chain when a node is selected.
-export function connectedEdgeIds(
-  edges: { id: string; source: string; target: string }[], nodeId: string,
+// Edge ids on the upstream execution lineage of nodeId: walk BACKWARD along exec wires
+// (target === current, skipping condition feeders where targetHandle === 'cond'), collecting each
+// edge and recursing into its source. The walk terminates naturally at triggers (no inbound edges)
+// and a visited-node set guards against cycles. Used to animate only the flow that leads INTO the
+// selected node — Unreal "tick" style — not the whole connected component.
+export function upstreamChainEdgeIds(
+  edges: { id: string; source: string; target: string; targetHandle?: string | null }[], nodeId: string,
 ): Set<string> {
-  const adj = new Map<string, { other: string; edgeId: string }[]>()
-  const link = (from: string, other: string, edgeId: string) => {
-    const list = adj.get(from) ?? []
-    list.push({ other, edgeId })
-    adj.set(from, list)
+  const incoming = new Map<string, { source: string; edgeId: string }[]>()
+  for (const e of edges) {
+    if (e.targetHandle === 'cond') continue   // condition feeders carry a boolean, not exec flow
+    const list = incoming.get(e.target) ?? []
+    list.push({ source: e.source, edgeId: e.id })
+    incoming.set(e.target, list)
   }
-  for (const e of edges) { link(e.source, e.target, e.id); link(e.target, e.source, e.id) }
   const out = new Set<string>()
   const seen = new Set<string>([nodeId])
   const stack = [nodeId]
   while (stack.length) {
     const n = stack.pop()!
-    for (const { other, edgeId } of adj.get(n) ?? []) {
+    for (const { source, edgeId } of incoming.get(n) ?? []) {
       out.add(edgeId)
-      if (!seen.has(other)) { seen.add(other); stack.push(other) }
+      if (!seen.has(source)) { seen.add(source); stack.push(source) }
     }
   }
   return out
+}
+
+// Drop pasted trigger nodes whose type is already present on the canvas — triggers are singletons
+// per type (each maps 1:1 to a Lua event function like precast/aftercast, so a duplicate would emit a
+// clashing `function precast(spell)` block). Edges touching a dropped node are removed too; the rest
+// of the pasted subgraph survives. `existingTriggerTypes` = trigger node types already on the canvas.
+export function dropDuplicateTriggers<
+  N extends { id: string; type: string },
+  E extends { source: string; target: string },
+>(nodes: N[], edges: E[], existingTriggerTypes: Set<string>): { nodes: N[]; edges: E[] } {
+  const removed = new Set<string>()
+  const kept = nodes.filter(n => {
+    if (n.type.startsWith('trigger:') && existingTriggerTypes.has(n.type)) { removed.add(n.id); return false }
+    return true
+  })
+  if (removed.size === 0) return { nodes, edges }
+  return { nodes: kept, edges: edges.filter(e => !removed.has(e.source) && !removed.has(e.target)) }
 }
 
 // ---- Copy/paste transforms (pure; the editor wires Ctrl-C/V to these) ----

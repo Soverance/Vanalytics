@@ -10,9 +10,9 @@ import './BlueprintEditor.css'
 import { ArrowLeft, Download, Trash2, Copy, ClipboardPaste } from 'lucide-react'
 import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
-import { wouldCreateCycle, isValidConnection, isSingleTargetSource, connectedEdgeIds } from '../components/character/blueprint/blueprintGraph'
+import { wouldCreateCycle, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
-import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, dropDuplicateTriggers, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
 import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
 import NodePalette from '../components/character/blueprint/NodePalette'
@@ -58,7 +58,7 @@ function BlueprintEditorInner() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [exportLua, setExportLua] = useState<{ lua: string; warnings: string[] } | null>(null)
   const hydrated = useRef(false)
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, getNode, setCenter, getZoom } = useReactFlow()
   const connectingFrom = useRef<{ nodeId: string; handleId: string } | null>(null)
   const [picker, setPicker] = useState<{ x: number; y: number; flowX: number; flowY: number; nodeId: string; handle: string; category: ActionCategory; allowGeneric: boolean } | null>(null)
   const [nodeMenu, setNodeMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null)
@@ -80,15 +80,32 @@ function BlueprintEditorInner() {
     return true
   }, [])
 
+  // Pan/zoom to center a node and give it the sole selection (gold ring). Used when a user tries to
+  // place a second trigger of a type that already exists — we navigate to the existing one instead.
+  const focusNode = useCallback((nodeId: string) => {
+    const n = getNode(nodeId)
+    if (n) {
+      const w = n.measured?.width ?? 220
+      const h = n.measured?.height ?? 90
+      setCenter(n.position.x + w / 2, n.position.y + h / 2, { zoom: getZoom(), duration: 400 })
+    }
+    setNodes(prev => prev.map(x => ({ ...x, selected: x.id === nodeId })))
+    setSelectedId(nodeId)
+  }, [getNode, setCenter, getZoom])
+
   // Paste the clipboard so its top-left anchor lands at the given screen pointer. Returns false if
-  // nothing to paste / no pointer. Pasted nodes replace the current selection.
+  // nothing to paste / no pointer. Pasted nodes replace the current selection. Trigger nodes whose
+  // type already exists are dropped (triggers are singletons per type — see dropDuplicateTriggers).
   const pasteAt = useCallback((pointer: { x: number; y: number } | null): boolean => {
     const clip = clipboard.current
     if (!clip || clip.nodes.length === 0 || !pointer) return false
     const flow = screenToFlowPosition({ x: pointer.x, y: pointer.y })
     const anchor = clipboardAnchor(clip)
     const offset = { x: flow.x - anchor.x, y: flow.y - anchor.y }
-    const { nodes: nn, edges: ee } = pasteClone(clip, newId, offset)
+    const pasted = pasteClone(clip, newId, offset)
+    const existingTriggers = new Set(nodesRef.current.filter(n => n.type?.startsWith('trigger:')).map(n => n.type!))
+    const { nodes: nn, edges: ee } = dropDuplicateTriggers(pasted.nodes, pasted.edges, existingTriggers)
+    if (nn.length === 0) return false   // everything pasted was a duplicate trigger
     setNodes(prev => [...prev.map(n => ({ ...n, selected: false })), ...nn])
     setEdges(prev => [...prev, ...ee])
     setSelectedId(nn[0].id)
@@ -295,6 +312,13 @@ function BlueprintEditorInner() {
 
   const addNode = useCallback((type: BlueprintNodeType) => {
     if (!palette) return
+    // Triggers are singletons per type: each maps 1:1 to a Lua event function (precast/aftercast/…),
+    // so a second one would emit a duplicate `function precast(spell)` that silently overwrites the
+    // first. If one already exists, navigate to it instead of creating a duplicate.
+    if (type.startsWith('trigger:')) {
+      const existing = nodes.find(n => n.type === type)
+      if (existing) { focusNode(existing.id); setPalette(null); return }
+    }
     const node: Node = {
       id: newId(), type,
       position: { x: palette.flowX, y: palette.flowY },
@@ -311,7 +335,7 @@ function BlueprintEditorInner() {
     setNodes(n => [...n, node])
     setPalette(null)
     if (type === 'mode' || type === 'cond:buff' || type === 'cond:stat') setSelectedId(node.id)
-  }, [palette])
+  }, [palette, nodes, focusNode])
 
   // Unified menu pick: if the menu was opened by dragging a tether (palette.connect set), spawn the
   // chosen node AND auto-wire it to the dragged pin; otherwise create an unwired node (addNode).
@@ -342,7 +366,7 @@ function BlueprintEditorInner() {
 
   const selected = nodes.find(n => n.id === selectedId)
   const chainEdgeIds = useMemo(
-    () => (selectedId ? connectedEdgeIds(edges.map(e => ({ id: e.id, source: e.source, target: e.target })), selectedId) : new Set<string>()),
+    () => (selectedId ? upstreamChainEdgeIds(edges.map(e => ({ id: e.id, source: e.source, target: e.target, targetHandle: e.targetHandle })), selectedId) : new Set<string>()),
     [selectedId, edges])
   const displayEdges = useMemo(
     () => edges.map(e => chainEdgeIds.has(e.id) ? { ...e, className: 'is-chain' } : (e.className ? { ...e, className: undefined } : e)),
