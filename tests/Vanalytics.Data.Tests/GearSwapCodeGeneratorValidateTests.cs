@@ -126,4 +126,23 @@ public class GearSwapCodeGeneratorValidateTests
         var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "TP")]);
         Assert.Empty(diags);
     }
+
+    [Fact]
+    public void Not_node_missing_input_is_an_error()
+    {
+        var graph = BranchWithCond(Node("c", "op:not"));   // nothing wired to 'in'
+        var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "TP")]);
+        Assert.Contains(diags, d => d.NodeId == "c" && d.Severity == "error" && d.Message.Contains("input"));
+    }
+
+    [Fact]
+    public void Comparison_with_valid_wired_value_input_is_valid()
+    {
+        // op:compare with Op/Value but NO own Resource; a 'value' node (Resource hpp) wired to its 'in'
+        var graph = BranchWithCond(Node("c", "op:compare", new() { Op = "<", Value = 25 }),
+                                   Node("v", "value", new() { Resource = "hpp" }));
+        graph.Edges.Add(Edge("v", "out", "c", "in"));
+        var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "TP")]);
+        Assert.Empty(diags);
+    }
 }
