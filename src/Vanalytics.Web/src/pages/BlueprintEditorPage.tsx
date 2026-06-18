@@ -27,8 +27,9 @@ import OperatorNode from '../components/character/blueprint/OperatorNode'
 import CommentNode from '../components/character/blueprint/CommentNode'
 import CompareInspector from '../components/character/blueprint/CompareInspector'
 import GearSetExportModal from '../components/character/GearSetExportModal'
+import ValidationResultsPanel from '../components/character/blueprint/ValidationResultsPanel'
 import type {
-  CharacterDetail, GearSetSummary, BlueprintGraph, BlueprintNodeType,
+  CharacterDetail, GearSetSummary, BlueprintGraph, BlueprintNodeType, Diagnostic,
 } from '../types/api'
 
 const nodeTypes = {
@@ -84,6 +85,7 @@ function BlueprintEditorInner() {
   const [palette, setPalette] = useState<{ x: number; y: number; flowX: number; flowY: number; connect?: { nodeId: string; handle: string } } | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [exportLua, setExportLua] = useState<{ lua: string; warnings: string[] } | null>(null)
+  const [validation, setValidation] = useState<Diagnostic[] | null>(null)
   const hydrated = useRef(false)
   const { screenToFlowPosition, getNode, setCenter, getZoom } = useReactFlow()
   const connectingFrom = useRef<{ nodeId: string; handleId: string } | null>(null)
@@ -513,7 +515,13 @@ function BlueprintEditorInner() {
   const onGenerate = useCallback(async () => {
     await save(toGraph())
     const result = await generate()
-    setExportLua(result)
+    if (result.diagnostics.some(d => d.severity === 'error')) {
+      setValidation(result.diagnostics)   // open results panel; do NOT open export
+      setExportLua(null)
+    } else {
+      setValidation(null)
+      setExportLua({ lua: result.lua, warnings: result.diagnostics.map(d => d.message) })
+    }
   }, [save, toGraph, generate])
 
   const fileName = useMemo(() => `${job}.lua`, [job])
@@ -546,6 +554,7 @@ function BlueprintEditorInner() {
       </div>
 
       <div className="flex min-h-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
         <div className="relative min-w-0 flex-1" onContextMenu={onPaneContextMenu} onMouseMove={onPaneMouseMove}>
           <ReactFlow
             nodes={displayNodes} edges={displayEdges}
@@ -616,6 +625,14 @@ function BlueprintEditorInner() {
                 </button>
               </div>
             </>
+          )}
+        </div>
+          {validation && (
+            <ValidationResultsPanel
+              diagnostics={validation}
+              onJump={focusNode}
+              onClose={() => setValidation(null)}
+            />
           )}
         </div>
         {selected?.type === 'equip' && (
