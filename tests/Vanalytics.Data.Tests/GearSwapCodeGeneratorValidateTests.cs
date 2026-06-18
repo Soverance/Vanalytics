@@ -145,4 +145,33 @@ public class GearSwapCodeGeneratorValidateTests
         var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "TP")]);
         Assert.Empty(diags);
     }
+
+    [Fact]
+    public void Deleted_gear_set_reference_is_a_warning()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ Node("t", "trigger:status_change"), Node("e", "equip", new() { GearSetId = 999 }) ],
+            Edges = [ Edge("t", "Engaged", "e", "in") ],
+        };
+
+        var diags = GearSwapCodeGenerator.Validate(graph, []);   // set 999 not provided
+
+        Assert.Contains(diags, d => d.NodeId == "e" && d.Severity == "warning" && d.Message.Contains("no longer exists"));
+        Assert.DoesNotContain(diags, d => d.Severity == "error");   // GearSetId is set -> not a "no set" error
+    }
+
+    [Fact]
+    public void Mode_with_zero_members_is_a_warning()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ Node("m", "mode", new() { ModeName = "TP", Members = [] }) ],
+            Edges = [],
+        };
+
+        var diags = GearSwapCodeGenerator.Validate(graph, []);
+
+        Assert.Contains(diags, d => d.NodeId == "m" && d.Severity == "warning" && d.Message.Contains("member"));
+    }
 }

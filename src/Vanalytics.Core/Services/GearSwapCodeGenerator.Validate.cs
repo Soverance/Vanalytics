@@ -36,6 +36,8 @@ public static partial class GearSwapCodeGenerator
         CheckEquipNoSet(ctx, diags);
         CheckBranches(ctx, diags);
         CheckConditions(ctx, diags);
+        CheckDeletedSets(ctx, diags);
+        CheckZeroMemberModes(ctx, diags);
         return diags;
     }
 
@@ -124,6 +126,32 @@ public static partial class GearSwapCodeGenerator
 
     private static bool HasInput(ValCtx ctx, string nodeId, string handle) =>
         ctx.Graph.Edges.Any(e => e.Target == nodeId && e.TargetHandle == handle);
+
+    private static void CheckDeletedSets(ValCtx ctx, List<Diagnostic> diags)
+    {
+        // id != 0 (0 = unset base, handled by the no-set error) and absent from the resolved sets.
+        bool Missing(long? id) => id is { } v && v != 0 && !ctx.SetsById.ContainsKey(v);
+
+        foreach (var n in ctx.Graph.Nodes)
+        {
+            IEnumerable<long?> refs = n.Type switch
+            {
+                "equip" => new[] { n.Data.GearSetId }.Concat((n.Data.OverlaySetIds ?? []).Select(x => (long?)x)),
+                "mode"  => (n.Data.Members ?? []).SelectMany(m =>
+                               new[] { (long?)m.GearSetId }.Concat((m.OverlaySetIds ?? []).Select(x => (long?)x))),
+                _ => Array.Empty<long?>(),
+            };
+            if (refs.Any(Missing))
+                diags.Add(Warn("References a gear set that no longer exists; that step will be skipped.", n.Id));
+        }
+    }
+
+    private static void CheckZeroMemberModes(ValCtx ctx, List<Diagnostic> diags)
+    {
+        foreach (var n in ctx.Graph.Nodes.Where(n => n.Type == "mode"))
+            if ((n.Data.Members?.Count ?? 0) == 0)
+                diags.Add(Warn("Mode has no member sets; it will not appear in the file.", n.Id));
+    }
 
     // Mirrors the op:compare null-conditions in Conditions.cs (BoolExpr + NumExpr).
     private static bool IsCompareComplete(ValCtx ctx, BlueprintNodeDto n)
