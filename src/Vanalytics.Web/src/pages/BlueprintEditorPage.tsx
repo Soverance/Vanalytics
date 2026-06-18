@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ReactFlow, Background, Controls, addEdge, applyNodeChanges, applyEdgeChanges,
-  useReactFlow, ReactFlowProvider,
+  useReactFlow, ReactFlowProvider, SelectionMode,
   type Node, type Edge, type Connection, type NodeChange, type EdgeChange,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -82,6 +82,7 @@ function BlueprintEditorInner() {
   const [hasClip, setHasClip] = useState(false)
   const clipboard = useRef<Clipboard | null>(null)
   const lastPointer = useRef<{ x: number; y: number } | null>(null)
+  const rightDownPos = useRef<{ x: number; y: number } | null>(null)
   const nodesRef = useRef(nodes); nodesRef.current = nodes
   const edgesRef = useRef(edges); edgesRef.current = edges
 
@@ -223,6 +224,12 @@ function BlueprintEditorInner() {
     lastPointer.current = { x: e.clientX, y: e.clientY }
   }, [])
 
+  // Record where a right-button press started so onPaneContextMenu can tell a right-CLICK (open the
+  // add menu) from a right-DRAG (pan the canvas — panOnDrag={[2]}), which also fires contextmenu.
+  const onPaneMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button === 2) rightDownPos.current = { x: e.clientX, y: e.clientY }
+  }, [])
+
   const onConnect = useCallback((conn: Connection) => {
     if (wouldCreateCycle(edges.map(e => ({ id: e.id, source: e.source, target: e.target })), conn.source!, conn.target!)) return
     const sourceType = nodes.find(n => n.id === conn.source)?.type ?? ''
@@ -305,8 +312,14 @@ function BlueprintEditorInner() {
 
   const onPaneContextMenu = useCallback((e: React.MouseEvent | MouseEvent) => {
     e.preventDefault()
-    lastPointer.current = { x: (e as React.MouseEvent).clientX, y: (e as React.MouseEvent).clientY }
     const me = e as React.MouseEvent
+    // A right-DRAG pans the canvas (panOnDrag={[2]}) but the browser still fires contextmenu on the
+    // drag-end mouseup. If the pointer moved since the right-press it was a pan, not a click — skip
+    // the menu (but still preventDefault, so no native browser menu either).
+    const down = rightDownPos.current
+    rightDownPos.current = null
+    if (down && Math.hypot(me.clientX - down.x, me.clientY - down.y) > 5) return
+    lastPointer.current = { x: me.clientX, y: me.clientY }
     // Position the palette relative to the canvas container (not the viewport) so it lands at
     // the cursor now that the editor renders inside the app's sidebar + padded content area.
     const rect = (me.currentTarget as HTMLElement).getBoundingClientRect()
@@ -462,7 +475,7 @@ function BlueprintEditorInner() {
           <ArrowLeft className="h-4 w-4" /> Back to character
         </button>
         <span className="font-bold">{character?.name ?? '…'} · <span className="text-amber-300">{job}</span> Blueprint</span>
-        <span className="ml-auto text-[10px] text-gray-500">right-click canvas to add · Del (or right-click a node) to remove · autosaves</span>
+        <span className="ml-auto text-[10px] text-gray-500">right-click to add · drag to box-select · right-drag to pan · Del to remove · autosaves</span>
         <button onClick={onGenerate}
           className="flex items-center gap-1.5 rounded border border-amber-700/40 bg-indigo-900/50 px-3 py-1.5 text-xs text-amber-200">
           <Download className="h-3.5 w-3.5" /> Generate GearSwap file
@@ -470,13 +483,16 @@ function BlueprintEditorInner() {
       </div>
 
       <div className="flex min-h-0 flex-1">
-        <div className="relative min-w-0 flex-1" onContextMenu={onPaneContextMenu} onMouseMove={onPaneMouseMove}>
+        <div className="relative min-w-0 flex-1" onContextMenu={onPaneContextMenu} onMouseMove={onPaneMouseMove} onMouseDown={onPaneMouseDown}>
           <ReactFlow
             nodes={nodes} edges={displayEdges}
             nodeTypes={nodeTypes}
             colorMode="dark"
             proOptions={{ hideAttribution: true }}
             deleteKeyCode={['Delete', 'Backspace']}
+            panOnDrag={[2]}
+            selectionOnDrag
+            selectionMode={SelectionMode.Partial}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect}
             isValidConnection={(conn) => {
               const st = nodes.find(n => n.id === conn.source)?.type ?? ''
