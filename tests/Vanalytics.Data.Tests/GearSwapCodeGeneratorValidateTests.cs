@@ -207,6 +207,21 @@ public class GearSwapCodeGeneratorValidateTests
     }
 
     [Fact]
+    public void Zero_member_mode_does_not_also_warn_empty()
+    {
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ Node("m", "mode", new() { ModeName = "TP", Members = [] }) ],
+            Edges = [],
+        };
+
+        var diags = GearSwapCodeGenerator.Validate(graph, []);
+
+        Assert.Contains(diags, d => d.NodeId == "m" && d.Message.Contains("member"));
+        Assert.DoesNotContain(diags, d => d.Message.Contains("empty"));
+    }
+
+    [Fact]
     public void Full_set_used_as_overlay_is_a_warning()
     {
         // equip base set 1 (sparse) + overlay set 2 (full 16-slot)

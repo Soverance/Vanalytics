@@ -172,7 +172,8 @@ public static partial class GearSwapCodeGenerator
     {
         var anyTriggerWired = ctx.Graph.Edges.Any(e => Triggers.ContainsKey(NodeType(ctx.Graph, e.Source)));
         var hasNonEmptyMode = ctx.Graph.Nodes.Any(n => n.Type == "mode" && (n.Data.Members?.Count ?? 0) > 0);
-        if (ctx.Graph.Nodes.Count == 0 || (!anyTriggerWired && !hasNonEmptyMode))
+        // Only when no more-specific diagnostic already fired (CheckEmpty runs last).
+        if (diags.Count == 0 && (ctx.Graph.Nodes.Count == 0 || (!anyTriggerWired && !hasNonEmptyMode)))
             diags.Add(Warn("Blueprint is empty; a minimal file will be generated.", null));
     }
 
