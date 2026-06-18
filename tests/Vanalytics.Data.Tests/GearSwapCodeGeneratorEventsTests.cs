@@ -29,10 +29,11 @@ public class GearSwapCodeGeneratorEventsTests
         new() { Id = id, Type = "branch", Data = new() };
 
     private static BlueprintNodeDto CondBuff(string id, string buffName) =>
-        new() { Id = id, Type = "cond:buff", Data = new() { BuffName = buffName } };
+        new() { Id = id, Type = "buff", Data = new() { BuffName = buffName } };
 
+    // A single op:compare with an inline resource is the 1-node equivalent of the old cond:stat.
     private static BlueprintNodeDto CondStat(string id, string resource, string op, int value) =>
-        new() { Id = id, Type = "cond:stat", Data = new() { Resource = resource, Op = op, Value = value } };
+        new() { Id = id, Type = "op:compare", Data = new() { Resource = resource, Op = op, Value = value } };
 
     // Exec edge from a branch True/False (or any) out handle to a target's 'in'.
     private static BlueprintEdgeDto ExecEdge(string source, string handle, string target) =>

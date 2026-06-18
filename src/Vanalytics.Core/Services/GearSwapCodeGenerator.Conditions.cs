@@ -18,29 +18,80 @@ public static partial class GearSwapCodeGenerator
     private static string? ExecTargetOf(ExecCtx ctx, string sourceId, string handle) =>
         ctx.Graph.Edges.FirstOrDefault(e => e.Source == sourceId && e.SourceHandle == handle)?.Target;
 
-    // The boolean Lua expression for a branch node, read from the cond:* node wired into its 'cond'
-    // handle. Null if no condition is wired or its config is incomplete (branch then emits nothing).
+    // The boolean Lua expression feeding a branch's 'cond' handle, compiled from the node wired there
+    // (buff | op:compare | op:and/or/not). Null if nothing is wired or the expression is incomplete —
+    // the branch then emits nothing (EmitExec returns null).
     private static string? CondExprFor(ExecCtx ctx, string branchId)
     {
         var condId = ctx.Graph.Edges
             .FirstOrDefault(e => e.Target == branchId && e.TargetHandle == "cond")?.Source;
-        if (condId is null || !ctx.ById.TryGetValue(condId, out var cond)) return null;
-        switch (cond.Type)
+        return condId is null ? null : BoolExpr(ctx, condId, new HashSet<string>());
+    }
+
+    // Recursive boolean expression for a condition-subgraph node. `visited` is per-path (copied into
+    // each child) so cycles are caught while a node may still feed two operator inputs (DAG reuse).
+    private static string? BoolExpr(ExecCtx ctx, string nodeId, HashSet<string> visited)
+    {
+        if (!visited.Add(nodeId)) return null;
+        if (!ctx.ById.TryGetValue(nodeId, out var n)) return null;
+        switch (n.Type)
         {
-            case "cond:buff":
-                var name = cond.Data.BuffName;
+            case "buff":
+                var name = n.Data.BuffName;
                 if (string.IsNullOrWhiteSpace(name)) return null;
-                // buffactive keys are the lowercased en (refresh.lua convert_buff_list). See
-                // reference_gearswap_buff_representations.
+                // buffactive keys are the lowercased en. See reference_gearswap_buff_representations.
                 return $"buffactive[{GearSwapLua.Key(name.ToLowerInvariant())}]";
-            case "cond:stat":
-                if (string.IsNullOrWhiteSpace(cond.Data.Resource) ||
-                    string.IsNullOrWhiteSpace(cond.Data.Op) || cond.Data.Value is null) return null;
-                if (!StatResources.Contains(cond.Data.Resource) || !StatOps.Contains(cond.Data.Op)) return null;
-                return $"player.{cond.Data.Resource} {cond.Data.Op} {cond.Data.Value}";
+
+            case "op:compare":
+                if (string.IsNullOrWhiteSpace(n.Data.Op) || n.Data.Value is null
+                    || !StatOps.Contains(n.Data.Op)) return null;
+                var wired = ctx.Graph.Edges
+                    .FirstOrDefault(e => e.Target == nodeId && e.TargetHandle == "in")?.Source;
+                var valueExpr = wired is not null ? NumExpr(ctx, wired, new HashSet<string>(visited)) : null;
+                if (valueExpr is null)
+                {
+                    if (string.IsNullOrWhiteSpace(n.Data.Resource) || !StatResources.Contains(n.Data.Resource))
+                        return null;
+                    valueExpr = $"player.{n.Data.Resource}";
+                }
+                return $"{valueExpr} {n.Data.Op} {n.Data.Value}";
+
+            case "op:and":
+            case "op:or":
+                var a = InBool(ctx, nodeId, "a", visited);
+                var b = InBool(ctx, nodeId, "b", visited);
+                if (a is null || b is null) return null;
+                return $"({a} {(n.Type == "op:and" ? "and" : "or")} {b})";
+
+            case "op:not":
+                var x = InBool(ctx, nodeId, "in", visited);
+                return x is null ? null : $"(not {x})";
+
             default:
                 return null;
         }
+    }
+
+    // Boolean expression wired into (nodeId, handle), or null if nothing is wired there.
+    private static string? InBool(ExecCtx ctx, string nodeId, string handle, HashSet<string> visited)
+    {
+        var src = ctx.Graph.Edges
+            .FirstOrDefault(e => e.Target == nodeId && e.TargetHandle == handle)?.Source;
+        return src is null ? null : BoolExpr(ctx, src, new HashSet<string>(visited));
+    }
+
+    // Numeric Lua expression for a value-source node feeding op:compare's 'in'. Null if unknown/invalid.
+    private static string? NumExpr(ExecCtx ctx, string nodeId, HashSet<string> visited)
+    {
+        if (!visited.Add(nodeId)) return null;
+        if (!ctx.ById.TryGetValue(nodeId, out var n)) return null;
+        if (n.Type == "value")
+        {
+            if (string.IsNullOrWhiteSpace(n.Data.Resource) || !StatResources.Contains(n.Data.Resource))
+                return null;
+            return $"player.{n.Data.Resource}";
+        }
+        return null;
     }
 
     // Recursively emits the exec flow at <targetId> as indented Lua statements (4*indent leading

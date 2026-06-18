@@ -70,7 +70,7 @@ public class GearSwapCodeGeneratorGenerateTests
             [
                 new() { Id="t", Type="trigger:status_change" },
                 new() { Id="b", Type="branch" },
-                new() { Id="c", Type="cond:stat", Data=new(){ Resource="hpp", Op="<", Value=25 } },
+                new() { Id="c", Type="op:compare", Data=new(){ Resource="hpp", Op="<", Value=25 } },
                 new() { Id="e", Type="equip", Data=new(){ GearSetId=42 } },
             ],
             Edges =
@@ -102,8 +102,8 @@ public class GearSwapCodeGeneratorGenerateTests
             Nodes =
             [
                 new() { Id="t", Type="trigger:precast" },
-                new() { Id="bSA", Type="branch" }, new() { Id="cSA", Type="cond:buff", Data=new(){ BuffName="Sneak Attack" } },
-                new() { Id="bTA", Type="branch" }, new() { Id="cTA", Type="cond:buff", Data=new(){ BuffName="Trick Attack" } },
+                new() { Id="bSA", Type="branch" }, new() { Id="cSA", Type="buff", Data=new(){ BuffName="Sneak Attack" } },
+                new() { Id="bTA", Type="branch" }, new() { Id="cTA", Type="buff", Data=new(){ BuffName="Trick Attack" } },
                 new() { Id="eSATA", Type="equip", Data=new(){ GearSetId=1 } },
                 new() { Id="eSA",   Type="equip", Data=new(){ GearSetId=2 } },
                 new() { Id="eDef",  Type="equip", Data=new(){ GearSetId=3 } },
