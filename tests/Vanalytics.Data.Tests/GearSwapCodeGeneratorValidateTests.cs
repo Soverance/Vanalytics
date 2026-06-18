@@ -174,4 +174,51 @@ public class GearSwapCodeGeneratorValidateTests
 
         Assert.Contains(diags, d => d.NodeId == "m" && d.Severity == "warning" && d.Message.Contains("member"));
     }
+
+    private static ResolvedGearSet Set16(long id, string name)
+    {
+        string[] grids = ["Main","Sub","Range","Ammo","Head","Neck","Ear1","Ear2",
+                          "Body","Hands","Ring1","Ring2","Back","Waist","Legs","Feet"];
+        var slots = grids.Select((g, i) => new ResolvedSlot(g, 100 + i, $"Item{i}", [])).ToList();
+        return new ResolvedGearSet(id, name, slots);
+    }
+
+    [Fact]
+    public void Orphan_node_is_a_warning()
+    {
+        // a buff node connected to nothing
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ Node("t", "trigger:status_change"), Node("e", "equip", new() { GearSetId = 1 }),
+                      Node("orphan", "buff", new() { BuffName = "Haste" }) ],
+            Edges = [ Edge("t", "Engaged", "e", "in") ],
+        };
+
+        var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "TP")]);
+
+        Assert.Contains(diags, d => d.NodeId == "orphan" && d.Severity == "warning" && d.Message.Contains("isn't connected"));
+    }
+
+    [Fact]
+    public void Empty_blueprint_is_a_warning()
+    {
+        var diags = GearSwapCodeGenerator.Validate(new BlueprintGraphDto(), []);
+        Assert.Contains(diags, d => d.NodeId == null && d.Severity == "warning" && d.Message.Contains("empty"));
+    }
+
+    [Fact]
+    public void Full_set_used_as_overlay_is_a_warning()
+    {
+        // equip base set 1 (sparse) + overlay set 2 (full 16-slot)
+        var graph = new BlueprintGraphDto
+        {
+            Nodes = [ Node("t", "trigger:status_change"),
+                      Node("e", "equip", new() { GearSetId = 1, OverlaySetIds = [2] }) ],
+            Edges = [ Edge("t", "Engaged", "e", "in") ],
+        };
+
+        var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "Base"), Set16(2, "Full")]);
+
+        Assert.Contains(diags, d => d.NodeId == "e" && d.Severity == "warning" && d.Message.Contains("override layer"));
+    }
 }

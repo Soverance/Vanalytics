@@ -38,6 +38,9 @@ public static partial class GearSwapCodeGenerator
         CheckConditions(ctx, diags);
         CheckDeletedSets(ctx, diags);
         CheckZeroMemberModes(ctx, diags);
+        CheckOrphans(ctx, diags);
+        CheckEmpty(ctx, diags);
+        CheckFullOverlay(ctx, diags);
         return diags;
     }
 
@@ -151,6 +154,44 @@ public static partial class GearSwapCodeGenerator
         foreach (var n in ctx.Graph.Nodes.Where(n => n.Type == "mode"))
             if ((n.Data.Members?.Count ?? 0) == 0)
                 diags.Add(Warn("Mode has no member sets; it will not appear in the file.", n.Id));
+    }
+
+    private static void CheckOrphans(ValCtx ctx, List<Diagnostic> diags)
+    {
+        foreach (var n in ctx.Graph.Nodes)
+        {
+            if (n.Type.StartsWith("trigger:")) continue;   // triggers are roots
+            if (n.Type == "comment") continue;             // documentation only
+            if (n.Type == "mode") continue;                // cycle-only modes are intentionally unwired
+            if (ctx.ExecReachable.Contains(n.Id) || ctx.CondReachable.Contains(n.Id)) continue;
+            diags.Add(Warn("This node isn't connected to anything that runs; it will be ignored.", n.Id));
+        }
+    }
+
+    private static void CheckEmpty(ValCtx ctx, List<Diagnostic> diags)
+    {
+        var anyTriggerWired = ctx.Graph.Edges.Any(e => Triggers.ContainsKey(NodeType(ctx.Graph, e.Source)));
+        var hasNonEmptyMode = ctx.Graph.Nodes.Any(n => n.Type == "mode" && (n.Data.Members?.Count ?? 0) > 0);
+        if (ctx.Graph.Nodes.Count == 0 || (!anyTriggerWired && !hasNonEmptyMode))
+            diags.Add(Warn("Blueprint is empty; a minimal file will be generated.", null));
+    }
+
+    private static void CheckFullOverlay(ValCtx ctx, List<Diagnostic> diags)
+    {
+        bool IsFull(long id) => ctx.SetsById.TryGetValue(id, out var s)
+            && s.Slots.Count(sl => sl.ItemId != 0 && !string.IsNullOrEmpty(sl.ItemName)) == 16;
+
+        foreach (var n in ctx.Graph.Nodes)
+        {
+            IEnumerable<long> overlays = n.Type switch
+            {
+                "equip" => n.Data.OverlaySetIds ?? Enumerable.Empty<long>(),
+                "mode"  => (n.Data.Members ?? []).SelectMany(m => m.OverlaySetIds ?? Enumerable.Empty<long>()),
+                _ => Enumerable.Empty<long>(),
+            };
+            if (overlays.Any(IsFull))
+                diags.Add(Warn("A full 16-slot gear set is used as an override layer; it will mask the layers beneath it.", n.Id));
+        }
     }
 
     // Mirrors the op:compare null-conditions in Conditions.cs (BoolExpr + NumExpr).
