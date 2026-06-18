@@ -1206,7 +1206,13 @@ export interface BlueprintResponse {
   updatedAt: string | null
 }
 
+export interface Diagnostic {
+  severity: 'error' | 'warning'
+  message: string
+  nodeId: string | null
+}
+
 export interface GenerateBlueprintResponse {
   lua: string
-  warnings: string[]
+  diagnostics: Diagnostic[]
 }
