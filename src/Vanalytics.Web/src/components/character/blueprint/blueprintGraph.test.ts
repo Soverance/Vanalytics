@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, isConditionType, condFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers, handleType, handleInfo } from './blueprintGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, isConditionType, condFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers, handleType, handleInfo, menuCandidateValid } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -222,13 +222,25 @@ describe('condition helpers', () => {
     expect(isValidConnection('cond:buff', 'out', 'branch', 'in')).toBe(false)
   })
 
-  it('validates exec wires from trigger/branch into branch|equip|mode', () => {
+  it('validates exec wires by type; category pins reach only Equip', () => {
+    // terminal exec pins reach branch | equip | mode
     expect(isValidConnection('trigger:status_change', 'Idle', 'branch', 'in')).toBe(true)
     expect(isValidConnection('trigger:status_change', 'Idle', 'mode', 'in')).toBe(true)
-    expect(isValidConnection('trigger:precast', 'WeaponSkill', 'branch', 'in')).toBe(true)
-    expect(isValidConnection('trigger:precast', 'WeaponSkill', 'mode', 'in')).toBe(false)
+    expect(isValidConnection('trigger:status_change', 'Engaged', 'equip', 'in')).toBe(true)
     expect(isValidConnection('branch', 'true', 'equip', 'in')).toBe(true)
     expect(isValidConnection('branch', 'false', 'branch', 'in')).toBe(true)
+    // category pins (precast WS/Magic, buff Gained/Lost) reach ONLY equip — branch/mode would
+    // discard the per-action dispatch
+    expect(isValidConnection('trigger:precast', 'WeaponSkill', 'equip', 'in')).toBe(true)
+    expect(isValidConnection('trigger:precast', 'WeaponSkill', 'branch', 'in')).toBe(false)
+    expect(isValidConnection('trigger:precast', 'WeaponSkill', 'mode', 'in')).toBe(false)
+    expect(isValidConnection('trigger:buff_change', 'Gained', 'branch', 'in')).toBe(false)
+  })
+
+  it('rejects cross-type wires', () => {
+    expect(isValidConnection('cond:buff', 'out', 'equip', 'in')).toBe(false)        // bool -> exec
+    expect(isValidConnection('trigger:precast', 'Magic', 'branch', 'cond')).toBe(false) // exec -> bool
+    expect(isValidConnection('branch', 'true', 'branch', 'cond')).toBe(false)        // exec -> bool
   })
 
   it('knows which sources are single-target', () => {
@@ -306,5 +318,34 @@ describe('handle type inventory', () => {
     expect(handleInfo('branch', 'cond')).toEqual({ id: 'cond', type: 'bool', dir: 'in' })
     expect(handleInfo('branch', 'true')).toEqual({ id: 'true', type: 'exec', dir: 'out' })
     expect(handleInfo('trigger:precast', 'Magic')).toEqual({ id: 'Magic', type: 'exec', dir: 'out' })
+  })
+})
+
+describe('menuCandidateValid (context-sensitive menu)', () => {
+  it('terminal exec pin offers branch/equip/mode', () => {
+    expect(menuCandidateValid('trigger:status_change', 'Engaged', 'branch')).toBe(true)
+    expect(menuCandidateValid('trigger:status_change', 'Engaged', 'equip')).toBe(true)
+    expect(menuCandidateValid('trigger:status_change', 'Engaged', 'mode')).toBe(true)
+    expect(menuCandidateValid('trigger:status_change', 'Engaged', 'cond:buff')).toBe(false)
+  })
+
+  it('category pin offers only equip', () => {
+    expect(menuCandidateValid('trigger:precast', 'Magic', 'equip')).toBe(true)
+    expect(menuCandidateValid('trigger:precast', 'Magic', 'branch')).toBe(false)
+    expect(menuCandidateValid('trigger:precast', 'Magic', 'mode')).toBe(false)
+    expect(menuCandidateValid('trigger:buff_change', 'Gained', 'branch')).toBe(false)
+  })
+
+  it('dragging from a branch cond input offers condition nodes', () => {
+    expect(menuCandidateValid('branch', 'cond', 'cond:buff')).toBe(true)
+    expect(menuCandidateValid('branch', 'cond', 'cond:stat')).toBe(true)
+    expect(menuCandidateValid('branch', 'cond', 'equip')).toBe(false)
+    expect(menuCandidateValid('branch', 'cond', 'branch')).toBe(false)
+  })
+
+  it('dragging from a condition out offers a branch', () => {
+    expect(menuCandidateValid('cond:buff', 'out', 'branch')).toBe(true)
+    expect(menuCandidateValid('cond:buff', 'out', 'equip')).toBe(false)
+    expect(menuCandidateValid('cond:buff', 'out', 'mode')).toBe(false)
   })
 })

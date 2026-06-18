@@ -240,27 +240,35 @@ export function condFace(
   return ''
 }
 
-// May a connection (sourceType.sourceHandle -> targetType.targetHandle) exist? Two wire kinds:
-//  - condition wire: target handle 'cond' accepts only a cond:* node's 'out'.
-//  - exec wire: target handle 'in' accepts a trigger pin or a branch true/false; target is
-//    branch|equip|mode. A category trigger pin may not target a mode (existing rule).
+// May a connection (sourceType.sourceHandle -> targetType.targetHandle) exist? Both endpoints must
+// carry the same handle value type (exec/bool/num). One domain rule on top: category trigger pins
+// (precast WS/JA/Magic, midcast Magic, buff Gained/Lost) dispatch on action name, so they reach only
+// an action-bound Equip leaf — a Branch or Mode would silently discard the dispatch. Terminal pins
+// (exec, no category) still reach branch | equip | mode.
 export function isValidConnection(
   sourceType: string, sourceHandle: string | null | undefined,
   targetType: string, targetHandle: string | null | undefined,
 ): boolean {
-  if (targetHandle === 'cond')
-    return isConditionType(sourceType) && sourceHandle === 'out' && targetType === 'branch'
+  const s = handleType(sourceType, sourceHandle)
+  const t = handleType(targetType, targetHandle)
+  if (s === null || t === null || s !== t) return false
+  if (sourceType.startsWith('trigger:') && categoryOfHandle(sourceType, sourceHandle ?? '') !== null
+      && targetType !== 'equip') return false
+  return true
+}
 
-  // exec wire (target 'in', or unspecified)
-  if (isConditionType(sourceType)) return false  // a boolean value can't drive exec flow
-  const execTarget = targetType === 'branch' || targetType === 'equip' || targetType === 'mode'
-  if (sourceType.startsWith('trigger:')) {
-    const isCategory = categoryOfHandle(sourceType, sourceHandle ?? '') !== null
-    if (targetType === 'mode' && isCategory) return false
-    return execTarget
-  }
-  if (sourceType === 'branch') return execTarget  // true/false outs
-  return false
+// Can a freshly-created `candidateType` node be wired to a tether dragged from (fromType, fromHandle)?
+// It must expose a handle of the same value type and opposite direction, then pass isValidConnection
+// (so the category-pin → Equip-only rule applies in the menu too). Drives context-sensitive filtering.
+export function menuCandidateValid(fromType: string, fromHandle: string, candidateType: string): boolean {
+  const from = handleInfo(fromType, fromHandle)
+  if (!from) return false
+  const wantDir = from.dir === 'out' ? 'in' : 'out'
+  const cand = handlesOf(candidateType).find(h => h.type === from.type && h.dir === wantDir)
+  if (!cand) return false
+  return from.dir === 'out'
+    ? isValidConnection(fromType, fromHandle, candidateType, cand.id)
+    : isValidConnection(candidateType, cand.id, fromType, fromHandle)
 }
 
 // Exec outputs that hold a single target (rewire replaces): trigger terminal pins and branch

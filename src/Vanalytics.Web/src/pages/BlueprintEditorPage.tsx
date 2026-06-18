@@ -12,7 +12,7 @@ import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
 import { wouldCreateCycle, isValidConnection, isSingleTargetSource, isConditionType, upstreamChainEdgeIds } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
-import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, dropDuplicateTriggers, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, dropDuplicateTriggers, menuCandidateValid, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
 import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
 import NodePalette from '../components/character/blueprint/NodePalette'
@@ -473,16 +473,13 @@ function BlueprintEditorInner() {
 
   // Which palette items are offered: right-click (no connect) shows everything except Equip (equips
   // are created by dragging from a pin); a drag-connect shows only nodes the dragged pin can wire to.
+  // Right-click (no drag) offers everything except Equip (equips are created by dragging from a pin).
+  // A drag offers only nodes whose handles are type-compatible with the dragged pin (context-sensitive).
   const menuFilter = (type: BlueprintNodeType): boolean => {
     const c = palette?.connect
     if (!c) return type !== 'equip'
-    if (c.kind === 'cond') return isValidConnection(type, 'out', 'branch', 'cond')
-    if (c.kind === 'condout') {
-      const sType = nodes.find(n => n.id === c.nodeId)?.type ?? ''
-      return isValidConnection(sType, 'out', type, 'cond')
-    }
-    const sType = nodes.find(n => n.id === c.nodeId)?.type ?? ''
-    return isValidConnection(sType, c.handle, type, 'in')
+    const fromType = nodes.find(n => n.id === c.nodeId)?.type ?? ''
+    return menuCandidateValid(fromType, c.handle, type)
   }
 
   if (loading) return <div className="py-12 text-center text-gray-400">Loading…</div>
