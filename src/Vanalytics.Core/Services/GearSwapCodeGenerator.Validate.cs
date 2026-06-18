@@ -35,6 +35,7 @@ public static partial class GearSwapCodeGenerator
         var diags = new List<Diagnostic>();
         CheckEquipNoSet(ctx, diags);
         CheckBranches(ctx, diags);
+        CheckConditions(ctx, diags);
         return diags;
     }
 
@@ -91,5 +92,49 @@ public static partial class GearSwapCodeGenerator
                 WalkCond(e.Source);
 
         return (exec, cond);
+    }
+
+    private static void CheckConditions(ValCtx ctx, List<Diagnostic> diags)
+    {
+        foreach (var id in ctx.CondReachable)
+        {
+            if (!ctx.ById.TryGetValue(id, out var n)) continue;
+            switch (n.Type)
+            {
+                case "buff":
+                    if (string.IsNullOrWhiteSpace(n.Data.BuffName))
+                        diags.Add(Err("Buff condition has no buff selected.", id));
+                    break;
+                case "op:compare":
+                    if (!IsCompareComplete(ctx, n))
+                        diags.Add(Err("Comparison is incomplete — it needs an operator, a threshold, and a value to compare.", id));
+                    break;
+                case "op:and":
+                case "op:or":
+                    if (!HasInput(ctx, id, "a") || !HasInput(ctx, id, "b"))
+                        diags.Add(Err("AND/OR condition is missing an input.", id));
+                    break;
+                case "op:not":
+                    if (!HasInput(ctx, id, "in"))
+                        diags.Add(Err("NOT condition is missing an input.", id));
+                    break;
+            }
+        }
+    }
+
+    private static bool HasInput(ValCtx ctx, string nodeId, string handle) =>
+        ctx.Graph.Edges.Any(e => e.Target == nodeId && e.TargetHandle == handle);
+
+    // Mirrors the op:compare null-conditions in Conditions.cs (BoolExpr + NumExpr).
+    private static bool IsCompareComplete(ValCtx ctx, BlueprintNodeDto n)
+    {
+        if (string.IsNullOrWhiteSpace(n.Data.Op) || !StatOps.Contains(n.Data.Op) || n.Data.Value is null)
+            return false;
+        var wired = ctx.Graph.Edges.FirstOrDefault(e => e.Target == n.Id && e.TargetHandle == "in")?.Source;
+        var wiredOk = wired is not null && ctx.ById.TryGetValue(wired, out var src)
+            && src.Type == "value" && !string.IsNullOrWhiteSpace(src.Data.Resource)
+            && StatResources.Contains(src.Data.Resource!);
+        var ownResOk = !string.IsNullOrWhiteSpace(n.Data.Resource) && StatResources.Contains(n.Data.Resource!);
+        return wiredOk || ownResOk;
     }
 }

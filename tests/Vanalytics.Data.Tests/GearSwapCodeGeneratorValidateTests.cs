@@ -77,4 +77,53 @@ public class GearSwapCodeGeneratorValidateTests
 
         Assert.Contains(diags, d => d.NodeId == "b" && d.Severity == "error" && d.Message.Contains("outcome"));
     }
+
+    private static BlueprintGraphDto BranchWithCond(params BlueprintNodeDto[] condNodes)
+    {
+        // trigger -> branch(true->equip set1); a cond node "c" is wired to branch.cond
+        var nodes = new List<BlueprintNodeDto>
+        {
+            Node("t", "trigger:status_change"), Node("b", "branch"), Node("e", "equip", new() { GearSetId = 1 }),
+        };
+        nodes.AddRange(condNodes);
+        return new BlueprintGraphDto
+        {
+            Nodes = nodes,
+            Edges = [ Edge("t", "Idle", "b", "in"), Edge("b", "true", "e", "in"), Edge("c", "out", "b", "cond") ],
+        };
+    }
+
+    [Fact]
+    public void Buff_condition_with_no_buff_is_an_error()
+    {
+        var graph = BranchWithCond(Node("c", "buff"));   // BuffName null
+        var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "TP")]);
+        Assert.Contains(diags, d => d.NodeId == "c" && d.Severity == "error" && d.Message.Contains("buff"));
+    }
+
+    [Fact]
+    public void Incomplete_comparison_is_an_error()
+    {
+        var graph = BranchWithCond(Node("c", "op:compare", new() { Op = "<", Value = 25 }));   // no Resource, no wired input
+        var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "TP")]);
+        Assert.Contains(diags, d => d.NodeId == "c" && d.Severity == "error" && d.Message.Contains("Comparison"));
+    }
+
+    [Fact]
+    public void And_node_missing_input_is_an_error()
+    {
+        // c = op:and with only input 'a' wired (to a complete buff); 'b' missing
+        var graph = BranchWithCond(Node("c", "op:and"), Node("a1", "buff", new() { BuffName = "Sneak Attack" }));
+        graph.Edges.Add(Edge("a1", "out", "c", "a"));
+        var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "TP")]);
+        Assert.Contains(diags, d => d.NodeId == "c" && d.Severity == "error" && d.Message.Contains("input"));
+    }
+
+    [Fact]
+    public void Complete_comparison_with_own_resource_is_valid()
+    {
+        var graph = BranchWithCond(Node("c", "op:compare", new() { Resource = "hpp", Op = "<", Value = 25 }));
+        var diags = GearSwapCodeGenerator.Validate(graph, [Set(1, "TP")]);
+        Assert.Empty(diags);
+    }
 }
