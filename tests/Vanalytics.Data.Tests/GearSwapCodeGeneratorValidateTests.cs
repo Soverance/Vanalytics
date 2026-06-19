@@ -276,7 +276,7 @@ public class GearSwapCodeGeneratorValidateTests
         var graph = ReachableSpellGraph(trigger: "trigger:precast", field: "name", value: "");
         var diags = GearSwapCodeGenerator.Validate(graph, NoSets());
         Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "s"
-            && d.Message.Contains("no action/skill/element"));
+            && d.Message.Contains("nothing selected"));
     }
 
     [Fact]
@@ -408,5 +408,22 @@ public class GearSwapCodeGeneratorValidateTests
         };
         var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
         Assert.DoesNotContain(diags, d => d.NodeId == "s" && d.Message.Contains("no spell there"));
+    }
+
+    [Fact]
+    public void Spell_contains_condition_with_family_under_precast_is_clean()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:precast", field: "contains", value: "Waltz");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.Severity == "error");
+    }
+
+    [Fact]
+    public void Spell_contains_condition_with_blank_value_is_an_error()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:precast", field: "contains", value: "");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "s"
+            && d.Message.Contains("nothing selected"));
     }
 }

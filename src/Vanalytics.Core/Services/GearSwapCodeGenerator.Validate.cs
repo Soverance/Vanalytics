@@ -204,9 +204,9 @@ public static partial class GearSwapCodeGenerator
                         diags.Add(Err("NOT condition is missing an input.", id));
                     break;
                 case "spell":
-                    if (n.Data.SpellField is not ("name" or "skill" or "element")
+                    if (n.Data.SpellField is not ("name" or "skill" or "element" or "contains")
                         || string.IsNullOrWhiteSpace(n.Data.SpellValue))
-                        diags.Add(Err("Spell condition has no action/skill/element selected.", id));
+                        diags.Add(Err("Spell condition has nothing selected.", id));
                     break;
             }
         }
