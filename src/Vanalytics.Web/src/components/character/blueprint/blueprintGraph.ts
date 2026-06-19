@@ -265,6 +265,43 @@ export const SPELL_ELEMENTS: string[] = [
   'Fire', 'Ice', 'Wind', 'Earth', 'Lightning', 'Water', 'Light', 'Dark',
 ]
 
+// Curated name-family substrings for the spell "Name contains" field. value = the exact substring
+// matched by the Lua plain string.find on spell.english (CASE-SENSITIVE — must match the catalog's
+// casing); label = display text. Every value is validated against allActionsCatalog() by a vitest
+// drift guard (each must match ≥1 action). Counts (current catalog) shown for reference.
+export const SPELL_FAMILIES: { value: string; label: string }[] = [
+  { value: 'Waltz', label: 'Waltz' },                 // 9
+  { value: 'Step', label: 'Step' },                   // 4
+  { value: 'Flourish', label: 'Flourish' },           // 12
+  { value: 'Samba', label: 'Samba' },                 // 7
+  { value: 'Jig', label: 'Jig' },                     // 4
+  { value: 'Roll', label: 'Roll (Corsair)' },         // 8
+  { value: 'Madrigal', label: 'Madrigal' },           // 2
+  { value: 'Minuet', label: 'Minuet' },               // 5
+  { value: 'March', label: 'March' },                 // 2
+  { value: 'Etude', label: 'Etude' },                 // 14
+  { value: 'Carol', label: 'Carol' },                 // 16
+  { value: 'Threnody', label: 'Threnody' },           // 16
+  { value: 'Mambo', label: 'Mambo' },                 // 2
+  { value: 'Lullaby', label: 'Lullaby' },             // 4
+  { value: 'Mazurka', label: 'Mazurka' },             // 2
+  { value: 'Cure', label: 'Cure' },                   // 7
+  { value: 'Curaga', label: 'Curaga' },               // 5
+  { value: 'helix', label: 'Helix (Scholar)' },       // 16
+  { value: 'storm', label: 'Storm (weather)' },       // 18
+  { value: 'Indi-', label: 'Indi- (Geomancy)' },      // 30
+  { value: 'Geo-', label: 'Geo- (Geomancy)' },        // 30
+  { value: 'Utsusemi', label: 'Utsusemi' },           // 3
+  { value: 'Katon', label: 'Katon (Ninjutsu)' },      // 3
+  { value: 'Boost', label: 'Boost' },                 // 8
+]
+
+// Count of catalog actions whose name contains this family substring. CASE-SENSITIVE includes() so
+// the displayed count matches the Lua plain string.find(spell.english, value, 1, true) at runtime.
+export function familyMatchCount(value: string): number {
+  return allActionsCatalog().filter(a => a.name.includes(value)).length
+}
+
 // Merged catalog for the "Action is" picker: spell.english matches WS, JA and magic alike, so one
 // searchable list covers all three. Names are emitted verbatim as the comparison value.
 export function allActionsCatalog(): ActionEntry[] {
@@ -279,6 +316,7 @@ export function allActionsCatalog(): ActionEntry[] {
 // skill/element show verbatim. Placeholder when no value is chosen yet.
 export function spellFace(data: { spellField?: string | null; spellValue?: string | null }): string {
   const field = data.spellField ?? 'name'
+  if (field === 'contains') return data.spellValue ? `contains "${data.spellValue}"` : 'contains …'
   const lead = field === 'skill' ? 'skill' : field === 'element' ? 'element' : 'spell'
   return data.spellValue ? `${lead} is ${data.spellValue}` : `${lead} is …`
 }

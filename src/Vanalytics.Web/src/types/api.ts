@@ -1178,7 +1178,7 @@ export interface BlueprintNode {
     members?: ModeMember[]
     overlaySetIds?: number[] | null
     buffName?: string | null
-    spellField?: 'name' | 'skill' | 'element' | null
+    spellField?: 'name' | 'skill' | 'element' | 'contains' | null
     spellValue?: string | null
     resource?: string | null
     op?: string | null

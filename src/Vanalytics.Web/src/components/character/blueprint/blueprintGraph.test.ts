@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, compareFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers, handleType, handleInfo, menuCandidateValid } from './blueprintGraph'
-import { spellFace, SPELL_SKILLS, SPELL_ELEMENTS, allActionsCatalog, NODE_HANDLES } from './blueprintGraph'
+import { spellFace, SPELL_SKILLS, SPELL_ELEMENTS, allActionsCatalog, NODE_HANDLES, SPELL_FAMILIES, familyMatchCount } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -383,5 +383,28 @@ describe('spell condition node', () => {
 
   it('is offered when dragging from a branch cond input', () => {
     expect(menuCandidateValid('branch', 'cond', 'spell')).toBe(true)
+  })
+})
+
+describe('spell contains / families', () => {
+  it('spellFace renders the contains form + placeholder', () => {
+    expect(spellFace({ spellField: 'contains', spellValue: 'Waltz' })).toBe('contains "Waltz"')
+    expect(spellFace({ spellField: 'contains', spellValue: '' })).toBe('contains …')
+    expect(spellFace({ spellField: 'contains', spellValue: null })).toBe('contains …')
+  })
+
+  it('SPELL_FAMILIES is non-empty and every family matches at least one catalog action', () => {
+    expect(SPELL_FAMILIES.length).toBeGreaterThan(10)
+    for (const f of SPELL_FAMILIES) {
+      expect(familyMatchCount(f.value), `family "${f.value}" matched 0 actions`).toBeGreaterThan(0)
+    }
+  })
+
+  it('familyMatchCount is case-sensitive (matches Lua plain string.find)', () => {
+    expect(familyMatchCount('Waltz')).toBeGreaterThan(0)
+    expect(familyMatchCount('Indi-')).toBeGreaterThan(0)
+    // helix appears only lowercase in compound names (Pyrohelix); capital 'Helix' matches nothing.
+    expect(familyMatchCount('helix')).toBeGreaterThan(0)
+    expect(familyMatchCount('Helix')).toBe(0)
   })
 })
