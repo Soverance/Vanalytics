@@ -1153,6 +1153,7 @@ export type BlueprintNodeType =
   | 'branch'
   | 'value'
   | 'buff'
+  | 'spell'
   | 'op:compare'
   | 'op:and'
   | 'op:or'
@@ -1177,6 +1178,8 @@ export interface BlueprintNode {
     members?: ModeMember[]
     overlaySetIds?: number[] | null
     buffName?: string | null
+    spellField?: 'name' | 'skill' | 'element' | null
+    spellValue?: string | null
     resource?: string | null
     op?: string | null
     value?: number | null

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, compareFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers, handleType, handleInfo, menuCandidateValid } from './blueprintGraph'
+import { spellFace, SPELL_SKILLS, SPELL_ELEMENTS, allActionsCatalog, NODE_HANDLES } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -353,5 +354,34 @@ describe('menuCandidateValid (context-sensitive menu)', () => {
     expect(menuCandidateValid('buff', 'out', 'op:compare')).toBe(false)  // bool != num in
     // compare 'in' (num input) -> value
     expect(menuCandidateValid('op:compare', 'in', 'value')).toBe(true)
+  })
+})
+
+describe('spell condition node', () => {
+  it('spellFace renders each field form and a placeholder when unset', () => {
+    expect(spellFace({ spellField: 'name', spellValue: "Rudra's Storm" })).toBe("spell is Rudra's Storm")
+    expect(spellFace({ spellField: 'skill', spellValue: 'Elemental Magic' })).toBe('skill is Elemental Magic')
+    expect(spellFace({ spellField: 'element', spellValue: 'Fire' })).toBe('element is Fire')
+    expect(spellFace({ spellField: 'name', spellValue: '' })).toBe('spell is …')
+    expect(spellFace({ spellField: 'skill', spellValue: null })).toBe('skill is …')
+  })
+
+  it('exposes non-empty skill and element catalogs', () => {
+    expect(SPELL_SKILLS).toContain('Elemental Magic')
+    expect(SPELL_ELEMENTS).toEqual(['Fire', 'Ice', 'Wind', 'Earth', 'Lightning', 'Water', 'Light', 'Dark'])
+  })
+
+  it('merges WS, JA and spells into the action catalog', () => {
+    const all = allActionsCatalog()
+    expect(all.length).toBeGreaterThan(500)
+    expect(all.some(a => a.name === "Rudra's Storm")).toBe(true)
+  })
+
+  it('spell node has a single bool out handle', () => {
+    expect(NODE_HANDLES['spell']).toEqual([{ id: 'out', type: 'bool', dir: 'out' }])
+  })
+
+  it('is offered when dragging from a branch cond input', () => {
+    expect(menuCandidateValid('branch', 'cond', 'spell')).toBe(true)
   })
 })

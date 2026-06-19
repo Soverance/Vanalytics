@@ -179,7 +179,7 @@ interface HandleDef { id: string; type: HandleValueType; dir: 'in' | 'out' }
 
 // Static handles per non-trigger node type. Triggers are derived from TRIGGER_DEFS (every trigger pin
 // is an exec output). Phase 2 extends this with value/buff/operator nodes.
-const NODE_HANDLES: Record<string, HandleDef[]> = {
+export const NODE_HANDLES: Record<string, HandleDef[]> = {
   branch: [
     { id: 'in', type: 'exec', dir: 'in' },
     { id: 'cond', type: 'bool', dir: 'in' },
@@ -190,6 +190,7 @@ const NODE_HANDLES: Record<string, HandleDef[]> = {
   mode: [{ id: 'in', type: 'exec', dir: 'in' }],
   value: [{ id: 'out', type: 'num', dir: 'out' }],
   buff: [{ id: 'out', type: 'bool', dir: 'out' }],
+  spell: [{ id: 'out', type: 'bool', dir: 'out' }],
   'op:compare': [
     { id: 'in', type: 'num', dir: 'in' },
     { id: 'out', type: 'bool', dir: 'out' },
@@ -250,6 +251,36 @@ export function compareFace(
   data: { resource?: string | null; op?: string | null; value?: number | null },
 ): string {
   return `${data.resource ? statResourceLabel(data.resource) : 'value'} ${data.op ?? '<'} ${data.value ?? 0}`
+}
+
+// Spell-condition catalogs. Skill/element values must match Windower res EXACTLY (spell.skill /
+// spell.element compare against the raw en) — transcribed from res/skills.lua (ids 32-45) and
+// res/elements.lua. No per-spell data needed; these are fixed lists.
+export const SPELL_SKILLS: string[] = [
+  'Divine Magic', 'Healing Magic', 'Enhancing Magic', 'Enfeebling Magic',
+  'Elemental Magic', 'Dark Magic', 'Summoning Magic', 'Ninjutsu',
+  'Singing', 'String Instrument', 'Wind Instrument', 'Blue Magic', 'Geomancy', 'Handbell',
+]
+export const SPELL_ELEMENTS: string[] = [
+  'Fire', 'Ice', 'Wind', 'Earth', 'Lightning', 'Water', 'Light', 'Dark',
+]
+
+// Merged catalog for the "Action is" picker: spell.english matches WS, JA and magic alike, so one
+// searchable list covers all three. Names are emitted verbatim as the comparison value.
+export function allActionsCatalog(): ActionEntry[] {
+  return [
+    ...WEAPON_SKILLS.map(w => ({ id: w.id, name: w.name })),
+    ...JOB_ABILITIES.map(a => ({ id: a.id, name: a.name })),
+    ...SPELLS.map(s => ({ id: s.id, name: s.name })),
+  ]
+}
+
+// Node-face text for a spell condition. The picked english (WS/JA/spell) is already proper-cased;
+// skill/element show verbatim. Placeholder when no value is chosen yet.
+export function spellFace(data: { spellField?: string | null; spellValue?: string | null }): string {
+  const field = data.spellField ?? 'name'
+  const lead = field === 'skill' ? 'skill' : field === 'element' ? 'element' : 'spell'
+  return data.spellValue ? `${lead} is ${data.spellValue}` : `${lead} is …`
 }
 
 // May a connection (sourceType.sourceHandle -> targetType.targetHandle) exist? Both endpoints must
