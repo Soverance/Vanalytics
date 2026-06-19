@@ -323,4 +323,82 @@ public class GearSwapCodeGeneratorValidateTests
 
     private static IReadOnlyCollection<ResolvedGearSet> NoSets() =>
         Array.Empty<ResolvedGearSet>();
+
+    // ---- Task 5: spell out-of-scope reachability tests ------------------
+
+    [Fact]
+    public void Spell_condition_under_status_change_is_out_of_scope_error()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:status_change", field: "name", value: "Rudra's Storm");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "s"
+            && d.Message.Contains("no spell there"));
+    }
+
+    [Fact]
+    public void Spell_condition_under_buff_change_is_out_of_scope_error()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:buff_change", field: "name", value: "Rudra's Storm");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "s"
+            && d.Message.Contains("no spell there"));
+    }
+
+    [Fact]
+    public void Spell_condition_under_midcast_is_in_scope_clean()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:midcast", field: "name", value: "Rudra's Storm");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.NodeId == "s" && d.Message.Contains("no spell there"));
+    }
+
+    [Fact]
+    public void Spell_condition_through_op_and_is_still_scope_checked()
+    {
+        // status_change --Idle--> branch; branch.cond <- op:and; op:and.a <- spell "s".
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            {
+                new() { Id = "t",   Type = "trigger:status_change" },
+                new() { Id = "b",   Type = "branch" },
+                new() { Id = "e",   Type = "equip", Data = new() { GearSetId = 1 } },
+                new() { Id = "and", Type = "op:and" },
+                new() { Id = "s",   Type = "spell", Data = new() { SpellField = "name", SpellValue = "Rudra's Storm" } },
+                new() { Id = "bf",  Type = "buff",  Data = new() { BuffName = "Sneak Attack" } },
+            },
+            Edges =
+            {
+                new() { Id = "t-b",    Source = "t",   SourceHandle = "Idle",   Target = "b",   TargetHandle = "in" },
+                new() { Id = "b-e",    Source = "b",   SourceHandle = "true",   Target = "e",   TargetHandle = "in" },
+                new() { Id = "and-b",  Source = "and", SourceHandle = "out",    Target = "b",   TargetHandle = "cond" },
+                new() { Id = "s-and",  Source = "s",   SourceHandle = "out",    Target = "and", TargetHandle = "a" },
+                new() { Id = "bf-and", Source = "bf",  SourceHandle = "out",    Target = "and", TargetHandle = "b" },
+            },
+        };
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.Contains(diags, d => d.NodeId == "s" && d.Message.Contains("no spell there"));
+    }
+
+    [Fact]
+    public void Spell_condition_feeding_only_an_orphan_branch_is_not_scope_error()
+    {
+        // spell "s" -> branch "b".cond, but "b" is wired to NO trigger (orphan).
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            {
+                new() { Id = "b", Type = "branch" },
+                new() { Id = "e", Type = "equip", Data = new() { GearSetId = 1 } },
+                new() { Id = "s", Type = "spell", Data = new() { SpellField = "name", SpellValue = "Rudra's Storm" } },
+            },
+            Edges =
+            {
+                new() { Id = "b-e", Source = "b", SourceHandle = "true",  Target = "e", TargetHandle = "in" },
+                new() { Id = "s-b", Source = "s", SourceHandle = "out",   Target = "b", TargetHandle = "cond" },
+            },
+        };
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.NodeId == "s" && d.Message.Contains("no spell there"));
+    }
 }

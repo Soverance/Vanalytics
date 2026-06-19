@@ -36,6 +36,7 @@ public static partial class GearSwapCodeGenerator
         CheckEquipNoSet(ctx, diags);
         CheckBranches(ctx, diags);
         CheckConditions(ctx, diags);
+        CheckSpellScope(ctx, diags);
         CheckDeletedSets(ctx, diags);
         CheckZeroMemberModes(ctx, diags);
         CheckOrphans(ctx, diags);
@@ -98,6 +99,82 @@ public static partial class GearSwapCodeGenerator
                 WalkCond(e.Source);
 
         return (exec, cond);
+    }
+
+    // Events whose handler receives a `spell` object (Events.cs Triggers signatures). A spell
+    // condition reachable from any OTHER trigger would index a nil `spell` at runtime.
+    private static readonly HashSet<string> SpellScopeTriggers =
+        new() { "trigger:precast", "trigger:midcast", "trigger:aftercast" };
+
+    // Maps each exec-reachable branch id -> the set of trigger TYPES whose exec-walk reaches it.
+    // Distinct from Reachable's merged set: here we keep the originating trigger type so a condition
+    // can be checked against the event it actually runs under.
+    private static Dictionary<string, HashSet<string>> BranchOriginTriggers(
+        BlueprintGraphDto graph, IReadOnlyDictionary<string, BlueprintNodeDto> byId)
+    {
+        var result = new Dictionary<string, HashSet<string>>();
+        foreach (var trig in graph.Nodes.Where(n => Triggers.ContainsKey(n.Type)))
+        {
+            var seen = new HashSet<string>();
+            void Walk(string id)
+            {
+                if (!seen.Add(id)) return;
+                if (!byId.TryGetValue(id, out var n)) return;
+                if (n.Type != "branch") return;   // equip/mode are terminal exec targets
+                if (!result.TryGetValue(id, out var origins))
+                    result[id] = origins = new HashSet<string>();
+                origins.Add(trig.Type);
+                foreach (var h in new[] { "true", "false" })
+                    foreach (var e in graph.Edges.Where(e => e.Source == id && e.SourceHandle == h))
+                        Walk(e.Target);
+            }
+            foreach (var e in graph.Edges.Where(e => e.Source == trig.Id))
+                Walk(e.Target);
+        }
+        return result;
+    }
+
+    // A `spell` condition is valid only where the `spell` object exists (precast/midcast/aftercast).
+    // For each reachable spell node, walk FORWARD along condition edges to the branch(es) it feeds; if
+    // any fed branch is reachable from a non-spell-scope trigger, error. A spell node feeding only an
+    // orphan branch (no trigger) is left to CheckOrphans.
+    private static void CheckSpellScope(ValCtx ctx, List<Diagnostic> diags)
+    {
+        var spellNodes = ctx.CondReachable
+            .Where(id => ctx.ById.TryGetValue(id, out var n) && n.Type == "spell")
+            .ToList();
+        if (spellNodes.Count == 0) return;
+
+        var branchOrigins = BranchOriginTriggers(ctx.Graph, ctx.ById);
+
+        foreach (var spellId in spellNodes)
+        {
+            var fedBranches = new HashSet<string>();
+            var seen = new HashSet<string>();
+            var stack = new Stack<string>();
+            stack.Push(spellId);
+            while (stack.Count > 0)
+            {
+                var cur = stack.Pop();
+                if (!seen.Add(cur)) continue;
+                foreach (var e in ctx.Graph.Edges.Where(e => e.Source == cur))
+                {
+                    if (e.TargetHandle == "cond"
+                        && ctx.ById.TryGetValue(e.Target, out var tn) && tn.Type == "branch")
+                        fedBranches.Add(e.Target);
+                    else
+                        stack.Push(e.Target);   // operator (op:and/or/not) — keep walking forward
+                }
+            }
+
+            var outOfScope = fedBranches.Any(b =>
+                branchOrigins.TryGetValue(b, out var origins)
+                && origins.Any(t => !SpellScopeTriggers.Contains(t)));
+            if (outOfScope)
+                diags.Add(Err(
+                    "Spell condition can't be used under status_change/buff_change — there's no spell there.",
+                    spellId));
+        }
     }
 
     private static void CheckConditions(ValCtx ctx, List<Diagnostic> diags)
