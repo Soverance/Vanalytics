@@ -22,6 +22,8 @@ import ModeInspector from '../components/character/blueprint/ModeInspector'
 import BranchNode from '../components/character/blueprint/BranchNode'
 import ValueNode from '../components/character/blueprint/ValueNode'
 import BuffNode from '../components/character/blueprint/BuffNode'
+import SpellNode from '../components/character/blueprint/SpellNode'
+import SpellInspector from '../components/character/blueprint/SpellInspector'
 import CompareNode from '../components/character/blueprint/CompareNode'
 import OperatorNode from '../components/character/blueprint/OperatorNode'
 import CommentNode from '../components/character/blueprint/CommentNode'
@@ -43,6 +45,7 @@ const nodeTypes = {
   branch: BranchNode,
   value: ValueNode,
   buff: BuffNode,
+  spell: SpellNode,
   'op:compare': CompareNode,
   'op:and': OperatorNode,
   'op:or': OperatorNode,
@@ -60,6 +63,7 @@ const defaultData = (type: BlueprintNodeType): Record<string, unknown> => {
     case 'mode': return { modeName: 'New Mode', modeCommand: null, members: [], memberNames: [] }
     case 'value': return { resource: 'hpp' }
     case 'buff': return { buffName: null }
+    case 'spell': return { spellField: 'name', spellValue: null }
     case 'op:compare': return { resource: 'hpp', op: '<', value: 25 }
     case 'comment': return { text: '', width: 320, height: 180 }
     default: return {}   // branch, op:and/op:or/op:not, triggers
@@ -168,6 +172,8 @@ function BlueprintEditorInner() {
             memberNames: (n.data.members ?? []).map(m => setById.get(m.gearSetId)?.name) }
         : n.type === 'buff'
         ? { buffName: n.data.buffName ?? null }
+        : n.type === 'spell'
+        ? { spellField: (n.data.spellField ?? 'name') as 'name' | 'skill' | 'element', spellValue: n.data.spellValue ?? null }
         : n.type === 'value'
         ? { resource: n.data.resource ?? 'hpp' }
         : n.type === 'op:compare'
@@ -192,6 +198,9 @@ function BlueprintEditorInner() {
           members: (m.members ?? []).map(mm => ({ gearSetId: mm.gearSetId, label: mm.label ?? null, overlaySetIds: mm.overlaySetIds ?? null })) }
       } else if (t === 'buff') {
         data = { buffName: (n.data as { buffName?: string | null }).buffName ?? null }
+      } else if (t === 'spell') {
+        const d = n.data as { spellField?: 'name' | 'skill' | 'element' | null; spellValue?: string | null }
+        data = { spellField: d.spellField ?? 'name' as const, spellValue: d.spellValue ?? null }
       } else if (t === 'value') {
         data = { resource: (n.data as { resource?: string | null }).resource ?? 'hpp' }
       } else if (t === 'op:compare') {
@@ -402,7 +411,7 @@ function BlueprintEditorInner() {
     setNodes(n => [...n, node])
     setPalette(null)
     // Open the inspector for configurable nodes (mode, compare); value/buff/comment are static.
-    if (type === 'mode' || type === 'op:compare') setSelectedId(node.id)
+    if (type === 'mode' || type === 'op:compare' || type === 'spell') setSelectedId(node.id)
   }, [palette, nodes, focusNode])
 
   // Unified menu pick: if the menu was opened by dragging a tether (palette.connect set), spawn the
@@ -675,6 +684,13 @@ function BlueprintEditorInner() {
             op={(selected.data as { op?: string | null }).op}
             value={(selected.data as { value?: number | null }).value}
             valueWired={edges.some(e => e.target === selected!.id && e.targetHandle === 'in')}
+            onChange={(patch) => updateCondData(patch)}
+          />
+        )}
+        {selected?.type === 'spell' && (
+          <SpellInspector
+            field={((selected.data as { spellField?: 'name' | 'skill' | 'element' | null }).spellField) ?? 'name'}
+            value={(selected.data as { spellValue?: string | null }).spellValue}
             onChange={(patch) => updateCondData(patch)}
           />
         )}

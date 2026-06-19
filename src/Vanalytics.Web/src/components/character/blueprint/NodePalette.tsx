@@ -19,6 +19,7 @@ const STATIC_ITEMS: Item[] = [
   { key: 'op:or', type: 'op:or', label: 'OR', group: 'Flow Control', color: '#a78bfa' },
   { key: 'op:not', type: 'op:not', label: 'NOT', group: 'Flow Control', color: '#a78bfa' },
   { key: 'op:compare', type: 'op:compare', label: 'Compare (≷)', group: 'Flow Control', color: '#f59e0b' },
+  { key: 'spell', type: 'spell', label: 'Spell / Action is…', group: 'Flow Control', color: '#a78bfa' },
   ...STAT_RESOURCES.map(r => ({ key: `value:${r.value}`, type: 'value' as const, label: r.label, group: 'Values', color: '#38bdf8', data: { resource: r.value } })),
   { key: 'comment', type: 'comment', label: 'Comment', group: 'Annotation', color: '#e5e7eb' },
 ]

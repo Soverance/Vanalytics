@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { allActionsCatalog, SPELL_SKILLS, SPELL_ELEMENTS } from './blueprintGraph'
 
 type Field = 'name' | 'skill' | 'element'
@@ -9,6 +9,7 @@ export default function SpellInspector({ field, value, onChange }: {
   onChange: (patch: { spellField?: Field; spellValue?: string | null }) => void
 }) {
   const [q, setQ] = useState('')
+  useEffect(() => { setQ('') }, [field])
   const actions = useMemo(() => allActionsCatalog(), [])
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase()
