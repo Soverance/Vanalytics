@@ -16,6 +16,7 @@ public class GearSwapCodeGeneratorConditionsTests
     private static BlueprintNodeDto Compare(string id, string? resource, string op, int value) =>
         new() { Id = id, Type = "op:compare", Data = new() { Resource = resource, Op = op, Value = value } };
     private static BlueprintNodeDto Op(string id, string type) => new() { Id = id, Type = type, Data = new() };
+    private static BlueprintNodeDto Spell(string id, string? field, string? value) => new() { Id = id, Type = "spell", Data = new() { SpellField = field, SpellValue = value } };
 
     // exec edge into a target's 'in'
     private static BlueprintEdgeDto Exec(string s, string h, string t) =>
@@ -137,19 +138,22 @@ public class GearSwapCodeGeneratorConditionsTests
         Assert.DoesNotContain("spell.", lua);
     }
 
-    // Builds: precast --WeaponSkill--> branch --true--> equip(set 1); branch.cond <- spell node.
-    private static string GenerateWithSpellCond(string field, string value)
+    [Fact]
+    public void Spell_condition_with_null_field_emits_no_branch()
     {
-        var spellNode = new BlueprintNodeDto
-        {
-            Id = "s", Type = "spell", Data = new() { SpellField = field, SpellValue = value }
-        };
+        var lua = GenerateWithSpellCond(field: null, value: "Fire");
+        Assert.DoesNotContain("spell.", lua);
+    }
+
+    // Builds: precast --WeaponSkill--> branch --true--> equip(set 1); branch.cond <- spell node.
+    private static string GenerateWithSpellCond(string? field, string value)
+    {
         var g = Graph(
-            [Trigger("t", "trigger:precast"), Branch("b"), Equip("e", 1), spellNode],
+            [Trigger("t", "trigger:precast"), Branch("b"), Equip("e", 1), Spell("s", field, value)],
             [
                 Exec("t", "WeaponSkill", "b"),
                 Exec("b", "true", "e"),
-                new() { Id = "s-b", Source = "s", SourceHandle = "out", Target = "b", TargetHandle = "cond" },
+                Wire("s", "b", "cond"),
             ]);
         return Emit(g, new() { [1] = "WS" });
     }
