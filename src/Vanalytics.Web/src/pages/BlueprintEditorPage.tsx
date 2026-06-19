@@ -173,7 +173,7 @@ function BlueprintEditorInner() {
         : n.type === 'buff'
         ? { buffName: n.data.buffName ?? null }
         : n.type === 'spell'
-        ? { spellField: (n.data.spellField ?? 'name') as 'name' | 'skill' | 'element', spellValue: n.data.spellValue ?? null }
+        ? { spellField: (n.data.spellField ?? 'name') as 'name' | 'skill' | 'element' | 'contains', spellValue: n.data.spellValue ?? null }
         : n.type === 'value'
         ? { resource: n.data.resource ?? 'hpp' }
         : n.type === 'op:compare'
@@ -199,7 +199,7 @@ function BlueprintEditorInner() {
       } else if (t === 'buff') {
         data = { buffName: (n.data as { buffName?: string | null }).buffName ?? null }
       } else if (t === 'spell') {
-        const d = n.data as { spellField?: 'name' | 'skill' | 'element' | null; spellValue?: string | null }
+        const d = n.data as { spellField?: 'name' | 'skill' | 'element' | 'contains' | null; spellValue?: string | null }
         data = { spellField: d.spellField ?? 'name', spellValue: d.spellValue ?? null }
       } else if (t === 'value') {
         data = { resource: (n.data as { resource?: string | null }).resource ?? 'hpp' }
@@ -689,7 +689,7 @@ function BlueprintEditorInner() {
         )}
         {selected?.type === 'spell' && (
           <SpellInspector
-            field={((selected.data as { spellField?: 'name' | 'skill' | 'element' | null }).spellField) ?? 'name'}
+            field={((selected.data as { spellField?: 'name' | 'skill' | 'element' | 'contains' | null }).spellField) ?? 'name'}
             value={(selected.data as { spellValue?: string | null }).spellValue}
             onChange={(patch) => updateCondData(patch)}
           />

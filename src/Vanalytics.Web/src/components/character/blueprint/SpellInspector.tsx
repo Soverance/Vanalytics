@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { allActionsCatalog, SPELL_SKILLS, SPELL_ELEMENTS } from './blueprintGraph'
+import { allActionsCatalog, SPELL_SKILLS, SPELL_ELEMENTS, SPELL_FAMILIES, familyMatchCount } from './blueprintGraph'
 
-type Field = 'name' | 'skill' | 'element'
+type Field = 'name' | 'skill' | 'element' | 'contains'
 
 export default function SpellInspector({ field, value, onChange }: {
   field: Field
@@ -27,6 +27,7 @@ export default function SpellInspector({ field, value, onChange }: {
         <option value="name">Action name</option>
         <option value="skill">Spell skill</option>
         <option value="element">Spell element</option>
+        <option value="contains">Name contains</option>
       </select>
 
       {field === 'name' && (
@@ -66,6 +67,19 @@ export default function SpellInspector({ field, value, onChange }: {
             className="w-full rounded border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200">
             <option value="">— choose —</option>
             {SPELL_ELEMENTS.map(el => <option key={el} value={el}>{el}</option>)}
+          </select>
+        </>
+      )}
+
+      {field === 'contains' && (
+        <>
+          <label className="mb-1 block text-xs text-gray-400">Family</label>
+          <select value={value ?? ''} onChange={e => onChange({ spellValue: e.target.value || null })}
+            className="w-full rounded border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200">
+            <option value="">— choose —</option>
+            {SPELL_FAMILIES.map(f => (
+              <option key={f.value} value={f.value}>{f.label} ({familyMatchCount(f.value)})</option>
+            ))}
           </select>
         </>
       )}
