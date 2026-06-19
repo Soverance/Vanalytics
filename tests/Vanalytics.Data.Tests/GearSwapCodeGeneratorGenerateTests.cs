@@ -144,4 +144,39 @@ public class GearSwapCodeGeneratorGenerateTests
 end";
         Assert.Contains(expected.Replace("\r\n", "\n"), lua.Replace("\r\n", "\n"));
     }
+
+    [Fact]
+    public void Spell_and_buff_compose_into_nested_precast_guard()
+    {
+        // precast WeaponSkill -> Branch(spell.english=='Rudra\'s Storm' AND buffactive['sneak attack']) ? WS
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id="t",   Type="trigger:precast" },
+                new() { Id="b",   Type="branch" },
+                new() { Id="and", Type="op:and" },
+                new() { Id="sp",  Type="spell", Data=new(){ SpellField="name", SpellValue="Rudra's Storm" } },
+                new() { Id="bf",  Type="buff",  Data=new(){ BuffName="Sneak Attack" } },
+                new() { Id="e",   Type="equip", Data=new(){ GearSetId=1 } },
+            ],
+            Edges =
+            [
+                new() { Id="t-WeaponSkill-b", Source="t",   SourceHandle="WeaponSkill", Target="b",   TargetHandle="in" },
+                new() { Id="and-out-b",       Source="and", SourceHandle="out",         Target="b",   TargetHandle="cond" },
+                new() { Id="sp-out-and-a",    Source="sp",  SourceHandle="out",         Target="and", TargetHandle="a" },
+                new() { Id="bf-out-and-b",    Source="bf",  SourceHandle="out",         Target="and", TargetHandle="b" },
+                new() { Id="b-true-e",        Source="b",   SourceHandle="true",        Target="e",   TargetHandle="in" },
+            ],
+        };
+        var sets = new List<ResolvedGearSet>
+        {
+            new(1, "WS", [ new ResolvedSlot("Hands", 10, "Adhemar Wristbands", []) ]),
+        };
+
+        var lua = GearSwapCodeGenerator.Generate(graph, sets).Lua;
+
+        Assert.Contains("spell.type == 'WeaponSkill'", lua);
+        Assert.Contains("(spell.english == 'Rudra\\'s Storm' and buffactive['sneak attack'])", lua);
+    }
 }
