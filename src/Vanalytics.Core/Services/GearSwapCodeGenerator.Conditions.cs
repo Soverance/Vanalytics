@@ -65,10 +65,15 @@ public static partial class GearSwapCodeGenerator
                 var slit = GearSwapLua.Key(sval);
                 return n.Data.SpellField switch
                 {
-                    "name"    => $"spell.english == {slit}",
-                    "skill"   => $"spell.skill == {slit}",
-                    "element" => $"spell.element == {slit}",
-                    _         => null,
+                    "name"     => $"spell.english == {slit}",
+                    "skill"    => $"spell.skill == {slit}",
+                    "element"  => $"spell.element == {slit}",
+                    // Plain (non-pattern) substring search: the 1,true args make string.find match the
+                    // literal — required because family values like 'Indi-'/'Geo-' contain '-', a Lua
+                    // pattern metacharacter. Returns a number (truthy) or nil (falsy); composes under
+                    // if / op:and/or/not via Lua truthiness.
+                    "contains" => $"string.find(spell.english, {slit}, 1, true)",
+                    _          => null,
                 };
 
             case "op:and":

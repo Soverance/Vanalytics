@@ -145,6 +145,29 @@ public class GearSwapCodeGeneratorConditionsTests
         Assert.DoesNotContain("spell.", lua);
     }
 
+    [Fact]
+    public void Spell_contains_condition_emits_plain_string_find()
+    {
+        var lua = GenerateWithSpellCond(field: "contains", value: "Waltz");
+        Assert.Contains("string.find(spell.english, 'Waltz', 1, true)", lua);
+    }
+
+    [Fact]
+    public void Spell_contains_hyphen_family_is_emitted_as_plain_literal()
+    {
+        // 'Indi-' contains '-', a Lua pattern metacharacter. The plain flag (1, true) makes string.find
+        // do a literal substring search so the hyphen matches literally, not as a pattern.
+        var lua = GenerateWithSpellCond(field: "contains", value: "Indi-");
+        Assert.Contains("string.find(spell.english, 'Indi-', 1, true)", lua);
+    }
+
+    [Fact]
+    public void Spell_contains_with_blank_value_emits_nothing()
+    {
+        var lua = GenerateWithSpellCond(field: "contains", value: "");
+        Assert.DoesNotContain("string.find", lua);
+    }
+
     // Builds: precast --WeaponSkill--> branch --true--> equip(set 1); branch.cond <- spell node.
     private static string GenerateWithSpellCond(string? field, string value)
     {
