@@ -200,7 +200,7 @@ function BlueprintEditorInner() {
         data = { buffName: (n.data as { buffName?: string | null }).buffName ?? null }
       } else if (t === 'spell') {
         const d = n.data as { spellField?: 'name' | 'skill' | 'element' | null; spellValue?: string | null }
-        data = { spellField: d.spellField ?? 'name' as const, spellValue: d.spellValue ?? null }
+        data = { spellField: d.spellField ?? 'name', spellValue: d.spellValue ?? null }
       } else if (t === 'value') {
         data = { resource: (n.data as { resource?: string | null }).resource ?? 'hpp' }
       } else if (t === 'op:compare') {
@@ -410,7 +410,7 @@ function BlueprintEditorInner() {
     const node: Node = { id: newId(), type, position: { x: palette.flowX, y: palette.flowY }, data: nodeData, ...nodeExtras(type, nodeData) }
     setNodes(n => [...n, node])
     setPalette(null)
-    // Open the inspector for configurable nodes (mode, compare); value/buff/comment are static.
+    // Open the inspector for configurable nodes (mode, compare, spell); value/buff/comment are static.
     if (type === 'mode' || type === 'op:compare' || type === 'spell') setSelectedId(node.id)
   }, [palette, nodes, focusNode])
 
