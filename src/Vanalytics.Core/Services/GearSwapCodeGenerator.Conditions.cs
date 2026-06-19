@@ -56,6 +56,21 @@ public static partial class GearSwapCodeGenerator
                 }
                 return $"{valueExpr} {n.Data.Op} {n.Data.Value}";
 
+            case "spell":
+                var sval = n.Data.SpellValue;
+                if (string.IsNullOrWhiteSpace(sval)) return null;
+                // Emitted verbatim — spell.english/skill/element compare against the resources' raw en,
+                // so the value (from a res-sourced picker) is NOT lowercased. GearSwapLua.Key produces a
+                // single-quoted, apostrophe-escaped Lua string literal.
+                var slit = GearSwapLua.Key(sval);
+                return n.Data.SpellField switch
+                {
+                    "name"    => $"spell.english == {slit}",
+                    "skill"   => $"spell.skill == {slit}",
+                    "element" => $"spell.element == {slit}",
+                    _         => null,
+                };
+
             case "op:and":
             case "op:or":
                 var a = InBool(ctx, nodeId, "a", visited);

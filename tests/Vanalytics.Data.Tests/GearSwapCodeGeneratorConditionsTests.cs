@@ -92,4 +92,65 @@ public class GearSwapCodeGeneratorConditionsTests
             [Exec("t", "Idle", "b"), Wire("c", "b", "cond"), Exec("b", "true", "e")]);
         Assert.DoesNotContain("function status_change", Emit(g, new() { [1] = "Def" }));
     }
+
+    // ── spell node condition tests ────────────────────────────────────────────
+
+    [Fact]
+    public void Spell_name_condition_emits_spell_english_equality()
+    {
+        var lua = GenerateWithSpellCond(field: "name", value: "Rudra's Storm");
+        Assert.Contains("spell.english == 'Rudra\\'s Storm'", lua);
+    }
+
+    [Fact]
+    public void Spell_skill_condition_emits_spell_skill_equality()
+    {
+        var lua = GenerateWithSpellCond(field: "skill", value: "Elemental Magic");
+        Assert.Contains("spell.skill == 'Elemental Magic'", lua);
+    }
+
+    [Fact]
+    public void Spell_element_condition_emits_spell_element_equality()
+    {
+        var lua = GenerateWithSpellCond(field: "element", value: "Fire");
+        Assert.Contains("spell.element == 'Fire'", lua);
+    }
+
+    [Fact]
+    public void Spell_condition_value_is_not_case_folded()
+    {
+        var lua = GenerateWithSpellCond(field: "name", value: "Mercy Stroke");
+        Assert.Contains("spell.english == 'Mercy Stroke'", lua);   // verbatim, not lowercased
+    }
+
+    [Fact]
+    public void Spell_condition_with_blank_value_emits_no_branch()
+    {
+        var lua = GenerateWithSpellCond(field: "name", value: "");
+        Assert.DoesNotContain("spell.english", lua);   // incomplete cond → branch emits nothing
+    }
+
+    [Fact]
+    public void Spell_condition_with_unknown_field_emits_no_branch()
+    {
+        var lua = GenerateWithSpellCond(field: "bogus", value: "Fire");
+        Assert.DoesNotContain("spell.", lua);
+    }
+
+    // Builds: precast --WeaponSkill--> branch --true--> equip(set 1); branch.cond <- spell node.
+    private static string GenerateWithSpellCond(string field, string value)
+    {
+        var spellNode = new BlueprintNodeDto
+        {
+            Id = "s", Type = "spell", Data = new() { SpellField = field, SpellValue = value }
+        };
+        var g = Graph(
+            [Trigger("t", "trigger:precast"), Branch("b"), Equip("e", 1), spellNode],
+            [
+                Exec("t", "WeaponSkill", "b"),
+                Exec("b", "true", "e"),
+                new() { Id = "s-b", Source = "s", SourceHandle = "out", Target = "b", TargetHandle = "cond" },
+            ]);
+        return Emit(g, new() { [1] = "WS" });
+    }
 }
