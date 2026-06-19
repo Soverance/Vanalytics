@@ -10,7 +10,7 @@ public class BlueprintGraphDto
 public class BlueprintNodeDto
 {
     public string Id { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;      // trigger:* | equip | mode | branch | value | buff | op:compare | op:and | op:or | op:not | comment
+    public string Type { get; set; } = string.Empty;      // trigger:* | equip | mode | branch | value | buff | spell | op:compare | op:and | op:or | op:not | comment
     public BlueprintPositionDto Position { get; set; } = new();
     public BlueprintNodeDataDto Data { get; set; } = new();
 }
@@ -57,6 +57,14 @@ public class BlueprintNodeDataDto
 
     /// <summary>On an `op:compare` node: the numeric threshold (e.g. 25 for player.hpp &lt; 25).</summary>
     public int? Value { get; set; }
+
+    /// <summary>On a `spell` node: which spell field to test — "name" | "skill" | "element".</summary>
+    public string? SpellField { get; set; }
+
+    /// <summary>On a `spell` node: the value to compare against — an action's raw english name
+    /// (field "name"), a skill name (field "skill"), or an element (field "element"). Emitted
+    /// verbatim (NOT case-folded) as a Lua string literal.</summary>
+    public string? SpellValue { get; set; }
 
     /// <summary>On a `comment` node: the free-text label (documentation only — never emitted to Lua).</summary>
     public string? Text { get; set; }
