@@ -171,6 +171,8 @@ public static partial class GearSwapCodeGenerator
                 branchOrigins.TryGetValue(b, out var origins)
                 && origins.Any(t => !SpellScopeTriggers.Contains(t)));
             if (outOfScope)
+                // Message names the current non-spell-scope triggers in prose; keep in sync with
+                // SpellScopeTriggers (the authoritative list) if trigger types are added.
                 diags.Add(Err(
                     "Spell condition can't be used under status_change/buff_change — there's no spell there.",
                     spellId));

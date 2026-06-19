@@ -353,6 +353,14 @@ public class GearSwapCodeGeneratorValidateTests
     }
 
     [Fact]
+    public void Spell_condition_under_aftercast_is_in_scope_clean()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:aftercast", field: "name", value: "Rudra's Storm");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.NodeId == "s" && d.Message.Contains("no spell there"));
+    }
+
+    [Fact]
     public void Spell_condition_through_op_and_is_still_scope_checked()
     {
         // status_change --Idle--> branch; branch.cond <- op:and; op:and.a <- spell "s".
