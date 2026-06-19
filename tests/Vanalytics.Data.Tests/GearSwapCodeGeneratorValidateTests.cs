@@ -267,4 +267,60 @@ public class GearSwapCodeGeneratorValidateTests
         Assert.Contains(diags, d => d.NodeId == "e" && d.Severity == "error");
         Assert.DoesNotContain(diags, d => d.NodeId == "t");   // no dead-pin error on the trigger
     }
+
+    // ---- spell condition tests ------------------------------------------
+
+    [Fact]
+    public void Spell_condition_with_no_value_is_an_error()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:precast", field: "name", value: "");
+        var diags = GearSwapCodeGenerator.Validate(graph, NoSets());
+        Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "s"
+            && d.Message.Contains("no action/skill/element"));
+    }
+
+    [Fact]
+    public void Complete_spell_condition_under_precast_is_clean()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:precast", field: "name", value: "Rudra's Storm");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.Severity == "error");
+    }
+
+    // ---- helpers for spell + future reachability tests ------------------
+
+    // precast --WeaponSkill--> branch(true->equip set1); branch.cond <- spell node "s".
+    private static BlueprintGraphDto ReachableSpellGraph(string trigger, string field, string value) => new()
+    {
+        Nodes =
+        {
+            new() { Id = "t", Type = trigger },
+            new() { Id = "b", Type = "branch" },
+            new() { Id = "e", Type = "equip", Data = new() { GearSetId = 1 } },
+            new() { Id = "s", Type = "spell", Data = new() { SpellField = field, SpellValue = value } },
+        },
+        Edges =
+        {
+            new() { Id = "t-b", Source = "t", SourceHandle = TriggerPin(trigger), Target = "b", TargetHandle = "in" },
+            new() { Id = "b-e", Source = "b", SourceHandle = "true", Target = "e", TargetHandle = "in" },
+            new() { Id = "s-b", Source = "s", Target = "b", TargetHandle = "cond" },
+        },
+    };
+
+    // A terminal/category pin that exists on the given trigger (used only to wire the branch).
+    private static string TriggerPin(string trigger) => trigger switch
+    {
+        "trigger:precast"       => "WeaponSkill",
+        "trigger:midcast"       => "Ranged",
+        "trigger:aftercast"     => "Idle",
+        "trigger:status_change" => "Idle",
+        "trigger:buff_change"   => "Gained",
+        _                       => "Idle",
+    };
+
+    private static IReadOnlyCollection<ResolvedGearSet> OneSet() =>
+        new[] { new ResolvedGearSet(1, "WS", new List<ResolvedSlot>()) };
+
+    private static IReadOnlyCollection<ResolvedGearSet> NoSets() =>
+        Array.Empty<ResolvedGearSet>();
 }
