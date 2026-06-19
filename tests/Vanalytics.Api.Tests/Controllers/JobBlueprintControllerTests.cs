@@ -348,6 +348,60 @@ public class JobBlueprintControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Blueprint_with_spell_condition_roundtrips_and_generates()
+    {
+        var (token, charId) = await SetupAsync("wf11@test.com", "wf11", "Wfeleven");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Seed one gear set so the equip node resolves.
+        const string setName = "WS Rudra Set";
+        var set = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = setName, Job = "THF", Category = "WeaponSkill",
+                Slots = [ new GearSetSlotDto { Slot = "Head", ItemId = 13892, ItemName = "Adhemar Bonnet +1", Augments = [] } ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+        var setId = set!.Id;
+
+        // Build the graph: trigger:precast -[WeaponSkill]-> branch -[cond]<- spell(name, Rudra's Storm); branch -[true]-> equip
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:precast",   Position = new() { X = 0,   Y = 0 },   Data = new() },
+                new() { Id = "b", Type = "branch",            Position = new() { X = 200, Y = 0 },   Data = new() },
+                new() { Id = "s", Type = "spell",             Position = new() { X = 200, Y = 150 }, Data = new()
+                    { SpellField = "name", SpellValue = "Rudra's Storm" } },
+                new() { Id = "e", Type = "equip",             Position = new() { X = 400, Y = 0 },   Data = new()
+                    { GearSetId = setId } },
+            ],
+            Edges =
+            [
+                new() { Id = "e1", Source = "t", SourceHandle = "WeaponSkill", Target = "b", TargetHandle = "in" },
+                new() { Id = "e2", Source = "s", SourceHandle = "out",         Target = "b", TargetHandle = "cond" },
+                new() { Id = "e3", Source = "b", SourceHandle = "true",        Target = "e", TargetHandle = "in" },
+            ],
+        };
+        var putResp = await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+        Assert.Equal(HttpStatusCode.OK, putResp.StatusCode);
+
+        // Round-trip: GET and assert that the spell node's SpellField and SpellValue survive.
+        var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
+        Assert.NotNull(wf);
+        var spellNode = Assert.Single(wf.Graph.Nodes, n => n.Type == "spell");
+        Assert.Equal("name",          spellNode.Data.SpellField);
+        Assert.Equal("Rudra's Storm", spellNode.Data.SpellValue);
+
+        // Generate: assert Lua contains the spell guard and no error diagnostics.
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+        Assert.NotNull(gen);
+        Assert.Contains("spell.english == 'Rudra\\'s Storm'", gen!.Lua);
+        Assert.DoesNotContain(gen.Diagnostics, d => d.Severity == "error");
+    }
+
+    [Fact]
     public async Task Generate_with_validation_error_returns_empty_lua_and_error_diagnostic()
     {
         var (token, charId) = await SetupAsync("wf8e@test.com", "wf8e", "Wfeight");
