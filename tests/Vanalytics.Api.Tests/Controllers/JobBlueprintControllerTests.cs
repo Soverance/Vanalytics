@@ -515,4 +515,62 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         Assert.Contains("if player.hpp < 25 then", gen.Lua);
         Assert.Contains($"equip(sets['{setName}'])", gen.Lua);
     }
+
+    [Fact]
+    public async Task Generate_emits_pet_midcast_dispatch_and_pet_change_terminal()
+    {
+        var (token, charId) = await SetupAsync("wfpet@test.com", "wfpet", "Wfpet");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Job/category are cosmetic for this test (codegen references sets by id); use the
+        // proven-valid THF + WeaponSkill/Idle values the other passing tests in this file use.
+        var bp = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "BP Set", Job = "THF", Category = "WeaponSkill",
+                Slots = [ new GearSetSlotDto { Slot = "Head", ItemId = 13892, ItemName = "Adhemar Bonnet +1", Augments = [] } ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        var petIdle = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "Pet Idle", Job = "THF", Category = "Idle",
+                Slots = [ new GearSetSlotDto { Slot = "Body", ItemId = 14001, ItemName = "Convoker's Doublet", Augments = [] } ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "pm", Type = "trigger:pet_midcast", Data = new() },
+                new() { Id = "a",  Type = "equip", Data = new() { GearSetId = bp!.Id, ActionName = "Searing Light" } },
+                new() { Id = "pc", Type = "trigger:pet_change", Data = new() },
+                new() { Id = "pi", Type = "equip", Data = new() { GearSetId = petIdle!.Id } },
+            ],
+            Edges =
+            [
+                new() { Id = "e1", Source = "pm", SourceHandle = "PetAction", Target = "a",  TargetHandle = "in" },
+                new() { Id = "e2", Source = "pc", SourceHandle = "Summoned",  Target = "pi", TargetHandle = "in" },
+            ],
+        };
+        var put = await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        // Round-trip: both triggers survive PUT/GET.
+        var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
+        Assert.Single(wf!.Graph.Nodes, n => n.Type == "trigger:pet_midcast");
+        Assert.Single(wf.Graph.Nodes, n => n.Type == "trigger:pet_change");
+
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+
+        Assert.Contains("function pet_midcast(spell)", gen!.Lua);
+        Assert.Contains("if spell.english == 'Searing Light' then equip(sets['BP Set'])", gen.Lua);
+        Assert.DoesNotContain("if true", gen.Lua);
+        Assert.Contains("function pet_change(pet, gain)", gen.Lua);
+        Assert.Contains("if gain then equip(sets['Pet Idle'])", gen.Lua);
+        Assert.DoesNotContain(gen.Diagnostics, d => d.Severity == "error");
+    }
 }
