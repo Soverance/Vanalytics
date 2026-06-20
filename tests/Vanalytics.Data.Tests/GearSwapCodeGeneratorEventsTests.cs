@@ -272,4 +272,46 @@ public class GearSwapCodeGeneratorEventsTests
         Assert.Contains("equip(sets['Frenzy'])", lua);
         Assert.DoesNotContain("else", lua);
     }
+
+    [Fact]
+    public void PetChange_summoned_and_released_terminal_equip()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:pet_change"), Equip("e1",1), Equip("e2",2)],
+            [Edge("t","Summoned","e1"), Edge("t","Released","e2")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("function pet_change(pet, gain)", lua);
+        Assert.Contains("if gain then equip(sets['TP Accuracy'])", lua);
+        Assert.Contains("elseif not gain then equip(sets['Idle Default'])", lua);
+    }
+
+    [Fact]
+    public void PetStatusChange_emits_if_elseif_on_new_status()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:pet_status_change"), Equip("e1",1), Equip("e2",2)],
+            [Edge("t","Engaged","e1"), Edge("t","Idle","e2")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("function pet_status_change(new, old)", lua);
+        Assert.Contains("if new == 'Engaged' then equip(sets['TP Accuracy'])", lua);
+        Assert.Contains("elseif new == 'Idle' then equip(sets['Idle Default'])", lua);
+    }
+
+    [Fact]
+    public void PetAftercast_uses_player_status()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:pet_aftercast"), Equip("e1",1), Equip("e2",2)],
+            [Edge("t","Engaged","e1"), Edge("t","Idle","e2")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("function pet_aftercast(spell)", lua);
+        Assert.Contains("if player.status == 'Engaged' then equip(sets['TP Accuracy'])", lua);
+        Assert.Contains("elseif player.status ~= 'Engaged' then equip(sets['Idle Default'])", lua);
+    }
 }

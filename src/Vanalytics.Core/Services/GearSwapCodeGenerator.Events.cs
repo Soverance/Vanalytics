@@ -40,6 +40,21 @@ public static partial class GearSwapCodeGenerator
             ("Gained", "gain",     "buff"),   // category, dispatch on buff name
             ("Lost",   "not gain", "buff"),   // category, dispatch on buff name
         ]),
+        ["trigger:pet_change"] = new("function pet_change(pet, gain)",
+        [
+            ("Summoned", "gain",     null),   // terminal: a pet appeared
+            ("Released", "not gain", null),   // terminal: pet left
+        ]),
+        ["trigger:pet_status_change"] = new("function pet_status_change(new, old)",
+        [
+            ("Engaged", "new == 'Engaged'", null),
+            ("Idle",    "new == 'Idle'",    null),
+        ]),
+        ["trigger:pet_aftercast"] = new("function pet_aftercast(spell)",
+        [
+            ("Engaged", "player.status == 'Engaged'", null),
+            ("Idle",    "player.status ~= 'Engaged'", null),
+        ]),
     };
 
     /// <summary>
