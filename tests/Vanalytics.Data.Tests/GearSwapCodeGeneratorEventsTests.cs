@@ -314,4 +314,33 @@ public class GearSwapCodeGeneratorEventsTests
         Assert.Contains("if player.status == 'Engaged' then equip(sets['TP Accuracy'])", lua);
         Assert.Contains("elseif player.status ~= 'Engaged' then equip(sets['Idle Default'])", lua);
     }
+
+    [Fact]
+    public void PetMidcast_named_plus_generic_dispatches_without_if_true()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:pet_midcast"), EquipNamed("e1",4,"Searing Light"), Equip("e2",2)],
+            [Edge("t","PetAction","e1"), Edge("t","PetAction","e2")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("function pet_midcast(spell)", lua);
+        Assert.Contains("    if spell.english == 'Searing Light' then equip(sets['Cure Set'])", lua);
+        Assert.Contains("    else equip(sets['Idle Default'])", lua);
+        Assert.DoesNotContain("if true", lua);
+    }
+
+    [Fact]
+    public void PetMidcast_generic_only_emits_bare_equip_no_if_true()
+    {
+        var graph = Graph(
+            [Trigger("t","trigger:pet_midcast"), Equip("e",2)],
+            [Edge("t","PetAction","e")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("function pet_midcast(spell)\n    equip(sets['Idle Default'])\nend", lua);
+        Assert.DoesNotContain("if true", lua);
+        Assert.DoesNotContain("spell.english", lua);
+    }
 }

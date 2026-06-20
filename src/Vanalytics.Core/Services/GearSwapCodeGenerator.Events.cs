@@ -55,6 +55,10 @@ public static partial class GearSwapCodeGenerator
             ("Engaged", "player.status == 'Engaged'", null),
             ("Idle",    "player.status ~= 'Engaged'", null),
         ]),
+        ["trigger:pet_midcast"] = new("function pet_midcast(spell)",
+        [
+            ("PetAction", "true", "spell.english"),   // lone guardless category pin (blood pacts / ready moves / automaton actions)
+        ]),
     };
 
     /// <summary>
@@ -75,6 +79,16 @@ public static partial class GearSwapCodeGenerator
         foreach (var node in graph.Nodes)
         {
             if (!Triggers.TryGetValue(node.Type, out var spec)) continue;
+
+            // Guardless single-category trigger (pet_midcast): emit the dispatch as the function body
+            // directly — no redundant `if true then … end`. Detected by a lone branch whose guard is "true".
+            if (spec.Branches.Length == 1 && spec.Branches[0].Cond == "true")
+            {
+                var fnBody = GuardlessCategoryBody(ctx, node, spec.Branches[0], equipById, setNamesById);
+                if (fnBody is null) continue;
+                sb.Append(spec.Signature).Append('\n').Append(fnBody).Append('\n').Append("end\n\n");
+                continue;
+            }
 
             var arms = new List<(string Cond, string Body)>();
             foreach (var (handle, cond, dispatch) in spec.Branches)
@@ -145,9 +159,11 @@ public static partial class GearSwapCodeGenerator
 
     // Category pin: dispatch on <dispatch> (e.g. spell.english, buff). Named leaves -> if/elseif chain;
     // generic (no actionName) -> trailing else. Only-generic collapses to an inline equip. Null if
-    // nothing resolves.
-    private static string? NestedBody(string dispatch, List<BlueprintNodeDto> leaves, IReadOnlyDictionary<long, string> names)
+    // nothing resolves. `indentSpaces` is the leading indent of the chain lines (8 inside an `if cond
+    // then` wrapper, 4 when emitted directly as a guardless function body).
+    private static string? NestedBody(string dispatch, List<BlueprintNodeDto> leaves, IReadOnlyDictionary<long, string> names, int indentSpaces = 8)
     {
+        var pad = new string(' ', indentSpaces);
         var named = leaves
             .Where(l => !string.IsNullOrEmpty(l.Data.ActionName))
             .Select(l => (Action: l.Data.ActionName!, Expr: EquipExpr(l.Data.GearSetId, l.Data.OverlaySetIds, names)))
@@ -164,11 +180,45 @@ public static partial class GearSwapCodeGenerator
         for (var i = 0; i < named.Count; i++)
         {
             var kw = i == 0 ? "if" : "elseif";
-            inner.Append($"        {kw} {dispatch} == {GearSwapLua.Key(named[i].Action)} then equip({named[i].Expr})\n");
+            inner.Append($"{pad}{kw} {dispatch} == {GearSwapLua.Key(named[i].Action)} then equip({named[i].Expr})\n");
         }
         if (genericExpr is not null)
-            inner.Append($"        else equip({genericExpr})\n");
-        inner.Append("        end");
+            inner.Append($"{pad}else equip({genericExpr})\n");
+        inner.Append($"{pad}end");
         return inner.ToString();
+    }
+
+    // A trigger with a single category pin and no meaningful guard (pet_midcast): emit its dispatch
+    // directly as the function body, at function-body indent (4 spaces), with no `if true then … end`.
+    // Returns null when nothing resolves (the function is then omitted entirely).
+    private static string? GuardlessCategoryBody(
+        ExecCtx ctx, BlueprintNodeDto node,
+        (string Handle, string Cond, string? Dispatch) branch,
+        IReadOnlyDictionary<string, BlueprintNodeDto> equipById,
+        IReadOnlyDictionary<long, string> names)
+    {
+        var targetIds = ctx.Graph.Edges
+            .Where(e => e.Source == node.Id && e.SourceHandle == branch.Handle)
+            .Select(e => e.Target).ToList();
+        if (targetIds.Count == 0) return null;
+
+        // Wired to a Branch -> recurse at function-body depth (indent level 1 => 4 spaces).
+        var branchId = targetIds.FirstOrDefault(t => ctx.ById.TryGetValue(t, out var n) && n.Type == "branch");
+        if (branchId is not null)
+            return EmitExec(ctx, branchId, 1, new HashSet<string>());
+
+        var leaves = targetIds
+            .Select(t => equipById.TryGetValue(t, out var n) ? n : null)
+            .Where(n => n is not null).Select(n => n!)
+            .ToList();
+        if (leaves.Count == 0) return null;
+
+        // Named leaves -> spell.english dispatch chain at 4-space indent.
+        if (leaves.Any(l => !string.IsNullOrEmpty(l.Data.ActionName)))
+            return NestedBody(branch.Dispatch!, leaves, names, 4)?.TrimStart('\n');
+
+        // Generic-only -> flat equip at 4-space indent.
+        var expr = EquipExpr(leaves[0].Data.GearSetId, leaves[0].Data.OverlaySetIds, names);
+        return expr is null ? null : $"    equip({expr})";
     }
 }
