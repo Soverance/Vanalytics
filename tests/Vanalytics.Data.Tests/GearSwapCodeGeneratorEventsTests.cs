@@ -343,4 +343,27 @@ public class GearSwapCodeGeneratorEventsTests
         Assert.DoesNotContain("if true", lua);
         Assert.DoesNotContain("spell.english", lua);
     }
+
+    [Fact]
+    public void PetMidcast_wired_to_branch_emits_condition_at_function_body_indent()
+    {
+        // pet_midcast PetAction -> Branch(buffactive['sneak attack']) ? Pet Hybrid : Pet Idle
+        // GuardlessCategoryBody calls EmitExec at depth 1 (4-space pad), so the `if` line is at
+        // 4 spaces and the equip lines inside the branch body are at 8 spaces.
+        var graph = Graph(
+            [Trigger("t","trigger:pet_midcast"), Branch("b"), CondBuff("c","Sneak Attack"),
+             Equip("e1",1), Equip("e2",2)],
+            [Edge("t","PetAction","b"), CondEdge("c","b"),
+             ExecEdge("b","true","e1"), ExecEdge("b","false","e2")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, new Dictionary<long,string>{[1]="Pet Hybrid",[2]="Pet Idle"});
+
+        Assert.Contains("function pet_midcast(spell)", lua);
+        Assert.Contains("    if buffactive['sneak attack'] then", lua);
+        Assert.Contains("        equip(sets['Pet Hybrid'])", lua);
+        Assert.Contains("    else", lua);
+        Assert.Contains("        equip(sets['Pet Idle'])", lua);
+        Assert.Contains("    end", lua);
+        Assert.DoesNotContain("if true", lua);
+    }
 }

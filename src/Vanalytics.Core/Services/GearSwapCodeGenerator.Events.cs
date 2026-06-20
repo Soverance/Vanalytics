@@ -173,6 +173,9 @@ public static partial class GearSwapCodeGenerator
         var generic = leaves.FirstOrDefault(l => string.IsNullOrEmpty(l.Data.ActionName));
         var genericExpr = generic is null ? null : EquipExpr(generic.Data.GearSetId, generic.Data.OverlaySetIds, names);
 
+        // Only-generic collapses to an inline " equip(...)" that sits after `then` — this form ignores
+        // indentSpaces, so a caller emitting at a non-standard indent (e.g. guardless function body)
+        // must handle the generic-only case itself rather than rely on this return.
         if (named.Count == 0)
             return genericExpr is null ? null : $" equip({genericExpr})";
 
@@ -214,6 +217,8 @@ public static partial class GearSwapCodeGenerator
         if (leaves.Count == 0) return null;
 
         // Named leaves -> spell.english dispatch chain at 4-space indent.
+        // NestedBody seeds a leading '\n' for the inline-after-`then` flow; at function-body level we
+        // strip it so the dispatch starts on the line right after the signature.
         if (leaves.Any(l => !string.IsNullOrEmpty(l.Data.ActionName)))
             return NestedBody(branch.Dispatch!, leaves, names, 4)?.TrimStart('\n');
 
