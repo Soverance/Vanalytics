@@ -104,7 +104,8 @@ public static partial class GearSwapCodeGenerator
     // Events whose handler receives a `spell` object (Events.cs Triggers signatures). A spell
     // condition reachable from any OTHER trigger would index a nil `spell` at runtime.
     private static readonly HashSet<string> SpellScopeTriggers =
-        new() { "trigger:precast", "trigger:midcast", "trigger:aftercast" };
+        new() { "trigger:precast", "trigger:midcast", "trigger:aftercast",
+                "trigger:pet_midcast", "trigger:pet_aftercast" };
 
     // Maps each exec-reachable branch id -> the set of trigger TYPES whose exec-walk reaches it.
     // Distinct from Reachable's merged set: here we keep the originating trigger type so a condition
@@ -171,10 +172,10 @@ public static partial class GearSwapCodeGenerator
                 branchOrigins.TryGetValue(b, out var origins)
                 && origins.Any(t => !SpellScopeTriggers.Contains(t)));
             if (outOfScope)
-                // Message names the current non-spell-scope triggers in prose; keep in sync with
-                // SpellScopeTriggers (the authoritative list) if trigger types are added.
+                // Keep the "no spell there" phrase stable (asserted by tests). SpellScopeTriggers is the
+                // authoritative list of events where a spell object exists.
                 diags.Add(Err(
-                    "Spell condition can't be used under status_change/buff_change — there's no spell there.",
+                    "Spell condition can't be used under this event — there's no spell there.",
                     spellId));
         }
     }

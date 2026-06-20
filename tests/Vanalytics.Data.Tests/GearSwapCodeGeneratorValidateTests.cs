@@ -310,12 +310,16 @@ public class GearSwapCodeGeneratorValidateTests
     // A terminal/category pin that exists on the given trigger (used only to wire the branch).
     private static string TriggerPin(string trigger) => trigger switch
     {
-        "trigger:precast"       => "WeaponSkill",
-        "trigger:midcast"       => "Ranged",
-        "trigger:aftercast"     => "Idle",
-        "trigger:status_change" => "Idle",
-        "trigger:buff_change"   => "Gained",
-        _                       => "Idle",
+        "trigger:precast"           => "WeaponSkill",
+        "trigger:midcast"           => "Ranged",
+        "trigger:aftercast"         => "Idle",
+        "trigger:status_change"     => "Idle",
+        "trigger:buff_change"       => "Gained",
+        "trigger:pet_midcast"       => "PetAction",
+        "trigger:pet_aftercast"     => "Idle",
+        "trigger:pet_change"        => "Summoned",
+        "trigger:pet_status_change" => "Idle",
+        _                           => "Idle",
     };
 
     private static IReadOnlyCollection<ResolvedGearSet> OneSet() =>
@@ -358,6 +362,40 @@ public class GearSwapCodeGeneratorValidateTests
         var graph = ReachableSpellGraph(trigger: "trigger:aftercast", field: "name", value: "Rudra's Storm");
         var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
         Assert.DoesNotContain(diags, d => d.NodeId == "s" && d.Message.Contains("no spell there"));
+    }
+
+    [Fact]
+    public void Spell_condition_under_pet_midcast_is_in_scope_clean()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:pet_midcast", field: "name", value: "Searing Light");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.NodeId == "s" && d.Message.Contains("no spell there"));
+    }
+
+    [Fact]
+    public void Spell_condition_under_pet_aftercast_is_in_scope_clean()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:pet_aftercast", field: "name", value: "Searing Light");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.NodeId == "s" && d.Message.Contains("no spell there"));
+    }
+
+    [Fact]
+    public void Spell_condition_under_pet_change_is_out_of_scope_error()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:pet_change", field: "name", value: "Searing Light");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "s"
+            && d.Message.Contains("no spell there"));
+    }
+
+    [Fact]
+    public void Spell_condition_under_pet_status_change_is_out_of_scope_error()
+    {
+        var graph = ReachableSpellGraph(trigger: "trigger:pet_status_change", field: "name", value: "Searing Light");
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "s"
+            && d.Message.Contains("no spell there"));
     }
 
     [Fact]
