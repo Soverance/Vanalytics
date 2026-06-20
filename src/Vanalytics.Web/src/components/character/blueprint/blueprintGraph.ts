@@ -4,7 +4,7 @@ import { JOB_ABILITIES } from '../../../lib/jobAbilities'
 import { SPELLS } from '../../../lib/spells'
 import { BUFFS } from '../../../lib/buffs'
 
-export type ActionCategory = 'WeaponSkill' | 'JobAbility' | 'Magic' | 'Buff'
+export type ActionCategory = 'WeaponSkill' | 'JobAbility' | 'Magic' | 'Buff' | 'PetAction'
 export interface ActionEntry { id: number; name: string; label?: string }
 
 // A handle is either a terminal pin (drop spawns a leaf immediately, flat equip) or a category pin
@@ -55,6 +55,30 @@ export const TRIGGER_DEFS: Record<
       Lost: { category: 'Buff', allowGeneric: false },
     },
   },
+  'trigger:pet_change': {
+    label: 'pet_change',
+    handles: ['Summoned', 'Released'],
+    handleLabels: { Summoned: 'Summoned', Released: 'Released' },
+    kinds: { Summoned: 'terminal', Released: 'terminal' },
+  },
+  'trigger:pet_status_change': {
+    label: 'pet_status_change',
+    handles: ['Engaged', 'Idle'],
+    handleLabels: { Engaged: 'Engaged', Idle: 'Idle' },
+    kinds: { Engaged: 'terminal', Idle: 'terminal' },
+  },
+  'trigger:pet_midcast': {
+    label: 'pet_midcast',
+    handles: ['PetAction'],
+    handleLabels: { PetAction: 'Pet Action' },
+    kinds: { PetAction: { category: 'PetAction', allowGeneric: true } },
+  },
+  'trigger:pet_aftercast': {
+    label: 'pet_aftercast',
+    handles: ['Engaged', 'Idle'],
+    handleLabels: { Engaged: 'Engaged', Idle: 'Idle (else)' },
+    kinds: { Engaged: 'terminal', Idle: 'terminal' },
+  },
 }
 
 // Category pin → its action category (its leaves dispatch on the category); terminal pin → null.
@@ -75,6 +99,8 @@ export function actionCatalog(category: ActionCategory): ActionEntry[] {
   if (category === 'WeaponSkill') return WEAPON_SKILLS.map(w => ({ id: w.id, name: w.name }))
   if (category === 'JobAbility') return JOB_ABILITIES.map(a => ({ id: a.id, name: a.name }))
   if (category === 'Buff') return BUFFS.map(b => ({ id: b.id, name: b.name, label: b.label }))
+  // Pet actions are blood pacts / ready moves (job abilities) and automaton spells — the merged list.
+  if (category === 'PetAction') return allActionsCatalog()
   return SPELLS.map(s => ({ id: s.id, name: s.name }))
 }
 

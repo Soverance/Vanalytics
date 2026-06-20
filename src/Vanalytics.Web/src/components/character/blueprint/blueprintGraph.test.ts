@@ -386,6 +386,28 @@ describe('spell condition node', () => {
   })
 })
 
+describe('pet event triggers', () => {
+  it('defines the four pet event triggers', () => {
+    expect(TRIGGER_DEFS['trigger:pet_change'].handles).toEqual(['Summoned', 'Released'])
+    expect(TRIGGER_DEFS['trigger:pet_status_change'].handles).toEqual(['Engaged', 'Idle'])
+    expect(TRIGGER_DEFS['trigger:pet_aftercast'].handles).toEqual(['Engaged', 'Idle'])
+    expect(TRIGGER_DEFS['trigger:pet_midcast'].handles).toEqual(['PetAction'])
+  })
+
+  it('pet terminal pins have no category; pet_midcast PetAction is a category pin', () => {
+    expect(categoryOfHandle('trigger:pet_change', 'Summoned')).toBeNull()
+    expect(categoryOfHandle('trigger:pet_status_change', 'Engaged')).toBeNull()
+    expect(categoryOfHandle('trigger:pet_aftercast', 'Idle')).toBeNull()
+    expect(categoryOfHandle('trigger:pet_midcast', 'PetAction')).toBe('PetAction')
+  })
+
+  it('PetAction catalog is the merged WS+JA+spell list (covers blood pacts & ready moves)', () => {
+    const pet = actionCatalog('PetAction')
+    expect(pet.find(a => a.name === 'Sneak Attack')).toBeTruthy()   // a job ability
+    expect(pet.length).toBeGreaterThan(actionCatalog('Magic').length)
+  })
+})
+
 describe('spell contains / families', () => {
   it('spellFace renders the contains form + placeholder', () => {
     expect(spellFace({ spellField: 'contains', spellValue: 'Waltz' })).toBe('contains "Waltz"')

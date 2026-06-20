@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { actionCatalog, type ActionCategory } from './blueprintGraph'
 
 const CATEGORY_LABEL: Record<ActionCategory, string> = {
-  WeaponSkill: 'Weapon Skill', JobAbility: 'Job Ability', Magic: 'Magic', Buff: 'Buff',
+  WeaponSkill: 'Weapon Skill', JobAbility: 'Job Ability', Magic: 'Magic', Buff: 'Buff', PetAction: 'Pet Action',
 }
 
 export default function ActionPicker({ x, y, category, allowGeneric, disabledNames, onPick, onClose }: {
