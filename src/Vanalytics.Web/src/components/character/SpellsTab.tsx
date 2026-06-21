@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, Fragment } from 'react'
 import { api } from '../../api/client'
 import type { CollectionResponse } from '../../types/api'
 import LoadingSpinner from '../LoadingSpinner'
-import { SPELLS, SPELL_TYPE_LABELS, spellWikiUrl, isScrollLearnable, type SpellType } from '../../lib/spells'
+import { SPELLS, SPELL_TYPE_LABELS, spellWikiUrl, isScrollLearnable, isObtainable, type SpellType } from '../../lib/spells'
 
 interface Props {
     characterId: string
@@ -14,7 +14,7 @@ const TYPE_ORDER: SpellType[] = [
     'BardSong', 'BlueMagic', 'Geomancy', 'Trust',
 ]
 
-type StatusFilter = 'all' | 'known' | 'unknown'
+type StatusFilter = 'all' | 'known' | 'unknown' | 'npcOnly'
 
 export default function SpellsTab({ characterId, fetchBase }: Props) {
     const base = fetchBase ?? `/api/characters/${characterId}`
@@ -47,25 +47,35 @@ export default function SpellsTab({ characterId, fetchBase }: Props) {
 
     const knownSet = useMemo(() => new Set(data?.spellIds ?? []), [data])
 
+    const obtainableSpells = useMemo(() => SPELLS.filter(isObtainable), [])
+    const npcOnlySpells = useMemo(() => SPELLS.filter(s => !isObtainable(s)), [])
+
     const byType = useMemo(() => {
         const map = new Map<SpellType, typeof SPELLS>()
-        for (const s of SPELLS) {
+        for (const s of obtainableSpells) {
             if (!map.has(s.type)) map.set(s.type, [])
             map.get(s.type)!.push(s)
         }
         return map
-    }, [])
+    }, [obtainableSpells])
 
     const filteredSpells = useMemo(() => {
-        let pool = typeFilter === 'All' ? SPELLS : byType.get(typeFilter) ?? []
-        if (statusFilter === 'known') pool = pool.filter(s => knownSet.has(s.id))
-        else if (statusFilter === 'unknown') pool = pool.filter(s => !knownSet.has(s.id))
+        let pool: typeof SPELLS
+        if (statusFilter === 'npcOnly') {
+            pool = typeFilter === 'All'
+                ? npcOnlySpells
+                : npcOnlySpells.filter(s => s.type === typeFilter)
+        } else {
+            pool = typeFilter === 'All' ? obtainableSpells : byType.get(typeFilter) ?? []
+            if (statusFilter === 'known') pool = pool.filter(s => knownSet.has(s.id))
+            else if (statusFilter === 'unknown') pool = pool.filter(s => !knownSet.has(s.id))
+        }
         const q = search.trim().toLowerCase()
         if (q) pool = pool.filter(s => s.name.toLowerCase().includes(q))
         return [...pool].sort((a, b) =>
             (a.minLevel - b.minLevel) || a.name.localeCompare(b.name)
         )
-    }, [typeFilter, statusFilter, search, byType, knownSet])
+    }, [typeFilter, statusFilter, search, byType, knownSet, obtainableSpells, npcOnlySpells])
 
     if (loading) return <LoadingSpinner />
 
@@ -79,7 +89,11 @@ export default function SpellsTab({ characterId, fetchBase }: Props) {
         )
     }
 
-    const totalKnown = data.spellIds.length
+    const obtainableKnownIds = data.spellIds.filter(id => {
+        const s = SPELLS.find(sp => sp.id === id)
+        return s ? isObtainable(s) : true
+    })
+    const totalKnown = obtainableKnownIds.length
     const colCount = typeFilter === 'All' ? 5 : 4
 
     return (
@@ -88,7 +102,7 @@ export default function SpellsTab({ characterId, fetchBase }: Props) {
             <div className="flex items-center gap-4 flex-wrap">
                 <div>
                     <span className="text-2xl font-semibold text-gray-100 tabular-nums">{totalKnown}</span>
-                    <span className="text-sm text-gray-500 ml-1">/ {SPELLS.length} known</span>
+                    <span className="text-sm text-gray-500 ml-1">/ {obtainableSpells.length} known</span>
                 </div>
                 <input
                     type="text"
@@ -98,17 +112,17 @@ export default function SpellsTab({ characterId, fetchBase }: Props) {
                     className="flex-1 min-w-[180px] rounded bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
                 <div className="flex gap-1">
-                    {(['all', 'known', 'unknown'] as const).map(s => (
+                    {(['all', 'known', 'unknown', 'npcOnly'] as const).map(s => (
                         <button
                             key={s}
                             onClick={() => setStatusFilter(s)}
-                            className={`px-2 py-1 rounded text-xs capitalize transition-colors ${
+                            className={`px-2 py-1 rounded text-xs transition-colors ${
                                 statusFilter === s
                                     ? 'bg-blue-500/30 text-blue-200 border border-blue-500/50'
                                     : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
                             }`}
                         >
-                            {s}
+                            {s === 'npcOnly' ? 'NPC-only' : s.charAt(0).toUpperCase() + s.slice(1)}
                         </button>
                     ))}
                 </div>
@@ -117,7 +131,7 @@ export default function SpellsTab({ characterId, fetchBase }: Props) {
             {/* Type filter pills */}
             <div className="flex flex-wrap gap-1.5">
                 {(['All', ...TYPE_ORDER] as const).map(t => {
-                    const pool = t === 'All' ? SPELLS : byType.get(t) ?? []
+                    const pool = t === 'All' ? obtainableSpells : byType.get(t) ?? []
                     const known = pool.filter(s => knownSet.has(s.id)).length
                     const label = t === 'All' ? 'All' : SPELL_TYPE_LABELS[t]
                     return (
@@ -178,6 +192,11 @@ export default function SpellsTab({ characterId, fetchBase }: Props) {
                                             </td>
                                             <td className={`px-3 py-1.5 ${known ? 'text-gray-100' : 'text-gray-500'}`}>
                                                 {s.name}
+                                                {s.npcOnly && (
+                                                    <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] bg-gray-700/50 text-gray-400 align-middle">
+                                                        NPC-only
+                                                    </span>
+                                                )}
                                             </td>
                                             {typeFilter === 'All' && (
                                                 <td className="px-3 py-1.5 text-gray-500 text-xs">

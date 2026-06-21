@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { spellWikiUrl, isScrollLearnable, type SpellCatalogEntry } from './spells'
+import { spellWikiUrl, isScrollLearnable, isObtainable, SPELLS, type SpellCatalogEntry } from './spells'
 
 const spell = (
   name: string,
@@ -42,5 +42,31 @@ describe('spellWikiUrl', () => {
     expect(spellWikiUrl(spell('Ifrit', 'SummonerPact'))).toBe(
       'https://www.bg-wiki.com/index.php?search=Ifrit',
     )
+  })
+})
+
+describe('isObtainable', () => {
+  it('is true for a normal player spell', () => {
+    const cure = SPELLS.find(s => s.name === 'Cure')!
+    expect(isObtainable(cure)).toBe(true)
+  })
+
+  it('is true for high-end sentinel-level spells (Death, Drain III)', () => {
+    expect(isObtainable(SPELLS.find(s => s.name === 'Death')!)).toBe(true)
+    expect(isObtainable(SPELLS.find(s => s.name === 'Drain III')!)).toBe(true)
+  })
+
+  it('is true for trusts', () => {
+    expect(isObtainable(SPELLS.find(s => s.type === 'Trust')!)).toBe(true)
+  })
+
+  it('is false for NPC-only spells', () => {
+    for (const name of ['Banish V', 'Firaga V', 'Poison V', 'Tractor II', 'Dokumori: San']) {
+      expect(isObtainable(SPELLS.find(s => s.name === name)!), name).toBe(false)
+    }
+  })
+
+  it('flags exactly the 28 known NPC-only catalog entries', () => {
+    expect(SPELLS.filter(s => s.npcOnly).length).toBe(28)
   })
 })
