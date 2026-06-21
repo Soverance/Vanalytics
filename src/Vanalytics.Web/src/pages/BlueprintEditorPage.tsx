@@ -10,7 +10,7 @@ import './BlueprintEditor.css'
 import { ArrowLeft, Download, Trash2, Copy, ClipboardPaste } from 'lucide-react'
 import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
-import { wouldCreateCycle, isValidConnection, isSingleTargetSource, handleInfo, handlesOf, upstreamChainEdgeIds } from '../components/character/blueprint/blueprintGraph'
+import { wouldCreateCycle, isValidConnection, isSingleTargetSource, handleInfo, handlesOf, upstreamChainEdgeIds, TRIGGER_DEFS } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
 import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, dropDuplicateTriggers, menuCandidateValid, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
@@ -35,11 +35,9 @@ import type {
 } from '../types/api'
 
 const nodeTypes = {
-  'trigger:status_change': TriggerNode,
-  'trigger:precast': TriggerNode,
-  'trigger:aftercast': TriggerNode,
-  'trigger:midcast': TriggerNode,
-  'trigger:buff_change': TriggerNode,
+  // Every trigger type renders with TriggerNode — derived from TRIGGER_DEFS so a newly added
+  // trigger can never be forgotten here (React Flow falls back to a blank default node otherwise).
+  ...Object.fromEntries(Object.keys(TRIGGER_DEFS).map((t) => [t, TriggerNode])),
   equip: EquipGearSetNode,
   mode: ModeNode,
   branch: BranchNode,
