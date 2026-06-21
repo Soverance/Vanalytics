@@ -101,6 +101,7 @@ public static partial class GearSwapCodeGenerator
     // deterministic order: trigger edges in graph order, each branch expands true-subtree then
     // false-subtree. For a graph with no branches this equals the direct trigger->equip children
     // in edge order, so get_sets() emission order (and existing golden output) is preserved.
+    // Sequential exec nodes (lua/print/chained equip) are walked via their 'out' edge.
     private static List<BlueprintNodeDto> ReachableEquips(BlueprintGraphDto graph)
     {
         var byId = graph.Nodes.ToDictionary(n => n.Id);
@@ -111,12 +112,16 @@ public static partial class GearSwapCodeGenerator
         {
             if (!visited.Add(nodeId)) return;
             if (!byId.TryGetValue(nodeId, out var node)) return;
-            if (node.Type == "equip") { result.Add(node); return; }
+            if (node.Type == "equip") result.Add(node);
             if (node.Type == "branch")
                 foreach (var h in new[] { "true", "false" })
                     foreach (var e in graph.Edges.Where(e => e.Source == nodeId && e.SourceHandle == h))
                         Walk(e.Target);
-            // mode/cond/other: not an equip leaf, stop.
+            else
+                // equip/mode/lua/print: follow the single exec 'out' chain so a set referenced only via
+                // a chained equip still emits into get_sets(). No 'out' edge => terminal, as before.
+                foreach (var e in graph.Edges.Where(e => e.Source == nodeId && e.SourceHandle == "out"))
+                    Walk(e.Target);
         }
 
         foreach (var edge in graph.Edges)

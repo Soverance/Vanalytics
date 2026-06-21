@@ -59,4 +59,51 @@ public class GearSwapCodeGeneratorCustomNodesTests
         Assert.Contains("function get_sets()", lua);
         Assert.DoesNotContain("\n\n\nfunction get_sets", lua); // no stray blank block
     }
+
+    [Fact]
+    public void Print_then_equip_chain_under_a_branch_emits_in_wiring_order()
+    {
+        // status_change Engaged -> Branch(HP%<25) ? (Print -> Equip) : -
+        var graph = Graph(
+            [Trigger("t", "trigger:status_change"), Branch("b"), CondStat("c", "hpp", "<", 25),
+             Print("p", "Low HP!", 5), Equip("e", 1)],
+            [Edge("t", "Engaged", "b"), CondEdge("c", "b"),
+             new() { Id = "b-true-p", Source = "b", SourceHandle = "true", Target = "p", TargetHandle = "in" },
+             new() { Id = "p-out-e", Source = "p", SourceHandle = "out", Target = "e", TargetHandle = "in" }]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        var pIdx = lua.IndexOf("add_to_chat(5, 'Low HP!')", StringComparison.Ordinal);
+        var eIdx = lua.IndexOf("equip(sets['TP'])", StringComparison.Ordinal);
+        Assert.True(pIdx >= 0 && eIdx > pIdx, "print must precede the chained equip");
+        Assert.Contains("if player.hpp < 25 then", lua);
+    }
+
+    [Fact]
+    public void Lua_node_emits_code_indented_to_context()
+    {
+        var graph = Graph(
+            [Trigger("t", "trigger:status_change"), Branch("b"), CondStat("c", "hpp", "<", 25),
+             Lua("l", "send_command('input /echo hi')")],
+            [Edge("t", "Engaged", "b"), CondEdge("c", "b"),
+             new() { Id = "b-true-l", Source = "b", SourceHandle = "true", Target = "l", TargetHandle = "in" }]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("send_command('input /echo hi')", lua);
+    }
+
+    [Fact]
+    public void Chained_equip_after_print_is_emitted_into_get_sets()
+    {
+        // A set referenced ONLY via a chained equip (print -> equip) must still emit in get_sets().
+        var graph = Graph(
+            [Trigger("t", "trigger:status_change"), Print("p", "engaged"), Equip("e", 1)],
+            [Edge("t", "Engaged", "p"),
+             new() { Id = "p-out-e", Source = "p", SourceHandle = "out", Target = "e", TargetHandle = "in" }]);
+
+        var result = GearSwapCodeGenerator.Generate(graph, [Set(1, "TP")]);
+
+        Assert.Contains("sets['TP'] = {", result.Lua);   // chained equip's set emitted
+    }
 }

@@ -15,6 +15,8 @@ public static partial class GearSwapCodeGenerator
         ["hp"] = "player.hp", ["hpp"] = "player.hpp", ["mp"] = "player.mp", ["mpp"] = "player.mpp", ["tp"] = "player.tp",
         ["pet.tp"] = "pet.tp", ["pet.hpp"] = "pet.hpp", ["world.moon"] = "world.moon.percent",
     };
+    // Fallback add_to_chat color when a print node has no ChatColor (the UI seeds one on create).
+    private const int DefaultChatColor = 1;
     // Everything EmitExec needs to walk the exec graph, resolved once per EmitEvents call.
     private sealed record ExecCtx(
         BlueprintGraphDto Graph,
@@ -143,8 +145,10 @@ public static partial class GearSwapCodeGenerator
     }
 
     // Recursively emits the exec flow at <targetId> as indented Lua statements (4*indent leading
-    // spaces, no leading/trailing newline). branch -> if/else; equip -> equip(...); mode -> equip
-    // current. Null when nothing resolves (skip).
+    // spaces, no leading/trailing newline). branch -> if/else (no pass-through). equip/mode/lua/print
+    // are sequential statements: each emits its own line(s), then follows its single 'out' exec edge to
+    // the next node and appends it on the following line at the SAME indent (UE "then" wiring). A node
+    // with no 'out' edge is terminal — identical to today. Null when nothing in the chain resolves.
     private static string? EmitExec(ExecCtx ctx, string targetId, int indent, HashSet<string> visited)
     {
         if (!visited.Add(targetId)) return null;
@@ -166,16 +170,46 @@ public static partial class GearSwapCodeGenerator
             return s;
         }
 
-        if (node.Type == "mode")
-            return ctx.ModeNsById.TryGetValue(targetId, out var ns)
-                ? $"{pad}equip(sets.{ns}[{ns}_Set_Names[{ns}_Index]])"
-                : null;
-
-        if (node.Type == "equip")
+        var self = node.Type switch
         {
-            var expr = EquipExpr(node.Data.GearSetId, node.Data.OverlaySetIds, ctx.Names);
-            return expr is null ? null : $"{pad}equip({expr})";
+            "mode" => ctx.ModeNsById.TryGetValue(targetId, out var ns)
+                ? $"{pad}equip(sets.{ns}[{ns}_Set_Names[{ns}_Index]])" : null,
+            "equip" => EquipExpr(node.Data.GearSetId, node.Data.OverlaySetIds, ctx.Names) is { } expr
+                ? $"{pad}equip({expr})" : null,
+            "lua" => EmitRawLua(node.Data.Code, pad),
+            "print" => EmitPrint(node.Data, pad),
+            _ => null,
+        };
+
+        // Follow the single exec 'out' edge (sequential chain). A node that itself resolves to nothing
+        // (e.g. deleted set) is skipped but the chain still continues.
+        var next = ExecTargetOf(ctx, targetId, "out");
+        var tail = next is null ? null : EmitExec(ctx, next, indent, visited);
+        if (self is null) return tail;
+        return tail is null ? self : $"{self}\n{tail}";
+    }
+
+    // Raw Lua emitted verbatim, each non-empty line prefixed with `pad` (the author's own relative
+    // indentation is preserved on top of that base). Null/blank -> null (skipped).
+    private static string? EmitRawLua(string? code, string pad)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return null;
+        var lines = code.Replace("\r\n", "\n").Replace("\r", "\n").Split('\n');
+        var sb = new System.Text.StringBuilder();
+        for (var i = 0; i < lines.Length; i++)
+        {
+            if (i > 0) sb.Append('\n');
+            var line = lines[i].TrimEnd();
+            if (line.Length > 0) sb.Append(pad).Append(line);
         }
-        return null;
+        return sb.ToString();
+    }
+
+    // add_to_chat(<color>, '<text>') at the given pad. Null/blank text -> null (skipped).
+    private static string? EmitPrint(BlueprintNodeDataDto data, string pad)
+    {
+        if (string.IsNullOrWhiteSpace(data.ChatText)) return null;
+        var color = data.ChatColor ?? DefaultChatColor;
+        return $"{pad}add_to_chat({color}, {GearSwapLua.Key(data.ChatText)})";
     }
 }
