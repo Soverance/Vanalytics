@@ -149,8 +149,8 @@ function BlueprintEditorInner() {
   }, [getNode, setCenter, getZoom])
 
   // Paste the clipboard so its top-left anchor lands at the given screen pointer. Returns false if
-  // nothing to paste / no pointer. Pasted nodes replace the current selection. Trigger nodes whose
-  // type already exists are dropped (triggers are singletons per type — see dropDuplicateTriggers).
+  // nothing to paste / no pointer. Pasted nodes replace the current selection. Trigger and setup nodes
+  // whose type already exists are dropped (singletons — see dropDuplicateSingletons).
   const pasteAt = useCallback((pointer: { x: number; y: number } | null): boolean => {
     const clip = clipboard.current
     if (!clip || clip.nodes.length === 0 || !pointer) return false
