@@ -235,4 +235,33 @@ public class GearSwapCodeGeneratorCustomNodesTests
         var graph = Graph([Setup("s", "include('organizer-lib')")], []);
         Assert.DoesNotContain(Validate(graph), d => d.Message.Contains("empty", StringComparison.OrdinalIgnoreCase));
     }
+
+    [Fact]
+    public void Setup_first_used_is_first_nonempty_even_with_leading_blank()
+    {
+        // [blank, A, B]: blank warns, A is "first used" (no warn), B warns "only first is used".
+        var graph = Graph([Setup("s0", "  "), Setup("sA", "A()"), Setup("sB", "B()")], []);
+
+        var diags = Validate(graph);
+
+        Assert.Contains(diags, d => d.Severity == "warning" && d.NodeId == "s0");   // blank
+        Assert.DoesNotContain(diags, d => d.NodeId == "sA");                         // first non-empty: no warning
+        Assert.Contains(diags, d => d.Severity == "warning" && d.NodeId == "sB");   // ignored extra
+    }
+
+    [Fact]
+    public void Validator_walks_exec_out_chain_through_a_print_to_a_downstream_equip()
+    {
+        // trigger -> print -> equip(NO set): the downstream equip is reachable THROUGH the print chain,
+        // so the empty-equip ERROR must fire (proves the validator's reachability follows out-chains).
+        var graph = Graph(
+            [Trigger("t", "trigger:status_change"), Print("p", "hi", 5),
+             new() { Id = "e", Type = "equip", Data = new() }],   // equip with no GearSetId, no overlays
+            [Edge("t", "Engaged", "p"),
+             new() { Id = "p-out-e", Source = "p", SourceHandle = "out", Target = "e", TargetHandle = "in" }]);
+
+        var diags = Validate(graph);
+
+        Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "e");   // CheckEquipNoSet saw the chained equip
+    }
 }
