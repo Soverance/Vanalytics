@@ -209,6 +209,16 @@ public static partial class GearSwapCodeGenerator
                         || string.IsNullOrWhiteSpace(n.Data.SpellValue))
                         diags.Add(Err("Spell condition has nothing selected.", id));
                     break;
+                case "pet":
+                    if (n.Data.PetField is not ("exists" or "status")
+                        || (n.Data.PetField == "status" && string.IsNullOrWhiteSpace(n.Data.PetValue)))
+                        diags.Add(Err("Pet condition has nothing selected.", id));
+                    break;
+                case "world":
+                    if (n.Data.WorldField is not ("weather" or "day" or "moghouse" or "zone")
+                        || (n.Data.WorldField is ("weather" or "day" or "zone") && string.IsNullOrWhiteSpace(n.Data.WorldValue)))
+                        diags.Add(Err("World condition has nothing selected.", id));
+                    break;
             }
         }
     }

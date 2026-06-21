@@ -328,6 +328,58 @@ public class GearSwapCodeGeneratorValidateTests
     private static IReadOnlyCollection<ResolvedGearSet> NoSets() =>
         Array.Empty<ResolvedGearSet>();
 
+    // ---- pet / world condition tests ------------------------------------
+
+    // status_change --Idle--> branch(true->equip set1); branch.cond <- the given condition node.
+    private static BlueprintGraphDto ReachableCondGraph(BlueprintNodeDto cond) => new()
+    {
+        Nodes =
+        {
+            new() { Id = "t", Type = "trigger:status_change" },
+            new() { Id = "b", Type = "branch" },
+            new() { Id = "e", Type = "equip", Data = new() { GearSetId = 1 } },
+            cond,
+        },
+        Edges =
+        {
+            new() { Id = "t-b", Source = "t", SourceHandle = "Idle",  Target = "b", TargetHandle = "in" },
+            new() { Id = "b-e", Source = "b", SourceHandle = "true",  Target = "e", TargetHandle = "in" },
+            new() { Id = "s-b", Source = cond.Id, Target = "b", TargetHandle = "cond" },
+        },
+    };
+
+    [Fact]
+    public void Pet_status_with_no_value_is_an_error()
+    {
+        var graph = ReachableCondGraph(new() { Id = "s", Type = "pet", Data = new() { PetField = "status", PetValue = "" } });
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "s" && d.Message.Contains("nothing selected"));
+    }
+
+    [Fact]
+    public void Pet_exists_is_complete()
+    {
+        var graph = ReachableCondGraph(new() { Id = "s", Type = "pet", Data = new() { PetField = "exists" } });
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.NodeId == "s" && d.Message.Contains("nothing selected"));
+    }
+
+    [Fact]
+    public void World_weather_with_no_value_is_an_error()
+    {
+        var graph = ReachableCondGraph(new() { Id = "s", Type = "world", Data = new() { WorldField = "weather", WorldValue = "" } });
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "s" && d.Message.Contains("nothing selected"));
+    }
+
+    [Fact]
+    public void World_mog_house_is_complete()
+    {
+        var graph = ReachableCondGraph(new() { Id = "s", Type = "world", Data = new() { WorldField = "moghouse" } });
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.NodeId == "s" && d.Message.Contains("nothing selected"));
+    }
+
     // ---- Task 5: spell out-of-scope reachability tests ------------------
 
     [Fact]
