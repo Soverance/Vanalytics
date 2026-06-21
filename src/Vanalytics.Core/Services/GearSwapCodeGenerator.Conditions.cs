@@ -85,6 +85,8 @@ public static partial class GearSwapCodeGenerator
                 };
 
             case "pet":
+                // pet.status / weather / day values are emitted VERBATIM (from a curated picker) — unlike
+                // buff, which lowercases for buffactive[]. Title-cased status strings (Idle/Engaged/Dead).
                 return n.Data.PetField switch
                 {
                     "exists" => "pet.isvalid",

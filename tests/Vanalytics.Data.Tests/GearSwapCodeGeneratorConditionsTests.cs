@@ -276,4 +276,18 @@ public class GearSwapCodeGeneratorConditionsTests
             [Exec("t","Idle","b"), Wire("w","b","cond"), Exec("b","true","e")]);
         Assert.DoesNotContain("function status_change", Emit(g, new(){[1]="Def"}));
     }
+
+    [Fact] public void World_weather_blank_emits_no_branch()
+    {
+        var g = Graph([Trigger("t","trigger:status_change"), Branch("b"), World("w","weather",null), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("w","b","cond"), Exec("b","true","e")]);
+        Assert.DoesNotContain("function status_change", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact] public void World_day_blank_emits_no_branch()
+    {
+        var g = Graph([Trigger("t","trigger:status_change"), Branch("b"), World("w","day",null), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("w","b","cond"), Exec("b","true","e")]);
+        Assert.DoesNotContain("function status_change", Emit(g, new(){[1]="Def"}));
+    }
 }
