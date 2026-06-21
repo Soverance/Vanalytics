@@ -182,4 +182,57 @@ public class GearSwapCodeGeneratorCustomNodesTests
         // No blank line between the last raw-lua statement and the closing `end`.
         Assert.DoesNotContain("do_b()\n\n", lua);
     }
+
+    private static List<Diagnostic> Validate(BlueprintGraphDto g, params ResolvedGearSet[] sets) =>
+        GearSwapCodeGenerator.Validate(g, sets);
+
+    [Fact]
+    public void Empty_lua_node_warns_when_reachable()
+    {
+        var graph = Graph(
+            [Trigger("t", "trigger:status_change"), Lua("l", "  ")],
+            [Edge("t", "Engaged", "l")]);
+        Assert.Contains(Validate(graph), d => d.Severity == "warning" && d.NodeId == "l");
+    }
+
+    [Fact]
+    public void Empty_print_node_warns_when_reachable()
+    {
+        var graph = Graph(
+            [Trigger("t", "trigger:status_change"), Print("p", "")],
+            [Edge("t", "Engaged", "p")]);
+        Assert.Contains(Validate(graph), d => d.Severity == "warning" && d.NodeId == "p");
+    }
+
+    [Fact]
+    public void Second_nonempty_setup_warns()
+    {
+        var graph = Graph([Setup("s1", "A()"), Setup("s2", "B()")], []);
+        var diags = Validate(graph);
+        Assert.Contains(diags, d => d.Severity == "warning" && d.NodeId == "s2");
+        Assert.DoesNotContain(diags, d => d.NodeId == "s1");
+    }
+
+    [Fact]
+    public void Print_only_pin_is_not_a_dead_trigger_pin()
+    {
+        var graph = Graph(
+            [Trigger("t", "trigger:status_change"), Print("p", "hi", 5)],
+            [Edge("t", "Engaged", "p")]);
+        Assert.DoesNotContain(Validate(graph), d => d.Severity == "error");
+    }
+
+    [Fact]
+    public void Unwired_lua_node_is_an_orphan_warning()
+    {
+        var graph = Graph([Lua("l", "x()")], []);
+        Assert.Contains(Validate(graph), d => d.Severity == "warning" && d.NodeId == "l");
+    }
+
+    [Fact]
+    public void Nonempty_setup_only_graph_is_not_flagged_empty()
+    {
+        var graph = Graph([Setup("s", "include('organizer-lib')")], []);
+        Assert.DoesNotContain(Validate(graph), d => d.Message.Contains("empty", StringComparison.OrdinalIgnoreCase));
+    }
 }

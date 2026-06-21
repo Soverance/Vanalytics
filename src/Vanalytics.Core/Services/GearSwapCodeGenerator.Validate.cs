@@ -39,6 +39,7 @@ public static partial class GearSwapCodeGenerator
         CheckSpellScope(ctx, diags);
         CheckDeletedSets(ctx, diags);
         CheckZeroMemberModes(ctx, diags);
+        CheckCustomNodes(ctx, diags);
         CheckOrphans(ctx, diags);
         CheckEmpty(ctx, diags);
         CheckFullOverlay(ctx, diags);
@@ -81,7 +82,10 @@ public static partial class GearSwapCodeGenerator
                 foreach (var h in new[] { "true", "false" })
                     foreach (var e in graph.Edges.Where(e => e.Source == id && e.SourceHandle == h))
                         WalkExec(e.Target);
-            // equip / mode are terminal exec targets
+            else
+                // equip/mode/lua/print: follow the sequential exec 'out' chain.
+                foreach (var e in graph.Edges.Where(e => e.Source == id && e.SourceHandle == "out"))
+                    WalkExec(e.Target);
         }
         foreach (var e in graph.Edges)
             if (Triggers.ContainsKey(NodeType(graph, e.Source)))
@@ -121,12 +125,17 @@ public static partial class GearSwapCodeGenerator
             {
                 if (!seen.Add(id)) return;
                 if (!byId.TryGetValue(id, out var n)) return;
-                if (n.Type != "branch") return;   // equip/mode are terminal exec targets
-                if (!result.TryGetValue(id, out var origins))
-                    result[id] = origins = new HashSet<string>();
-                origins.Add(trig.Type);
-                foreach (var h in new[] { "true", "false" })
-                    foreach (var e in graph.Edges.Where(e => e.Source == id && e.SourceHandle == h))
+                if (n.Type == "branch")
+                {
+                    if (!result.TryGetValue(id, out var origins))
+                        result[id] = origins = new HashSet<string>();
+                    origins.Add(trig.Type);
+                    foreach (var h in new[] { "true", "false" })
+                        foreach (var e in graph.Edges.Where(e => e.Source == id && e.SourceHandle == h))
+                            Walk(e.Target);
+                }
+                else
+                    foreach (var e in graph.Edges.Where(e => e.Source == id && e.SourceHandle == "out"))
                         Walk(e.Target);
             }
             foreach (var e in graph.Edges.Where(e => e.Source == trig.Id))
@@ -252,6 +261,32 @@ public static partial class GearSwapCodeGenerator
                 diags.Add(Warn("Mode has no member sets; it will not appear in the file.", n.Id));
     }
 
+    // setup is a singleton emitted at file top; warn empties + any non-first non-empty (ignored).
+    // lua/print warn when reachable-but-empty (mirrors CheckEquipNoSet only flagging reachable nodes).
+    private static void CheckCustomNodes(ValCtx ctx, List<Diagnostic> diags)
+    {
+        var firstNonEmptySeen = false;
+        foreach (var s in ctx.Graph.Nodes.Where(n => n.Type == "setup"))
+        {
+            if (string.IsNullOrWhiteSpace(s.Data.Code))
+            {
+                diags.Add(Warn("Setup node has no Lua; it emits nothing.", s.Id));
+                continue;
+            }
+            if (firstNonEmptySeen)
+                diags.Add(Warn("Only the first Setup node is used; this one is ignored.", s.Id));
+            firstNonEmptySeen = true;
+        }
+
+        foreach (var n in ctx.Graph.Nodes.Where(n => n.Type == "lua" && ctx.ExecReachable.Contains(n.Id)))
+            if (string.IsNullOrWhiteSpace(n.Data.Code))
+                diags.Add(Warn("Custom Lua node is empty; it emits nothing.", n.Id));
+
+        foreach (var n in ctx.Graph.Nodes.Where(n => n.Type == "print" && ctx.ExecReachable.Contains(n.Id)))
+            if (string.IsNullOrWhiteSpace(n.Data.ChatText))
+                diags.Add(Warn("Print node has no message; it emits nothing.", n.Id));
+    }
+
     private static void CheckOrphans(ValCtx ctx, List<Diagnostic> diags)
     {
         foreach (var n in ctx.Graph.Nodes)
@@ -259,6 +294,7 @@ public static partial class GearSwapCodeGenerator
             if (n.Type.StartsWith("trigger:")) continue;   // triggers are roots
             if (n.Type == "comment") continue;             // documentation only
             if (n.Type == "mode") continue;                // cycle-only modes are intentionally unwired
+            if (n.Type == "setup") continue;               // standalone file-load block, never wired
             if (ctx.ExecReachable.Contains(n.Id) || ctx.CondReachable.Contains(n.Id)) continue;
             diags.Add(Warn("This node isn't connected to anything that runs; it will be ignored.", n.Id));
         }
@@ -268,8 +304,9 @@ public static partial class GearSwapCodeGenerator
     {
         var anyTriggerWired = ctx.Graph.Edges.Any(e => Triggers.ContainsKey(NodeType(ctx.Graph, e.Source)));
         var hasNonEmptyMode = ctx.Graph.Nodes.Any(n => n.Type == "mode" && (n.Data.Members?.Count ?? 0) > 0);
-        // Only when no more-specific diagnostic already fired — every non-empty graph that trips this also produces a per-node diagnostic.
-        if (diags.Count == 0 && (ctx.Graph.Nodes.Count == 0 || (!anyTriggerWired && !hasNonEmptyMode)))
+        var hasSetup = ctx.Graph.Nodes.Any(n => n.Type == "setup" && !string.IsNullOrWhiteSpace(n.Data.Code));
+        // Only when no more-specific diagnostic already fired.
+        if (diags.Count == 0 && (ctx.Graph.Nodes.Count == 0 || (!anyTriggerWired && !hasNonEmptyMode && !hasSetup)))
             diags.Add(Warn("Blueprint is empty; a minimal file will be generated.", null));
     }
 
@@ -329,6 +366,9 @@ public static partial class GearSwapCodeGenerator
                         foreach (var h in new[] { "true", "false" })
                             foreach (var e in ctx.Graph.Edges.Where(e => e.Source == id && e.SourceHandle == h))
                                 Walk(e.Target);
+                    else
+                        foreach (var e in ctx.Graph.Edges.Where(e => e.Source == id && e.SourceHandle == "out"))
+                            Walk(e.Target);
                 }
                 foreach (var t in targets) Walk(t);
 
@@ -351,6 +391,8 @@ public static partial class GearSwapCodeGenerator
         "equip" => (n.Data.GearSetId is { } b && b != 0)
                    || (n.Data.OverlaySetIds ?? []).Any(id => id != 0),
         "mode"  => (n.Data.Members?.Count ?? 0) > 0,
+        "lua"   => !string.IsNullOrWhiteSpace(n.Data.Code),
+        "print" => !string.IsNullOrWhiteSpace(n.Data.ChatText),
         _ => false,
     };
 }
