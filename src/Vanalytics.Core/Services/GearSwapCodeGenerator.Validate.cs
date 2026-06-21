@@ -289,7 +289,7 @@ public static partial class GearSwapCodeGenerator
         var wired = ctx.Graph.Edges.FirstOrDefault(e => e.Target == n.Id && e.TargetHandle == "in")?.Source;
         var wiredOk = wired is not null && ctx.ById.TryGetValue(wired, out var src)
             && src.Type == "value" && !string.IsNullOrWhiteSpace(src.Data.Resource)
-            && StatResources.Contains(src.Data.Resource!);
+            && ValueSources.ContainsKey(src.Data.Resource!);
         var ownResOk = !string.IsNullOrWhiteSpace(n.Data.Resource) && StatResources.Contains(n.Data.Resource!);
         return wiredOk || ownResOk;
     }

@@ -464,4 +464,30 @@ public class GearSwapCodeGeneratorValidateTests
         Assert.Contains(diags, d => d.Severity == "error" && d.NodeId == "s"
             && d.Message.Contains("nothing selected"));
     }
+
+    [Fact]
+    public void Compare_wired_to_pet_value_source_is_complete()
+    {
+        // status_change Idle -> branch -[cond]<- op:compare; compare.in <- value(pet.tp); branch.true -> equip
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            {
+                new() { Id = "t", Type = "trigger:status_change" },
+                new() { Id = "b", Type = "branch" },
+                new() { Id = "c", Type = "op:compare", Data = new() { Op = ">=", Value = 1000 } },
+                new() { Id = "v", Type = "value", Data = new() { Resource = "pet.tp" } },
+                new() { Id = "e", Type = "equip", Data = new() { GearSetId = 1 } },
+            },
+            Edges =
+            {
+                new() { Id = "t-b", Source = "t", SourceHandle = "Idle",  Target = "b", TargetHandle = "in" },
+                new() { Id = "c-b", Source = "c", SourceHandle = "out",   Target = "b", TargetHandle = "cond" },
+                new() { Id = "v-c", Source = "v", SourceHandle = "out",   Target = "c", TargetHandle = "in" },
+                new() { Id = "b-e", Source = "b", SourceHandle = "true",  Target = "e", TargetHandle = "in" },
+            },
+        };
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.NodeId == "c" && d.Message.Contains("incomplete"));
+    }
 }
