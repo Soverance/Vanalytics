@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ClipboardPaste, Search } from 'lucide-react'
 import type { BlueprintNodeType } from '../../../types/api'
-import { STAT_RESOURCES } from './blueprintGraph'
+import { VALUE_SOURCES } from './blueprintGraph'
 import { BUFFS } from '../../../lib/buffs'
 
 interface Item { key: string; type: BlueprintNodeType; label: string; group: string; color: string; data?: Record<string, unknown> }
@@ -24,7 +24,9 @@ const STATIC_ITEMS: Item[] = [
   { key: 'op:not', type: 'op:not', label: 'NOT', group: 'Flow Control', color: '#a78bfa' },
   { key: 'op:compare', type: 'op:compare', label: 'Compare (≷)', group: 'Flow Control', color: '#f59e0b' },
   { key: 'spell', type: 'spell', label: 'Spell / Action is…', group: 'Flow Control', color: '#a78bfa' },
-  ...STAT_RESOURCES.map(r => ({ key: `value:${r.value}`, type: 'value' as const, label: r.label, group: 'Values', color: '#38bdf8', data: { resource: r.value } })),
+  { key: 'pet', type: 'pet', label: 'Pet state is…', group: 'Flow Control', color: '#fb923c' },
+  { key: 'world', type: 'world', label: 'World state is…', group: 'Flow Control', color: '#2dd4bf' },
+  ...VALUE_SOURCES.map(r => ({ key: `value:${r.value}`, type: 'value' as const, label: r.label, group: 'Values', color: '#38bdf8', data: { resource: r.value } })),
   { key: 'comment', type: 'comment', label: 'Comment', group: 'Annotation', color: '#e5e7eb' },
 ]
 

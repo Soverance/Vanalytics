@@ -24,6 +24,10 @@ import ValueNode from '../components/character/blueprint/ValueNode'
 import BuffNode from '../components/character/blueprint/BuffNode'
 import SpellNode from '../components/character/blueprint/SpellNode'
 import SpellInspector from '../components/character/blueprint/SpellInspector'
+import PetNode from '../components/character/blueprint/PetNode'
+import PetInspector from '../components/character/blueprint/PetInspector'
+import WorldNode from '../components/character/blueprint/WorldNode'
+import WorldInspector from '../components/character/blueprint/WorldInspector'
 import CompareNode from '../components/character/blueprint/CompareNode'
 import OperatorNode from '../components/character/blueprint/OperatorNode'
 import CommentNode from '../components/character/blueprint/CommentNode'
@@ -44,6 +48,8 @@ const nodeTypes = {
   value: ValueNode,
   buff: BuffNode,
   spell: SpellNode,
+  pet: PetNode,
+  world: WorldNode,
   'op:compare': CompareNode,
   'op:and': OperatorNode,
   'op:or': OperatorNode,
@@ -62,6 +68,8 @@ const defaultData = (type: BlueprintNodeType): Record<string, unknown> => {
     case 'value': return { resource: 'hpp' }
     case 'buff': return { buffName: null }
     case 'spell': return { spellField: 'name', spellValue: null }
+    case 'pet': return { petField: 'exists', petValue: null }
+    case 'world': return { worldField: 'weather', worldValue: null, worldLabel: null }
     case 'op:compare': return { resource: 'hpp', op: '<', value: 25 }
     case 'comment': return { text: '', width: 320, height: 180 }
     default: return {}   // branch, op:and/op:or/op:not, triggers
@@ -172,6 +180,10 @@ function BlueprintEditorInner() {
         ? { buffName: n.data.buffName ?? null }
         : n.type === 'spell'
         ? { spellField: (n.data.spellField ?? 'name') as 'name' | 'skill' | 'element' | 'contains', spellValue: n.data.spellValue ?? null }
+        : n.type === 'pet'
+        ? { petField: (n.data.petField ?? 'exists') as 'exists' | 'status', petValue: n.data.petValue ?? null }
+        : n.type === 'world'
+        ? { worldField: (n.data.worldField ?? 'weather') as 'weather' | 'day' | 'moghouse' | 'zone', worldValue: n.data.worldValue ?? null, worldLabel: n.data.worldLabel ?? null }
         : n.type === 'value'
         ? { resource: n.data.resource ?? 'hpp' }
         : n.type === 'op:compare'
@@ -199,6 +211,12 @@ function BlueprintEditorInner() {
       } else if (t === 'spell') {
         const d = n.data as { spellField?: 'name' | 'skill' | 'element' | 'contains' | null; spellValue?: string | null }
         data = { spellField: d.spellField ?? 'name', spellValue: d.spellValue ?? null }
+      } else if (t === 'pet') {
+        const d = n.data as { petField?: 'exists' | 'status' | null; petValue?: string | null }
+        data = { petField: d.petField ?? 'exists', petValue: d.petValue ?? null }
+      } else if (t === 'world') {
+        const d = n.data as { worldField?: 'weather' | 'day' | 'moghouse' | 'zone' | null; worldValue?: string | null; worldLabel?: string | null }
+        data = { worldField: d.worldField ?? 'weather', worldValue: d.worldValue ?? null, worldLabel: d.worldLabel ?? null }
       } else if (t === 'value') {
         data = { resource: (n.data as { resource?: string | null }).resource ?? 'hpp' }
       } else if (t === 'op:compare') {
@@ -409,7 +427,7 @@ function BlueprintEditorInner() {
     setNodes(n => [...n, node])
     setPalette(null)
     // Open the inspector for configurable nodes (mode, compare, spell); value/buff/comment are static.
-    if (type === 'mode' || type === 'op:compare' || type === 'spell') setSelectedId(node.id)
+    if (type === 'mode' || type === 'op:compare' || type === 'spell' || type === 'pet' || type === 'world') setSelectedId(node.id)
   }, [palette, nodes, focusNode])
 
   // Unified menu pick: if the menu was opened by dragging a tether (palette.connect set), spawn the
@@ -689,6 +707,21 @@ function BlueprintEditorInner() {
           <SpellInspector
             field={((selected.data as { spellField?: 'name' | 'skill' | 'element' | 'contains' | null }).spellField) ?? 'name'}
             value={(selected.data as { spellValue?: string | null }).spellValue}
+            onChange={(patch) => updateCondData(patch)}
+          />
+        )}
+        {selected?.type === 'pet' && (
+          <PetInspector
+            field={((selected.data as { petField?: 'exists' | 'status' | null }).petField) ?? 'exists'}
+            value={(selected.data as { petValue?: string | null }).petValue}
+            onChange={(patch) => updateCondData(patch)}
+          />
+        )}
+        {selected?.type === 'world' && (
+          <WorldInspector
+            field={((selected.data as { worldField?: 'weather' | 'day' | 'moghouse' | 'zone' | null }).worldField) ?? 'weather'}
+            value={(selected.data as { worldValue?: string | null }).worldValue}
+            label={(selected.data as { worldLabel?: string | null }).worldLabel}
             onChange={(patch) => updateCondData(patch)}
           />
         )}
