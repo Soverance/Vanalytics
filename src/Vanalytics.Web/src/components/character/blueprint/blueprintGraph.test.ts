@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, compareFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers, handleType, handleInfo, menuCandidateValid } from './blueprintGraph'
-import { spellFace, SPELL_SKILLS, SPELL_ELEMENTS, allActionsCatalog, NODE_HANDLES, SPELL_FAMILIES, familyMatchCount } from './blueprintGraph'
+import { spellFace, SPELL_SKILLS, SPELL_ELEMENTS, allActionsCatalog, NODE_HANDLES, SPELL_FAMILIES, familyMatchCount, VALUE_SOURCES, petFace, worldFace } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -428,5 +428,27 @@ describe('spell contains / families', () => {
     // helix appears only lowercase in compound names (Pyrohelix); capital 'Helix' matches nothing.
     expect(familyMatchCount('helix')).toBeGreaterThan(0)
     expect(familyMatchCount('Helix')).toBe(0)
+  })
+})
+
+describe('pet/world condition nodes', () => {
+  it('pet and world nodes are bool-out condition sources', () => {
+    expect(handleType('pet', 'out')).toBe('bool')
+    expect(handleType('world', 'out')).toBe('bool')
+  })
+
+  it('VALUE_SOURCES adds pet/world numerics with labels', () => {
+    expect(VALUE_SOURCES.find(s => s.value === 'pet.tp')?.label).toBe('Pet TP')
+    expect(VALUE_SOURCES.find(s => s.value === 'pet.hpp')?.label).toBe('Pet HP%')
+    expect(VALUE_SOURCES.find(s => s.value === 'world.moon')?.label).toBe('Moon %')
+    expect(statResourceLabel('pet.tp')).toBe('Pet TP')
+  })
+
+  it('petFace and worldFace render readable text', () => {
+    expect(petFace({ petField: 'exists' })).toBe('pet exists')
+    expect(petFace({ petField: 'status', petValue: 'Engaged' })).toBe('pet is Engaged')
+    expect(worldFace({ worldField: 'weather', worldValue: 'Fire' })).toBe('weather is Fire')
+    expect(worldFace({ worldField: 'moghouse' })).toBe('in mog house')
+    expect(worldFace({ worldField: 'zone', worldLabel: 'Western Adoulin' })).toBe('in Western Adoulin')
   })
 })

@@ -1158,6 +1158,8 @@ export type BlueprintNodeType =
   | 'value'
   | 'buff'
   | 'spell'
+  | 'pet'
+  | 'world'
   | 'op:compare'
   | 'op:and'
   | 'op:or'
@@ -1184,6 +1186,11 @@ export interface BlueprintNode {
     buffName?: string | null
     spellField?: 'name' | 'skill' | 'element' | 'contains' | null
     spellValue?: string | null
+    petField?: 'exists' | 'status' | null
+    petValue?: string | null
+    worldField?: 'weather' | 'day' | 'moghouse' | 'zone' | null
+    worldValue?: string | null
+    worldLabel?: string | null
     resource?: string | null
     op?: string | null
     value?: number | null

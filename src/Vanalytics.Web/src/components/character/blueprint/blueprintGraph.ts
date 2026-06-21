@@ -217,6 +217,8 @@ export const NODE_HANDLES: Record<string, HandleDef[]> = {
   value: [{ id: 'out', type: 'num', dir: 'out' }],
   buff: [{ id: 'out', type: 'bool', dir: 'out' }],
   spell: [{ id: 'out', type: 'bool', dir: 'out' }],
+  pet: [{ id: 'out', type: 'bool', dir: 'out' }],
+  world: [{ id: 'out', type: 'bool', dir: 'out' }],
   'op:compare': [
     { id: 'in', type: 'num', dir: 'in' },
     { id: 'out', type: 'bool', dir: 'out' },
@@ -267,8 +269,17 @@ export const STAT_RESOURCES: { value: string; label: string }[] = [
 ]
 export const STAT_OPS = ['<', '<=', '>', '>=', '==', '~='] as const
 
+// Value-node numeric sources = player stats + pet/world numerics. op:compare's inline picker stays
+// STAT_RESOURCES (player-only); these extra sources only reach codegen via a wired value node.
+export const VALUE_SOURCES: { value: string; label: string }[] = [
+  ...STAT_RESOURCES,
+  { value: 'pet.tp', label: 'Pet TP' },
+  { value: 'pet.hpp', label: 'Pet HP%' },
+  { value: 'world.moon', label: 'Moon %' },
+]
+
 export function statResourceLabel(r?: string | null): string {
-  return STAT_RESOURCES.find(x => x.value === r)?.label ?? r ?? '?'
+  return VALUE_SOURCES.find(x => x.value === r)?.label ?? r ?? '?'
 }
 
 // The text shown on an op:compare node's face. With a wired numeric input the resource is overridden
@@ -326,6 +337,27 @@ export const SPELL_FAMILIES: { value: string; label: string }[] = [
 // the displayed count matches the Lua plain string.find(spell.english, value, 1, true) at runtime.
 export function familyMatchCount(value: string): number {
   return allActionsCatalog().filter(a => a.name.includes(value)).length
+}
+
+// Curated pet status values (res/statuses en — verify against GearSwap pet.status during impl).
+export const PET_STATUSES: string[] = ['Idle', 'Engaged', 'Dead']
+
+// Node-face text for a pet condition.
+export function petFace(d: { petField?: string | null; petValue?: string | null }): string {
+  if (d.petField === 'exists') return 'pet exists'
+  if (d.petField === 'status') return d.petValue ? `pet is ${d.petValue}` : 'pet status…'
+  return 'pet…'
+}
+
+// Node-face text for a world condition. Zone shows the stored display label (codegen uses the id).
+export function worldFace(d: { worldField?: string | null; worldValue?: string | null; worldLabel?: string | null }): string {
+  switch (d.worldField) {
+    case 'weather': return d.worldValue ? `weather is ${d.worldValue}` : 'weather…'
+    case 'day': return d.worldValue ? `day is ${d.worldValue}` : 'day…'
+    case 'moghouse': return 'in mog house'
+    case 'zone': return d.worldLabel ? `in ${d.worldLabel}` : 'zone…'
+    default: return 'world…'
+  }
 }
 
 // Merged catalog for the "Action is" picker: spell.english matches WS, JA and magic alike, so one
