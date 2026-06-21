@@ -165,4 +165,21 @@ public class GearSwapCodeGeneratorCustomNodesTests
         var pIdx = lua.IndexOf("add_to_chat(5, 'WS!')", StringComparison.Ordinal);
         Assert.True(eIdx >= 0 && pIdx > eIdx, "chained print must follow the named-leaf equip");
     }
+
+    [Fact]
+    public void Lua_node_with_trailing_newline_does_not_leak_a_blank_line()
+    {
+        var graph = Graph(
+            [Trigger("t", "trigger:status_change"), Branch("b"), CondStat("c", "hpp", "<", 25),
+             Lua("l", "do_a()\ndo_b()\n")],   // trailing newline + multi-line
+            [Edge("t", "Engaged", "b"), CondEdge("c", "b"),
+             new() { Id = "b-true-l", Source = "b", SourceHandle = "true", Target = "l", TargetHandle = "in" }]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("do_a()", lua);
+        Assert.Contains("do_b()", lua);
+        // No blank line between the last raw-lua statement and the closing `end`.
+        Assert.DoesNotContain("do_b()\n\n", lua);
+    }
 }

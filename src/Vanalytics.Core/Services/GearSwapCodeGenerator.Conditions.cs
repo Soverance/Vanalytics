@@ -151,6 +151,8 @@ public static partial class GearSwapCodeGenerator
     // with no 'out' edge is terminal — identical to today. Null when nothing in the chain resolves.
     private static string? EmitExec(ExecCtx ctx, string targetId, int indent, HashSet<string> visited)
     {
+        // Note: unlike BoolExpr (which copies `visited` per child for DAG reuse), exec flow shares one
+        // `visited` — each exec node emits at most once; a pure "then" chain has no node convergence.
         if (!visited.Add(targetId)) return null;
         if (!ctx.ById.TryGetValue(targetId, out var node)) return null;
         var pad = new string(' ', indent * 4);
@@ -191,6 +193,8 @@ public static partial class GearSwapCodeGenerator
 
     // Raw Lua emitted verbatim, each non-empty line prefixed with `pad` (the author's own relative
     // indentation is preserved on top of that base). Null/blank -> null (skipped).
+    // Trailing newlines (common from a textarea) are stripped so they don't leak a blank line into the
+    // emitted function body; internal blank lines authored between statements are preserved.
     private static string? EmitRawLua(string? code, string pad)
     {
         if (string.IsNullOrWhiteSpace(code)) return null;
@@ -202,7 +206,7 @@ public static partial class GearSwapCodeGenerator
             var line = lines[i].TrimEnd();
             if (line.Length > 0) sb.Append(pad).Append(line);
         }
-        return sb.ToString();
+        return sb.ToString().TrimEnd('\n');
     }
 
     // add_to_chat(<color>, '<text>') at the given pad. Null/blank text -> null (skipped).

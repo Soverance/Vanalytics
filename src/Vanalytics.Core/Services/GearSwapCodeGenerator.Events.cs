@@ -118,6 +118,7 @@ public static partial class GearSwapCodeGenerator
                     }
                     else
                     {
+                        // Single-target wiring: only targetIds[0] is followed (first-wins, same as ExecTargetOf).
                         var flow = EmitExec(ctx, targetIds[0], 2, new HashSet<string>());
                         body = flow is null ? null : "\n" + flow;
                     }
@@ -210,7 +211,7 @@ public static partial class GearSwapCodeGenerator
         if (arms.Count == 0)
             return genericExpr is null ? null : $" equip({genericExpr})";
 
-        var inner = new System.Text.StringBuilder("\n");
+        var inner = new StringBuilder("\n");
         for (var i = 0; i < arms.Count; i++)
         {
             var kw = i == 0 ? "if" : "elseif";
