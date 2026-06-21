@@ -17,6 +17,10 @@ public class GearSwapCodeGeneratorConditionsTests
         new() { Id = id, Type = "op:compare", Data = new() { Resource = resource, Op = op, Value = value } };
     private static BlueprintNodeDto Op(string id, string type) => new() { Id = id, Type = type, Data = new() };
     private static BlueprintNodeDto Spell(string id, string? field, string? value) => new() { Id = id, Type = "spell", Data = new() { SpellField = field, SpellValue = value } };
+    private static BlueprintNodeDto Pet(string id, string? field, string? value) =>
+        new() { Id = id, Type = "pet", Data = new() { PetField = field, PetValue = value } };
+    private static BlueprintNodeDto World(string id, string? field, string? value) =>
+        new() { Id = id, Type = "world", Data = new() { WorldField = field, WorldValue = value } };
 
     // exec edge into a target's 'in'
     private static BlueprintEdgeDto Exec(string s, string h, string t) =>
@@ -214,6 +218,62 @@ public class GearSwapCodeGeneratorConditionsTests
         var g = Graph(
             [Trigger("t","trigger:status_change"), Branch("b"), Compare("c",null,">",1), Value("v","bogus"), Equip("e",1)],
             [Exec("t","Idle","b"), Wire("c","b","cond"), Wire("v","c","in"), Exec("b","true","e")]);
+        Assert.DoesNotContain("function status_change", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact] public void Pet_exists_emits_pet_isvalid()
+    {
+        var g = Graph([Trigger("t","trigger:status_change"), Branch("b"), Pet("p","exists",null), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("p","b","cond"), Exec("b","true","e")]);
+        Assert.Contains("if pet.isvalid then", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact] public void Pet_status_emits_pet_status_equality()
+    {
+        var g = Graph([Trigger("t","trigger:status_change"), Branch("b"), Pet("p","status","Engaged"), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("p","b","cond"), Exec("b","true","e")]);
+        Assert.Contains("if pet.status == 'Engaged' then", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact] public void Pet_status_blank_emits_no_branch()
+    {
+        var g = Graph([Trigger("t","trigger:status_change"), Branch("b"), Pet("p","status",null), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("p","b","cond"), Exec("b","true","e")]);
+        Assert.DoesNotContain("function status_change", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact] public void World_weather_emits_weather_element_equality()
+    {
+        var g = Graph([Trigger("t","trigger:status_change"), Branch("b"), World("w","weather","Fire"), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("w","b","cond"), Exec("b","true","e")]);
+        Assert.Contains("if world.weather_element == 'Fire' then", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact] public void World_day_emits_day_element_equality()
+    {
+        var g = Graph([Trigger("t","trigger:status_change"), Branch("b"), World("w","day","Ice"), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("w","b","cond"), Exec("b","true","e")]);
+        Assert.Contains("if world.day_element == 'Ice' then", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact] public void World_mog_house_emits_in_mog_house()
+    {
+        var g = Graph([Trigger("t","trigger:status_change"), Branch("b"), World("w","moghouse",null), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("w","b","cond"), Exec("b","true","e")]);
+        Assert.Contains("if world.in_mog_house then", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact] public void World_zone_emits_numeric_zone_id()
+    {
+        var g = Graph([Trigger("t","trigger:status_change"), Branch("b"), World("w","zone","230"), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("w","b","cond"), Exec("b","true","e")]);
+        Assert.Contains("if world.zone_id == 230 then", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact] public void World_zone_non_numeric_emits_no_branch()
+    {
+        var g = Graph([Trigger("t","trigger:status_change"), Branch("b"), World("w","zone","abc"), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("w","b","cond"), Exec("b","true","e")]);
         Assert.DoesNotContain("function status_change", Emit(g, new(){[1]="Def"}));
     }
 }

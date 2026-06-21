@@ -84,6 +84,28 @@ public static partial class GearSwapCodeGenerator
                     _          => null,
                 };
 
+            case "pet":
+                return n.Data.PetField switch
+                {
+                    "exists" => "pet.isvalid",
+                    "status" => string.IsNullOrWhiteSpace(n.Data.PetValue)
+                        ? null : $"pet.status == {GearSwapLua.Key(n.Data.PetValue)}",
+                    _ => null,
+                };
+
+            case "world":
+                switch (n.Data.WorldField)
+                {
+                    case "moghouse": return "world.in_mog_house";
+                    case "weather": return string.IsNullOrWhiteSpace(n.Data.WorldValue)
+                        ? null : $"world.weather_element == {GearSwapLua.Key(n.Data.WorldValue)}";
+                    case "day": return string.IsNullOrWhiteSpace(n.Data.WorldValue)
+                        ? null : $"world.day_element == {GearSwapLua.Key(n.Data.WorldValue)}";
+                    case "zone": return int.TryParse(n.Data.WorldValue, out var zid)
+                        ? $"world.zone_id == {zid}" : null;
+                    default: return null;
+                }
+
             case "op:and":
             case "op:or":
                 var a = InBool(ctx, nodeId, "a", visited);
