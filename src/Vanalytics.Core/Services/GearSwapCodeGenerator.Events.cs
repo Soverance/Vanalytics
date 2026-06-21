@@ -109,7 +109,18 @@ public static partial class GearSwapCodeGenerator
                 }
                 else if (dispatch is null)
                 {
-                    body = TerminalBody(targetIds, equipById, modeNsById, setNamesById);
+                    // Inline fast path (byte-identical): a lone equip/mode terminal target with no 'out'
+                    // chain keeps today's ` equip(...)` form. A lua/print target, or an equip/mode that
+                    // chains, drops to the multi-line block form via EmitExec (same shape as a branch arm).
+                    if (targetIds.Count == 1 && IsSimpleTerminal(ctx, targetIds[0]))
+                    {
+                        body = TerminalBody(targetIds, equipById, modeNsById, setNamesById);
+                    }
+                    else
+                    {
+                        var flow = EmitExec(ctx, targetIds[0], 2, new HashSet<string>());
+                        body = flow is null ? null : "\n" + flow;
+                    }
                 }
                 else
                 {
@@ -117,7 +128,7 @@ public static partial class GearSwapCodeGenerator
                         .Select(t => equipById.TryGetValue(t, out var n) ? n : null)
                         .Where(n => n is not null).Select(n => n!)
                         .ToList();
-                    body = leaves.Count == 0 ? null : NestedBody(dispatch, leaves, setNamesById);
+                    body = leaves.Count == 0 ? null : NestedBody(ctx, dispatch, leaves, setNamesById);
                 }
                 if (body is null) continue;
                 arms.Add((cond, body));
@@ -134,6 +145,15 @@ public static partial class GearSwapCodeGenerator
             sb.Append("end\n\n");
         }
         return sb.ToString();
+    }
+
+    // A terminal pin can stay inline (today's ` equip(...)`) only when its target is a lone equip/mode
+    // with no exec 'out' successor. lua/print targets, or a chained equip/mode, need the block form.
+    private static bool IsSimpleTerminal(ExecCtx ctx, string nodeId)
+    {
+        if (!ctx.ById.TryGetValue(nodeId, out var n)) return false;
+        if (n.Type != "equip" && n.Type != "mode") return false;
+        return ExecTargetOf(ctx, nodeId, "out") is null;
     }
 
     // Terminal pin: first resolvable target wins, inline after `then`. An equip leaf -> flat
@@ -158,32 +178,46 @@ public static partial class GearSwapCodeGenerator
     }
 
     // Category pin: dispatch on <dispatch> (e.g. spell.english, buff). Named leaves -> if/elseif chain;
-    // generic (no actionName) -> trailing else. Only-generic collapses to an inline equip. Null if
-    // nothing resolves. `indentSpaces` is the leading indent of the chain lines (8 inside an `if cond
-    // then` wrapper, 4 when emitted directly as a guardless function body).
-    private static string? NestedBody(string dispatch, List<BlueprintNodeDto> leaves, IReadOnlyDictionary<long, string> names, int indentSpaces = 8)
+    // generic (no actionName) -> trailing else. A named leaf that chains (exec 'out' wired) emits its
+    // arm as a multi-line block via EmitExec instead of an inline equip, so the chain isn't dropped.
+    // Only-generic collapses to an inline equip. Null if nothing resolves. `indentSpaces` is the chain
+    // line indent (8 inside an `if cond then` wrapper, 4 as a guardless function body).
+    private static string? NestedBody(ExecCtx ctx, string dispatch, List<BlueprintNodeDto> leaves, IReadOnlyDictionary<long, string> names, int indentSpaces = 8)
     {
         var pad = new string(' ', indentSpaces);
-        var named = leaves
-            .Where(l => !string.IsNullOrEmpty(l.Data.ActionName))
-            .Select(l => (Action: l.Data.ActionName!, Expr: EquipExpr(l.Data.GearSetId, l.Data.OverlaySetIds, names)))
-            .Where(x => x.Expr is not null)
-            .Select(x => (x.Action, Expr: x.Expr!))
-            .ToList();
+        var named = leaves.Where(l => !string.IsNullOrEmpty(l.Data.ActionName)).ToList();
         var generic = leaves.FirstOrDefault(l => string.IsNullOrEmpty(l.Data.ActionName));
         var genericExpr = generic is null ? null : EquipExpr(generic.Data.GearSetId, generic.Data.OverlaySetIds, names);
 
-        // Only-generic collapses to an inline " equip(...)" that sits after `then` — this form ignores
-        // indentSpaces, so a caller emitting at a non-standard indent (e.g. guardless function body)
-        // must handle the generic-only case itself rather than rely on this return.
-        if (named.Count == 0)
+        // Build (action, renderer) pairs, dropping leaves whose own equip resolves to nothing AND that
+        // don't chain to anything.
+        var arms = new List<(string Action, bool Block, string Inline, string? BlockBody)>();
+        foreach (var l in named)
+        {
+            var chains = ExecTargetOf(ctx, l.Id, "out") is not null;
+            if (chains)
+            {
+                var flow = EmitExec(ctx, l.Id, indentSpaces / 4 + 1, new HashSet<string>());
+                if (flow is not null) arms.Add((l.Data.ActionName!, true, "", flow));
+            }
+            else
+            {
+                var expr = EquipExpr(l.Data.GearSetId, l.Data.OverlaySetIds, names);
+                if (expr is not null) arms.Add((l.Data.ActionName!, false, $"equip({expr})", null));
+            }
+        }
+
+        if (arms.Count == 0)
             return genericExpr is null ? null : $" equip({genericExpr})";
 
-        var inner = new StringBuilder("\n");
-        for (var i = 0; i < named.Count; i++)
+        var inner = new System.Text.StringBuilder("\n");
+        for (var i = 0; i < arms.Count; i++)
         {
             var kw = i == 0 ? "if" : "elseif";
-            inner.Append($"{pad}{kw} {dispatch} == {GearSwapLua.Key(named[i].Action)} then equip({named[i].Expr})\n");
+            if (arms[i].Block)
+                inner.Append($"{pad}{kw} {dispatch} == {GearSwapLua.Key(arms[i].Action)} then\n{arms[i].BlockBody}\n");
+            else
+                inner.Append($"{pad}{kw} {dispatch} == {GearSwapLua.Key(arms[i].Action)} then {arms[i].Inline}\n");
         }
         if (genericExpr is not null)
             inner.Append($"{pad}else equip({genericExpr})\n");
@@ -220,7 +254,7 @@ public static partial class GearSwapCodeGenerator
         // NestedBody seeds a leading '\n' for the inline-after-`then` flow; at function-body level we
         // strip it so the dispatch starts on the line right after the signature.
         if (leaves.Any(l => !string.IsNullOrEmpty(l.Data.ActionName)))
-            return NestedBody(branch.Dispatch!, leaves, names, 4)?.TrimStart('\n');
+            return NestedBody(ctx, branch.Dispatch!, leaves, names, 4)?.TrimStart('\n');
 
         // Generic-only -> flat equip at 4-space indent.
         var expr = EquipExpr(leaves[0].Data.GearSetId, leaves[0].Data.OverlaySetIds, names);

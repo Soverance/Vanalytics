@@ -106,4 +106,63 @@ public class GearSwapCodeGeneratorCustomNodesTests
 
         Assert.Contains("sets['TP'] = {", result.Lua);   // chained equip's set emitted
     }
+
+    [Fact]
+    public void Terminal_pin_wired_directly_to_print_emits_block_form()
+    {
+        var graph = Graph(
+            [Trigger("t", "trigger:status_change"), Print("p", "Engaged!", 5)],
+            [Edge("t", "Engaged", "p")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("function status_change(new, old)", lua);
+        // block form: condition on its own line, statement indented beneath
+        Assert.Contains("if new == 'Engaged' then\n        add_to_chat(5, 'Engaged!')\n", lua);
+    }
+
+    [Fact]
+    public void Terminal_pin_equip_then_print_chain_emits_both_in_order()
+    {
+        var graph = Graph(
+            [Trigger("t", "trigger:aftercast"), Equip("e", 2), Print("p", "idle", 5)],
+            [Edge("t", "Idle", "e"),
+             new() { Id = "e-out-p", Source = "e", SourceHandle = "out", Target = "p", TargetHandle = "in" }]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        var eIdx = lua.IndexOf("equip(sets['Idle'])", StringComparison.Ordinal);
+        var pIdx = lua.IndexOf("add_to_chat(5, 'idle')", StringComparison.Ordinal);
+        Assert.True(eIdx >= 0 && pIdx > eIdx, "equip must precede the chained print");
+    }
+
+    [Fact]
+    public void Plain_terminal_equip_stays_inline_byte_identical()
+    {
+        var graph = Graph(
+            [Trigger("t", "trigger:status_change"), Equip("e", 1)],
+            [Edge("t", "Engaged", "e")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("if new == 'Engaged' then equip(sets['TP'])", lua);  // inline, unchanged
+    }
+
+    [Fact]
+    public void Named_category_leaf_that_chains_switches_that_arm_to_block()
+    {
+        // precast WeaponSkill -> "Rudra's Storm" leaf -> equip set 3, then chained print
+        var graph = Graph(
+            [Trigger("t", "trigger:precast"), EquipNamed("e", 3, "Rudra's Storm"), Print("p", "WS!", 5)],
+            [Edge("t", "WeaponSkill", "e"),
+             new() { Id = "e-out-p", Source = "e", SourceHandle = "out", Target = "p", TargetHandle = "in" }]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("if spell.type == 'WeaponSkill' then", lua);
+        Assert.Contains("if spell.english == 'Rudra\\'s Storm' then", lua);
+        var eIdx = lua.IndexOf("equip(sets['WS Rudra'])", StringComparison.Ordinal);
+        var pIdx = lua.IndexOf("add_to_chat(5, 'WS!')", StringComparison.Ordinal);
+        Assert.True(eIdx >= 0 && pIdx > eIdx, "chained print must follow the named-leaf equip");
+    }
 }
