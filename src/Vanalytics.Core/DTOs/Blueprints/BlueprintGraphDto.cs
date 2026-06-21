@@ -10,7 +10,7 @@ public class BlueprintGraphDto
 public class BlueprintNodeDto
 {
     public string Id { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;      // trigger:* | equip | mode | branch | value | buff | spell | op:compare | op:and | op:or | op:not | comment
+    public string Type { get; set; } = string.Empty;      // trigger:* | equip | mode | branch | value | buff | spell | op:compare | op:and | op:or | op:not | comment | setup | lua | print
     public BlueprintPositionDto Position { get; set; } = new();
     public BlueprintNodeDataDto Data { get; set; } = new();
 }
@@ -94,6 +94,18 @@ public class BlueprintNodeDataDto
 
     /// <summary>On a `comment` node: the frame height in flow units.</summary>
     public double? Height { get; set; }
+
+    /// <summary>On a `setup` (file-top, singleton) or `lua` (in-event) node: raw Lua emitted
+    /// verbatim — the escape hatch. `setup` goes at file top; `lua` is an exec statement in an event.</summary>
+    public string? Code { get; set; }
+
+    /// <summary>On a `print` node: the chat message text. Emitted as a single-quoted Lua literal in
+    /// add_to_chat(ChatColor, '<ChatText>').</summary>
+    public string? ChatText { get; set; }
+
+    /// <summary>On a `print` node: the FFXI/Windower add_to_chat color code. Null falls back to the
+    /// generator default.</summary>
+    public int? ChatColor { get; set; }
 }
 
 public class BlueprintEdgeDto
