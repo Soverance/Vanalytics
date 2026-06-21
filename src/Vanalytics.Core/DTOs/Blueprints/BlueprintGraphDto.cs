@@ -48,8 +48,9 @@ public class BlueprintNodeDataDto
     /// codegen for the buffactive[...] key. Display uses the Title-Case label.</summary>
     public string? BuffName { get; set; }
 
-    /// <summary>On a `value` node, or an `op:compare` node's own (unwired) source: the player field to
-    /// test — one of hp, hpp, mp, mpp, tp (used verbatim as player.&lt;Resource&gt;).</summary>
+    /// <summary>On a `value` node: the numeric source — a player stat (hp/hpp/mp/mpp/tp →
+    /// player.&lt;r&gt;), pet.tp, pet.hpp, or world.moon (→ world.moon.percent). On an `op:compare`
+    /// node's own (unwired) source: a player stat only (hp/hpp/mp/mpp/tp).</summary>
     public string? Resource { get; set; }
 
     /// <summary>On an `op:compare` node: the Lua comparison operator, one of &lt; &lt;= &gt; &gt;= == ~=.</summary>
@@ -65,6 +66,25 @@ public class BlueprintNodeDataDto
     /// (field "name"), a skill name (field "skill"), or an element (field "element"). Emitted
     /// verbatim (NOT case-folded) as a Lua string literal.</summary>
     public string? SpellValue { get; set; }
+
+    /// <summary>On a `pet` node: which pet field to test — "exists" (pet.isvalid) or "status"
+    /// (pet.status == PetValue).</summary>
+    public string? PetField { get; set; }
+
+    /// <summary>On a `pet` node with field "status": the pet status to match (e.g. "Engaged").</summary>
+    public string? PetValue { get; set; }
+
+    /// <summary>On a `world` node: which world field to test — "weather"/"day" (element equality),
+    /// "moghouse" (world.in_mog_house), or "zone" (world.zone_id == WorldValue).</summary>
+    public string? WorldField { get; set; }
+
+    /// <summary>On a `world` node: the value to match — an element name (weather/day) or a numeric
+    /// zone id as a string (zone). Null for "moghouse".</summary>
+    public string? WorldValue { get; set; }
+
+    /// <summary>On a `world` zone node: the zone's display name (for the node face/inspector only;
+    /// codegen compares WorldValue as the numeric zone id).</summary>
+    public string? WorldLabel { get; set; }
 
     /// <summary>On a `comment` node: the free-text label (documentation only — never emitted to Lua).</summary>
     public string? Text { get; set; }
