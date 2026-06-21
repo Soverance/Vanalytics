@@ -573,4 +573,49 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         Assert.Contains("if gain then equip(sets['Pet Idle'])", gen.Lua);
         Assert.DoesNotContain(gen.Diagnostics, d => d.Severity == "error");
     }
+
+    [Fact]
+    public async Task Blueprint_with_world_condition_roundtrips_and_generates()
+    {
+        var (token, charId) = await SetupAsync("wfworld@test.com", "wfworld", "Wfworld");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var set = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "Fire Day Set", Job = "THF", Category = "Idle",
+                Slots = [ new GearSetSlotDto { Slot = "Head", ItemId = 13892, ItemName = "Adhemar Bonnet +1", Augments = [] } ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        // status_change Idle -> branch -[cond]<- world(day == Fire); branch -[true]-> equip
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:status_change", Data = new() },
+                new() { Id = "b", Type = "branch", Data = new() },
+                new() { Id = "w", Type = "world", Data = new() { WorldField = "day", WorldValue = "Fire" } },
+                new() { Id = "e", Type = "equip", Data = new() { GearSetId = set!.Id } },
+            ],
+            Edges =
+            [
+                new() { Id = "e1", Source = "t", SourceHandle = "Idle",  Target = "b", TargetHandle = "in" },
+                new() { Id = "e2", Source = "w", SourceHandle = "out",   Target = "b", TargetHandle = "cond" },
+                new() { Id = "e3", Source = "b", SourceHandle = "true",  Target = "e", TargetHandle = "in" },
+            ],
+        };
+        var put = await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var wf = await _client.GetFromJsonAsync<BlueprintResponse>($"/api/characters/{charId}/blueprints/THF");
+        var world = Assert.Single(wf!.Graph.Nodes, n => n.Type == "world");
+        Assert.Equal("day", world.Data.WorldField);
+        Assert.Equal("Fire", world.Data.WorldValue);
+
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+        Assert.Contains("if world.day_element == 'Fire' then", gen!.Lua);
+        Assert.DoesNotContain(gen.Diagnostics, d => d.Severity == "error");
+    }
 }
