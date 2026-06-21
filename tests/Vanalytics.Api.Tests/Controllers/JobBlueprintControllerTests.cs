@@ -618,4 +618,51 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         Assert.Contains("if world.day_element == 'Fire' then", gen!.Lua);
         Assert.DoesNotContain(gen.Diagnostics, d => d.Severity == "error");
     }
+
+    [Fact]
+    public async Task Generate_emits_setup_at_top_and_print_then_chained_equip()
+    {
+        var (token, charId) = await SetupAsync("wfsetup@test.com", "wfsetup", "Wfsetup");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var set = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "Engaged Set", Job = "THF", Category = "Engaged",
+                Slots = [ new GearSetSlotDto { Slot = "Head", ItemId = 13892, ItemName = "Adhemar Bonnet +1", Augments = [] } ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+        var setId = set!.Id;
+
+        // setup (file-top) + status_change -[Engaged]-> print -[out]-> equip
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "su", Type = "setup",                 Data = new() { Code = "include('organizer-lib')" } },
+                new() { Id = "t",  Type = "trigger:status_change", Data = new() },
+                new() { Id = "p",  Type = "print",                 Data = new() { ChatText = "Engaged!", ChatColor = 5 } },
+                new() { Id = "e",  Type = "equip",                 Data = new() { GearSetId = setId } },
+            ],
+            Edges =
+            [
+                new() { Id = "e1", Source = "t", SourceHandle = "Engaged", Target = "p", TargetHandle = "in" },
+                new() { Id = "e2", Source = "p", SourceHandle = "out",     Target = "e", TargetHandle = "in" },
+            ],
+        };
+        var put = await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var gen = await (await _client.PostAsync($"/api/characters/{charId}/blueprints/THF/generate", null))
+            .Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+
+        Assert.DoesNotContain(gen!.Diagnostics, d => d.Severity == "error");
+        Assert.Contains("function get_sets()", gen.Lua);
+        // setup at file top, before get_sets
+        Assert.True(gen.Lua.IndexOf("include('organizer-lib')", StringComparison.Ordinal)
+                    < gen.Lua.IndexOf("function get_sets()", StringComparison.Ordinal));
+        // print then chained equip in status_change
+        Assert.Contains("add_to_chat(", gen.Lua);
+        Assert.Contains("function status_change(new, old)", gen.Lua);
+    }
 }
