@@ -22,6 +22,8 @@ export default function WorldInspector({ field, value, label, onChange }: {
       .finally(() => setZonesLoaded(true))
   }, [field, zonesLoaded])
 
+  useEffect(() => { setQ('') }, [field])
+
   const zoneRows = useMemo(() => {
     const needle = q.trim().toLowerCase()
     const list = needle ? zones.filter(z => z.name.toLowerCase().includes(needle)) : zones
