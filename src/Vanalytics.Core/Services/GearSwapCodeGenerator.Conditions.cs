@@ -7,6 +7,14 @@ public static partial class GearSwapCodeGenerator
 {
     private static readonly HashSet<string> StatResources = new() { "hp", "hpp", "mp", "mpp", "tp" };
     private static readonly HashSet<string> StatOps = new() { "<", "<=", ">", ">=", "==", "~=" };
+    // Value-node numeric sources: stored Resource -> Lua accessor. Player stats keep player.<r>; pet/world
+    // stats map to their own globals. op:compare's INLINE resource stays player-only (StatResources) — pet
+    // and world numerics only reach codegen via a wired value node.
+    private static readonly Dictionary<string, string> ValueSources = new()
+    {
+        ["hp"] = "player.hp", ["hpp"] = "player.hpp", ["mp"] = "player.mp", ["mpp"] = "player.mpp", ["tp"] = "player.tp",
+        ["pet.tp"] = "pet.tp", ["pet.hpp"] = "pet.hpp", ["world.moon"] = "world.moon.percent",
+    };
     // Everything EmitExec needs to walk the exec graph, resolved once per EmitEvents call.
     private sealed record ExecCtx(
         BlueprintGraphDto Graph,
@@ -106,11 +114,7 @@ public static partial class GearSwapCodeGenerator
         if (!visited.Add(nodeId)) return null;
         if (!ctx.ById.TryGetValue(nodeId, out var n)) return null;
         if (n.Type == "value")
-        {
-            if (string.IsNullOrWhiteSpace(n.Data.Resource) || !StatResources.Contains(n.Data.Resource))
-                return null;
-            return $"player.{n.Data.Resource}";
-        }
+            return n.Data.Resource is { } r && ValueSources.TryGetValue(r, out var acc) ? acc : null;
         return null;
     }
 

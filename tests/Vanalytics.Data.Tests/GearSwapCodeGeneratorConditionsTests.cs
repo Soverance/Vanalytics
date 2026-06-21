@@ -180,4 +180,40 @@ public class GearSwapCodeGeneratorConditionsTests
             ]);
         return Emit(g, new() { [1] = "WS" });
     }
+
+    [Fact]
+    public void Value_pet_tp_emits_pet_tp_accessor()
+    {
+        var g = Graph(
+            [Trigger("t","trigger:status_change"), Branch("b"), Compare("c","hpp",">=",1000), Value("v","pet.tp"), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("c","b","cond"), Wire("v","c","in"), Exec("b","true","e")]);
+        Assert.Contains("if pet.tp >= 1000 then", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact]
+    public void Value_pet_hpp_emits_pet_hpp_accessor()
+    {
+        var g = Graph(
+            [Trigger("t","trigger:status_change"), Branch("b"), Compare("c","hpp","<",50), Value("v","pet.hpp"), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("c","b","cond"), Wire("v","c","in"), Exec("b","true","e")]);
+        Assert.Contains("if pet.hpp < 50 then", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact]
+    public void Value_moon_emits_world_moon_percent()
+    {
+        var g = Graph(
+            [Trigger("t","trigger:status_change"), Branch("b"), Compare("c","hpp",">",90), Value("v","world.moon"), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("c","b","cond"), Wire("v","c","in"), Exec("b","true","e")]);
+        Assert.Contains("if world.moon.percent > 90 then", Emit(g, new(){[1]="Def"}));
+    }
+
+    [Fact]
+    public void Value_unknown_source_emits_no_branch()
+    {
+        var g = Graph(
+            [Trigger("t","trigger:status_change"), Branch("b"), Compare("c",null,">",1), Value("v","bogus"), Equip("e",1)],
+            [Exec("t","Idle","b"), Wire("c","b","cond"), Wire("v","c","in"), Exec("b","true","e")]);
+        Assert.DoesNotContain("function status_change", Emit(g, new(){[1]="Def"}));
+    }
 }
