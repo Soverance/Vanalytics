@@ -12,7 +12,7 @@ import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
 import { wouldCreateCycle, isValidConnection, isSingleTargetSource, handleInfo, handlesOf, upstreamChainEdgeIds, TRIGGER_DEFS } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
-import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, dropDuplicateTriggers, menuCandidateValid, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, dropDuplicateSingletons, DEFAULT_CHAT_COLOR, menuCandidateValid, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
 import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
 import NodePalette from '../components/character/blueprint/NodePalette'
@@ -31,6 +31,12 @@ import WorldInspector from '../components/character/blueprint/WorldInspector'
 import CompareNode from '../components/character/blueprint/CompareNode'
 import OperatorNode from '../components/character/blueprint/OperatorNode'
 import CommentNode from '../components/character/blueprint/CommentNode'
+import SetupNode from '../components/character/blueprint/SetupNode'
+import LuaNode from '../components/character/blueprint/LuaNode'
+import PrintNode from '../components/character/blueprint/PrintNode'
+import SetupInspector from '../components/character/blueprint/SetupInspector'
+import LuaInspector from '../components/character/blueprint/LuaInspector'
+import PrintInspector from '../components/character/blueprint/PrintInspector'
 import CompareInspector from '../components/character/blueprint/CompareInspector'
 import GearSetExportModal from '../components/character/GearSetExportModal'
 import ValidationResultsPanel from '../components/character/blueprint/ValidationResultsPanel'
@@ -55,6 +61,9 @@ const nodeTypes = {
   'op:or': OperatorNode,
   'op:not': OperatorNode,
   comment: CommentNode,
+  setup: SetupNode,
+  lua: LuaNode,
+  print: PrintNode,
 }
 
 let idSeq = 1
@@ -72,6 +81,9 @@ const defaultData = (type: BlueprintNodeType): Record<string, unknown> => {
     case 'world': return { worldField: 'weather', worldValue: null, worldLabel: null }
     case 'op:compare': return { resource: 'hpp', op: '<', value: 25 }
     case 'comment': return { text: '', width: 320, height: 180 }
+    case 'setup': return { code: '' }
+    case 'lua': return { code: '' }
+    case 'print': return { chatText: '', chatColor: DEFAULT_CHAT_COLOR }
     default: return {}   // branch, op:and/op:or/op:not, triggers
   }
 }
@@ -146,8 +158,9 @@ function BlueprintEditorInner() {
     const anchor = clipboardAnchor(clip)
     const offset = { x: flow.x - anchor.x, y: flow.y - anchor.y }
     const pasted = pasteClone(clip, newId, offset)
-    const existingTriggers = new Set(nodesRef.current.filter(n => n.type?.startsWith('trigger:')).map(n => n.type!))
-    const { nodes: nn, edges: ee } = dropDuplicateTriggers(pasted.nodes, pasted.edges, existingTriggers)
+    const existingSingletons = new Set(
+      nodesRef.current.filter(n => n.type?.startsWith('trigger:') || n.type === 'setup').map(n => n.type!))
+    const { nodes: nn, edges: ee } = dropDuplicateSingletons(pasted.nodes, pasted.edges, existingSingletons)
     if (nn.length === 0) return false   // everything pasted was a duplicate trigger
     setNodes(prev => [...prev.map(n => ({ ...n, selected: false })), ...nn])
     setEdges(prev => [...prev, ...ee])
@@ -190,6 +203,10 @@ function BlueprintEditorInner() {
         ? { resource: n.data.resource ?? 'hpp', op: n.data.op ?? '<', value: n.data.value ?? 25 }
         : n.type === 'comment'
         ? { text: n.data.text ?? '', width: n.data.width ?? 320, height: n.data.height ?? 180 }
+        : n.type === 'setup' || n.type === 'lua'
+        ? { code: n.data.code ?? '' }
+        : n.type === 'print'
+        ? { chatText: n.data.chatText ?? '', chatColor: n.data.chatColor ?? DEFAULT_CHAT_COLOR }
         : {}   // branch, op:and/op:or/op:not: no data
       return { id: n.id, type: n.type, position: n.position, data, ...nodeExtras(n.type, data) }
     }))
@@ -227,6 +244,11 @@ function BlueprintEditorInner() {
         // node.width/height are the live RF dims (NodeResizer writes them); data mirrors them via
         // onResize. Prefer the live node dims, fall back to data, then the default.
         data = { text: d.text ?? '', width: n.width ?? d.width ?? 320, height: n.height ?? d.height ?? 180 }
+      } else if (t === 'setup' || t === 'lua') {
+        data = { code: (n.data as { code?: string | null }).code ?? '' }
+      } else if (t === 'print') {
+        const d = n.data as { chatText?: string | null; chatColor?: number | null }
+        data = { chatText: d.chatText ?? '', chatColor: d.chatColor ?? DEFAULT_CHAT_COLOR }
       } else if (t === 'branch' || t === 'op:and' || t === 'op:or' || t === 'op:not') {
         data = {}
       } else {
@@ -418,7 +440,7 @@ function BlueprintEditorInner() {
     // Triggers are singletons per type: each maps 1:1 to a Lua event function (precast/aftercast/…),
     // so a second one would emit a duplicate `function precast(spell)` that silently overwrites the
     // first. If one already exists, navigate to it instead of creating a duplicate.
-    if (type.startsWith('trigger:')) {
+    if (type.startsWith('trigger:') || type === 'setup') {
       const existing = nodes.find(n => n.type === type)
       if (existing) { focusNode(existing.id); setPalette(null); return }
     }
@@ -427,7 +449,7 @@ function BlueprintEditorInner() {
     setNodes(n => [...n, node])
     setPalette(null)
     // Open the inspector for configurable nodes (mode, compare, spell); value/buff/comment are static.
-    if (type === 'mode' || type === 'op:compare' || type === 'spell' || type === 'pet' || type === 'world') setSelectedId(node.id)
+    if (type === 'mode' || type === 'op:compare' || type === 'spell' || type === 'pet' || type === 'world' || type === 'setup' || type === 'lua' || type === 'print') setSelectedId(node.id)
   }, [palette, nodes, focusNode])
 
   // Unified menu pick: if the menu was opened by dragging a tether (palette.connect set), spawn the
@@ -722,6 +744,25 @@ function BlueprintEditorInner() {
             field={((selected.data as { worldField?: 'weather' | 'day' | 'moghouse' | 'zone' | null }).worldField) ?? 'weather'}
             value={(selected.data as { worldValue?: string | null }).worldValue}
             label={(selected.data as { worldLabel?: string | null }).worldLabel}
+            onChange={(patch) => updateCondData(patch)}
+          />
+        )}
+        {selected?.type === 'setup' && (
+          <SetupInspector
+            code={(selected.data as { code?: string | null }).code}
+            onChange={(patch) => updateCondData(patch)}
+          />
+        )}
+        {selected?.type === 'lua' && (
+          <LuaInspector
+            code={(selected.data as { code?: string | null }).code}
+            onChange={(patch) => updateCondData(patch)}
+          />
+        )}
+        {selected?.type === 'print' && (
+          <PrintInspector
+            text={(selected.data as { chatText?: string | null }).chatText}
+            color={(selected.data as { chatColor?: number | null }).chatColor}
             onChange={(patch) => updateCondData(patch)}
           />
         )}

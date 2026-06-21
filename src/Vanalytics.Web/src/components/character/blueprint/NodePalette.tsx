@@ -28,6 +28,9 @@ const STATIC_ITEMS: Item[] = [
   { key: 'world', type: 'world', label: 'World state is…', group: 'Flow Control', color: '#2dd4bf' },
   ...VALUE_SOURCES.map(r => ({ key: `value:${r.value}`, type: 'value' as const, label: r.label, group: 'Values', color: '#38bdf8', data: { resource: r.value } })),
   { key: 'comment', type: 'comment', label: 'Comment', group: 'Annotation', color: '#e5e7eb' },
+  { key: 'setup', type: 'setup', label: 'Setup (file load)', group: 'Setup', color: '#eab308' },
+  { key: 'lua', type: 'lua', label: 'Custom Lua', group: 'Flow Control', color: '#eab308' },
+  { key: 'print', type: 'print', label: 'Print to chat', group: 'Flow Control', color: '#f472b6' },
 ]
 
 const BUFF_ITEMS: Item[] = BUFFS.map(b => ({ key: `buff:${b.id}`, type: 'buff' as const, label: b.label, group: 'Buffs', color: '#34d399', data: { buffName: b.name } }))
