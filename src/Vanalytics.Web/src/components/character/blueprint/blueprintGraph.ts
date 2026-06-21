@@ -212,8 +212,11 @@ export const NODE_HANDLES: Record<string, HandleDef[]> = {
     { id: 'true', type: 'exec', dir: 'out' },
     { id: 'false', type: 'exec', dir: 'out' },
   ],
-  equip: [{ id: 'in', type: 'exec', dir: 'in' }],
-  mode: [{ id: 'in', type: 'exec', dir: 'in' }],
+  equip: [{ id: 'in', type: 'exec', dir: 'in' }, { id: 'out', type: 'exec', dir: 'out' }],
+  mode: [{ id: 'in', type: 'exec', dir: 'in' }, { id: 'out', type: 'exec', dir: 'out' }],
+  lua: [{ id: 'in', type: 'exec', dir: 'in' }, { id: 'out', type: 'exec', dir: 'out' }],
+  print: [{ id: 'in', type: 'exec', dir: 'in' }, { id: 'out', type: 'exec', dir: 'out' }],
+  setup: [],
   value: [{ id: 'out', type: 'num', dir: 'out' }],
   buff: [{ id: 'out', type: 'bool', dir: 'out' }],
   spell: [{ id: 'out', type: 'bool', dir: 'out' }],
@@ -360,6 +363,35 @@ export function worldFace(d: { worldField?: string | null; worldValue?: string |
   }
 }
 
+// Curated FFXI/Windower add_to_chat color codes for the Print node. Codes are display-only (cosmetic);
+// verify against Windower add_to_chat during impl. The user never types a code — picks from this list.
+export const CHAT_COLORS: { code: number; label: string }[] = [
+  { code: 1, label: 'White' },
+  { code: 2, label: 'Green' },
+  { code: 5, label: 'Pink' },
+  { code: 8, label: 'Teal' },
+  { code: 36, label: 'Yellow' },
+  { code: 167, label: 'Orange' },
+  { code: 207, label: 'Grey' },
+]
+export const DEFAULT_CHAT_COLOR = 1
+
+// Node-face text helpers. The first non-blank code line previews lua/setup; print shows its message.
+function firstLine(code?: string | null): string {
+  return (code ?? '').split('\n').find(l => l.trim())?.trim() ?? ''
+}
+export function printFace(d: { chatText?: string | null }): string {
+  return d.chatText ? `say "${d.chatText}"` : 'say…'
+}
+export function luaFace(d: { code?: string | null }): string {
+  const l = firstLine(d.code)
+  return l ? l.slice(0, 28) : 'custom lua…'
+}
+export function setupFace(d: { code?: string | null }): string {
+  const l = firstLine(d.code)
+  return l ? l.slice(0, 28) : 'file-load setup…'
+}
+
 // Merged catalog for the "Action is" picker: spell.english matches WS, JA and magic alike, so one
 // searchable list covers all three. Names are emitted verbatim as the comparison value.
 export function allActionsCatalog(): ActionEntry[] {
@@ -417,6 +449,8 @@ export function menuCandidateValid(fromType: string, fromHandle: string, candida
 export function isSingleTargetSource(sourceType: string, sourceHandle: string | null | undefined): boolean {
   if (sourceType === 'branch') return true
   if (sourceType.startsWith('trigger:')) return categoryOfHandle(sourceType, sourceHandle ?? '') === null
+  // Sequential exec chain: the 'out' of an exec statement node holds a single successor.
+  if (sourceHandle === 'out' && (sourceType === 'equip' || sourceType === 'mode' || sourceType === 'lua' || sourceType === 'print')) return true
   return false
 }
 
@@ -448,17 +482,18 @@ export function upstreamChainEdgeIds(
   return out
 }
 
-// Drop pasted trigger nodes whose type is already present on the canvas — triggers are singletons
-// per type (each maps 1:1 to a Lua event function like precast/aftercast, so a duplicate would emit a
-// clashing `function precast(spell)` block). Edges touching a dropped node are removed too; the rest
-// of the pasted subgraph survives. `existingTriggerTypes` = trigger node types already on the canvas.
-export function dropDuplicateTriggers<
+// Drop pasted nodes whose type is a SINGLETON already present on the canvas — triggers (each maps 1:1
+// to a Lua event function) and the file-top `setup` node. Edges touching a dropped node are removed
+// too; the rest of the pasted subgraph survives. `existingSingletonTypes` = singleton node types
+// already on the canvas (trigger:* and/or 'setup').
+export function dropDuplicateSingletons<
   N extends { id: string; type: string },
   E extends { source: string; target: string },
->(nodes: N[], edges: E[], existingTriggerTypes: Set<string>): { nodes: N[]; edges: E[] } {
+>(nodes: N[], edges: E[], existingSingletonTypes: Set<string>): { nodes: N[]; edges: E[] } {
   const removed = new Set<string>()
   const kept = nodes.filter(n => {
-    if (n.type.startsWith('trigger:') && existingTriggerTypes.has(n.type)) { removed.add(n.id); return false }
+    const isSingleton = n.type.startsWith('trigger:') || n.type === 'setup'
+    if (isSingleton && existingSingletonTypes.has(n.type)) { removed.add(n.id); return false }
     return true
   })
   if (removed.size === 0) return { nodes, edges }

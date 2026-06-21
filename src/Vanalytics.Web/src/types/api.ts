@@ -1165,6 +1165,9 @@ export type BlueprintNodeType =
   | 'op:or'
   | 'op:not'
   | 'comment'
+  | 'setup'
+  | 'lua'
+  | 'print'
 
 export interface ModeMember {
   gearSetId: number
@@ -1197,6 +1200,9 @@ export interface BlueprintNode {
     text?: string | null
     width?: number | null
     height?: number | null
+    code?: string | null
+    chatText?: string | null
+    chatColor?: number | null
   }
 }
 

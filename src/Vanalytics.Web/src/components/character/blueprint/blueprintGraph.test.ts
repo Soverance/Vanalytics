@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, compareFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateTriggers, handleType, handleInfo, menuCandidateValid } from './blueprintGraph'
+import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, compareFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateSingletons, handleType, handleInfo, menuCandidateValid } from './blueprintGraph'
 import { spellFace, SPELL_SKILLS, SPELL_ELEMENTS, allActionsCatalog, NODE_HANDLES, SPELL_FAMILIES, familyMatchCount, VALUE_SOURCES, petFace, worldFace } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
@@ -264,7 +264,7 @@ describe('condition helpers', () => {
     expect(upstreamChainEdgeIds(edges, 'trig')).toEqual(new Set())
   })
 
-  it('dropDuplicateTriggers removes pasted triggers whose type already exists, plus their edges', () => {
+  it('dropDuplicateSingletons removes pasted triggers whose type already exists, plus their edges', () => {
     const nodes = [
       { id: 'p', type: 'trigger:precast' },   // duplicate -> dropped
       { id: 'b', type: 'branch' },
@@ -274,13 +274,13 @@ describe('condition helpers', () => {
       { source: 'p', target: 'b' },   // touches dropped 'p' -> dropped
       { source: 'b', target: 'e' },   // survives
     ]
-    const out = dropDuplicateTriggers(nodes, edges, new Set(['trigger:precast']))
+    const out = dropDuplicateSingletons(nodes, edges, new Set(['trigger:precast']))
     expect(out.nodes.map(n => n.id)).toEqual(['b', 'e'])
     expect(out.edges).toEqual([{ source: 'b', target: 'e' }])
   })
 
-  it('dropDuplicateTriggers keeps a pasted trigger whose type is not yet on the canvas', () => {
-    const out = dropDuplicateTriggers(
+  it('dropDuplicateSingletons keeps a pasted trigger whose type is not yet on the canvas', () => {
+    const out = dropDuplicateSingletons(
       [{ id: 'a', type: 'trigger:aftercast' }], [], new Set(['trigger:precast']))
     expect(out.nodes.map(n => n.id)).toEqual(['a'])
     expect(out.edges).toEqual([])
