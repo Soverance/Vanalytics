@@ -97,3 +97,30 @@ export function savePaletteCollapse(state: Record<string, boolean>): void {
     /* ignore quota / disabled storage */
   }
 }
+
+const CONTEXT_SENSITIVE_KEY = 'bp.palette.context-sensitive.v1'
+
+// Parse the stored Context-Sensitive flag. Only an explicit 'false' turns it off; unset/anything else
+// → true (default-on). Pure (no storage access) so it can be unit-tested in the node env.
+export function parseContextSensitive(raw: string | null): boolean {
+  return raw !== 'false'
+}
+
+// Persisted Context-Sensitive toggle: ON filters the add-menu to position-valid nodes, OFF shows all.
+// Guarded so SSR / disabled-storage never throws; defaults to ON.
+export function loadContextSensitive(): boolean {
+  try {
+    return parseContextSensitive(
+      typeof window !== 'undefined' ? window.localStorage.getItem(CONTEXT_SENSITIVE_KEY) : null)
+  } catch {
+    return true
+  }
+}
+
+export function saveContextSensitive(value: boolean): void {
+  try {
+    if (typeof window !== 'undefined') window.localStorage.setItem(CONTEXT_SENSITIVE_KEY, String(value))
+  } catch {
+    /* ignore quota / disabled storage */
+  }
+}

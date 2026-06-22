@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  buildPaletteGroups, isGroupExpanded, GROUP_ORDER, DEFAULT_EXPANDED_GROUPS,
+  buildPaletteGroups, isGroupExpanded, GROUP_ORDER, DEFAULT_EXPANDED_GROUPS, parseContextSensitive,
 } from './paletteCatalog'
 
 describe('buildPaletteGroups', () => {
@@ -72,5 +72,18 @@ describe('isGroupExpanded', () => {
   it('lets an explicit persisted toggle override the default', () => {
     expect(isGroupExpanded({ group: 'Triggers', query: '', persisted: { Triggers: false } })).toBe(false)
     expect(isGroupExpanded({ group: 'Conditions', query: '', persisted: { Conditions: true } })).toBe(true)
+  })
+})
+
+describe('parseContextSensitive', () => {
+  it('defaults to true when unset or unparseable', () => {
+    expect(parseContextSensitive(null)).toBe(true)
+    expect(parseContextSensitive('')).toBe(true)
+    expect(parseContextSensitive('yes')).toBe(true)
+  })
+
+  it('returns true for "true" and false for "false"', () => {
+    expect(parseContextSensitive('true')).toBe(true)
+    expect(parseContextSensitive('false')).toBe(false)
   })
 })
