@@ -375,13 +375,13 @@ function BlueprintEditorInner() {
   // Create a node of `type` (seeded with `data` or its defaults) and wire it to the tether dragged
   // from (fromId, fromHandle): the new node's same-type, opposite-direction handle connects to the
   // dragged pin. Single-target source outputs replace their prior edge; one edge per target handle.
-  const spawnAndWire = useCallback((fromId: string, fromHandle: string, type: BlueprintNodeType, data: Record<string, unknown> | undefined, x: number, y: number) => {
+  const spawnAndWire = useCallback((fromId: string, fromHandle: string, type: BlueprintNodeType, data: Record<string, unknown> | undefined, x: number, y: number): boolean => {
     const fromType = nodesRef.current.find(n => n.id === fromId)?.type ?? ''
     const from = handleInfo(fromType, fromHandle)
-    if (!from) return
+    if (!from) return false
     const wantDir = from.dir === 'out' ? 'in' : 'out'
     const match = handlesOf(type).find(h => h.type === from.type && h.dir === wantDir)
-    if (!match) return
+    if (!match) return false
     const nid = newId()
     setNodes(n => [...n, { id: nid, type, position: { x, y }, data: data ?? defaultData(type) }])
     setEdges(prev => {
@@ -395,6 +395,7 @@ function BlueprintEditorInner() {
       return [...noInputDup, { id: `${src}-${srcH}-${tgt}`, source: src, sourceHandle: srcH, target: tgt, targetHandle: tgtH }]
     })
     setTimeout(() => setSelectedId(nid), 0)
+    return true
   }, [])
 
   const onConnectEnd = useCallback((e: MouseEvent | TouchEvent) => {
@@ -449,7 +450,7 @@ function BlueprintEditorInner() {
     setNodes(n => [...n, node])
     setPalette(null)
     // Open the inspector for configurable nodes (mode, compare, spell); value/buff/comment are static.
-    if (type === 'mode' || type === 'op:compare' || type === 'spell' || type === 'pet' || type === 'world' || type === 'setup' || type === 'lua' || type === 'print') setSelectedId(node.id)
+    if (type === 'equip' || type === 'mode' || type === 'op:compare' || type === 'spell' || type === 'pet' || type === 'world' || type === 'setup' || type === 'lua' || type === 'print') setSelectedId(node.id)
   }, [palette, nodes, focusNode])
 
   // Unified menu pick: if the menu was opened by dragging a tether (palette.connect set), spawn the
@@ -470,7 +471,9 @@ function BlueprintEditorInner() {
         return
       }
     }
-    spawnAndWire(nodeId, handle, type, data, flowX, flowY)
+    // Context Sensitive OFF can offer a node that doesn't fit the dragged pin; if it can't wire,
+    // drop it unwired at the cursor (addNode handles singletons + opens the inspector).
+    if (!spawnAndWire(nodeId, handle, type, data, flowX, flowY)) addNode(type, data)
     setPalette(null)
   }, [palette, nodes, addNode, spawnAndWire])
 
