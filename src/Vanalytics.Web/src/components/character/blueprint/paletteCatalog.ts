@@ -58,7 +58,8 @@ export const BUFF_ITEMS: PaletteItem[] = BUFFS.map(b => ({
 
 export interface PaletteGroup { group: string; items: PaletteItem[] }
 
-// Ordered, filtered groups for the menu. Buff presets are pooled in only when a query is present.
+// Ordered, filtered groups for the menu. Buff presets are pooled in only when a query is present;
+// the optional `filter` still excludes them (e.g. a non-buff drag-connect) even while a query pools them in.
 export function buildPaletteGroups(opts: { query: string; filter?: (t: BlueprintNodeType) => boolean }): PaletteGroup[] {
   const q = opts.query.trim().toLowerCase()
   const pool = q ? [...STATIC_ITEMS, ...BUFF_ITEMS] : STATIC_ITEMS

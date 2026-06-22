@@ -39,6 +39,7 @@ describe('buildPaletteGroups', () => {
     const items = buildPaletteGroups({ query: 'haste' }).flatMap(g => g.items)
     expect(items.some(i => i.type === 'buff')).toBe(true)
     expect(items.every(i => i.label.toLowerCase().includes('haste'))).toBe(true)
+    expect(items.filter(i => i.type === 'buff').every(i => i.group === 'Conditions')).toBe(true)
   })
 
   it('respects the drag-connect filter', () => {
@@ -46,6 +47,12 @@ describe('buildPaletteGroups', () => {
     const items = groups.flatMap(g => g.items)
     expect(items).toHaveLength(1)
     expect(items[0].type).toBe('equip')
+  })
+
+  it('keeps the filter authoritative over buff presets even with a query', () => {
+    const items = buildPaletteGroups({ query: 'haste', filter: t => t === 'buff' }).flatMap(g => g.items)
+    expect(items.length).toBeGreaterThan(0)
+    expect(items.every(i => i.type === 'buff')).toBe(true)
   })
 })
 
