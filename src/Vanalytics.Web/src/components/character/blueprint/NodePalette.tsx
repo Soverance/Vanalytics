@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ClipboardPaste, Search, ChevronRight, ChevronDown } from 'lucide-react'
 import type { BlueprintNodeType } from '../../../types/api'
 import {
@@ -19,12 +19,18 @@ export default function NodePalette({ x, y, onPick, onClose, onPaste, filter }: 
   // Buffs are search-only; tell the user how to reach them when Conditions is open with no query.
   const buffsAvailable = !filter || filter('buff')
 
+  // Persist collapse choices, but skip the initial mount — the palette remounts on every right-click
+  // open, so writing the just-loaded value back each time would be needless localStorage churn.
+  const firstPersist = useRef(true)
+  useEffect(() => {
+    if (firstPersist.current) { firstPersist.current = false; return }
+    savePaletteCollapse(persisted)
+  }, [persisted])
+
   const toggleGroup = (group: string) => {
     setPersisted(prev => {
       const current = group in prev ? prev[group] : DEFAULT_EXPANDED_GROUPS.has(group)
-      const next = { ...prev, [group]: !current }
-      savePaletteCollapse(next)
-      return next
+      return { ...prev, [group]: !current }
     })
   }
 
@@ -56,7 +62,7 @@ export default function NodePalette({ x, y, onPick, onClose, onPaste, filter }: 
             const expanded = isGroupExpanded({ group, query, persisted })
             return (
               <div key={group}>
-                <button onClick={() => toggleGroup(group)}
+                <button onClick={() => toggleGroup(group)} aria-expanded={expanded}
                   className="flex w-full items-center gap-1 px-2 pt-2 pb-1 text-left text-[10px] uppercase tracking-wide text-gray-500 hover:text-gray-300">
                   {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                   {group}
