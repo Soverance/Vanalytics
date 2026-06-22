@@ -22,7 +22,7 @@ export default function EquipGearSetNode({ data }: NodeProps) {
         style={{ top: 16, width: 10, height: 10, background: '#0d1117', border: '2px solid #d8b25e' }}
       />
       <div className="flex items-center gap-2 rounded-t-lg bg-gradient-to-b from-indigo-700 to-indigo-900 px-3 py-1.5 text-xs font-bold text-indigo-50">
-        <Shield className="h-3.5 w-3.5" /> {labelForAction(d.actionName) || 'Equip Gear Set'}
+        <Shield className="h-3.5 w-3.5" /> {labelForAction(d.actionName) || 'Equip'}
       </div>
       <div className="px-3 py-2 text-xs">
         {d.gearSetId != null ? (
