@@ -1,7 +1,0 @@
-/* Thin themed scrollbars for the export code area (webkit + firefox). */
-.lua-scroll { scrollbar-width: thin; scrollbar-color: #2d3748 #0a0e14; }
-.lua-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
-.lua-scroll::-webkit-scrollbar-track { background: #0a0e14; border-radius: 4px; }
-.lua-scroll::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 5px; border: 2px solid #0a0e14; }
-.lua-scroll::-webkit-scrollbar-thumb:hover { background: #4a5568; }
-.lua-scroll::-webkit-scrollbar-corner { background: #0a0e14; }

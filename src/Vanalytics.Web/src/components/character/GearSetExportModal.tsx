@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { X, Copy, Check, Download as DownloadIcon } from 'lucide-react'
 import { toGearSwapLua, type GearSetSlot } from '../../utils/gearSwapExport'
-import './GearSetExportModal.css'
 
 interface Props {
   name: string
@@ -51,7 +50,7 @@ export default function GearSetExportModal({ name, slots, luaOverride, warnings,
               {warnings.map((w, i) => <div key={i}>⚠ {w}</div>)}
             </div>
           )}
-          <pre className="lua-scroll min-h-0 flex-1 overflow-auto whitespace-pre rounded border border-gray-800 bg-gray-950 p-3 text-xs text-green-300">{lua}</pre>
+          <pre className="styled-scrollbar min-h-0 flex-1 overflow-auto whitespace-pre rounded border border-gray-800 bg-gray-900 p-3 text-xs text-gray-200">{lua}</pre>
         </div>
 
         {/* footer (fixed): count + actions always visible */}
