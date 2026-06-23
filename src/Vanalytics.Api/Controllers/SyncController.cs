@@ -483,7 +483,7 @@ public class SyncController : ControllerBase
 
         var character = await ResolveAddonCharacterAsync();
         if (character is null)
-            return NotFound(new { message = MissingCharacterMessage });
+            return BadRequest(new { message = MissingCharacterMessage });
 
         if (!JobNormalizer.TryNormalize(job, out var normalized) || normalized is null)
             return BadRequest(new { message = "Invalid job." });

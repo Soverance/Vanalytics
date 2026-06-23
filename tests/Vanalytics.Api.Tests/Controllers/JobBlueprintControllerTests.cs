@@ -194,6 +194,21 @@ public class JobBlueprintControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Addon_pull_returns_400_when_job_param_missing()
+    {
+        var (_, _, apiKey, charName, server) =
+            await SetupForAddonAsync("addonpull4@test.com", "addonpull4", "AddonPull4");
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var req = new HttpRequestMessage(HttpMethod.Get, "/api/sync/blueprint"); // no ?job=
+        req.Headers.Add("X-Api-Key", apiKey);
+        req.Headers.Add("X-Character-Name", charName);
+        req.Headers.Add("X-Server", server);
+        var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
     public async Task Get_before_save_returns_empty_graph()
     {
         var (token, charId) = await SetupAsync("wf1@test.com", "wf1", "Wfone");
