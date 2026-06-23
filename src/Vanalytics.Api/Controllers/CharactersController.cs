@@ -880,17 +880,8 @@ public class CharactersController : ControllerBase
 
     // Validates the optional gear-set job tag against the real FFXI job list, returning the
     // canonical uppercase code (e.g. "thf" -> "THF"). Null/blank is allowed (job is optional).
-    private static bool TryNormalizeJob(string? job, out string? normalized)
-    {
-        normalized = null;
-        if (string.IsNullOrWhiteSpace(job)) return true;
-        if (Enum.TryParse<Vanalytics.Core.Enums.JobType>(job.Trim(), ignoreCase: true, out var parsed))
-        {
-            normalized = parsed.ToString();
-            return true;
-        }
-        return false;
-    }
+    private static bool TryNormalizeJob(string? job, out string? normalized) =>
+        Vanalytics.Api.Services.JobNormalizer.TryNormalize(job, out normalized);
 
     // Validates the gear-set category against the GearSetCategory enum, returning the canonical
     // enum name. Null/blank defaults to "Other"; an unrecognized value is rejected.
