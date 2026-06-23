@@ -60,6 +60,7 @@ local collection_lib = require('collection')
 local macro_lib = require('macros')
 local moves_lib = require('moves')
 local async_http = require('async_http')
+local blueprint_lib = require('blueprint')
 
 -- Default settings (matches settings.xml)
 local defaults = {
@@ -3463,6 +3464,48 @@ windower.register_event('addon command', function(command, ...)
             windower.add_to_chat(207, '[Vanalytics] Usage: //va macros <push|pull|status|diag|dump> [--force]')
         end
 
+    elseif command == 'blueprint' then
+        local sub = args[1] and args[1]:lower() or 'help'
+
+        if sub == 'pull' then
+            local player = windower.ffxi.get_player()
+            if not player then
+                log_error('Log in first.')
+                return
+            end
+            local rest = {}
+            for i = 2, #args do rest[#rest + 1] = args[i] end
+            local job, force = blueprint_lib.parse_args(rest, player.main_job)
+            if not job or job == '' then
+                log_error('No current job — specify one: //va blueprint pull <JOB>')
+                return
+            end
+
+            if settings.ApiKey == '' then
+                log_error('Cannot pull blueprint: API key not configured. Run: //va apikey <your-key>')
+                return
+            end
+
+            blueprint_lib.pull({
+                api_url = settings.ApiUrl,
+                headers = {
+                    ['Content-Type'] = 'application/json',
+                    ['X-Api-Key'] = settings.ApiKey,
+                },
+                http_fn = http_request,
+                json_decode = json_decode,
+                char_name = player.name,
+                job = job,
+                current_job = player.main_job,
+                force = force,
+                log = log,
+                log_error = log_error,
+                log_success = log_success,
+            })
+        else
+            log('Usage: //va blueprint pull [JOB] [--force]')
+        end
+
     elseif command == 'moves' then
         local subcommand = args[1] and args[1]:lower() or 'help'
         if subcommand == 'execute' then
@@ -3511,6 +3554,7 @@ windower.register_event('addon command', function(command, ...)
         log('//va macros pull [--force]  - Download pending macro updates (zone to apply in-game)')
         log('//va macros status         - Show tracked macro book count')
         log('//va macros diag           - Show per-book change-detection state')
+        log('//va blueprint pull [JOB] [--force] - Install your generated GearSwap file for a job')
         log('//va moves execute   - Execute pending inventory move orders')
         log('//va moves status    - Show pending move order details')
         log('//va help         - Show this help')
