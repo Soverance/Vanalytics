@@ -765,7 +765,7 @@ public class CharactersController : ControllerBase
             Job = normalized,
             Graph = wf is null
                 ? new BlueprintGraphDto()
-                : JsonSerializer.Deserialize<BlueprintGraphDto>(wf.GraphJson, JsonOpts) ?? new BlueprintGraphDto(),
+                : JsonSerializer.Deserialize<BlueprintGraphDto>(wf.GraphJson, BlueprintJson.Options) ?? new BlueprintGraphDto(),
             UpdatedAt = wf?.UpdatedAt
         });
     }
@@ -781,7 +781,7 @@ public class CharactersController : ControllerBase
             return BadRequest(new { message = "Invalid job." });
 
         var now = DateTimeOffset.UtcNow;
-        var json = JsonSerializer.Serialize(graph ?? new BlueprintGraphDto(), JsonOpts);
+        var json = JsonSerializer.Serialize(graph ?? new BlueprintGraphDto(), BlueprintJson.Options);
         var wf = await _db.CharacterJobBlueprints
             .FirstOrDefaultAsync(w => w.CharacterId == id && w.Job == normalized);
         if (wf is null)

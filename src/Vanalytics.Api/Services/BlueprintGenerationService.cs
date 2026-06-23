@@ -15,11 +15,6 @@ public class BlueprintGenerationService
 {
     private readonly VanalyticsDbContext _db;
 
-    private static readonly JsonSerializerOptions JsonOpts = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     public BlueprintGenerationService(VanalyticsDbContext db) => _db = db;
 
     public async Task<(bool BlueprintExists, GenerateBlueprintResponse Response)> GenerateAsync(
@@ -31,7 +26,7 @@ public class BlueprintGenerationService
 
         var graph = wf is null
             ? new BlueprintGraphDto()
-            : JsonSerializer.Deserialize<BlueprintGraphDto>(wf.GraphJson, JsonOpts) ?? new BlueprintGraphDto();
+            : JsonSerializer.Deserialize<BlueprintGraphDto>(wf.GraphJson, BlueprintJson.Options) ?? new BlueprintGraphDto();
 
         var modeSetIds = graph.Nodes
             .Where(n => n.Type == "mode")
@@ -65,7 +60,7 @@ public class BlueprintGenerationService
             s.Id, s.Name,
             s.Slots.Select(sl => new ResolvedSlot(
                 sl.Slot, sl.ItemId, sl.ItemName,
-                DeserializeAugments(sl.AugmentsJson))).ToList()))
+                BlueprintJson.DeserializeAugments(sl.AugmentsJson))).ToList()))
             .ToList();
 
         var diagnostics = GearSwapCodeGenerator.Validate(graph, resolved);
@@ -76,6 +71,4 @@ public class BlueprintGenerationService
         return (exists, new GenerateBlueprintResponse { Lua = result.Lua, Diagnostics = diagnostics });
     }
 
-    private static List<string> DeserializeAugments(string? json) =>
-        string.IsNullOrEmpty(json) ? [] : (JsonSerializer.Deserialize<List<string>>(json) ?? []);
 }
