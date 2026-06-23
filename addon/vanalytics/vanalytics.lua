@@ -3486,11 +3486,20 @@ windower.register_event('addon command', function(command, ...)
                 return
             end
 
+            local info = windower.ffxi.get_info()
+            if not info then
+                log_error('Cannot pull blueprint. Try again after zoning.')
+                return
+            end
+            local server_name = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
+
             blueprint_lib.pull({
                 api_url = settings.ApiUrl,
                 headers = {
                     ['Content-Type'] = 'application/json',
                     ['X-Api-Key'] = settings.ApiKey,
+                    ['X-Character-Name'] = player.name,
+                    ['X-Server'] = server_name,
                 },
                 http_fn = http_request,
                 json_decode = json_decode,
