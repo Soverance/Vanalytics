@@ -83,6 +83,116 @@ public class JobBlueprintControllerTests : IAsyncLifetime
         return (login.AccessToken, character.Id);
     }
 
+    // Extended setup that also returns the addon API key.  charName and Server="Asura" must be
+    // forwarded in the X-Character-Name / X-Server headers so ResolveAddonCharacterAsync can
+    // match the character row to the authenticated user.
+    private async Task<(string Token, Guid CharacterId, string ApiKey, string CharName, string Server)>
+        SetupForAddonAsync(string email, string username, string charName)
+    {
+        var (token, charId) = await SetupAsync(email, username, charName);
+
+        // The SetupAsync helper already generated an API key, but we need to generate a second one
+        // so we have a value to return.  Keys accumulate per user; we generate a fresh one here
+        // so the test controls which key it uses (the first key generated during SetupAsync is
+        // discarded — it was only needed for the initial sync).
+        // NOTE: SetupAsync logged in and stored the token; we just call generate again.
+        var keyReq = new HttpRequestMessage(HttpMethod.Post, "/api/keys/generate");
+        keyReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var key = await (await _client.SendAsync(keyReq)).Content.ReadFromJsonAsync<ApiKeyResponse>();
+
+        return (token, charId, key!.ApiKey, charName, "Asura");
+    }
+
+    // Helper: send addon-style GET /api/sync/blueprint?job=... with apikey auth headers.
+    private async Task<HttpResponseMessage> PullBlueprintAsync(
+        string apiKey, string charName, string server, string job)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Get, $"/api/sync/blueprint?job={job}");
+        req.Headers.Add("X-Api-Key", apiKey);
+        req.Headers.Add("X-Character-Name", charName);
+        req.Headers.Add("X-Server", server);
+        return await _client.SendAsync(req);
+    }
+
+    [Fact]
+    public async Task Addon_pull_returns_404_when_no_blueprint_saved()
+    {
+        var (_, _, apiKey, charName, server) =
+            await SetupForAddonAsync("addonpull1@test.com", "addonpull1", "AddonPull1");
+
+        // No blueprint saved — endpoint should return 404.
+        var resp = await PullBlueprintAsync(apiKey, charName, server, "THF");
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Addon_pull_returns_lua_for_a_saved_blueprint()
+    {
+        var (token, charId, apiKey, charName, server) =
+            await SetupForAddonAsync("addonpull2@test.com", "addonpull2", "AddonPull2");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Seed a gear set (mirrors Generate_emits_lua_from_saved_blueprint_and_gear_set).
+        var set = await (await _client.PostAsJsonAsync($"/api/characters/{charId}/gear-sets",
+            new SaveGearSetRequest
+            {
+                Name = "TP Set", Job = "THF", Category = "Engaged",
+                Slots = [ new GearSetSlotDto { Slot = "Head", ItemId = 13892, ItemName = "Adhemar Bonnet +1", Augments = [] } ]
+            }))
+            .Content.ReadFromJsonAsync<GearSetDetailResponse>();
+
+        // Save the blueprint (same graph that the web Generate test uses).
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id="t", Type="trigger:status_change", Data=new() },
+                new() { Id="e", Type="equip", Data=new() { GearSetId = set!.Id } },
+            ],
+            Edges = [ new() { Id="x", Source="t", SourceHandle="Engaged", Target="e", TargetHandle="in" } ],
+        };
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var resp = await PullBlueprintAsync(apiKey, charName, server, "THF");
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var body = await resp.Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+        Assert.NotNull(body);
+        Assert.False(string.IsNullOrEmpty(body!.Lua));
+    }
+
+    [Fact]
+    public async Task Addon_pull_returns_empty_lua_when_blueprint_has_errors()
+    {
+        var (token, charId, apiKey, charName, server) =
+            await SetupForAddonAsync("addonpull3@test.com", "addonpull3", "AddonPull3");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Blueprint: status_change Engaged -> equip with NO gear set (reused from
+        // Generate_with_validation_error_returns_empty_lua_and_error_diagnostic).
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            [
+                new() { Id = "t", Type = "trigger:status_change", Position = new() { X = 0, Y = 0 }, Data = new() },
+                new() { Id = "e", Type = "equip",                 Position = new() { X = 200, Y = 0 }, Data = new() },
+            ],
+            Edges =
+            [
+                new() { Id = "t-Engaged-e", Source = "t", SourceHandle = "Engaged", Target = "e", TargetHandle = "in" },
+            ],
+        };
+        await _client.PutAsJsonAsync($"/api/characters/{charId}/blueprints/THF", graph);
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var resp = await PullBlueprintAsync(apiKey, charName, server, "THF");
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var body = await resp.Content.ReadFromJsonAsync<GenerateBlueprintResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("", body!.Lua);
+        Assert.Contains(body.Diagnostics, d => d.Severity == "error");
+    }
+
     [Fact]
     public async Task Get_before_save_returns_empty_graph()
     {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Api.Services;
+using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Core.DTOs.Macros;
 using Vanalytics.Core.DTOs.Sync;
 using Vanalytics.Core.Enums;
@@ -20,12 +21,15 @@ public class SyncController : ControllerBase
     private readonly VanalyticsDbContext _db;
     private readonly RateLimiter _rateLimiter;
     private readonly MacroRateLimiter _macroLimiter;
+    private readonly BlueprintGenerationService _blueprintGen;
 
-    public SyncController(VanalyticsDbContext db, RateLimiter rateLimiter, MacroRateLimiter macroLimiter)
+    public SyncController(VanalyticsDbContext db, RateLimiter rateLimiter, MacroRateLimiter macroLimiter,
+        BlueprintGenerationService blueprintGen)
     {
         _db = db;
         _rateLimiter = rateLimiter;
         _macroLimiter = macroLimiter;
+        _blueprintGen = blueprintGen;
     }
 
     // Resolve the character the addon is acting on. The addon MUST send
@@ -464,6 +468,31 @@ public class SyncController : ControllerBase
         }
 
         return Ok(new { message = "Sync successful", lastSyncAt = character.LastSyncAt });
+    }
+
+    // Addon endpoint: return the generated GearSwap .lua for the addon's current character + the given
+    // job. Mirrors the web generate logic via the shared service. 404 when the character has no saved
+    // blueprint for that job (the addon shows "build one in the editor"). A blueprint that fails
+    // validation returns 200 with Lua == "" (the addon shows "fix it in the editor").
+    [HttpGet("blueprint")]
+    public async Task<IActionResult> GetBlueprint([FromQuery] string job)
+    {
+        var apiKey = Request.Headers["X-Api-Key"].ToString();
+        if (!_rateLimiter.IsAllowed(apiKey))
+            return StatusCode(429, new { message = "Rate limit exceeded. Max 20 requests per hour." });
+
+        var character = await ResolveAddonCharacterAsync();
+        if (character is null)
+            return NotFound(new { message = MissingCharacterMessage });
+
+        if (!JobNormalizer.TryNormalize(job, out var normalized) || normalized is null)
+            return BadRequest(new { message = "Invalid job." });
+
+        var (exists, response) = await _blueprintGen.GenerateAsync(character.Id, normalized);
+        if (!exists)
+            return NotFound(new { message = $"No {normalized} blueprint saved for this character." });
+
+        return Ok(response);
     }
 
     [HttpPost("macros")]
