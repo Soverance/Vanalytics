@@ -13,6 +13,7 @@ using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 using Vanalytics.Core.Services;
 using Vanalytics.Data;
+using Vanalytics.Api.Services;
 
 namespace Vanalytics.Api.Controllers;
 
@@ -22,15 +23,17 @@ namespace Vanalytics.Api.Controllers;
 public class CharactersController : ControllerBase
 {
     private readonly VanalyticsDbContext _db;
+    private readonly BlueprintGenerationService _blueprintGen;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public CharactersController(VanalyticsDbContext db)
+    public CharactersController(VanalyticsDbContext db, BlueprintGenerationService blueprintGen)
     {
         _db = db;
+        _blueprintGen = blueprintGen;
     }
 
     [HttpGet]
@@ -810,53 +813,10 @@ public class CharactersController : ControllerBase
         if (!TryNormalizeJob(job, out var normalized) || normalized is null)
             return BadRequest(new { message = "Invalid job." });
 
-        var wf = await _db.CharacterJobBlueprints
-            .FirstOrDefaultAsync(w => w.CharacterId == id && w.Job == normalized);
-        var graph = wf is null
-            ? new BlueprintGraphDto()
-            : JsonSerializer.Deserialize<BlueprintGraphDto>(wf.GraphJson, JsonOpts) ?? new BlueprintGraphDto();
-
-        var modeSetIds = graph.Nodes
-            .Where(n => n.Type == "mode")
-            .SelectMany(n => n.Data.Members ?? [])
-            .Select(m => m.GearSetId);
-
-        // Overlay layers reference extra sets via OverlaySetIds; these must be resolved too, otherwise a
-        // set used only inside a set_combine (and nowhere as a plain equip/mode leaf) is missing.
-        var overlaySetIds = graph.Nodes
-            .Where(n => n.Type == "equip")
-            .SelectMany(n => n.Data.OverlaySetIds ?? [])
-            .Concat(graph.Nodes
-                .Where(n => n.Type == "mode")
-                .SelectMany(n => n.Data.Members ?? [])
-                .SelectMany(m => m.OverlaySetIds ?? []));
-
-        var referencedIds = graph.Nodes
-            .Where(n => n.Type == "equip" && n.Data.GearSetId is not null)
-            .Select(n => n.Data.GearSetId!.Value)
-            .Concat(modeSetIds)
-            .Concat(overlaySetIds)
-            .Distinct()
-            .ToList();
-
-        var sets = await _db.CharacterGearSets
-            .Where(s => s.CharacterId == id && referencedIds.Contains(s.Id))
-            .Include(s => s.Slots)
-            .ToListAsync();
-
-        var resolved = sets.Select(s => new ResolvedGearSet(
-            s.Id, s.Name,
-            s.Slots.Select(sl => new ResolvedSlot(
-                sl.Slot, sl.ItemId, sl.ItemName,
-                DeserializeAugments(sl.AugmentsJson))).ToList()))
-            .ToList();
-
-        var diagnostics = GearSwapCodeGenerator.Validate(graph, resolved);
-        if (diagnostics.Any(d => d.Severity == "error"))
-            return Ok(new GenerateBlueprintResponse { Lua = "", Diagnostics = diagnostics });
-
-        var result = GearSwapCodeGenerator.Generate(graph, resolved);
-        return Ok(new GenerateBlueprintResponse { Lua = result.Lua, Diagnostics = diagnostics });
+        // Web preserves the "no blueprint row -> generate from an empty graph" behavior by ignoring
+        // BlueprintExists. (The addon endpoint maps BlueprintExists=false to a 404 instead.)
+        var (_, response) = await _blueprintGen.GenerateAsync(id, normalized);
+        return Ok(response);
     }
 
     [HttpDelete("{id:guid}")]
