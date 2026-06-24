@@ -28,9 +28,13 @@ public class GearSwapImportService(VanalyticsDbContext db)
         foreach (var id in await _db.EquippedGear.Where(g => g.CharacterId == characterId && g.ItemId != 0).Select(g => g.ItemId).ToListAsync(ct))
             ownedIds.Add(id);
 
-        // Existing set names for the overwrite badge.
+        // Existing set names for the overwrite badge — scoped to THIS job, since overwrite
+        // identity is (character, job, name). Filtered in memory for correct null-job equality.
         var existingNames = new HashSet<string>(
-            await _db.CharacterGearSets.Where(s => s.CharacterId == characterId).Select(s => s.Name).ToListAsync(ct),
+            (await _db.CharacterGearSets.Where(s => s.CharacterId == characterId)
+                .Select(s => new { s.Job, s.Name }).ToListAsync(ct))
+                .Where(s => string.Equals(s.Job, suggestedJob, StringComparison.OrdinalIgnoreCase))
+                .Select(s => s.Name),
             StringComparer.OrdinalIgnoreCase);
 
         var preview = new GearSwapImportPreview { SuggestedJob = suggestedJob, Warnings = parsed.Warnings.ToList() };

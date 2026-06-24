@@ -794,15 +794,20 @@ public class CharactersController : ControllerBase
         if (request.Sets.Count == 0)
             return BadRequest(new { message = "No sets selected." });
 
-        var existing = await _db.CharacterGearSets
+        var allSets = await _db.CharacterGearSets
             .Include(s => s.Slots)
             .Where(s => s.CharacterId == id)
             .ToListAsync(ct);
-        var byName = existing.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
+        // Overwrite identity is (character, job, name): only this job's sets are upsert targets.
+        // GroupBy/First tolerates pre-existing same-name sets (no DB uniqueness constraint exists).
+        var byName = allSets
+            .Where(s => string.Equals(s.Job, job, StringComparison.OrdinalIgnoreCase))
+            .GroupBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
         var response = new ImportCommitResponse();
         var now = DateTimeOffset.UtcNow;
-        var projectedCount = existing.Count;
+        var projectedCount = allSets.Count; // cap is per character, across all jobs
 
         foreach (var req in request.Sets)
         {

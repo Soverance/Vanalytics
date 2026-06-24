@@ -42,7 +42,7 @@ public static class GearSwapSetParser
                 var path = TryReadKeyPath(targets[i], out var root0);
                 var value = values[i];
 
-                if (root0 == "sets" && path is not null)
+                if (root0 == "sets" && path is { Count: > 0 })
                 {
                     try
                     {
