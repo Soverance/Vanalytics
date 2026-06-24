@@ -97,4 +97,22 @@ public class GearSwapSetParserTests
         Assert.Equal("Base Body", Assert.Single(acc.Slots, s => s.Slot == "Body").ItemName);
         Assert.Contains(acc.Slots, s => s.Slot == "Hands" && s.ItemName == "Acc Hands");
     }
+
+    [Fact]
+    public void Parses_mote_fixture_and_skips_dynamic_set()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "GearSwapImport", "Fixtures", "sample_mote.lua");
+        var lua = File.ReadAllText(path);
+        var result = GearSwapSetParser.Parse(lua);
+
+        Assert.Contains(result.Sets, s => s.LuaKey == "idle");
+        Assert.Contains(result.Sets, s => s.LuaKey == "engaged.Acc"
+            && s.Slots.Any(x => x.Slot == "Neck" && x.ItemName == "Combatant's Torque"));
+        // Apostrophe set key handled, augmented item resolved via gear.Herc_Feet.
+        var ws = Assert.Single(result.Sets, s => s.LuaKey == "precast.WS.Rudra's Storm");
+        Assert.Equal("Herculean Boots", Assert.Single(ws.Slots).ItemName);
+        // The dynamic set is skipped with a warning, and nothing throws.
+        Assert.DoesNotContain(result.Sets, s => s.LuaKey == "engaged.Dynamic");
+        Assert.Contains(result.Warnings, w => w.Contains("engaged.Dynamic"));
+    }
 }
