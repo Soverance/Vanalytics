@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Plus, Camera, Workflow as BlueprintIcon } from 'lucide-react'
+import { Plus, Camera, Workflow as BlueprintIcon, Download } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useCharacterGearSets } from '../../hooks/useCharacterGearSets'
 import GearSetEditor, { type WorkingSet } from './GearSetEditor'
 import GearSetExportModal from './GearSetExportModal'
+import GearSwapImportModal from './GearSwapImportModal'
 import GearSetNav from './GearSetNav'
 import GearSetList from './GearSetList'
 import GearSetReadOnlyView from './GearSetReadOnlyView'
@@ -31,7 +32,7 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
   const characterId = character.id
   const navigate = useNavigate()
   const base = fetchBase ?? `/api/characters/${characterId}`
-  const { sets: hookSets, createSet, updateSet, deleteSet, getSet } = useCharacterGearSets(characterId, !readOnly)
+  const { sets: hookSets, createSet, updateSet, deleteSet, getSet, reload } = useCharacterGearSets(characterId, !readOnly)
 
   // In read-only mode, fetch the sets list via base (public endpoint); otherwise use the hook.
   const [readOnlySets, setReadOnlySets] = useState<GearSetSummary[]>([])
@@ -45,6 +46,7 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
   const sets = readOnly ? readOnlySets : hookSets
 
   const [editing, setEditing] = useState<WorkingSet | null>(null)
+  const [showImport, setShowImport] = useState(false)
   const [readOnlyDetail, setReadOnlyDetail] = useState<GearSetDetail | null>(null)
   const [exporting, setExporting] = useState<{ name: string; slots: GearSetSlot[] } | null>(null)
   const [owned, setOwned] = useState<OwnedEquipmentItem[]>([])
@@ -191,6 +193,10 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-gray-800/60 text-gray-300 border border-gray-700/40 disabled:opacity-50 disabled:cursor-not-allowed">
             <Plus className="h-3.5 w-3.5" /> Blank set
           </button>
+          <button onClick={() => setShowImport(true)} disabled={atCap}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-gray-800/60 text-gray-300 border border-gray-700/40 disabled:opacity-50 disabled:cursor-not-allowed">
+            <Download className="h-3.5 w-3.5" /> Import from GearSwap
+          </button>
           <span className="ml-auto text-[10px] text-gray-500">{sets.length} / {MAX_GEAR_SETS_PER_CHARACTER}</span>
           <button
             onClick={() => selJob && navigate(`/characters/${characterId}/blueprint/${selJob}`)}
@@ -248,6 +254,15 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
 
       {exporting && (
         <GearSetExportModal name={exporting.name} slots={exporting.slots} onClose={() => setExporting(null)} />
+      )}
+
+      {showImport && (
+        <GearSwapImportModal
+          characterId={characterId}
+          defaultJob={selJob || null}
+          onClose={() => setShowImport(false)}
+          onImported={reload}
+        />
       )}
     </div>
   )
