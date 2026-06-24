@@ -135,7 +135,7 @@ internal static class SetEvaluator
             var fieldValue = FieldValue(field);
             if (fieldValue is null) continue;
 
-            var (name, augments) = ReadItem(fieldValue);
+            var (name, augments) = ReadItem(fieldValue, env);
             if (name is null) continue;
             slots.Add(new ParsedSlot(slot, name, augments));
         }
@@ -166,16 +166,24 @@ internal static class SetEvaluator
         _ => null,
     };
 
-    private static (string? Name, IReadOnlyList<string> Augments) ReadItem(ExpressionSyntax value)
+    private static (string? Name, IReadOnlyList<string> Augments) ReadItem(ExpressionSyntax value, EvalEnvironment env)
     {
+        // Dereference a variable reference (gear.Herc_Head or a bare identifier) to its table.
+        if (value is MemberAccessExpressionSyntax or IdentifierNameSyntax)
+        {
+            var key = VariablePathText(value);
+            if (key is not null && env.Tables.TryGetValue(key, out var t))
+                value = t;
+        }
+
         if (value is LiteralExpressionSyntax { Token.Value: string s })
             return (s, Array.Empty<string>());
 
-        if (value is TableConstructorExpressionSyntax t)
+        if (value is TableConstructorExpressionSyntax tc)
         {
             string? name = null;
             var augs = new List<string>();
-            foreach (var f in t.Fields)
+            foreach (var f in tc.Fields)
             {
                 var key = FieldKey(f);
                 var fv = FieldValue(f);
@@ -193,5 +201,21 @@ internal static class SetEvaluator
         }
 
         return (null, Array.Empty<string>());
+    }
+
+    // "gear.Herc_Head" -> "gear.Herc_Head"; bare "Herc" -> "Herc"; null if not a var path.
+    private static string? VariablePathText(ExpressionSyntax expr)
+    {
+        var parts = new List<string>();
+        var cur = expr;
+        while (true)
+        {
+            switch (cur)
+            {
+                case MemberAccessExpressionSyntax m: parts.Insert(0, m.MemberName.Text); cur = m.Expression; break;
+                case IdentifierNameSyntax id: parts.Insert(0, id.Name); return string.Join(".", parts);
+                default: return null;
+            }
+        }
     }
 }

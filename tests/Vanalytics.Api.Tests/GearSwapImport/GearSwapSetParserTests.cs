@@ -67,4 +67,20 @@ public class GearSwapSetParserTests
         Assert.Single(set.Slots);
         Assert.Equal("Head", set.Slots[0].Slot);
     }
+
+    [Fact]
+    public void Resolves_gear_variable_references_in_slot_values()
+    {
+        const string lua = """
+            gear = {}
+            gear.Herc_Head = { name="Herculean Helm", augments={'Attack+20',}}
+            sets.engaged = { head=gear.Herc_Head, body="Adhemar Jacket +1" }
+            """;
+        var result = GearSwapSetParser.Parse(lua);
+        var set = Assert.Single(result.Sets);
+        var head = Assert.Single(set.Slots, s => s.Slot == "Head");
+        Assert.Equal("Herculean Helm", head.ItemName);
+        Assert.Equal(new[] { "Attack+20" }, head.Augments);
+        Assert.Contains(set.Slots, s => s.Slot == "Body" && s.ItemName == "Adhemar Jacket +1");
+    }
 }
