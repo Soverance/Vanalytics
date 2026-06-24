@@ -122,34 +122,91 @@ internal static class SetEvaluator
 {
     public static IReadOnlyList<ParsedSlot>? Evaluate(ExpressionSyntax value, EvalEnvironment env, List<string> warnings)
     {
-        var table = ResolveToTable(value, env);
-        if (table is null) return null;
-
-        var slots = new List<ParsedSlot>();
-        foreach (var field in table.Fields)
-        {
-            var key = FieldKey(field);
-            if (key is null) continue;
-            if (!SlotKeyMap.TryToInternal(key, out var slot)) continue;
-
-            var fieldValue = FieldValue(field);
-            if (fieldValue is null) continue;
-
-            var (name, augments) = ReadItem(fieldValue, env);
-            if (name is null) continue;
-            slots.Add(new ParsedSlot(slot, name, augments));
-        }
-        return slots;
+        var map = EvaluateToMap(value, env);
+        return map?.Values.ToList();
     }
 
-    private static TableConstructorExpressionSyntax? ResolveToTable(ExpressionSyntax value, EvalEnvironment env)
+    // Produces an ordered slot map (internal slot -> ParsedSlot) or null if unresolvable.
+    private static Dictionary<string, ParsedSlot>? EvaluateToMap(ExpressionSyntax value, EvalEnvironment env)
     {
-        return value switch
+        switch (value)
         {
-            TableConstructorExpressionSyntax t => t,
-            _ => null,
-        };
+            case TableConstructorExpressionSyntax table:
+            {
+                var map = new Dictionary<string, ParsedSlot>(StringComparer.OrdinalIgnoreCase);
+                foreach (var field in table.Fields)
+                {
+                    var key = FieldKey(field);
+                    var fv = FieldValue(field);
+                    if (key is null || fv is null) continue;
+                    if (!SlotKeyMap.TryToInternal(key, out var slot)) continue;
+                    var (name, augments) = ReadItem(fv, env);
+                    if (name is null) continue;
+                    map[slot] = new ParsedSlot(slot, name, augments);
+                }
+                return map;
+            }
+
+            case FunctionCallExpressionSyntax call when IsSetCombine(call):
+            {
+                var combined = new Dictionary<string, ParsedSlot>(StringComparer.OrdinalIgnoreCase);
+                foreach (var arg in SetCombineArgs(call))
+                {
+                    var part = ResolveOperandToMap(arg, env);
+                    if (part is null) return null;          // unknown operand -> whole set unresolvable
+                    foreach (var kv in part) combined[kv.Key] = kv.Value; // right wins
+                }
+                return combined;
+            }
+
+            case MemberAccessExpressionSyntax or IdentifierNameSyntax:
+                return ResolveOperandToMap(value, env);
+
+            default:
+                return null;
+        }
     }
+
+    // A set_combine operand is either an inline table or a reference to a prior sets.* entry.
+    private static Dictionary<string, ParsedSlot>? ResolveOperandToMap(ExpressionSyntax operand, EvalEnvironment env)
+    {
+        if (operand is TableConstructorExpressionSyntax)
+            return EvaluateToMap(operand, env);
+
+        var path = SetReferencePath(operand);
+        if (path is not null && env.Sets.TryGetValue(path, out var slots))
+            return slots.ToDictionary(s => s.Slot, s => s, StringComparer.OrdinalIgnoreCase);
+
+        return null;
+    }
+
+    // Reads "sets.engaged.Acc" -> "engaged.Acc" (drops leading sets root); null otherwise.
+    private static string? SetReferencePath(ExpressionSyntax expr)
+    {
+        var parts = new List<string>();
+        var cur = expr;
+        while (true)
+        {
+            switch (cur)
+            {
+                case MemberAccessExpressionSyntax m: parts.Insert(0, m.MemberName.Text); cur = m.Expression; break;
+                case ElementAccessExpressionSyntax e when e.KeyExpression is LiteralExpressionSyntax { Token.Value: string k }:
+                    parts.Insert(0, k); cur = e.Expression; break;
+                case IdentifierNameSyntax id:
+                    if (!string.Equals(id.Name, "sets", StringComparison.OrdinalIgnoreCase)) return null;
+                    return string.Join(".", parts);
+                default: return null;
+            }
+        }
+    }
+
+    private static bool IsSetCombine(FunctionCallExpressionSyntax call) =>
+        call.Expression is IdentifierNameSyntax { Name: "set_combine" };
+
+    private static IEnumerable<ExpressionSyntax> SetCombineArgs(FunctionCallExpressionSyntax call) =>
+        call.Argument is ExpressionListFunctionArgumentSyntax list
+            ? list.Expressions
+            : Enumerable.Empty<ExpressionSyntax>();
 
     private static string? FieldKey(TableFieldSyntax field) => field switch
     {

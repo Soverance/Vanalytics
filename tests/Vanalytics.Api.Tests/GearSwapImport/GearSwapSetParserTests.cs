@@ -83,4 +83,18 @@ public class GearSwapSetParserTests
         Assert.Equal(new[] { "Attack+20" }, head.Augments);
         Assert.Contains(set.Slots, s => s.Slot == "Body" && s.ItemName == "Adhemar Jacket +1");
     }
+
+    [Fact]
+    public void Flattens_set_combine_with_rightmost_winning()
+    {
+        const string lua = """
+            sets.engaged = { head="Base Head", body="Base Body" }
+            sets.engaged.Acc = set_combine(sets.engaged, { head="Acc Head", hands="Acc Hands" })
+            """;
+        var result = GearSwapSetParser.Parse(lua);
+        var acc = Assert.Single(result.Sets, s => s.LuaKey == "engaged.Acc");
+        Assert.Equal("Acc Head", Assert.Single(acc.Slots, s => s.Slot == "Head").ItemName);
+        Assert.Equal("Base Body", Assert.Single(acc.Slots, s => s.Slot == "Body").ItemName);
+        Assert.Contains(acc.Slots, s => s.Slot == "Hands" && s.ItemName == "Acc Hands");
+    }
 }
