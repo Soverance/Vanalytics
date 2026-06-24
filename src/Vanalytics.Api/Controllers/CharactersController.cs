@@ -24,16 +24,18 @@ public class CharactersController : ControllerBase
 {
     private readonly VanalyticsDbContext _db;
     private readonly BlueprintGenerationService _blueprintGen;
+    private readonly GearSwapImportService _import;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public CharactersController(VanalyticsDbContext db, BlueprintGenerationService blueprintGen)
+    public CharactersController(VanalyticsDbContext db, BlueprintGenerationService blueprintGen, GearSwapImportService import)
     {
         _db = db;
         _blueprintGen = blueprintGen;
+        _import = import;
     }
 
     [HttpGet]
@@ -745,6 +747,101 @@ public class CharactersController : ControllerBase
         _db.CharacterGearSets.Remove(set);
         await _db.SaveChangesAsync();
         return NoContent();
+    }
+
+    // Parse-only: never writes. Multipart upload of a GearSwap .lua + optional job hint.
+    [HttpPost("{id:guid}/gear-sets/import/preview")]
+    [RequestSizeLimit(1_000_000)] // 1 MB; gearswap files are small
+    public async Task<IActionResult> ImportPreview(Guid id, IFormFile file, [FromForm] string? job, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id, ct);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (file is null || file.Length == 0) return BadRequest(new { message = "No file uploaded." });
+        if (!file.FileName.EndsWith(".lua", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Please upload a .lua file." });
+
+        string lua;
+        using (var reader = new StreamReader(file.OpenReadStream()))
+            lua = await reader.ReadToEndAsync(ct);
+
+        var suggestedJob = SuggestJobFromFileName(file.FileName, job);
+        var preview = await _import.BuildPreviewAsync(id, lua, suggestedJob, ct);
+        return Ok(preview);
+    }
+
+    // "Soverance_THF.lua" -> "THF" when no explicit job given.
+    private static string? SuggestJobFromFileName(string fileName, string? explicitJob)
+    {
+        if (TryNormalizeJob(explicitJob, out var norm) && norm is not null) return norm;
+        var stem = Path.GetFileNameWithoutExtension(fileName);
+        foreach (var part in stem.Split('_', '-', ' '))
+            if (TryNormalizeJob(part, out var j) && j is not null) return j;
+        return null;
+    }
+
+    // Upserts the chosen sets by (character, job, name). Never deletes sets absent from the file.
+    [HttpPost("{id:guid}/gear-sets/import/commit")]
+    public async Task<IActionResult> ImportCommit(Guid id, [FromBody] ImportCommitRequest request, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id, ct);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (!TryNormalizeJob(request.Job, out var job))
+            return BadRequest(new { message = "Invalid job." });
+        if (request.Sets.Count == 0)
+            return BadRequest(new { message = "No sets selected." });
+
+        var existing = await _db.CharacterGearSets
+            .Include(s => s.Slots)
+            .Where(s => s.CharacterId == id)
+            .ToListAsync(ct);
+        var byName = existing.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
+
+        var response = new ImportCommitResponse();
+        var now = DateTimeOffset.UtcNow;
+        var projectedCount = existing.Count;
+
+        foreach (var req in request.Sets)
+        {
+            if (string.IsNullOrWhiteSpace(req.Name)) continue;
+            var name = req.Name.Trim();
+            if (!TryNormalizeCategory(req.Category, out var category)) category = "Other";
+
+            if (byName.TryGetValue(name, out var set))
+            {
+                set.Job = job;
+                set.Category = category;
+                set.TagsJson = JsonSerializer.Serialize(NormalizeTags(req.Tags));
+                _db.GearSetSlots.RemoveRange(set.Slots);
+                set.Slots.Clear();
+                foreach (var slot in ToSlotEntities(req)) set.Slots.Add(slot);
+                set.UpdatedAt = now;
+                response.Updated++;
+            }
+            else
+            {
+                if (projectedCount >= MaxGearSetsPerCharacter)
+                    return Conflict(new { message = $"Importing these sets would exceed the maximum of {MaxGearSetsPerCharacter} gear sets. Remove some sets or import fewer." });
+                var created = new CharacterGearSet
+                {
+                    CharacterId = id, Name = name, Job = job, Category = category,
+                    TagsJson = JsonSerializer.Serialize(NormalizeTags(req.Tags)),
+                    CreatedAt = now, UpdatedAt = now,
+                };
+                foreach (var slot in ToSlotEntities(req)) created.Slots.Add(slot);
+                _db.CharacterGearSets.Add(created);
+                byName[name] = created;
+                projectedCount++;
+                response.Created++;
+            }
+            response.Names.Add(name);
+        }
+
+        await _db.SaveChangesAsync(ct);
+        return Ok(response);
     }
 
     [HttpGet("{id:guid}/blueprints/{job}")]
