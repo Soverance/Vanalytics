@@ -162,6 +162,7 @@ internal static class SetEvaluator
     {
         IdentifierKeyedTableFieldSyntax k => k.Value,
         ExpressionKeyedTableFieldSyntax e => e.Value,
+        UnkeyedTableFieldSyntax u => u.Value,
         _ => null,
     };
 
