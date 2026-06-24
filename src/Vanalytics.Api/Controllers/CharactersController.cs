@@ -752,7 +752,7 @@ public class CharactersController : ControllerBase
     // Parse-only: never writes. Multipart upload of a GearSwap .lua + optional job hint.
     [HttpPost("{id:guid}/gear-sets/import/preview")]
     [RequestSizeLimit(1_000_000)] // 1 MB; gearswap files are small
-    public async Task<IActionResult> ImportPreview(Guid id, IFormFile file, [FromForm] string? job, CancellationToken ct)
+    public async Task<IActionResult> ImportPreview(Guid id, IFormFile file, [FromQuery] string? job, CancellationToken ct)
     {
         var userId = GetUserId();
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id, ct);
