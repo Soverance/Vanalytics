@@ -253,6 +253,11 @@ function CommandsTab() {
         <CommandRow command="//va macros dump" description="Dump the raw contents of macro DAT files to text for debugging" />
       </CommandTable>
 
+      <SectionHeading>GearSwap Blueprint</SectionHeading>
+      <CommandTable>
+        <CommandRow command="//va blueprint pull [JOB] [--force]" description="Install the GearSwap file you generated in the Blueprint editor into GearSwap's data folder (your current job if JOB is omitted). Won't overwrite an existing file unless you add --force, which first backs the old file up to .lua.bak. Reloads GearSwap automatically when you pull the job you're currently on." />
+      </CommandTable>
+
       <SectionHeading>Hunt Overlays</SectionHeading>
       <CommandTable>
         <CommandRow command="//va hunt on|off|toggle" description="Master switch for the hunt overlay set (Target, Watch, Wide Scan, NM Cache)" />
