@@ -1236,3 +1236,35 @@ export interface GenerateBlueprintResponse {
   lua: string
   diagnostics: Diagnostic[]
 }
+
+// GearSwap import preview / commit
+export interface ImportSlotPreview {
+  slot: string
+  rawName: string
+  itemId: number
+  itemName: string
+  matchKind: 'exact' | 'normalized' | 'fuzzy' | 'unresolved'
+  confidence?: number | null
+  owned: boolean
+  augments: string[]
+}
+
+export interface ImportSetPreview {
+  name: string
+  category: string
+  luaKey: string
+  overwritesExisting: boolean
+  slots: ImportSlotPreview[]
+}
+
+export interface GearSwapImportPreview {
+  suggestedJob?: string | null
+  sets: ImportSetPreview[]
+  warnings: string[]
+}
+
+export interface ImportCommitResponse {
+  created: number
+  updated: number
+  names: string[]
+}
