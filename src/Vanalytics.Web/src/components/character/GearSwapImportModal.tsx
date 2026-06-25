@@ -3,7 +3,9 @@ import { X, Upload, Check, AlertTriangle } from 'lucide-react'
 import { FFXI_JOBS } from '../../lib/jobs'
 import { importPreview, importCommit } from '../../api/gearSwapImport'
 import { toCommitSets, type SelectableSet } from './gearSwapImportSelection'
-import type { GearSwapImportPreview } from '../../types/api'
+import type { GearSwapImportPreview, ImportSetPreview } from '../../types/api'
+import { groupByCategory } from '../../lib/gearSetCategories'
+import { summarizeImport } from './gearSwapImportSummary'
 
 interface Props {
   characterId: string
@@ -54,6 +56,30 @@ export default function GearSwapImportModal({ characterId, defaultJob, onClose, 
 
   const selectedCount = selection.filter(s => s.include).length
 
+  const renderSetRow = (s: ImportSetPreview) => {
+    const sel = selection.find(x => x.name === s.name)?.include ?? false
+    const unresolved = s.slots.filter(x => x.matchKind === 'unresolved').length
+    const notOwned = s.slots.filter(x => x.itemId !== 0 && !x.owned).length
+    return (
+      <div key={s.luaKey} className="rounded border border-gray-800 bg-gray-950/40 px-3 py-2">
+        <label className="flex items-center gap-2 text-sm text-gray-200">
+          <input type="checkbox" checked={sel} onChange={() => toggle(s.name)} />
+          <span className="font-medium">{s.name}</span>
+          {s.overwritesExisting
+            ? <span className="rounded bg-amber-900/50 px-1.5 py-0.5 text-[10px] text-amber-200">Overwrites</span>
+            : <span className="rounded bg-emerald-900/40 px-1.5 py-0.5 text-[10px] text-emerald-200">New</span>}
+          <span className="ml-auto text-[10px] text-gray-500">{s.slots.length} slots</span>
+        </label>
+        {(unresolved > 0 || notOwned > 0) && (
+          <div className="mt-1 flex gap-3 pl-6 text-[10px]">
+            {unresolved > 0 && <span className="text-red-300">{unresolved} unresolved</span>}
+            {notOwned > 0 && <span className="text-amber-300">{notOwned} not owned</span>}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg border-2 border-amber-800/50 bg-gray-900"
@@ -95,30 +121,23 @@ export default function GearSwapImportModal({ characterId, defaultJob, onClose, 
                   <ul className="mt-1 list-disc pl-4">{preview.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
                 </details>
               )}
-              <div className="flex flex-col gap-2">
-                {preview.sets.map(s => {
-                  const sel = selection.find(x => x.name === s.name)?.include ?? false
-                  const unresolved = s.slots.filter(x => x.matchKind === 'unresolved').length
-                  const notOwned = s.slots.filter(x => x.itemId !== 0 && !x.owned).length
-                  return (
-                    <div key={s.luaKey} className="rounded border border-gray-800 bg-gray-950/40 px-3 py-2">
-                      <label className="flex items-center gap-2 text-sm text-gray-200">
-                        <input type="checkbox" checked={sel} onChange={() => toggle(s.name)} />
-                        <span className="font-medium">{s.name}</span>
-                        {s.overwritesExisting
-                          ? <span className="rounded bg-amber-900/50 px-1.5 py-0.5 text-[10px] text-amber-200">Overwrites</span>
-                          : <span className="rounded bg-emerald-900/40 px-1.5 py-0.5 text-[10px] text-emerald-200">New</span>}
-                        <span className="ml-auto text-[10px] text-gray-500">{s.slots.length} slots</span>
-                      </label>
-                      {(unresolved > 0 || notOwned > 0) && (
-                        <div className="mt-1 flex gap-3 pl-6 text-[10px]">
-                          {unresolved > 0 && <span className="text-red-300">{unresolved} unresolved</span>}
-                          {notOwned > 0 && <span className="text-amber-300">{notOwned} not owned</span>}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+              {(() => {
+                const sum = summarizeImport(preview.sets)
+                return (
+                  <div className="text-[11px] text-gray-400">
+                    {sum.total} sets · {sum.overwrite} overwrite · {sum.newSets} new
+                    {sum.unresolvedSlots > 0 && <span className="text-red-300"> · {sum.unresolvedSlots} items unresolved</span>}
+                    {sum.notOwnedSlots > 0 && <span className="text-amber-300"> · {sum.notOwnedSlots} not owned</span>}
+                  </div>
+                )
+              })()}
+              <div className="flex flex-col gap-3">
+                {groupByCategory(preview.sets).map(g => (
+                  <div key={g.category} className="flex flex-col gap-2">
+                    <div className="text-[10px] uppercase tracking-wide text-gray-500">{g.label}</div>
+                    {g.rows.map(renderSetRow)}
+                  </div>
+                ))}
               </div>
             </>
           )}
