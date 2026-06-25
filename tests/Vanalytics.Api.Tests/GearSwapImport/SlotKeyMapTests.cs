@@ -10,6 +10,10 @@ public class SlotKeyMapTests
     [InlineData("right_ear", "Ear2")]
     [InlineData("left_ring", "Ring1")]
     [InlineData("right_ring", "Ring2")]
+    [InlineData("ear1", "Ear1")]
+    [InlineData("ear2", "Ear2")]
+    [InlineData("ring1", "Ring1")]
+    [InlineData("ring2", "Ring2")]
     [InlineData("feet", "Feet")]
     public void Maps_known_lua_keys_to_internal_slot_names(string luaKey, string expected)
     {

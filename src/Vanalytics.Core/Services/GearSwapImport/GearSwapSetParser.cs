@@ -48,9 +48,11 @@ public static class GearSwapSetParser
                     {
                         var slots = SetEvaluator.Evaluate(value, env, warnings);
                         if (slots is null) { warnings.Add($"Skipped set '{KeyPathText(path)}' (could not evaluate its value)."); continue; }
-                        var ps = new ParsedSet(KeyPathText(path), SetNaming.FriendlyName(path), SetNaming.Category(path), slots);
+                        // Register even empty sets so later set_combine / alias references resolve,
+                        // but don't surface empty namespace containers (e.g. `sets.JA = {}`) as imports.
                         env.Sets[KeyPathText(path)] = slots;
-                        sets.Add(ps);
+                        if (slots.Count > 0)
+                            sets.Add(new ParsedSet(KeyPathText(path), SetNaming.FriendlyName(path), SetNaming.Category(path), slots));
                     }
                     catch (Exception)
                     {
@@ -159,7 +161,9 @@ internal static class SetEvaluator
                 return combined;
             }
 
-            case MemberAccessExpressionSyntax or IdentifierNameSyntax:
+            // A bare reference as the whole value is an alias assignment, e.g.
+            // `sets.WS['Mandalic Stab'] = sets.WS['Rudra's Storm']` — copy the referenced set.
+            case MemberAccessExpressionSyntax or ElementAccessExpressionSyntax or IdentifierNameSyntax:
                 return ResolveOperandToMap(value, env);
 
             default:

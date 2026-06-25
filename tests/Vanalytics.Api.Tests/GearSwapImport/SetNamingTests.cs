@@ -62,4 +62,37 @@ public class SetNamingTests
         Assert.Equal("MyCustomThing", SetNaming.FriendlyName(segs));
         Assert.Equal("Other", SetNaming.Category(segs));
     }
+
+    // Action sets use a colon regardless of whether the leaf was dotted or bracket-keyed.
+    [Fact]
+    public void Dotted_action_leaf_uses_colon_like_bracket()
+    {
+        Assert.Equal("JA: Steal", SetNaming.FriendlyName(new[] { Id("JA"), Id("Steal") }));
+        Assert.Equal("JA: Perfect Dodge", SetNaming.FriendlyName(new[] { Id("JA"), Br("Perfect Dodge") }));
+        Assert.Equal("WS: Exenterator", SetNaming.FriendlyName(new[] { Id("WS"), Id("Exenterator") }));
+    }
+
+    [Fact]
+    public void Nested_action_qualifier_is_the_segment_before_the_leaf()
+    {
+        var segs = new[] { Id("WS"), Id("SA"), Br("Rudra's Storm") };
+        Assert.Equal("SA: Rudra's Storm", SetNaming.FriendlyName(segs));
+        Assert.Equal("WeaponSkill", SetNaming.Category(segs));
+    }
+
+    // Mode-cycle sets use parentheses regardless of dotted vs bracket, and map to Engaged/Idle.
+    [Fact]
+    public void Tp_variant_is_parenthetical_and_engaged_category()
+    {
+        var segs = new[] { Id("TP"), Br("Accuracy") };
+        Assert.Equal("TP (Accuracy)", SetNaming.FriendlyName(segs));
+        Assert.Equal("Engaged", SetNaming.Category(segs));
+    }
+
+    [Fact]
+    public void Idle_variant_is_parenthetical()
+    {
+        Assert.Equal("Idle (MDT)", SetNaming.FriendlyName(new[] { Id("Idle"), Id("MDT") }));
+        Assert.Equal("Idle (Crafting)", SetNaming.FriendlyName(new[] { Id("Idle"), Id("Crafting") }));
+    }
 }

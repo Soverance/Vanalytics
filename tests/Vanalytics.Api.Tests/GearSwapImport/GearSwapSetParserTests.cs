@@ -115,4 +115,52 @@ public class GearSwapSetParserTests
         Assert.DoesNotContain(result.Sets, s => s.LuaKey == "engaged.Dynamic");
         Assert.Contains(result.Warnings, w => w.Contains("engaged.Dynamic"));
     }
+
+    [Fact]
+    public void Empty_namespace_container_sets_are_dropped_but_still_referenceable()
+    {
+        // `sets.JA = {}` is an empty container just used to instantiate the namespace.
+        const string lua = """
+            sets.JA = {}
+            sets.JA.Steal = { hands="Thief's Kote" }
+            """;
+        var result = GearSwapSetParser.Parse(lua);
+
+        // The empty container is not surfaced...
+        Assert.DoesNotContain(result.Sets, s => s.LuaKey == "JA");
+        // ...but its populated child is, with the action-colon name.
+        var steal = Assert.Single(result.Sets);
+        Assert.Equal("JA.Steal", steal.LuaKey);
+        Assert.Equal("JA: Steal", steal.FriendlyName);
+        Assert.Empty(result.Warnings); // empties are dropped silently, not warned
+    }
+
+    [Fact]
+    public void Resolves_alias_assignment_to_another_set()
+    {
+        // `sets.X = sets.Y` copies Y's slots (GearSwap aliasing idiom).
+        const string lua = """
+            sets.WS["Rudra's Storm"] = { head="Pill. Bonnet +1", body="Abnoba Kaftan" }
+            sets.WS["Mandalic Stab"] = sets.WS["Rudra's Storm"]
+            """;
+        var result = GearSwapSetParser.Parse(lua);
+
+        var alias = Assert.Single(result.Sets, s => s.LuaKey == "WS.Mandalic Stab");
+        Assert.Equal("WS: Mandalic Stab", alias.FriendlyName);
+        Assert.Equal(2, alias.Slots.Count);
+        Assert.Contains(alias.Slots, s => s.Slot == "Head" && s.ItemName == "Pill. Bonnet +1");
+        Assert.Contains(alias.Slots, s => s.Slot == "Body" && s.ItemName == "Abnoba Kaftan");
+    }
+
+    [Fact]
+    public void Recognizes_ear_and_ring_numeric_slot_aliases()
+    {
+        const string lua = """sets.WS = { ear1="Steelflash Earring", ear2="Bladeborn Earring", ring2="Epona's Ring" }""";
+        var result = GearSwapSetParser.Parse(lua);
+
+        var ws = Assert.Single(result.Sets);
+        Assert.Contains(ws.Slots, s => s.Slot == "Ear1" && s.ItemName == "Steelflash Earring");
+        Assert.Contains(ws.Slots, s => s.Slot == "Ear2" && s.ItemName == "Bladeborn Earring");
+        Assert.Contains(ws.Slots, s => s.Slot == "Ring2" && s.ItemName == "Epona's Ring");
+    }
 }
