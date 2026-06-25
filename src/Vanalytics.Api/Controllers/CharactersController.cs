@@ -653,7 +653,9 @@ public class CharactersController : ControllerBase
         }).ToList();
     }
 
-    // Owner's currently-owned item ids: inventory ∪ equipped (same source as owned-equipment).
+    // Owner's currently-owned item ids: all inventory bags ∪ equipped gear. (Unlike the
+    // owned-equipment endpoint, this isn't filtered to equippable items — a superset is fine
+    // here since gear-set slot itemIds are equippable anyway, and it can't cause a false "owned".)
     internal static async Task<HashSet<int>> LoadOwnedItemIdsAsync(VanalyticsDbContext db, Guid id)
     {
         var inventoryIds = await db.CharacterInventories
