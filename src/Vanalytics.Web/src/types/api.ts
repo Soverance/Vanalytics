@@ -1111,6 +1111,8 @@ export interface GearSetSummary {
   category: string
   tags: string[]
   slotCount: number
+  unresolvedCount: number
+  notOwnedCount: number | null
   updatedAt: string
 }
 

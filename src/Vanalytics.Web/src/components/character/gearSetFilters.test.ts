@@ -6,7 +6,8 @@ import type { GearSetSummary } from '../../types/api'
 
 const set = (over: Partial<GearSetSummary>): GearSetSummary => ({
   id: 1, name: 'Set', job: 'THF', category: 'WeaponSkill', tags: [],
-  slotCount: 0, updatedAt: '2026-01-01T00:00:00Z', ...over,
+  slotCount: 0, unresolvedCount: 0, notOwnedCount: null,
+  updatedAt: '2026-01-01T00:00:00Z', ...over,
 })
 
 describe('buildTree', () => {
