@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Download, Trash2, Check, X, Link2 } from 'lucide-react'
-import { categoryLabel } from '../../lib/gearSetCategories'
+import { categoryLabel, groupByCategory } from '../../lib/gearSetCategories'
 import { visibleSlice, type SortKey } from './gearSetFilters'
 import type { GearSetSummary } from '../../types/api'
 
@@ -14,6 +14,7 @@ interface Props {
   activeTags: string[]
   onToggleTag: (tag: string) => void
   readOnly?: boolean
+  showCategoryHeaders?: boolean
   onOpen: (id: number) => void
   onExport: (id: number) => void
   onDelete: (id: number) => Promise<void>
@@ -22,7 +23,7 @@ interface Props {
 
 export default function GearSetList({
   rows, knownTags, search, onSearchChange, sort, onSortChange,
-  activeTags, onToggleTag, readOnly = false, onOpen, onExport, onDelete, onCopyLink,
+  activeTags, onToggleTag, readOnly = false, showCategoryHeaders = false, onOpen, onExport, onDelete, onCopyLink,
 }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null)
   const [rowError, setRowError] = useState<{ id: number; msg: string } | null>(null)
@@ -40,6 +41,57 @@ export default function GearSetList({
     catch (e) { setRowError({ id, msg: e instanceof Error ? e.message : 'Failed to delete gear set.' }) }
     finally { setConfirmingDelete(null) }
   }
+
+  const renderRow = (s: GearSetSummary) => (
+    <div key={s.id} className="rounded bg-gray-800/40 border border-gray-700/40">
+      <div className="flex items-center gap-3 p-2.5">
+        <button onClick={() => onOpen(s.id)} className="flex-1 text-left min-w-0">
+          <span className="text-sm text-gray-200">{s.name}</span>
+          {s.job && <span className="ml-2 text-[10px] text-amber-300/70 px-1.5 py-0.5 rounded bg-indigo-900/40">{s.job}</span>}
+          <span className="ml-2 text-[10px] text-sky-300/70 px-1.5 py-0.5 rounded bg-sky-900/30">{categoryLabel(s.category)}</span>
+          {s.tags.map(t => (
+            <span key={t} className="ml-1 text-[10px] text-gray-400 px-1.5 py-0.5 rounded bg-gray-700/40">{t}</span>
+          ))}
+          <span className="ml-2 text-[10px] text-gray-500">{s.slotCount} slots</span>
+          {s.unresolvedCount > 0 && (
+            <span className="ml-2 text-[10px] text-red-300" title="Items that didn't match the catalog">
+              ⚠{s.unresolvedCount} unresolved
+            </span>
+          )}
+          {s.notOwnedCount != null && s.notOwnedCount > 0 && (
+            <span className="ml-2 text-[10px] text-amber-300" title="Items you don't currently own">
+              {s.notOwnedCount} not owned
+            </span>
+          )}
+        </button>
+        <button onClick={() => onExport(s.id)} className="text-gray-500 hover:text-amber-300" title="Export to GearSwap">
+          <Download className="h-4 w-4" />
+        </button>
+        {onCopyLink && (
+          <button onClick={() => onCopyLink(s.id)} className="text-gray-500 hover:text-sky-300" title="Copy share link">
+            <Link2 className="h-4 w-4" />
+          </button>
+        )}
+        {!readOnly && (confirmingDelete === s.id ? (
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-gray-400">Delete?</span>
+            <button onClick={() => confirmDelete(s.id)} className="text-rose-400 hover:text-rose-300" title="Confirm delete">
+              <Check className="h-4 w-4" />
+            </button>
+            <button onClick={() => { setRowError(null); setConfirmingDelete(null) }} className="text-gray-500 hover:text-gray-300" title="Cancel">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => { setRowError(null); setConfirmingDelete(s.id) }}
+            className="text-gray-500 hover:text-rose-400" title="Delete">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        ))}
+      </div>
+      {rowError?.id === s.id && <div className="text-[11px] text-rose-300 px-3 pb-2">{rowError.msg}</div>}
+    </div>
+  )
 
   return (
     <div className="space-y-3">
@@ -74,46 +126,14 @@ export default function GearSetList({
       {rows.length === 0 && <div className="text-xs text-gray-500 py-6 text-center">No sets match.</div>}
 
       <div className="space-y-1.5">
-        {shown.map(s => (
-          <div key={s.id} className="rounded bg-gray-800/40 border border-gray-700/40">
-            <div className="flex items-center gap-3 p-2.5">
-              <button onClick={() => onOpen(s.id)} className="flex-1 text-left min-w-0">
-                <span className="text-sm text-gray-200">{s.name}</span>
-                {s.job && <span className="ml-2 text-[10px] text-amber-300/70 px-1.5 py-0.5 rounded bg-indigo-900/40">{s.job}</span>}
-                <span className="ml-2 text-[10px] text-sky-300/70 px-1.5 py-0.5 rounded bg-sky-900/30">{categoryLabel(s.category)}</span>
-                {s.tags.map(t => (
-                  <span key={t} className="ml-1 text-[10px] text-gray-400 px-1.5 py-0.5 rounded bg-gray-700/40">{t}</span>
-                ))}
-                <span className="ml-2 text-[10px] text-gray-500">{s.slotCount} slots</span>
-              </button>
-              <button onClick={() => onExport(s.id)} className="text-gray-500 hover:text-amber-300" title="Export to GearSwap">
-                <Download className="h-4 w-4" />
-              </button>
-              {onCopyLink && (
-                <button onClick={() => onCopyLink(s.id)} className="text-gray-500 hover:text-sky-300" title="Copy share link">
-                  <Link2 className="h-4 w-4" />
-                </button>
-              )}
-              {!readOnly && (confirmingDelete === s.id ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-gray-400">Delete?</span>
-                  <button onClick={() => confirmDelete(s.id)} className="text-rose-400 hover:text-rose-300" title="Confirm delete">
-                    <Check className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => { setRowError(null); setConfirmingDelete(null) }} className="text-gray-500 hover:text-gray-300" title="Cancel">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <button onClick={() => { setRowError(null); setConfirmingDelete(s.id) }}
-                  className="text-gray-500 hover:text-rose-400" title="Delete">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              ))}
-            </div>
-            {rowError?.id === s.id && <div className="text-[11px] text-rose-300 px-3 pb-2">{rowError.msg}</div>}
-          </div>
-        ))}
+        {showCategoryHeaders
+          ? groupByCategory(shown).map(g => (
+              <div key={g.category} className="space-y-1.5">
+                <div className="px-1 pt-2 text-[10px] uppercase tracking-wide text-gray-500">{g.label}</div>
+                {g.rows.map(renderRow)}
+              </div>
+            ))
+          : shown.map(renderRow)}
       </div>
 
       {hiddenCount > 0 && (

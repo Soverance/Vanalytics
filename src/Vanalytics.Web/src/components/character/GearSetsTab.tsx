@@ -243,6 +243,7 @@ export default function GearSetsTab({ character, gear, itemCache, onSaveFavorite
               activeTags={activeTags}
               onToggleTag={toggleTag}
               readOnly={readOnly}
+              showCategoryHeaders={selCategory == null}
               onOpen={openExisting}
               onExport={exportSet}
               onDelete={readOnly ? () => Promise.resolve() : deleteSet}
