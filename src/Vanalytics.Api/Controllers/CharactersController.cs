@@ -618,15 +618,23 @@ public class CharactersController : ControllerBase
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
-        return Ok(await LoadGearSetsAsync(_db, id));
+        var ownedItemIds = await LoadOwnedItemIdsAsync(_db, id);
+        return Ok(await LoadGearSetsAsync(_db, id, ownedItemIds));
     }
 
-    internal static async Task<List<GearSetSummaryResponse>> LoadGearSetsAsync(VanalyticsDbContext db, Guid id)
+    internal static async Task<List<GearSetSummaryResponse>> LoadGearSetsAsync(
+        VanalyticsDbContext db, Guid id, HashSet<int>? ownedItemIds = null)
     {
         var rows = await db.CharacterGearSets
             .Where(s => s.CharacterId == id)
             .OrderByDescending(s => s.UpdatedAt)
-            .Select(s => new { s.Id, s.Name, s.Job, s.Category, s.TagsJson, SlotCount = s.Slots.Count, s.UpdatedAt })
+            .Select(s => new
+            {
+                s.Id, s.Name, s.Job, s.Category, s.TagsJson, s.UpdatedAt,
+                SlotCount = s.Slots.Count,
+                UnresolvedCount = s.Slots.Count(x => x.ItemId == 0),
+                ResolvedItemIds = s.Slots.Where(x => x.ItemId != 0).Select(x => x.ItemId).ToList()
+            })
             .ToListAsync();
 
         return rows.Select(r => new GearSetSummaryResponse
@@ -637,8 +645,22 @@ public class CharactersController : ControllerBase
             Category = r.Category,
             Tags = DeserializeTags(r.TagsJson),
             SlotCount = r.SlotCount,
+            UnresolvedCount = r.UnresolvedCount,
+            NotOwnedCount = ownedItemIds is null
+                ? null
+                : r.ResolvedItemIds.Count(itemId => !ownedItemIds.Contains(itemId)),
             UpdatedAt = r.UpdatedAt
         }).ToList();
+    }
+
+    // Owner's currently-owned item ids: inventory ∪ equipped (same source as owned-equipment).
+    internal static async Task<HashSet<int>> LoadOwnedItemIdsAsync(VanalyticsDbContext db, Guid id)
+    {
+        var inventoryIds = await db.CharacterInventories
+            .Where(i => i.CharacterId == id).Select(i => i.ItemId).ToListAsync();
+        var equippedIds = await db.EquippedGear
+            .Where(g => g.CharacterId == id && g.ItemId != 0).Select(g => g.ItemId).ToListAsync();
+        return inventoryIds.Concat(equippedIds).ToHashSet();
     }
 
     [HttpGet("{id:guid}/gear-sets/{setId:long}")]
