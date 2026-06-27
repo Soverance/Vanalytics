@@ -9,6 +9,7 @@ import GearSetSlotPicker from './GearSetSlotPicker'
 import type { CharacterDetail, OwnedEquipmentItem, GearSetSlot, GameItemDetail } from '../../types/api'
 import { X } from 'lucide-react'
 import { GEAR_SET_CATEGORIES } from '../../lib/gearSetCategories'
+import { stripImportedTag } from './gearSwapImportSelection'
 
 export interface WorkingSet {
   id: number | null
@@ -116,7 +117,8 @@ export default function GearSetEditor({
     setSaving(true)
     setSaveError(null)
     try {
-      await onSave({ name, job: job || null, category, tags, slots })
+      // Saving an edit means the set is no longer a pristine import — shed the marker.
+      await onSave({ name, job: job || null, category, tags: stripImportedTag(tags), slots })
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Failed to save gear set.')
       setSaving(false)

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toCommitSets, type SelectableSet } from './gearSwapImportSelection'
+import { toCommitSets, stripImportedTag, IMPORTED_TAG, type SelectableSet } from './gearSwapImportSelection'
 import type { ImportSetPreview } from '../../types/api'
 
 const set = (name: string, over: Partial<ImportSetPreview> = {}): ImportSetPreview => ({
@@ -30,5 +30,22 @@ describe('toCommitSets', () => {
     const main = out[0].slots.find(s => s.slot === 'Main')!
     expect(main.itemId).toBe(0)
     expect(main.itemName).toBe('B')
+  })
+
+  it('tags imported sets with the IMPORTED_TAG constant', () => {
+    const out = toCommitSets([set('Engaged')], [{ name: 'Engaged', include: true }], 'THF')
+    expect(out[0].tags).toEqual([IMPORTED_TAG])
+  })
+})
+
+describe('stripImportedTag', () => {
+  it('removes the imported marker case-insensitively, keeping other tags', () => {
+    expect(stripImportedTag(['imported', 'BiS'])).toEqual(['BiS'])
+    expect(stripImportedTag(['Imported', 'TH', 'imported'])).toEqual(['TH'])
+  })
+
+  it('is a no-op when the marker is absent', () => {
+    expect(stripImportedTag(['BiS', 'SATA'])).toEqual(['BiS', 'SATA'])
+    expect(stripImportedTag([])).toEqual([])
   })
 })
