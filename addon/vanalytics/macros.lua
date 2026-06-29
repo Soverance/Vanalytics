@@ -563,7 +563,7 @@ function macros.push(macro_path, settings, http_fn, json_encode, json_decode, ba
     else
         log_fn('Push: uploading books changed since last sync.')
         log_fn('Note: FFXI only writes macro edits to DAT files on zone/relogin. If a recent')
-        log_fn('      in-game edit is missing from Vanalytics, zone once and push again.')
+        log_fn('in-game edit is missing from Vanalytics, zone once and push again.')
     end
 
     -- Character context is required for every addon API call. If the player
@@ -571,7 +571,7 @@ function macros.push(macro_path, settings, http_fn, json_encode, json_decode, ba
     -- the wrong character via fallback heuristics.
     local ch_headers = character_headers(api_key)
     if not ch_headers then
-        log_fn('Cannot sync macros — not fully logged in yet. Try again after zoning.')
+        log_fn('Cannot sync macros: not fully logged in yet. Try again after zoning.')
         on_complete(false)
         return
     end
@@ -612,7 +612,7 @@ function macros.push(macro_path, settings, http_fn, json_encode, json_decode, ba
             return
         end
 
-        log_fn('Detected ' .. #changed_books .. ' changed book(s) — uploading...')
+        log_fn('Detected ' .. #changed_books .. ' changed book(s). Uploading...')
 
         if not settings.macro_hashes then settings.macro_hashes = {} end
 
@@ -699,7 +699,7 @@ function macros.pull(macro_path, settings, http_fn, json_encode, json_decode, ba
 
     local ch_headers = character_headers(api_key)
     if not ch_headers then
-        log_fn('Cannot pull macros — not fully logged in yet. Try again after zoning.')
+        log_fn('Cannot pull macros. Try again after zoning.')
         on_complete({})
         return
     end

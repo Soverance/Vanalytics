@@ -1136,6 +1136,42 @@ namespace Vanalytics.Data.Migrations
                     b.ToTable("CharacterJobs");
                 });
 
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterJobBlueprint", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("GraphJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("{\"version\":1,\"nodes\":[],\"edges\":[]}");
+
+                    b.Property<string>("Job")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId", "Job")
+                        .IsUnique();
+
+                    b.ToTable("CharacterJobBlueprints");
+                });
+
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterMissions", b =>
                 {
                     b.Property<Guid>("CharacterId")
@@ -2756,6 +2792,17 @@ namespace Vanalytics.Data.Migrations
                 {
                     b.HasOne("Vanalytics.Core.Models.Character", "Character")
                         .WithMany("Jobs")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterJobBlueprint", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithMany()
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

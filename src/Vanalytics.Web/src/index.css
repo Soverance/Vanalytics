@@ -48,6 +48,10 @@
   background: rgb(75 85 99); /* gray-600 */
 }
 
+.styled-scrollbar::-webkit-scrollbar-corner {
+  background: rgb(17 24 39); /* gray-900 — matches the track on 2-axis scroll areas */
+}
+
 /* Firefox */
 .styled-scrollbar {
   scrollbar-width: thin;

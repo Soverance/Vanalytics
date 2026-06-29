@@ -10,6 +10,12 @@
 //
 // Generated via one-shot bash/awk pipeline; regenerate when Windower
 // pushes new spells.
+//
+// NPC-only spells (Windower `levels={}` with no learnable job, type != Trust)
+// carry `npcOnly: true`. No player can obtain them; the Spells tab excludes them
+// from completion counts and hides them behind a NPC-only filter. When
+// regenerating, set npcOnly:true wherever the Windower `levels` table is empty
+// and the type is not Trust.
 
 export interface SpellCatalogEntry {
     id: number
@@ -19,6 +25,10 @@ export interface SpellCatalogEntry {
     /** Lowest job-level requirement across all jobs that can cast this spell.
      *  0 for trusts (no level gate). */
     minLevel: number
+    /** True for NPC/enemy-only spells no player can obtain (Windower `levels={}`,
+     *  type != Trust). Excluded from completion counts; hidden behind the NPC-only
+     *  filter. */
+    npcOnly?: boolean
 }
 
 export type SpellType =
@@ -72,17 +82,17 @@ export const SPELLS: SpellCatalogEntry[] = [
     { id: 29, name: "Banish II", type: "WhiteMagic", mpCost: 57, minLevel: 30 },
     { id: 30, name: "Banish III", type: "WhiteMagic", mpCost: 96, minLevel: 65 },
     { id: 31, name: "Banish IV", type: "WhiteMagic", mpCost: 108, minLevel: 90 },
-    { id: 32, name: "Banish V", type: "WhiteMagic", mpCost: 159, minLevel: 0 },
+    { id: 32, name: "Banish V", type: "WhiteMagic", mpCost: 159, minLevel: 0, npcOnly: true },
     { id: 33, name: "Diaga", type: "WhiteMagic", mpCost: 12, minLevel: 15 },
     { id: 34, name: "Diaga II", type: "WhiteMagic", mpCost: 60, minLevel: 45 },
     { id: 35, name: "Diaga III", type: "WhiteMagic", mpCost: 120, minLevel: 75 },
-    { id: 36, name: "Diaga IV", type: "WhiteMagic", mpCost: 180, minLevel: 0 },
-    { id: 37, name: "Diaga V", type: "WhiteMagic", mpCost: 240, minLevel: 0 },
+    { id: 36, name: "Diaga IV", type: "WhiteMagic", mpCost: 180, minLevel: 0, npcOnly: true },
+    { id: 37, name: "Diaga V", type: "WhiteMagic", mpCost: 240, minLevel: 0, npcOnly: true },
     { id: 38, name: "Banishga", type: "WhiteMagic", mpCost: 41, minLevel: 15 },
     { id: 39, name: "Banishga II", type: "WhiteMagic", mpCost: 120, minLevel: 40 },
     { id: 40, name: "Banishga III", type: "WhiteMagic", mpCost: 233, minLevel: 65 },
-    { id: 41, name: "Banishga IV", type: "WhiteMagic", mpCost: 380, minLevel: 0 },
-    { id: 42, name: "Banishga V", type: "WhiteMagic", mpCost: 563, minLevel: 0 },
+    { id: 41, name: "Banishga IV", type: "WhiteMagic", mpCost: 380, minLevel: 0, npcOnly: true },
+    { id: 42, name: "Banishga V", type: "WhiteMagic", mpCost: 563, minLevel: 0, npcOnly: true },
     { id: 43, name: "Protect", type: "WhiteMagic", mpCost: 9, minLevel: 7 },
     { id: 44, name: "Protect II", type: "WhiteMagic", mpCost: 28, minLevel: 27 },
     { id: 45, name: "Protect III", type: "WhiteMagic", mpCost: 46, minLevel: 47 },
@@ -217,33 +227,33 @@ export const SPELLS: SpellCatalogEntry[] = [
     { id: 174, name: "Firaga", type: "BlackMagic", mpCost: 57, minLevel: 28 },
     { id: 175, name: "Firaga II", type: "BlackMagic", mpCost: 153, minLevel: 53 },
     { id: 176, name: "Firaga III", type: "BlackMagic", mpCost: 263, minLevel: 69 },
-    { id: 177, name: "Firaga IV", type: "BlackMagic", mpCost: 360, minLevel: 0 },
-    { id: 178, name: "Firaga V", type: "BlackMagic", mpCost: 450, minLevel: 0 },
+    { id: 177, name: "Firaga IV", type: "BlackMagic", mpCost: 360, minLevel: 0, npcOnly: true },
+    { id: 178, name: "Firaga V", type: "BlackMagic", mpCost: 450, minLevel: 0, npcOnly: true },
     { id: 179, name: "Blizzaga", type: "BlackMagic", mpCost: 80, minLevel: 32 },
     { id: 180, name: "Blizzaga II", type: "BlackMagic", mpCost: 175, minLevel: 57 },
     { id: 181, name: "Blizzaga III", type: "BlackMagic", mpCost: 297, minLevel: 71 },
-    { id: 182, name: "Blizzaga IV", type: "BlackMagic", mpCost: 403, minLevel: 0 },
-    { id: 183, name: "Blizzaga V", type: "BlackMagic", mpCost: 500, minLevel: 0 },
+    { id: 182, name: "Blizzaga IV", type: "BlackMagic", mpCost: 403, minLevel: 0, npcOnly: true },
+    { id: 183, name: "Blizzaga V", type: "BlackMagic", mpCost: 500, minLevel: 0, npcOnly: true },
     { id: 184, name: "Aeroga", type: "BlackMagic", mpCost: 45, minLevel: 23 },
     { id: 185, name: "Aeroga II", type: "BlackMagic", mpCost: 131, minLevel: 48 },
     { id: 186, name: "Aeroga III", type: "BlackMagic", mpCost: 232, minLevel: 67 },
-    { id: 187, name: "Aeroga IV", type: "BlackMagic", mpCost: 318, minLevel: 0 },
-    { id: 188, name: "Aeroga V", type: "BlackMagic", mpCost: 402, minLevel: 0 },
+    { id: 187, name: "Aeroga IV", type: "BlackMagic", mpCost: 318, minLevel: 0, npcOnly: true },
+    { id: 188, name: "Aeroga V", type: "BlackMagic", mpCost: 402, minLevel: 0, npcOnly: true },
     { id: 189, name: "Stonega", type: "BlackMagic", mpCost: 24, minLevel: 15 },
     { id: 190, name: "Stonega II", type: "BlackMagic", mpCost: 93, minLevel: 40 },
     { id: 191, name: "Stonega III", type: "BlackMagic", mpCost: 175, minLevel: 63 },
-    { id: 192, name: "Stonega IV", type: "BlackMagic", mpCost: 243, minLevel: 0 },
-    { id: 193, name: "Stonega V", type: "BlackMagic", mpCost: 315, minLevel: 0 },
+    { id: 192, name: "Stonega IV", type: "BlackMagic", mpCost: 243, minLevel: 0, npcOnly: true },
+    { id: 193, name: "Stonega V", type: "BlackMagic", mpCost: 315, minLevel: 0, npcOnly: true },
     { id: 194, name: "Thundaga", type: "BlackMagic", mpCost: 105, minLevel: 36 },
     { id: 195, name: "Thundaga II", type: "BlackMagic", mpCost: 200, minLevel: 61 },
     { id: 196, name: "Thundaga III", type: "BlackMagic", mpCost: 332, minLevel: 73 },
-    { id: 197, name: "Thundaga IV", type: "BlackMagic", mpCost: 450, minLevel: 0 },
-    { id: 198, name: "Thundaga V", type: "BlackMagic", mpCost: 520, minLevel: 0 },
+    { id: 197, name: "Thundaga IV", type: "BlackMagic", mpCost: 450, minLevel: 0, npcOnly: true },
+    { id: 198, name: "Thundaga V", type: "BlackMagic", mpCost: 520, minLevel: 0, npcOnly: true },
     { id: 199, name: "Waterga", type: "BlackMagic", mpCost: 34, minLevel: 19 },
     { id: 200, name: "Waterga II", type: "BlackMagic", mpCost: 112, minLevel: 44 },
     { id: 201, name: "Waterga III", type: "BlackMagic", mpCost: 202, minLevel: 65 },
-    { id: 202, name: "Waterga IV", type: "BlackMagic", mpCost: 280, minLevel: 0 },
-    { id: 203, name: "Waterga V", type: "BlackMagic", mpCost: 357, minLevel: 0 },
+    { id: 202, name: "Waterga IV", type: "BlackMagic", mpCost: 280, minLevel: 0, npcOnly: true },
+    { id: 203, name: "Waterga V", type: "BlackMagic", mpCost: 357, minLevel: 0, npcOnly: true },
     { id: 204, name: "Flare", type: "BlackMagic", mpCost: 315, minLevel: 60 },
     { id: 205, name: "Flare II", type: "BlackMagic", mpCost: 280, minLevel: 75 },
     { id: 206, name: "Freeze", type: "BlackMagic", mpCost: 315, minLevel: 50 },
@@ -262,19 +272,19 @@ export const SPELLS: SpellCatalogEntry[] = [
     { id: 219, name: "Comet", type: "BlackMagic", mpCost: 350, minLevel: 94 },
     { id: 220, name: "Poison", type: "BlackMagic", mpCost: 5, minLevel: 3 },
     { id: 221, name: "Poison II", type: "BlackMagic", mpCost: 38, minLevel: 43 },
-    { id: 222, name: "Poison III", type: "BlackMagic", mpCost: 72, minLevel: 0 },
-    { id: 223, name: "Poison IV", type: "BlackMagic", mpCost: 106, minLevel: 0 },
-    { id: 224, name: "Poison V", type: "BlackMagic", mpCost: 140, minLevel: 0 },
+    { id: 222, name: "Poison III", type: "BlackMagic", mpCost: 72, minLevel: 0, npcOnly: true },
+    { id: 223, name: "Poison IV", type: "BlackMagic", mpCost: 106, minLevel: 0, npcOnly: true },
+    { id: 224, name: "Poison V", type: "BlackMagic", mpCost: 140, minLevel: 0, npcOnly: true },
     { id: 225, name: "Poisonga", type: "BlackMagic", mpCost: 44, minLevel: 24 },
     { id: 226, name: "Poisonga II", type: "BlackMagic", mpCost: 112, minLevel: 64 },
-    { id: 227, name: "Poisonga III", type: "BlackMagic", mpCost: 180, minLevel: 0 },
-    { id: 228, name: "Poisonga IV", type: "BlackMagic", mpCost: 248, minLevel: 0 },
-    { id: 229, name: "Poisonga V", type: "BlackMagic", mpCost: 314, minLevel: 0 },
+    { id: 227, name: "Poisonga III", type: "BlackMagic", mpCost: 180, minLevel: 0, npcOnly: true },
+    { id: 228, name: "Poisonga IV", type: "BlackMagic", mpCost: 248, minLevel: 0, npcOnly: true },
+    { id: 229, name: "Poisonga V", type: "BlackMagic", mpCost: 314, minLevel: 0, npcOnly: true },
     { id: 230, name: "Bio", type: "BlackMagic", mpCost: 15, minLevel: 10 },
     { id: 231, name: "Bio II", type: "BlackMagic", mpCost: 36, minLevel: 35 },
     { id: 232, name: "Bio III", type: "BlackMagic", mpCost: 54, minLevel: 75 },
-    { id: 233, name: "Bio IV", type: "BlackMagic", mpCost: 154, minLevel: 0 },
-    { id: 234, name: "Bio V", type: "BlackMagic", mpCost: 197, minLevel: 0 },
+    { id: 233, name: "Bio IV", type: "BlackMagic", mpCost: 154, minLevel: 0, npcOnly: true },
+    { id: 234, name: "Bio V", type: "BlackMagic", mpCost: 197, minLevel: 0, npcOnly: true },
     { id: 235, name: "Burn", type: "BlackMagic", mpCost: 25, minLevel: 24 },
     { id: 236, name: "Frost", type: "BlackMagic", mpCost: 25, minLevel: 22 },
     { id: 237, name: "Choke", type: "BlackMagic", mpCost: 25, minLevel: 20 },
@@ -305,7 +315,7 @@ export const SPELLS: SpellCatalogEntry[] = [
     { id: 262, name: "Warp II", type: "BlackMagic", mpCost: 150, minLevel: 40 },
     { id: 263, name: "Escape", type: "BlackMagic", mpCost: 125, minLevel: 29 },
     { id: 264, name: "Tractor", type: "BlackMagic", mpCost: 26, minLevel: 25 },
-    { id: 265, name: "Tractor II", type: "BlackMagic", mpCost: 50, minLevel: 0 },
+    { id: 265, name: "Tractor II", type: "BlackMagic", mpCost: 50, minLevel: 0, npcOnly: true },
     { id: 266, name: "Absorb-STR", type: "BlackMagic", mpCost: 33, minLevel: 43 },
     { id: 267, name: "Absorb-DEX", type: "BlackMagic", mpCost: 33, minLevel: 41 },
     { id: 268, name: "Absorb-VIT", type: "BlackMagic", mpCost: 33, minLevel: 35 },
@@ -383,7 +393,7 @@ export const SPELLS: SpellCatalogEntry[] = [
     { id: 340, name: "Utsusemi: San", type: "Ninjutsu", mpCost: 0, minLevel: 100 },
     { id: 341, name: "Jubaku: Ichi", type: "Ninjutsu", mpCost: 0, minLevel: 30 },
     { id: 342, name: "Jubaku: Ni", type: "Ninjutsu", mpCost: 0, minLevel: 55 },
-    { id: 343, name: "Jubaku: San", type: "Ninjutsu", mpCost: 0, minLevel: 0 },
+    { id: 343, name: "Jubaku: San", type: "Ninjutsu", mpCost: 0, minLevel: 0, npcOnly: true },
     { id: 344, name: "Hojo: Ichi", type: "Ninjutsu", mpCost: 0, minLevel: 23 },
     { id: 345, name: "Hojo: Ni", type: "Ninjutsu", mpCost: 0, minLevel: 48 },
     { id: 346, name: "Hojo: San", type: "Ninjutsu", mpCost: 0, minLevel: 73 },
@@ -392,7 +402,7 @@ export const SPELLS: SpellCatalogEntry[] = [
     { id: 349, name: "Kurayami: San", type: "Ninjutsu", mpCost: 0, minLevel: 69 },
     { id: 350, name: "Dokumori: Ichi", type: "Ninjutsu", mpCost: 0, minLevel: 27 },
     { id: 351, name: "Dokumori: Ni", type: "Ninjutsu", mpCost: 0, minLevel: 52 },
-    { id: 352, name: "Dokumori: San", type: "Ninjutsu", mpCost: 0, minLevel: 0 },
+    { id: 352, name: "Dokumori: San", type: "Ninjutsu", mpCost: 0, minLevel: 0, npcOnly: true },
     { id: 353, name: "Tonko: Ichi", type: "Ninjutsu", mpCost: 0, minLevel: 9 },
     { id: 354, name: "Tonko: Ni", type: "Ninjutsu", mpCost: 0, minLevel: 34 },
     { id: 355, name: "Siren", type: "SummonerPact", mpCost: 7, minLevel: 1 },
@@ -994,6 +1004,10 @@ const SCROLL_LEARNABLE = new Set<SpellType>([
 
 export const isScrollLearnable = (type: SpellType): boolean =>
     SCROLL_LEARNABLE.has(type)
+
+// A spell is player-obtainable unless it is flagged NPC/enemy-only. Centralizes
+// the meaning so callers never read the `npcOnly` field directly.
+export const isObtainable = (s: SpellCatalogEntry): boolean => !s.npcOnly
 
 // Deep link to BG-Wiki. Scroll-learnable spells point at the scroll item
 // ("Scroll of {name}") so players can see how to obtain it; scroll-less spells

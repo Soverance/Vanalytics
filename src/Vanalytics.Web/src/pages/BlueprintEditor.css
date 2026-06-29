@@ -1,0 +1,31 @@
+/* Blueprint editor: make node selection clearly visible — React Flow's default selection style is
+   nearly invisible on the dark theme. Gold ring + soft glow following the node's rounded corners.
+   The custom node root (a div with rounded-lg) is the direct child of the .react-flow__node wrapper,
+   which gets the .selected class when the node is selected (single or shift-multi). */
+.react-flow__node.selected {
+  box-shadow: none;
+}
+.react-flow__node.selected > div {
+  box-shadow: 0 0 0 2px #f5c451, 0 0 12px 2px rgba(245, 196, 81, 0.35);
+  border-radius: 0.5rem;
+}
+
+/* After a box-select, React Flow draws a group bounding box around the selection — redundant with the
+   per-node gold ring, so hide it. Dragging any selected node still moves the whole group. (The
+   transient drag-rectangle, .react-flow__selection, already disappears on mouse release.) */
+.react-flow__nodesselection-rect { display: none; }
+
+/* Closed-fist cursor while panning (right-drag). Overrides base.css's .selection { cursor: pointer },
+   which otherwise wins by source order since we enable both selectionOnDrag and panOnDrag. */
+.react-flow__pane.dragging { cursor: grabbing; }
+
+/* UE convention: all wires white. */
+.react-flow__edge-path { stroke: #e5e7eb; stroke-width: 2; }
+
+/* Animated flow along the selected node's upstream exec lineage (back to its trigger origin). */
+.react-flow__edge.is-chain .react-flow__edge-path {
+  stroke: #ffffff;
+  stroke-dasharray: 6 4;
+  animation: bp-dashflow 0.6s linear infinite;
+}
+@keyframes bp-dashflow { to { stroke-dashoffset: -20; } }

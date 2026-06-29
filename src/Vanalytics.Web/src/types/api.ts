@@ -1111,6 +1111,8 @@ export interface GearSetSummary {
   category: string
   tags: string[]
   slotCount: number
+  unresolvedCount: number
+  notOwnedCount: number | null
   updatedAt: string
 }
 
@@ -1139,4 +1141,132 @@ export interface OwnedEquipmentItem {
   slots: number | null
   jobs: number | null
   augments: string[]
+}
+
+// --- GearSwap blueprint editor ---
+export type BlueprintNodeType =
+  | 'trigger:status_change'
+  | 'trigger:precast'
+  | 'trigger:aftercast'
+  | 'trigger:midcast'
+  | 'trigger:buff_change'
+  | 'trigger:pet_change'
+  | 'trigger:pet_status_change'
+  | 'trigger:pet_midcast'
+  | 'trigger:pet_aftercast'
+  | 'equip'
+  | 'mode'
+  | 'branch'
+  | 'value'
+  | 'buff'
+  | 'spell'
+  | 'pet'
+  | 'world'
+  | 'op:compare'
+  | 'op:and'
+  | 'op:or'
+  | 'op:not'
+  | 'comment'
+  | 'setup'
+  | 'lua'
+  | 'print'
+
+export interface ModeMember {
+  gearSetId: number
+  label?: string | null
+  overlaySetIds?: number[] | null
+}
+
+export interface BlueprintNode {
+  id: string
+  type: BlueprintNodeType
+  position: { x: number; y: number }
+  data: {
+    gearSetId?: number | null
+    actionName?: string | null
+    modeName?: string
+    modeCommand?: string | null
+    members?: ModeMember[]
+    overlaySetIds?: number[] | null
+    buffName?: string | null
+    spellField?: 'name' | 'skill' | 'element' | 'contains' | null
+    spellValue?: string | null
+    petField?: 'exists' | 'status' | null
+    petValue?: string | null
+    worldField?: 'weather' | 'day' | 'moghouse' | 'zone' | null
+    worldValue?: string | null
+    worldLabel?: string | null
+    resource?: string | null
+    op?: string | null
+    value?: number | null
+    text?: string | null
+    width?: number | null
+    height?: number | null
+    code?: string | null
+    chatText?: string | null
+    chatColor?: number | null
+  }
+}
+
+export interface BlueprintEdge {
+  id: string
+  source: string
+  sourceHandle?: string | null
+  target: string
+  targetHandle?: string | null
+}
+
+export interface BlueprintGraph {
+  version: number
+  nodes: BlueprintNode[]
+  edges: BlueprintEdge[]
+}
+
+export interface BlueprintResponse {
+  job: string
+  graph: BlueprintGraph
+  updatedAt: string | null
+}
+
+export interface Diagnostic {
+  severity: 'error' | 'warning'
+  message: string
+  nodeId: string | null
+}
+
+export interface GenerateBlueprintResponse {
+  lua: string
+  diagnostics: Diagnostic[]
+}
+
+// GearSwap import preview / commit
+export interface ImportSlotPreview {
+  slot: string
+  rawName: string
+  itemId: number
+  itemName: string
+  matchKind: 'exact' | 'normalized' | 'fuzzy' | 'unresolved'
+  confidence?: number | null
+  owned: boolean
+  augments: string[]
+}
+
+export interface ImportSetPreview {
+  name: string
+  category: string
+  luaKey: string
+  overwritesExisting: boolean
+  slots: ImportSlotPreview[]
+}
+
+export interface GearSwapImportPreview {
+  suggestedJob?: string | null
+  sets: ImportSetPreview[]
+  warnings: string[]
+}
+
+export interface ImportCommitResponse {
+  created: number
+  updated: number
+  names: string[]
 }

@@ -23,6 +23,7 @@ import PublicProfilePage from './pages/PublicProfilePage'
 import { FfxiFileSystemProvider } from './context/FfxiFileSystemContext'
 import ModelDebugPage from './pages/ModelDebugPage'
 import SessionReportPage from './pages/SessionReportPage'
+import BlueprintEditorPage from './pages/BlueprintEditorPage'
 import NpcBrowserPage from './pages/NpcBrowserPage'
 import ZoneBrowserPage from './pages/ZoneBrowserPage'
 import ForumCategoryListPage from './pages/ForumCategoryListPage'
@@ -122,6 +123,7 @@ export default function App() {
             {/* Protected routes */}
             <Route path="/characters" element={<CharactersPage />} />
             <Route path="/characters/:id" element={<ProtectedRoute><CharacterDetailPage /></ProtectedRoute>} />
+            <Route path="/characters/:id/blueprint/:job" element={<ProtectedRoute><BlueprintEditorPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/items" element={<ItemDatabasePage />} />
             <Route path="/items/:id" element={<ItemDetailPage />} />

@@ -41,6 +41,7 @@ export default function CharacterDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const initialGearTab = (searchParams.get('tab') as GearTab) || 'Equipment'
+  const initialJob = searchParams.get('job')
   const [character, setCharacter] = useState<CharacterDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [swapSlot, setSwapSlot] = useState<string | null>(null)
@@ -386,6 +387,7 @@ export default function CharacterDetailPage() {
             gear={localGear}
             itemCache={itemCache}
             onSaveFavorite={handleSaveFavorite}
+            initialJob={initialJob}
           />
         )}
       </section>

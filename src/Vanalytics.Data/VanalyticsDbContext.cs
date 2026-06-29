@@ -34,6 +34,7 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<CharacterPorterItem> CharacterPorterItems => Set<CharacterPorterItem>();
     public DbSet<CharacterGearSet> CharacterGearSets => Set<CharacterGearSet>();
     public DbSet<GearSetSlot> GearSetSlots => Set<GearSetSlot>();
+    public DbSet<CharacterJobBlueprint> CharacterJobBlueprints => Set<CharacterJobBlueprint>();
     public DbSet<CharacterProgression> CharacterProgression => Set<CharacterProgression>();
     public DbSet<CharacterMissions> CharacterMissions => Set<CharacterMissions>();
     public DbSet<CharacterTitle> CharacterTitles => Set<CharacterTitle>();

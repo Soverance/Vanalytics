@@ -102,6 +102,8 @@ builder.Services.AddOpenApi("v1", options =>
 builder.Services.AddSingleton<VanadielClock>();
 builder.Services.AddSoveranceOAuth(builder.Configuration);
 builder.Services.AddScoped<DatMappingService>();
+builder.Services.AddScoped<BlueprintGenerationService>();
+builder.Services.AddScoped<GearSwapImportService>();
 builder.Services.AddSingleton<RateLimiter>();
 builder.Services.AddSingleton<EconomyRateLimiter>();
 builder.Services.AddSingleton<LoginRateLimiter>();

@@ -8,9 +8,12 @@ using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Core.DTOs.Porter;
 using Vanalytics.Core.DTOs.Sync;
+using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
+using Vanalytics.Core.Services;
 using Vanalytics.Data;
+using Vanalytics.Api.Services;
 
 namespace Vanalytics.Api.Controllers;
 
@@ -20,15 +23,19 @@ namespace Vanalytics.Api.Controllers;
 public class CharactersController : ControllerBase
 {
     private readonly VanalyticsDbContext _db;
+    private readonly BlueprintGenerationService _blueprintGen;
+    private readonly GearSwapImportService _import;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public CharactersController(VanalyticsDbContext db)
+    public CharactersController(VanalyticsDbContext db, BlueprintGenerationService blueprintGen, GearSwapImportService import)
     {
         _db = db;
+        _blueprintGen = blueprintGen;
+        _import = import;
     }
 
     [HttpGet]
@@ -611,15 +618,23 @@ public class CharactersController : ControllerBase
         var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
         if (character is null) return NotFound();
         if (character.UserId != userId) return Forbid();
-        return Ok(await LoadGearSetsAsync(_db, id));
+        var ownedItemIds = await LoadOwnedItemIdsAsync(_db, id);
+        return Ok(await LoadGearSetsAsync(_db, id, ownedItemIds));
     }
 
-    internal static async Task<List<GearSetSummaryResponse>> LoadGearSetsAsync(VanalyticsDbContext db, Guid id)
+    internal static async Task<List<GearSetSummaryResponse>> LoadGearSetsAsync(
+        VanalyticsDbContext db, Guid id, HashSet<int>? ownedItemIds = null)
     {
         var rows = await db.CharacterGearSets
             .Where(s => s.CharacterId == id)
             .OrderByDescending(s => s.UpdatedAt)
-            .Select(s => new { s.Id, s.Name, s.Job, s.Category, s.TagsJson, SlotCount = s.Slots.Count, s.UpdatedAt })
+            .Select(s => new
+            {
+                s.Id, s.Name, s.Job, s.Category, s.TagsJson, s.UpdatedAt,
+                SlotCount = s.Slots.Count,
+                UnresolvedCount = s.Slots.Count(x => x.ItemId == 0),
+                ResolvedItemIds = s.Slots.Where(x => x.ItemId != 0).Select(x => x.ItemId).ToList()
+            })
             .ToListAsync();
 
         return rows.Select(r => new GearSetSummaryResponse
@@ -630,8 +645,24 @@ public class CharactersController : ControllerBase
             Category = r.Category,
             Tags = DeserializeTags(r.TagsJson),
             SlotCount = r.SlotCount,
+            UnresolvedCount = r.UnresolvedCount,
+            NotOwnedCount = ownedItemIds is null
+                ? null
+                : r.ResolvedItemIds.Count(itemId => !ownedItemIds.Contains(itemId)),
             UpdatedAt = r.UpdatedAt
         }).ToList();
+    }
+
+    // Owner's currently-owned item ids: all inventory bags ∪ equipped gear. (Unlike the
+    // owned-equipment endpoint, this isn't filtered to equippable items — a superset is fine
+    // here since gear-set slot itemIds are equippable anyway, and it can't cause a false "owned".)
+    internal static async Task<HashSet<int>> LoadOwnedItemIdsAsync(VanalyticsDbContext db, Guid id)
+    {
+        var inventoryIds = await db.CharacterInventories
+            .Where(i => i.CharacterId == id).Select(i => i.ItemId).ToListAsync();
+        var equippedIds = await db.EquippedGear
+            .Where(g => g.CharacterId == id && g.ItemId != 0).Select(g => g.ItemId).ToListAsync();
+        return inventoryIds.Concat(equippedIds).ToHashSet();
     }
 
     [HttpGet("{id:guid}/gear-sets/{setId:long}")]
@@ -742,6 +773,178 @@ public class CharactersController : ControllerBase
         return NoContent();
     }
 
+    // Parse-only: never writes. Multipart upload of a GearSwap .lua + optional job hint.
+    [HttpPost("{id:guid}/gear-sets/import/preview")]
+    [RequestSizeLimit(1_000_000)] // 1 MB; gearswap files are small
+    public async Task<IActionResult> ImportPreview(Guid id, IFormFile file, [FromQuery] string? job, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id, ct);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (file is null || file.Length == 0) return BadRequest(new { message = "No file uploaded." });
+        if (!file.FileName.EndsWith(".lua", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Please upload a .lua file." });
+
+        string lua;
+        using (var reader = new StreamReader(file.OpenReadStream()))
+            lua = await reader.ReadToEndAsync(ct);
+
+        var suggestedJob = SuggestJobFromFileName(file.FileName, job);
+        var preview = await _import.BuildPreviewAsync(id, lua, suggestedJob, ct);
+        return Ok(preview);
+    }
+
+    // "Soverance_THF.lua" -> "THF" when no explicit job given.
+    private static string? SuggestJobFromFileName(string fileName, string? explicitJob)
+    {
+        if (TryNormalizeJob(explicitJob, out var norm) && norm is not null) return norm;
+        var stem = Path.GetFileNameWithoutExtension(fileName);
+        foreach (var part in stem.Split('_', '-', ' '))
+            if (TryNormalizeJob(part, out var j) && j is not null) return j;
+        return null;
+    }
+
+    // Upserts the chosen sets by (character, job, name). Never deletes sets absent from the file.
+    [HttpPost("{id:guid}/gear-sets/import/commit")]
+    public async Task<IActionResult> ImportCommit(Guid id, [FromBody] ImportCommitRequest request, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id, ct);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (!TryNormalizeJob(request.Job, out var job))
+            return BadRequest(new { message = "Invalid job." });
+        if (request.Sets.Count == 0)
+            return BadRequest(new { message = "No sets selected." });
+
+        var allSets = await _db.CharacterGearSets
+            .Include(s => s.Slots)
+            .Where(s => s.CharacterId == id)
+            .ToListAsync(ct);
+        // Overwrite identity is (character, job, name): only this job's sets are upsert targets.
+        // GroupBy/First tolerates pre-existing same-name sets (no DB uniqueness constraint exists).
+        var byName = allSets
+            .Where(s => string.Equals(s.Job, job, StringComparison.OrdinalIgnoreCase))
+            .GroupBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+        var response = new ImportCommitResponse();
+        var now = DateTimeOffset.UtcNow;
+        var projectedCount = allSets.Count; // cap is per character, across all jobs
+
+        foreach (var req in request.Sets)
+        {
+            if (string.IsNullOrWhiteSpace(req.Name)) continue;
+            var name = req.Name.Trim();
+            if (!TryNormalizeCategory(req.Category, out var category)) category = "Other";
+
+            if (byName.TryGetValue(name, out var set))
+            {
+                set.Job = job;
+                set.Category = category;
+                set.TagsJson = JsonSerializer.Serialize(NormalizeTags(req.Tags));
+                _db.GearSetSlots.RemoveRange(set.Slots);
+                set.Slots.Clear();
+                foreach (var slot in ToSlotEntities(req)) set.Slots.Add(slot);
+                set.UpdatedAt = now;
+                response.Updated++;
+            }
+            else
+            {
+                if (projectedCount >= MaxGearSetsPerCharacter)
+                    return Conflict(new { message = $"Importing these sets would exceed the maximum of {MaxGearSetsPerCharacter} gear sets. Remove some sets or import fewer." });
+                var created = new CharacterGearSet
+                {
+                    CharacterId = id, Name = name, Job = job, Category = category,
+                    TagsJson = JsonSerializer.Serialize(NormalizeTags(req.Tags)),
+                    CreatedAt = now, UpdatedAt = now,
+                };
+                foreach (var slot in ToSlotEntities(req)) created.Slots.Add(slot);
+                _db.CharacterGearSets.Add(created);
+                byName[name] = created;
+                projectedCount++;
+                response.Created++;
+            }
+            response.Names.Add(name);
+        }
+
+        await _db.SaveChangesAsync(ct);
+        return Ok(response);
+    }
+
+    [HttpGet("{id:guid}/blueprints/{job}")]
+    public async Task<IActionResult> GetBlueprint(Guid id, string job)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (!TryNormalizeJob(job, out var normalized) || normalized is null)
+            return BadRequest(new { message = "Invalid job." });
+
+        var wf = await _db.CharacterJobBlueprints
+            .FirstOrDefaultAsync(w => w.CharacterId == id && w.Job == normalized);
+
+        return Ok(new BlueprintResponse
+        {
+            Job = normalized,
+            Graph = wf is null
+                ? new BlueprintGraphDto()
+                : JsonSerializer.Deserialize<BlueprintGraphDto>(wf.GraphJson, BlueprintJson.Options) ?? new BlueprintGraphDto(),
+            UpdatedAt = wf?.UpdatedAt
+        });
+    }
+
+    [HttpPut("{id:guid}/blueprints/{job}")]
+    public async Task<IActionResult> SaveBlueprint(Guid id, string job, [FromBody] BlueprintGraphDto graph)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (!TryNormalizeJob(job, out var normalized) || normalized is null)
+            return BadRequest(new { message = "Invalid job." });
+
+        var now = DateTimeOffset.UtcNow;
+        var json = JsonSerializer.Serialize(graph ?? new BlueprintGraphDto(), BlueprintJson.Options);
+        var wf = await _db.CharacterJobBlueprints
+            .FirstOrDefaultAsync(w => w.CharacterId == id && w.Job == normalized);
+        if (wf is null)
+        {
+            wf = new CharacterJobBlueprint
+            {
+                CharacterId = id, Job = normalized, GraphJson = json,
+                CreatedAt = now, UpdatedAt = now
+            };
+            _db.CharacterJobBlueprints.Add(wf);
+        }
+        else
+        {
+            wf.GraphJson = json;
+            wf.UpdatedAt = now;
+        }
+        await _db.SaveChangesAsync();
+
+        return Ok(new BlueprintResponse { Job = normalized, Graph = graph ?? new BlueprintGraphDto(), UpdatedAt = wf.UpdatedAt });
+    }
+
+    [HttpPost("{id:guid}/blueprints/{job}/generate")]
+    public async Task<IActionResult> GenerateBlueprint(Guid id, string job)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        if (!TryNormalizeJob(job, out var normalized) || normalized is null)
+            return BadRequest(new { message = "Invalid job." });
+
+        // Web preserves the "no blueprint row -> generate from an empty graph" behavior by ignoring
+        // BlueprintExists. (The addon endpoint maps BlueprintExists=false to a 404 instead.)
+        var (_, response) = await _blueprintGen.GenerateAsync(id, normalized);
+        return Ok(response);
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -763,17 +966,8 @@ public class CharactersController : ControllerBase
 
     // Validates the optional gear-set job tag against the real FFXI job list, returning the
     // canonical uppercase code (e.g. "thf" -> "THF"). Null/blank is allowed (job is optional).
-    private static bool TryNormalizeJob(string? job, out string? normalized)
-    {
-        normalized = null;
-        if (string.IsNullOrWhiteSpace(job)) return true;
-        if (Enum.TryParse<Vanalytics.Core.Enums.JobType>(job.Trim(), ignoreCase: true, out var parsed))
-        {
-            normalized = parsed.ToString();
-            return true;
-        }
-        return false;
-    }
+    private static bool TryNormalizeJob(string? job, out string? normalized) =>
+        Vanalytics.Api.Services.JobNormalizer.TryNormalize(job, out normalized);
 
     // Validates the gear-set category against the GearSetCategory enum, returning the canonical
     // enum name. Null/blank defaults to "Other"; an unrecognized value is rejected.

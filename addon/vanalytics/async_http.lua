@@ -22,6 +22,15 @@ local M = {}
 local active = {}
 local DEFAULT_TIMEOUT = 30
 
+-- The deadline measures time spent *actively pumping*, not absolute wall time.
+-- When poll() isn't called for a while (game minimized/zoning/alt-tabbed, or a
+-- heavy frame hitch), prerender stalls and in-flight requests make no progress
+-- through no fault of the network. Any inter-poll gap larger than this many
+-- seconds is treated as a pump stall and credited back to every active
+-- request's deadline so it isn't charged for time the addon wasn't running.
+local STALL_GAP = 1.0
+local last_poll = nil
+
 local TLS_DEFAULTS = {
     mode = 'client',
     protocol = 'any',
@@ -124,7 +133,14 @@ end
 -- inside a coroutine; yields whenever the socket would block.
 -- Returns: ok, status_or_error, headers, body
 -----------------------------------------------------------------------
-local function run_request(params)
+local function run_request(params, entry)
+    -- Bumped whenever bytes actually move (sent or received). poll() watches
+    -- this counter to reset the inactivity deadline, so a slow-but-progressing
+    -- transfer never trips the timeout — only a genuinely stalled socket does.
+    local function note_progress()
+        if entry then entry.activity = (entry.activity or 0) + 1 end
+    end
+
     local url = parse_url(params.url)
     if not url then return false, 'invalid-url' end
 
@@ -188,6 +204,7 @@ local function run_request(params)
         local s, serr, last = conn:send(request_bytes, sent + 1)
         if s then
             sent = s
+            note_progress()
         elseif serr == 'wantread' or serr == 'wantwrite' or serr == 'timeout' then
             sent = last or sent
             coroutine.yield()
@@ -204,6 +221,7 @@ local function run_request(params)
         local chunk, rerr, partial = conn:receive(4096)
         local data = chunk or partial
         if data and #data > 0 then
+            note_progress()
             table.insert(buf, data)
             local joined = table.concat(buf)
             local sc, h, bs = parse_response_head(joined)
@@ -240,6 +258,7 @@ local function run_request(params)
             local chunk, rerr, partial = conn:receive(content_length - have)
             local data = chunk or partial
             if data and #data > 0 then
+                note_progress()
                 table.insert(buf, data)
                 have = have + #data
             end
@@ -262,6 +281,7 @@ local function run_request(params)
             local chunk, rerr, partial = conn:receive(4096)
             local data = chunk or partial
             if data and #data > 0 then
+                note_progress()
                 table.insert(buf, data)
             end
             if chunk then
@@ -282,6 +302,7 @@ local function run_request(params)
             local chunk, rerr, partial = conn:receive(4096)
             local data = chunk or partial
             if data and #data > 0 then
+                note_progress()
                 table.insert(buf, data)
             end
             if chunk then
@@ -315,8 +336,24 @@ function M.request(params, callback)
     local timeout = params.timeout or DEFAULT_TIMEOUT
     local label = params.label or ((params.method or 'GET') .. ' ' .. (params.url or ''))
 
-    local co = coroutine.create(function()
-        local ok, status, headers, body = run_request(params)
+    -- Create the entry first so the coroutine can flip fired_callback BEFORE
+    -- it invokes the callback. Without that flag set, a callback that throws
+    -- would be re-invoked by poll()'s coroutine-error path (which only guards
+    -- on fired_callback) — firing the same callback twice and forking the
+    -- sync chain (a second on_complete → duplicate step advance).
+    local entry = {
+        callback = callback,
+        timeout = timeout,
+        deadline = socket.gettime() + timeout,
+        activity = 0,
+        label = label,
+        fired_callback = false,
+    }
+
+    entry.co = coroutine.create(function()
+        local ok, status, headers, body = run_request(params, entry)
+        if entry.fired_callback then return end
+        entry.fired_callback = true
         if ok then
             callback(true, status, headers, body)
         else
@@ -324,20 +361,32 @@ function M.request(params, callback)
         end
     end)
 
-    table.insert(active, {
-        co = co,
-        callback = callback,
-        deadline = os.time() + timeout,
-        label = label,
-        fired_callback = false,
-    })
+    table.insert(active, entry)
 end
 
 -- Pump all in-flight coroutines once. Call from the addon's prerender hook.
 function M.poll()
-    if #active == 0 then return end
+    if #active == 0 then
+        last_poll = nil
+        return
+    end
 
-    local now = os.time()
+    local now = socket.gettime()
+
+    -- Credit back any pump-stall gap (see STALL_GAP): if poll() hasn't run for
+    -- a while, the in-flight requests were frozen, not slow. Push their
+    -- deadlines forward by the lost interval so they aren't spuriously timed
+    -- out for wall-clock time the addon spent unable to pump them.
+    if last_poll then
+        local gap = now - last_poll
+        if gap > STALL_GAP then
+            for _, r in ipairs(active) do
+                r.deadline = r.deadline + gap
+            end
+        end
+    end
+    last_poll = now
+
     local i = 1
     while i <= #active do
         local r = active[i]
@@ -354,6 +403,7 @@ function M.poll()
                 end
             end
         else
+            local before = r.activity
             local ok, err = coroutine.resume(r.co)
             if not ok then
                 table.remove(active, i)
@@ -367,6 +417,13 @@ function M.poll()
             elseif coroutine.status(r.co) == 'dead' then
                 table.remove(active, i)
             else
+                -- Forward progress (bytes moved this resume) resets the
+                -- inactivity clock, so a slow-but-steady transfer never trips
+                -- the deadline — only a socket stuck with no progress for the
+                -- full timeout does.
+                if r.activity ~= before then
+                    r.deadline = now + r.timeout
+                end
                 i = i + 1
             end
         end

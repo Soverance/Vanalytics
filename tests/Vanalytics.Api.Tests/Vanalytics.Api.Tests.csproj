@@ -22,6 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="GearSwapImport/Fixtures/*.lua" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Vanalytics.Api\Vanalytics.Api.csproj" />
     <ProjectReference Include="..\..\src\Vanalytics.Core\Vanalytics.Core.csproj" />
     <ProjectReference Include="..\..\src\Vanalytics.Data\Vanalytics.Data.csproj" />

@@ -94,12 +94,15 @@ function porter.sync(character_name, server, on_complete)
         body = payload,
         label = 'porter-sync',
     }, function(result, status_code, _, _)
+        local ok = false
         if not result then
             log_error_fn('Porter sync connection failed: ' .. tostring(status_code))
         elseif status_code ~= 200 then
             log_error_fn('Porter sync failed with status ' .. tostring(status_code))
+        else
+            ok = true
         end
-        on_complete()
+        on_complete(ok)
     end)
 end
 

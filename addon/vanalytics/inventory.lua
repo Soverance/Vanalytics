@@ -238,20 +238,26 @@ function inventory.sync(character_name, server, on_complete)
         },
         body = payload,
         label = 'inventory-sync',
+        -- A first-run full sync ships the entire inventory and the backend
+        -- clears stale rows + bulk-inserts, which can run well past the 30s
+        -- default deadline and spuriously time out. Give it a generous window;
+        -- incremental diffs are small and keep the default.
+        timeout = is_full_sync and 120 or nil,
     }, function(result, status_code, _, _)
         if not result then
             log_error_fn('Inventory sync connection failed: ' .. tostring(status_code))
-            on_complete()
+            on_complete(false)
             return
         end
 
         -- Update snapshot regardless of status so we don't re-send same diff
         previous_snapshot = current_snapshot
 
-        if status_code ~= 200 then
+        local ok = status_code == 200
+        if not ok then
             log_error_fn('Inventory sync failed with status ' .. tostring(status_code))
         end
-        on_complete()
+        on_complete(ok)
     end)
 end
 
