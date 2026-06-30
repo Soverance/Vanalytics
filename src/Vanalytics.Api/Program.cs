@@ -18,6 +18,7 @@ using Vanalytics.Api;
 using Vanalytics.Api.Middleware;
 using Vanalytics.Api.Services;
 using Vanalytics.Api.Services.Sync;
+using Vanalytics.Api.Services.SearchServer;
 using Vanalytics.Core.Services.SearchServer;
 using Vanalytics.Data;
 
@@ -148,10 +149,14 @@ builder.Services.AddHostedService<ServerStatusScraper>();
 builder.Services.AddHostedService<BazaarStalenessJob>();
 builder.Services.AddHostedService<SessionStalenessJob>();
 
-// AH scraper — disabled by default; enable via AhScraper:Enabled = true in config
+// AH scraper — enabled/disabled at runtime via ScraperSettings.MasterEnabled (Admin > Economy);
+// the AhScraper config section now holds tuning only (batch size, delays, discovery ranges).
 builder.Services.AddSingleton<SearchPacketCodec>();
 builder.Services.AddSingleton(
     builder.Configuration.GetSection("AhScraper").Get<AhScraperOptions>() ?? new AhScraperOptions());
+builder.Services.AddSingleton<SearchEndpointProber>();
+builder.Services.AddSingleton<IDiscoveryProber, SearchEndpointProberAdapter>();
+builder.Services.AddSingleton<DiscoveryOrchestrator>();
 builder.Services.AddHostedService<AuctionHouseScraper>();
 
 // Forum

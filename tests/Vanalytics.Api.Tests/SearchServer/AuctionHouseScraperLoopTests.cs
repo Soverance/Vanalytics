@@ -69,7 +69,22 @@ public class AuctionHouseScraperLoopTests : IAsyncLifetime
                 new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "S", "B", stack),
             });
 
+        public Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<PlayerRecord>>(Array.Empty<PlayerRecord>());
+
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    [Fact]
+    public async Task RunCycle_NoOps_WhenMasterDisabled()
+    {
+        // The migration seeds ScraperSettings Id=1 with MasterEnabled=false.
+        // We verify IsMasterEnabledAsync reads that row and returns false.
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+
+        bool enabled = await AuctionHouseScraper.IsMasterEnabledAsync(db, CancellationToken.None);
+        Assert.False(enabled);
     }
 
     [Fact]

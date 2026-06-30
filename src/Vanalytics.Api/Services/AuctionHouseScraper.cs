@@ -11,14 +11,18 @@ public class AuctionHouseScraper(
     IServiceScopeFactory scopeFactory,
     AhScraperOptions options) : BackgroundService
 {
+    /// <summary>
+    /// Reads the DB-backed master toggle for the AH scraper. Returns false when the row is absent (safe default).
+    /// Public so tests can invoke it directly.
+    /// </summary>
+    public static async Task<bool> IsMasterEnabledAsync(VanalyticsDbContext db, CancellationToken ct)
+    {
+        var setting = await db.ScraperSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == 1, ct);
+        return setting?.MasterEnabled ?? false;
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!options.Enabled)
-        {
-            logger.LogInformation("AH scraper disabled (AhScraper:Enabled = false); skipping");
-            return;
-        }
-
         // Startup delay — let migrations finish before we hit the DB
         await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
 
@@ -26,9 +30,14 @@ public class AuctionHouseScraper(
         {
             try
             {
-                await RunCycleAsync(stoppingToken);
+                using var scope = scopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+                if (await IsMasterEnabledAsync(db, stoppingToken))
+                    await RunCycleAsync(stoppingToken);
+                else
+                    logger.LogDebug("AH scraper master disabled; idling");
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "AH scrape cycle failed");
             }

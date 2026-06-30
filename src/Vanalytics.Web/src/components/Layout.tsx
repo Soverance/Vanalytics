@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
 import LoginModal from './LoginModal'
-import { Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare, Flag } from 'lucide-react'
+import { Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare, Flag, Coins } from 'lucide-react'
 import { CompareProvider } from './compare/CompareContext'
 import CompareTray from './compare/CompareTray'
 import { SyncProvider } from '../context/SyncContext'
@@ -220,6 +220,7 @@ function LayoutInner() {
               <SidebarLink to="/admin/data" label="Data" icon={<Database className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
               <SidebarLink to="/admin/saml" label="SAML" icon={<KeyRound className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
               <SidebarLink to="/admin/reports" label="Reports" icon={<Flag className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+              <SidebarLink to="/admin/economy" label="Economy" icon={<Coins className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
             </SidebarSection>
           )}
         </nav>

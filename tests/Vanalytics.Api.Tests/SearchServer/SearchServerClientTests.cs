@@ -52,4 +52,40 @@ public class SearchServerClientTests
             listener.Stop();
         }
     }
+
+    [Fact]
+    public async Task GetOnlinePlayersAsync_ReadsMultiPacketRosterUntilFinal()
+    {
+        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        var serverTask = Task.Run(async () =>
+        {
+            try
+            {
+                using var conn = await listener.AcceptTcpClientAsync();
+                using var ns = conn.GetStream();
+                var head = new byte[2]; await ns.ReadExactlyAsync(head);
+                int len = head[0] | (head[1] << 8);
+                var pkt = new byte[len]; head.CopyTo(pkt, 0);
+                await ns.ReadExactlyAsync(pkt.AsMemory(2, len - 2));
+                var fields = SearchPacketCodec.DecryptSearchRequestForTestPublic(pkt, out var ctx);
+                Assert.Equal(0x00, fields.Type);
+                await ns.WriteAsync(SearchPacketCodec.BuildPlayerListForTest(
+                    new List<PlayerRecord> { new("Alpha", 0, 0, 0, 0, 0, 0, 0, 0, 1) }, isFinal: false, ctx));
+                await ns.WriteAsync(SearchPacketCodec.BuildPlayerListForTest(
+                    new List<PlayerRecord> { new("Beta", 0, 0, 0, 0, 0, 0, 0, 0, 2) }, isFinal: true, ctx));
+                await ns.FlushAsync();
+            }
+            finally { listener.Stop(); }
+        });
+
+        await using var client = new SearchServerClient(new SearchPacketCodec());
+        await client.ConnectAsync("127.0.0.1", port, CancellationToken.None);
+        var players = await client.GetOnlinePlayersAsync(CancellationToken.None);
+        await serverTask;
+        Assert.Equal(2, players.Count);
+        Assert.Contains(players, p => p.Name == "Alpha");
+        Assert.Contains(players, p => p.Name == "Beta");
+    }
 }

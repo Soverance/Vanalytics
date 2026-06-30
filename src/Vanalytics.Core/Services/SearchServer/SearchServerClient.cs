@@ -61,6 +61,34 @@ public sealed class SearchServerClient(SearchPacketCodec codec) : ISearchServerC
         }
     }
 
+    public async Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct)
+    {
+        if (_stream is null) throw new InvalidOperationException("not connected");
+        await _gate.WaitAsync(ct);
+        try
+        {
+            uint nonce = BitConverter.ToUInt32(RandomNumberGenerator.GetBytes(4));
+            byte[] req = codec.EncodeSearchAllRequest(nonce, out var ctx);
+            await _stream.WriteAsync(req, ct);
+            await _stream.FlushAsync(ct);
+
+            var all = new List<PlayerRecord>();
+            bool isFinal;
+            do
+            {
+                var head = new byte[2];
+                await _stream.ReadExactlyAsync(head, ct);
+                int len = head[0] | (head[1] << 8);
+                if (len < SearchProtocol.MinPacket) throw new SearchProtocolException($"bad response length {len}");
+                var pkt = new byte[len]; head.CopyTo(pkt, 0);
+                await _stream.ReadExactlyAsync(pkt.AsMemory(2, len - 2), ct);
+                all.AddRange(codec.DecodePlayerListResponse(pkt, ctx, out isFinal));
+            } while (!isFinal);
+            return all;
+        }
+        finally { _gate.Release(); }
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_stream is not null) await _stream.DisposeAsync();
