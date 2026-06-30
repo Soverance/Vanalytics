@@ -21,6 +21,20 @@ namespace Vanalytics.Api.Tests.SearchServer;
 // Fakes
 // ---------------------------------------------------------------------------
 
+/// <summary>
+/// A prober that always returns false after a short delay so TryStart scans
+/// complete quickly with found=0. The delay keeps the job alive long enough
+/// for GetJob() to reliably return it.
+/// </summary>
+file sealed class FastFalseProber : IDiscoveryProber
+{
+    public async Task<bool> IsSearchServerAsync(string host, int port, int probeItemId, int timeoutMs, CancellationToken ct)
+    {
+        await Task.Delay(50, ct);
+        return false;
+    }
+}
+
 file sealed class FakeSearchClient(IReadOnlyList<string> names) : ISearchServerClient
 {
     public Task ConnectAsync(string host, int port, CancellationToken ct) => Task.CompletedTask;
@@ -154,5 +168,55 @@ public class DiscoveryOrchestratorTests : IAsyncLifetime
         Assert.Equal(MappingSource.Auto, asura.MappingSource);
         Assert.False(asura.ScrapeEnabled);     // never auto-enabled
         Assert.Equal(1, result.Mapped);
+    }
+
+    /// <summary>
+    /// Regression test for the Progress&lt;T&gt; race condition in TryStart:
+    /// the terminal "Completed" event MUST reach the job's channel before
+    /// TryComplete() closes it. With the old <see cref="Progress{T}"/>
+    /// (thread-pool post, async) TryComplete() wins the race and the event
+    /// is silently dropped. With the SyncProgress fix it arrives synchronously
+    /// before TryComplete(), so ReadAllAsync drains it.
+    /// </summary>
+    [Fact]
+    public async Task TryStart_TerminalEventReachesChannel_Completed()
+    {
+        // Arrange: 1-IP CIDR, prober always returns false after a short delay.
+        var options = new AhScraperOptions
+        {
+            DiscoveryCidrs = ["127.0.0.1/32"],   // 1 IP only
+            ProbeTimeoutMs = 500,
+            DiscoveryConcurrency = 1,
+        };
+
+        var orch = new DiscoveryOrchestrator(
+            NullLogger<DiscoveryOrchestrator>.Instance,
+            _factory.Services.GetRequiredService<IServiceScopeFactory>(),
+            options,
+            new FastFalseProber());
+
+        var codec = new Vanalytics.Core.Services.SearchServer.SearchPacketCodec();
+
+        // Act: start the scan via the public TryStart path (this is the path that has the race).
+        bool started = orch.TryStart(codec, out _);
+        Assert.True(started, "TryStart must return true for a fresh orchestrator");
+
+        var job = orch.GetJob();
+        Assert.NotNull(job);
+
+        // Drain the channel. With the bug the Completed event is dropped and
+        // ReadAllAsync returns only Progress events; the assertion below fails.
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var events = new List<DiscoveryProgressEvent>();
+        await foreach (var e in job!.Channel.Reader.ReadAllAsync(cts.Token))
+        {
+            events.Add(e);
+        }
+
+        // Assert: a "Completed" terminal event must be present (found=0 since the
+        // prober always returns false).
+        var completed = events.FirstOrDefault(e => e.Type == "Completed");
+        Assert.NotNull(completed);
+        Assert.Equal(0, completed!.Found);
     }
 }

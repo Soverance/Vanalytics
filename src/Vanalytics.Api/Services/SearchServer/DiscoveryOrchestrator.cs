@@ -48,7 +48,13 @@ public class DiscoveryOrchestrator(
 
             _ = Task.Run(async () =>
             {
-                var progress = new Progress<DiscoveryProgressEvent>(e =>
+                // Use a synchronous IProgress<T> implementation instead of Progress<T>.
+                // Progress<T>.Report posts the callback to the thread pool (no
+                // SynchronizationContext in ASP.NET Core), so TryComplete() in the finally
+                // block races against the terminal-event TryWrite and wins — the Completed /
+                // Cancelled / Failed event is silently dropped. SyncProgress calls the
+                // handler on the calling thread, so the write completes before the finally runs.
+                IProgress<DiscoveryProgressEvent> progress = new SyncProgress(e =>
                 {
                     job.LastEvent = e;
                     channel.Writer.TryWrite(e);
@@ -65,7 +71,7 @@ public class DiscoveryOrchestrator(
                         scopeFactory,
                         cts.Token);
 
-                    ((IProgress<DiscoveryProgressEvent>)progress).Report(new DiscoveryProgressEvent
+                    progress.Report(new DiscoveryProgressEvent
                     {
                         Type = "Completed",
                         Found = result.Found,
@@ -75,13 +81,13 @@ public class DiscoveryOrchestrator(
                 }
                 catch (OperationCanceledException)
                 {
-                    ((IProgress<DiscoveryProgressEvent>)progress).Report(
+                    progress.Report(
                         new DiscoveryProgressEvent { Type = "Cancelled" });
                 }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Discovery scan failed");
-                    ((IProgress<DiscoveryProgressEvent>)progress).Report(
+                    progress.Report(
                         new DiscoveryProgressEvent { Type = "Failed", Message = ex.Message });
                 }
                 finally
@@ -234,6 +240,19 @@ public class DiscoveryOrchestrator(
     private sealed class RealClientFactory(SearchPacketCodec codec) : ISearchServerClientFactory
     {
         public ISearchServerClient Create() => new SearchServerClient(codec);
+    }
+
+    /// <summary>
+    /// A synchronous <see cref="IProgress{T}"/> that invokes the handler on the calling
+    /// thread (unlike <see cref="Progress{T}"/> which posts to the captured
+    /// <see cref="System.Threading.SynchronizationContext"/> — or the thread pool when
+    /// there is no context, as in ASP.NET Core). Using this ensures terminal events
+    /// (Completed / Cancelled / Failed) are written to the channel before the
+    /// <c>finally</c> block calls <c>TryComplete()</c>.
+    /// </summary>
+    private sealed class SyncProgress(Action<DiscoveryProgressEvent> handler) : IProgress<DiscoveryProgressEvent>
+    {
+        public void Report(DiscoveryProgressEvent value) => handler(value);
     }
 }
 
