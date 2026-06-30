@@ -22,68 +22,32 @@ public class EconomyController : ControllerBase
         _rateLimiter = rateLimiter;
     }
 
-    [HttpPost("ah")]
-    [Authorize(AuthenticationSchemes = "ApiKey")]
-    public async Task<IActionResult> IngestAh([FromBody] AhIngestionRequest request)
+    [HttpGet("ah/{itemId:int}")]
+    public async Task<IActionResult> GetAhHistory(int itemId, [FromQuery] string server)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var srv = await _db.GameServers.FirstOrDefaultAsync(s => s.Name == server);
+        if (srv is null) return BadRequest(new { message = $"Unknown server: {server}" });
 
-        var apiKey = Request.Headers["X-Api-Key"].ToString();
-        if (!_rateLimiter.IsAllowed(apiKey))
-            return StatusCode(429, new { message = "Rate limit exceeded. Max 120 requests per hour." });
-
-        var server = await _db.GameServers.FirstOrDefaultAsync(s => s.Name == request.Server);
-        if (server is null)
-            return BadRequest(new { message = $"Unknown server: {request.Server}" });
-
-        var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == request.ItemId);
-        if (!itemExists)
-            return BadRequest(new { message = $"Unknown item ID: {request.ItemId}" });
-
-        var now = DateTimeOffset.UtcNow;
-        var accepted = 0;
-        var duplicates = 0;
-
-        // Batch dedup: preload existing matching records in one query
-        var saleDates = request.Sales.Select(s => s.SoldAt).Distinct().ToList();
-        var existingSales = await _db.AuctionSales
-            .Where(s => s.ItemId == request.ItemId && s.ServerId == server.Id)
-            .Where(s => saleDates.Contains(s.SoldAt))
-            .Select(s => new { s.Price, s.SoldAt, s.BuyerName, s.SellerName, s.StackSize })
-            .ToListAsync();
-
-        var existingSet = new HashSet<string>(
-            existingSales.Select(s => $"{s.Price}|{s.SoldAt:O}|{s.BuyerName}|{s.SellerName}|{s.StackSize}"));
-
-        foreach (var sale in request.Sales)
+        async Task<object> SideAsync(bool stack)
         {
-            var key = $"{sale.Price}|{sale.SoldAt:O}|{sale.BuyerName}|{sale.SellerName}|{sale.StackSize}";
-            if (existingSet.Contains(key))
+            var q = _db.AuctionSales
+                .Where(s => s.ItemId == itemId && s.ServerId == srv.Id && (stack ? s.StackSize > 1 : s.StackSize == 1))
+                .OrderByDescending(s => s.SoldAt)
+                .Take(20);
+            var sales = await q.Select(s => new
             {
-                duplicates++;
-                continue;
-            }
-
-            _db.AuctionSales.Add(new AuctionSale
-            {
-                ItemId = request.ItemId,
-                ServerId = server.Id,
-                Price = sale.Price,
-                SoldAt = sale.SoldAt,
-                SellerName = sale.SellerName,
-                BuyerName = sale.BuyerName,
-                StackSize = sale.StackSize,
-                ReportedByUserId = userId,
-                ReportedAt = now,
-            });
-
-            accepted++;
+                s.Price, s.SoldAt, s.SellerName, s.BuyerName, s.StackSize,
+            }).ToListAsync();
+            return new { latestPrice = sales.Count > 0 ? sales[0].Price : (int?)null, sales };
         }
 
-        if (accepted > 0)
-            await _db.SaveChangesAsync();
-
-        return Ok(new AhIngestionResponse { Accepted = accepted, Duplicates = duplicates });
+        return Ok(new
+        {
+            itemId,
+            server = srv.Name,
+            single = await SideAsync(false),
+            stack = await SideAsync(true),
+        });
     }
 
     [HttpPost("bazaar/presence")]

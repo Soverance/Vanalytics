@@ -18,6 +18,7 @@ using Vanalytics.Api;
 using Vanalytics.Api.Middleware;
 using Vanalytics.Api.Services;
 using Vanalytics.Api.Services.Sync;
+using Vanalytics.Core.Services.SearchServer;
 using Vanalytics.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -146,6 +147,12 @@ builder.Services.AddHostedService<ServerStatusScraper>();
 // when SE patches the game. Sync should only be triggered by an admin from /admin/data.
 builder.Services.AddHostedService<BazaarStalenessJob>();
 builder.Services.AddHostedService<SessionStalenessJob>();
+
+// AH scraper — disabled by default; enable via AhScraper:Enabled = true in config
+builder.Services.AddSingleton<SearchPacketCodec>();
+builder.Services.AddSingleton(
+    builder.Configuration.GetSection("AhScraper").Get<AhScraperOptions>() ?? new AhScraperOptions());
+builder.Services.AddHostedService<AuctionHouseScraper>();
 
 // Forum
 builder.Services.AddForumServices();

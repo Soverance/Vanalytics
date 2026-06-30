@@ -31,6 +31,7 @@ public class KeysController : ControllerBase
         // The plaintext key is only shown once — on generation.
         var rawKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         user.ApiKey = PasswordHasher.HashPassword(rawKey);
+        user.ApiKeyLookup = ApiKeyHasher.Lookup(rawKey);
         user.ApiKeyCreatedAt = DateTimeOffset.UtcNow;
         user.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
@@ -50,6 +51,7 @@ public class KeysController : ControllerBase
         if (user is null) return NotFound();
 
         user.ApiKey = null;
+        user.ApiKeyLookup = null;
         user.ApiKeyCreatedAt = null;
         user.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
