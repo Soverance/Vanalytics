@@ -18,6 +18,7 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<GameItem> GameItems => Set<GameItem>();
     public DbSet<ServerStatusChange> ServerStatusChanges => Set<ServerStatusChange>();
     public DbSet<AuctionSale> AuctionSales => Set<AuctionSale>();
+    public DbSet<AhScrapeState> AhScrapeStates => Set<AhScrapeState>();
     public DbSet<BazaarPresence> BazaarPresences => Set<BazaarPresence>();
     public DbSet<BazaarListing> BazaarListings => Set<BazaarListing>();
     public DbSet<SyncHistory> SyncHistory => Set<SyncHistory>();

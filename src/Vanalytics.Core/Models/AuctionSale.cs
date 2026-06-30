@@ -1,5 +1,3 @@
-using Soverance.Auth.Models;
-
 namespace Vanalytics.Core.Models;
 
 public class AuctionSale
@@ -12,10 +10,9 @@ public class AuctionSale
     public string SellerName { get; set; } = string.Empty;
     public string BuyerName { get; set; } = string.Empty;
     public int StackSize { get; set; } = 1;
-    public Guid ReportedByUserId { get; set; }
-    public DateTimeOffset ReportedAt { get; set; }
+    /// <summary>When the scraper recorded this row.</summary>
+    public DateTimeOffset ObservedAt { get; set; }
 
     public GameItem Item { get; set; } = null!;
     public GameServer Server { get; set; } = null!;
-    public User ReportedBy { get; set; } = null!;
 }

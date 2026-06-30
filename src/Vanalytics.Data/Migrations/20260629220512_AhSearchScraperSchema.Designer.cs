@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vanalytics.Data;
 
@@ -11,9 +12,11 @@ using Vanalytics.Data;
 namespace Vanalytics.Data.Migrations
 {
     [DbContext(typeof(VanalyticsDbContext))]
-    partial class VanalyticsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260629220512_AhSearchScraperSchema")]
+    partial class AhSearchScraperSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -157,10 +160,6 @@ namespace Vanalytics.Data.Migrations
                     b.Property<DateTimeOffset?>("ApiKeyCreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("ApiKeyLookup")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -218,10 +217,6 @@ namespace Vanalytics.Data.Migrations
                     b.HasIndex("ApiKey")
                         .IsUnique()
                         .HasFilter("[ApiKey] IS NOT NULL");
-
-                    b.HasIndex("ApiKeyLookup")
-                        .IsUnique()
-                        .HasFilter("[ApiKeyLookup] IS NOT NULL");
 
                     b.HasIndex("Email")
                         .IsUnique();
