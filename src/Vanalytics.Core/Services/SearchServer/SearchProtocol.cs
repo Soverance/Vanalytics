@@ -202,7 +202,14 @@ public sealed class Blowfish
             uint data = 0;
             for (int k = 0; k < 4; k++)
             {
-                data = (data << 8) | key[j];
+                // LSB's blowfish_init takes the key as int8* (SIGNED char): bytes >= 0x80
+                // sign-extend during this assembly. MD5 keys are full of high-bit bytes, so
+                // we must replicate the sign extension or the P-array (and thus the whole
+                // cipher) diverges from xi_search. (Standard Blowfish uses unsigned bytes.)
+                // CS0675 is exactly this intended sign-extended OR, so it is suppressed.
+#pragma warning disable CS0675
+                data = (data << 8) | unchecked((uint)(sbyte)key[j]);
+#pragma warning restore CS0675
                 j = (j + 1) % key.Length;
             }
             _p[i] ^= data;
@@ -214,29 +221,42 @@ public sealed class Blowfish
             for (int k = 0; k < 256; k += 2) { EncipherBlock(ref xl, ref xr); _s[i][k] = xl; _s[i][k + 1] = xr; }
     }
 
-    private uint F(uint x) =>
-        ((_s[0][(x >> 24) & 0xFF] + _s[1][(x >> 16) & 0xFF]) ^ _s[2][(x >> 8) & 0xFF]) + _s[3][x & 0xFF];
+    // FFXI's CUSTOMIZED Blowfish round function (ported verbatim from LandSandBoat
+    // src/common/blowfish.cpp `TT`). This is NOT standard Blowfish F: two of the four
+    // S-box lookups are reduced to a single bit and XOR'd with 0x20. The standard
+    // Schneier F would speak a different cipher and the real xi_search rejects it.
+    // S-box layout maps LSB's flat S[1024] as: S[0..255]=_s[0], S[256..511]=_s[1],
+    // S[512..767]=_s[2], S[768..1023]=_s[3].
+    private uint TT(uint x) => unchecked(
+        ((_s[1][(x >> 8) & 0xFF] & 1u) ^ 0x20u)
+      + ((_s[3][x >> 24] & 1u) ^ 0x20u)
+      + _s[2][(x >> 16) & 0xFF]
+      + _s[0][x & 0xFF]);
 
     public void EncipherBlock(ref uint xl, ref uint xr)
     {
-        for (int i = 0; i < 16; i += 2)
+        for (int i = 0; i < 16; i++)
         {
-            xl ^= _p[i];      xr ^= F(xl);
-            xr ^= _p[i + 1];  xl ^= F(xr);
+            xl ^= _p[i];
+            xr = unchecked(TT(xl) ^ xr);
+            (xl, xr) = (xr, xl);
         }
-        xl ^= _p[16]; xr ^= _p[17];
-        (xl, xr) = (xr, xl);
+        (xl, xr) = (xr, xl); // undo the final swap
+        xr ^= _p[16];
+        xl ^= _p[17];
     }
 
     public void DecipherBlock(ref uint xl, ref uint xr)
     {
-        for (int i = 16; i > 0; i -= 2)
+        for (int i = 17; i > 1; i--)
         {
-            xl ^= _p[i + 1];  xr ^= F(xl);
-            xr ^= _p[i];      xl ^= F(xr);
+            xl ^= _p[i];
+            xr = unchecked(TT(xl) ^ xr);
+            (xl, xr) = (xr, xl);
         }
-        xl ^= _p[1]; xr ^= _p[0];
-        (xl, xr) = (xr, xl);
+        (xl, xr) = (xr, xl); // undo the final swap
+        xr ^= _p[1];
+        xl ^= _p[0];
     }
 }
 
