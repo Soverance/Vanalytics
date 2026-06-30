@@ -17,5 +17,7 @@ public class GameServerConfiguration : IEntityTypeConfiguration<GameServer>
             .HasConversion<string>()
             .HasMaxLength(16)
             .HasDefaultValue(ServerStatus.Unknown);
+        builder.Property(s => s.SearchHost).HasMaxLength(255);
+        builder.Property(s => s.ScrapeEnabled).HasDefaultValue(false);
     }
 }

@@ -28,10 +28,5 @@ public class AuctionSaleConfiguration : IEntityTypeConfiguration<AuctionSale>
             .WithMany()
             .HasForeignKey(s => s.ServerId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne(s => s.ReportedBy)
-            .WithMany()
-            .HasForeignKey(s => s.ReportedByUserId)
-            .OnDelete(DeleteBehavior.NoAction);
     }
 }
