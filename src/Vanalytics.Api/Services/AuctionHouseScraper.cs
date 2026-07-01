@@ -21,6 +21,56 @@ public class AuctionHouseScraper(
         return setting?.MasterEnabled ?? false;
     }
 
+    /// <summary>Upserts the singleton run-state row (Id=1), applies <paramref name="mutate"/>, and saves.</summary>
+    private static async Task UpdateRunStateAsync(
+        VanalyticsDbContext db, Action<ScraperRunState> mutate, CancellationToken ct)
+    {
+        var state = await db.ScraperRunStates.FirstOrDefaultAsync(s => s.Id == 1, ct)
+                    ?? db.ScraperRunStates.Add(new ScraperRunState { Id = 1 }).Entity;
+        mutate(state);
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Marks a cycle as started: IsRunning=true, LastCycleStartedAt=now.</summary>
+    public static Task MarkCycleStartAsync(VanalyticsDbContext db, DateTimeOffset now, CancellationToken ct) =>
+        UpdateRunStateAsync(db, s =>
+        {
+            s.IsRunning = true;
+            s.LastCycleStartedAt = now;
+        }, ct);
+
+    /// <summary>Marks a cycle as finished cleanly: IsRunning=false, counts + finish time set, error cleared.</summary>
+    public static Task MarkCycleEndAsync(
+        VanalyticsDbContext db, int worldsProcessed, int salesIngested, DateTimeOffset now, CancellationToken ct) =>
+        UpdateRunStateAsync(db, s =>
+        {
+            s.IsRunning = false;
+            s.LastCycleFinishedAt = now;
+            s.WorldsProcessedLastCycle = worldsProcessed;
+            s.SalesIngestedLastCycle = salesIngested;
+            s.LastError = null;
+            s.LastErrorAt = null;
+        }, ct);
+
+    /// <summary>Records a whole-cycle failure: IsRunning=false, LastError + LastErrorAt set.</summary>
+    public static Task MarkCycleErrorAsync(VanalyticsDbContext db, string error, DateTimeOffset now, CancellationToken ct) =>
+        UpdateRunStateAsync(db, s =>
+        {
+            s.IsRunning = false;
+            s.LastError = error.Length > 2000 ? error[..2000] : error;
+            s.LastErrorAt = now;
+        }, ct);
+
+    /// <summary>
+    /// Records the outcome of a single world's scrape onto the entity: clears the error on success,
+    /// stamps the message + timestamp on failure. Pure (no DB call) so the caller controls persistence.
+    /// </summary>
+    public static void ApplyWorldScrapeResult(GameServer world, string? error, DateTimeOffset now)
+    {
+        world.LastScrapeError = error;
+        world.LastScrapeErrorAt = error is null ? null : now;
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Startup delay — let migrations finish before we hit the DB
@@ -40,9 +90,25 @@ public class AuctionHouseScraper(
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "AH scrape cycle failed");
+                await RecordCycleFailureAsync(ex, stoppingToken);
             }
 
             await Task.Delay(TimeSpan.FromSeconds(options.CycleIdleDelaySeconds), stoppingToken);
+        }
+    }
+
+    /// <summary>Best-effort recording of a whole-cycle failure to run-state; never throws into the loop.</summary>
+    private async Task RecordCycleFailureAsync(Exception ex, CancellationToken ct)
+    {
+        try
+        {
+            using var scope = scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            await MarkCycleErrorAsync(db, ex.Message, DateTimeOffset.UtcNow, ct);
+        }
+        catch (Exception inner) when (inner is not OperationCanceledException)
+        {
+            logger.LogError(inner, "Failed to record AH scrape cycle error to run-state");
         }
     }
 
@@ -52,12 +118,15 @@ public class AuctionHouseScraper(
         var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
         var codec = scope.ServiceProvider.GetRequiredService<SearchPacketCodec>();
 
+        await MarkCycleStartAsync(db, DateTimeOffset.UtcNow, ct);
+
         var worlds = await db.GameServers
             .Where(s => s.ScrapeEnabled && s.SearchHost != null && s.SearchPort != null)
             .ToListAsync(ct);
 
         logger.LogInformation("AH scrape cycle starting — {Count} eligible world(s)", worlds.Count);
 
+        int totalSales = 0;
         foreach (var world in worlds)
         {
             if (ct.IsCancellationRequested) break;
@@ -73,13 +142,19 @@ public class AuctionHouseScraper(
                     new AuctionHouseIngestor(db), new AhScrapeScheduler(db),
                     DateTimeOffset.UtcNow, ct);
 
+                totalSales += n;
+                ApplyWorldScrapeResult(world, error: null, DateTimeOffset.UtcNow);
                 logger.LogInformation("AH scrape {World}: {Count} new sale(s) ingested", world.Name, n);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                ApplyWorldScrapeResult(world, ex.Message, DateTimeOffset.UtcNow);
                 logger.LogWarning(ex, "AH scrape failed for world {World} — skipping to next", world.Name);
             }
         }
+
+        // Persist per-world results and stamp the cycle as finished (clears any prior cycle error).
+        await MarkCycleEndAsync(db, worlds.Count, totalSales, DateTimeOffset.UtcNow, ct);
     }
 
     /// <summary>

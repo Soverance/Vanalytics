@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { api, getStoredTokens } from '../api/client'
+import { deriveScraperHealth, type ScraperStatus, type ScraperTone } from '../lib/scraperStatus'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,8 @@ interface World {
   endpointHealthy: boolean | null
   lastProbedAt: string | null
   lastScrapedAt: string | null
+  lastScrapeError: string | null
+  lastScrapeErrorAt: string | null
   saleCount: number
 }
 
@@ -237,6 +240,12 @@ function WorldRow({ world, onRefresh }: { world: World; onRefresh: () => void })
       <td className="px-4 py-3">
         <p className="text-xs text-gray-400">{formatDate(world.lastScrapedAt)}</p>
         <p className="text-[11px] text-gray-600">{world.saleCount.toLocaleString()} sales</p>
+        {world.lastScrapeError && (
+          <p className="mt-1 text-[11px] text-red-400 max-w-[16rem] break-words" title={world.lastScrapeError}>
+            ⚠ {world.lastScrapeError}
+            <span className="text-red-500/60"> · {formatDate(world.lastScrapeErrorAt)}</span>
+          </p>
+        )}
       </td>
     </tr>
   )
@@ -408,6 +417,50 @@ function DiscoveryPanel({ onWorldsRefresh }: { onWorldsRefresh: () => void }) {
   )
 }
 
+// ─── StatusCard ───────────────────────────────────────────────────────────────
+
+const toneClasses: Record<ScraperTone, { border: string; text: string; dot: string }> = {
+  green: { border: 'border-emerald-800/60', text: 'text-emerald-400', dot: 'bg-emerald-400' },
+  amber: { border: 'border-amber-800/60', text: 'text-amber-400', dot: 'bg-amber-400' },
+  red: { border: 'border-red-800/60', text: 'text-red-400', dot: 'bg-red-400' },
+  gray: { border: 'border-gray-800', text: 'text-gray-500', dot: 'bg-gray-600' },
+}
+
+function StatusCard({ status, masterEnabled }: { status: ScraperStatus | null; masterEnabled: boolean }) {
+  const health = deriveScraperHealth(status, masterEnabled, Date.now())
+  const t = toneClasses[health.tone]
+
+  return (
+    <div className={`rounded-lg border bg-gray-900 p-5 transition-colors ${t.border}`}>
+      <div className="flex items-center gap-2">
+        <span className={`inline-block h-2.5 w-2.5 rounded-full ${t.dot} ${health.key === 'running' ? 'animate-pulse' : ''}`} />
+        <span className={`text-sm font-medium ${t.text}`}>{health.label}</span>
+        {status?.lastCycleFinishedAt && (
+          <span className="text-xs text-gray-500">· last cycle {formatDate(status.lastCycleFinishedAt)}</span>
+        )}
+      </div>
+
+      {masterEnabled && status && (health.key === 'active' || health.key === 'running' || health.key === 'stalled') && (
+        <p className="mt-1.5 text-xs text-gray-500">
+          {status.salesIngestedLastCycle.toLocaleString()} sales ingested across{' '}
+          {status.worldsProcessedLastCycle.toLocaleString()} world{status.worldsProcessedLastCycle === 1 ? '' : 's'} last cycle
+        </p>
+      )}
+
+      {!masterEnabled && (
+        <p className="mt-1.5 text-xs text-gray-600">Master switch is off — the scraper is not running.</p>
+      )}
+
+      {status?.lastError && (
+        <p className="mt-2 text-xs text-red-400 break-words">
+          ⚠ {status.lastError}
+          {status.lastErrorAt && <span className="text-red-500/60"> · {formatDate(status.lastErrorAt)}</span>}
+        </p>
+      )}
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminEconomyPage() {
@@ -420,12 +473,20 @@ export default function AdminEconomyPage() {
   const [worldsLoading, setWorldsLoading] = useState(true)
   const [worldsError, setWorldsError] = useState('')
 
+  const [status, setStatus] = useState<ScraperStatus | null>(null)
+
   const fetchWorlds = useCallback(() => {
     setWorldsLoading(true)
     api<World[]>('/api/admin/economy/worlds')
       .then(setWorlds)
       .catch(() => setWorldsError('Failed to load worlds.'))
       .finally(() => setWorldsLoading(false))
+  }, [])
+
+  const fetchStatus = useCallback(() => {
+    api<ScraperStatus>('/api/admin/economy/status')
+      .then(setStatus)
+      .catch(() => { /* transient; keep last-known status */ })
   }, [])
 
   useEffect(() => {
@@ -437,6 +498,13 @@ export default function AdminEconomyPage() {
     fetchWorlds()
   }, [fetchWorlds])
 
+  // Poll scraper status while the page is open so the heartbeat stays fresh.
+  useEffect(() => {
+    fetchStatus()
+    const id = setInterval(fetchStatus, 15_000)
+    return () => clearInterval(id)
+  }, [fetchStatus])
+
   const handleToggleMaster = async () => {
     setMasterError('')
     setMasterToggling(true)
@@ -446,6 +514,7 @@ export default function AdminEconomyPage() {
         body: JSON.stringify({ enabled: !masterEnabled }),
       })
       setMasterEnabled(result.masterEnabled)
+      fetchStatus()
     } catch (err: unknown) {
       setMasterError(err instanceof Error ? err.message : 'Failed to update master switch.')
     } finally {
@@ -502,6 +571,12 @@ export default function AdminEconomyPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ── Scraper status ── */}
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold mb-3">Scraper Status</h2>
+        <StatusCard status={status} masterEnabled={masterEnabled} />
       </section>
 
       {/* ── Discovery ── */}

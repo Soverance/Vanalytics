@@ -513,8 +513,56 @@ public class AdminEconomyControllerTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
     }
 
+    // ── GET status ────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetStatus_RequiresAdmin_403ForNonAdmin()
+    {
+        var memberToken = await MemberTokenAsync();
+
+        var req = new HttpRequestMessage(HttpMethod.Get, "/api/admin/economy/status");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", memberToken);
+        var response = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetStatus_AsAdmin_ReturnsRunState()
+    {
+        var token = await AdminTokenAsync();
+
+        // Seed a completed cycle into run-state
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            await Vanalytics.Api.Services.AuctionHouseScraper.MarkCycleEndAsync(
+                db, worldsProcessed: 2, salesIngested: 7, DateTimeOffset.UtcNow, CancellationToken.None);
+        }
+
+        var req = new HttpRequestMessage(HttpMethod.Get, "/api/admin/economy/status");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var response = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<StatusResponse>();
+        Assert.NotNull(body);
+        Assert.False(body!.IsRunning);
+        Assert.Equal(2, body.WorldsProcessedLastCycle);
+        Assert.Equal(7, body.SalesIngestedLastCycle);
+        Assert.NotNull(body.LastCycleFinishedAt);
+    }
+
     // ── DTOs ──────────────────────────────────────────────────────────────────
 
     private record MasterResponse(bool MasterEnabled);
     private record HealthyResponse(bool Healthy);
+    private record StatusResponse(
+        bool IsRunning,
+        DateTimeOffset? LastCycleStartedAt,
+        DateTimeOffset? LastCycleFinishedAt,
+        int WorldsProcessedLastCycle,
+        int SalesIngestedLastCycle,
+        string? LastError,
+        DateTimeOffset? LastErrorAt);
 }

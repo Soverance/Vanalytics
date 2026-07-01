@@ -44,11 +44,29 @@ public class AdminEconomyController(
                 s.MappingConfidence,
                 s.EndpointHealthy,
                 s.LastProbedAt,
+                s.LastScrapeError,
+                s.LastScrapeErrorAt,
                 saleCount = db.AuctionSales.Count(a => a.ServerId == s.Id),
                 lastScrapedAt = db.AhScrapeStates.Where(a => a.ServerId == s.Id).Max(a => (DateTimeOffset?)a.LastScrapedAt),
             })
             .ToListAsync();
         return Ok(worlds);
+    }
+
+    [HttpGet("status")]
+    public async Task<IActionResult> Status()
+    {
+        var s = await db.ScraperRunStates.AsNoTracking().FirstOrDefaultAsync(x => x.Id == 1);
+        return Ok(new
+        {
+            isRunning = s?.IsRunning ?? false,
+            lastCycleStartedAt = s?.LastCycleStartedAt,
+            lastCycleFinishedAt = s?.LastCycleFinishedAt,
+            worldsProcessedLastCycle = s?.WorldsProcessedLastCycle ?? 0,
+            salesIngestedLastCycle = s?.SalesIngestedLastCycle ?? 0,
+            lastError = s?.LastError,
+            lastErrorAt = s?.LastErrorAt,
+        });
     }
 
     [HttpGet("master")]
