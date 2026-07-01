@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import type { PriceHistoryResponse } from '../../types/api'
 import SalesTable from './SalesTable'
+import { spanLabel } from '../../lib/economySpans'
 
 const PAGE_SIZE = 25
 
@@ -37,7 +38,7 @@ export default function ItemRecentSales({ itemId, server, days }: Props) {
 
   return (
     <div className="mt-4">
-      <h3 className="text-xs font-semibold text-gray-500 mb-2">Recent Sales ({days}d)</h3>
+      <h3 className="text-xs font-semibold text-gray-500 mb-2">Recent Sales ({spanLabel(days)})</h3>
       {loading && !data ? (
         <p className="text-sm text-gray-500">Loading sales…</p>
       ) : data && data.totalCount > 0 ? (
@@ -49,7 +50,7 @@ export default function ItemRecentSales({ itemId, server, days }: Props) {
           onPageChange={setPage}
         />
       ) : (
-        <p className="text-sm text-gray-500">No sales in the last {days} days.</p>
+        <p className="text-sm text-gray-500">{days > 0 ? `No sales in the last ${spanLabel(days)}.` : 'No sales recorded.'}</p>
       )}
     </div>
   )

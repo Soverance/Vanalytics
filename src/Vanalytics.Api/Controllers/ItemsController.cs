@@ -318,15 +318,17 @@ public class ItemsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 25)
     {
-        if (days > 365) days = 365;
         if (pageSize > 100) pageSize = 100;
 
         var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
         if (!itemExists) return NotFound();
 
-        var since = DateTimeOffset.UtcNow.AddDays(-days);
-        var query = _db.AuctionSales
-            .Where(s => s.ItemId == id && s.SoldAt >= since);
+        var query = _db.AuctionSales.Where(s => s.ItemId == id);
+        if (days > 0)
+        {
+            var since = DateTimeOffset.UtcNow.AddDays(-days);
+            query = query.Where(s => s.SoldAt >= since);
+        }
 
         if (!string.IsNullOrEmpty(server))
         {
@@ -350,7 +352,16 @@ public class ItemsController : ControllerBase
             var allPrices = await query.Select(s => s.Price).ToListAsync();
             var median = PriceMath.Median(allPrices);
 
-            salesPerDay = days > 0 ? Math.Round((double)totalCount / days, 2) : 0;
+            if (days > 0)
+            {
+                salesPerDay = Math.Round((double)totalCount / days, 2);
+            }
+            else
+            {
+                var earliest = await query.MinAsync(s => s.SoldAt);
+                var spanDays = Math.Max(1, Math.Ceiling((DateTimeOffset.UtcNow - earliest).TotalDays));
+                salesPerDay = Math.Round(totalCount / spanDays, 2);
+            }
 
             stats = new { Median = median, Min = min, Max = max, Average = avg, SalesPerDay = salesPerDay };
         }
@@ -375,18 +386,21 @@ public class ItemsController : ControllerBase
     [HttpGet("{id:int}/prices/all")]
     public async Task<IActionResult> CrossServerPrices(int id, [FromQuery] int days = 30)
     {
-        if (days > 365) days = 365;
-
         var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
         if (!itemExists) return NotFound();
 
         var enabled = await EnabledServerQuery.GetEnabledAsync(_db);
         var enabledIds = enabled.Select(s => s.Id).ToHashSet();
 
-        var since = DateTimeOffset.UtcNow.AddDays(-days);
+        var salesQuery = _db.AuctionSales
+            .Where(s => s.ItemId == id && enabledIds.Contains(s.ServerId));
+        if (days > 0)
+        {
+            var since = DateTimeOffset.UtcNow.AddDays(-days);
+            salesQuery = salesQuery.Where(s => s.SoldAt >= since);
+        }
 
-        var rawSales = await _db.AuctionSales
-            .Where(s => s.ItemId == id && s.SoldAt >= since && enabledIds.Contains(s.ServerId))
+        var rawSales = await salesQuery
             .Select(s => new { ServerName = s.Server.Name, s.Price })
             .ToListAsync();
 
@@ -409,6 +423,43 @@ public class ItemsController : ControllerBase
             .ToList();
 
         return Ok(new { days, servers = serverPrices });
+    }
+
+    [HttpGet("{id:int}/prices/history")]
+    public async Task<IActionResult> PriceHistory(
+        int id, [FromQuery] string? server = null, [FromQuery] int days = 90)
+    {
+        var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
+        if (!itemExists) return NotFound();
+
+        var query = _db.AuctionSales.Where(s => s.ItemId == id);
+        if (days > 0)
+        {
+            var since = DateTimeOffset.UtcNow.AddDays(-days);
+            query = query.Where(s => s.SoldAt >= since);
+        }
+        if (!string.IsNullOrEmpty(server))
+        {
+            var srv = await _db.GameServers.FirstOrDefaultAsync(s => s.Name == server);
+            if (srv is null) return BadRequest(new { message = $"Unknown server: {server}" });
+            query = query.Where(s => s.ServerId == srv.Id);
+        }
+
+        var bucket = PriceBuckets.BucketForDays(days);
+        var rows = await query.Select(s => new { s.SoldAt, s.Price }).ToListAsync();
+
+        var points = rows
+            .GroupBy(r => PriceBuckets.BucketStart(r.SoldAt, bucket))
+            .OrderBy(g => g.Key)
+            .Select(g => new
+            {
+                t = g.Key,
+                median = PriceMath.Median(g.Select(x => x.Price).ToList()),
+                count = g.Count(),
+            })
+            .ToList();
+
+        return Ok(new { bucket, points });
     }
 
     [HttpGet("{id:int}/bazaar")]

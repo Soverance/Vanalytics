@@ -541,6 +541,17 @@ export interface EconomyServer {
   name: string
 }
 
+export interface PricePoint {
+  t: string          // ISO bucket-start timestamp
+  median: number
+  count: number
+}
+
+export interface PriceHistoryPointsResponse {
+  bucket: 'day' | 'week' | 'month'
+  points: PricePoint[]
+}
+
 // Vana'diel Clock
 export interface VanadielClockData {
   time: VanadielTime
