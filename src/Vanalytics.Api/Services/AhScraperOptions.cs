@@ -17,11 +17,12 @@ public class AhScraperOptions
     /// <summary>CIDR blocks to enumerate during search-server discovery.</summary>
     public string[] DiscoveryCidrs { get; set; } =
     [
-        "202.67.53.0/24",
-        "202.67.54.0/24",
-        "202.67.62.0/24",
-        "124.150.152.0/24",
-        "124.150.154.0/24", // confirmed via live capture: Siren search server is 124.150.154.71
+        // "202.67.53.0/24",
+        // "202.67.54.0/24",
+        // "202.67.62.0/24",
+        // "124.150.152.0/24",
+        //"124.150.144.0/20", // this is likely to be the full range of Square Enix servers
+        "124.150.154.0/24", // confirmed via live capture: Siren search server is 124.150.154.71, seems like the 17 other search servers are also in this range
     ];
 
     /// <summary>Minimum overlapping character names required to consider a roster-to-world match valid.</summary>
