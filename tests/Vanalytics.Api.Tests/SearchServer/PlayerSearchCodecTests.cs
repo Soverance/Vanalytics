@@ -6,22 +6,27 @@ namespace Vanalytics.Api.Tests.SearchServer;
 public class PlayerSearchCodecTests
 {
     [Fact]
-    public void BitReader_ReadsLsbFirst()
+    public void BitReader_ReadsMsbFirst()
     {
-        // byte 0b1010_0101 = 0xA5; reading 3 bits LSB-first => 0b101 = 5, then 2 bits => 0b00 = 0
-        var r = new BitReader(new byte[] { 0xA5 }, 0);
+        // 0xB4 = 1011_0100. MSB-first: read 3 => 101 = 5, read 3 => 101 = 5, read 2 => 00 = 0.
+        var r = new BitReader(new byte[] { 0xB4 }, 0);
+        Assert.Equal(5ul, r.Read(3));
         Assert.Equal(5ul, r.Read(3));
         Assert.Equal(0ul, r.Read(2));
+        // 0x80 = 1000_0000: first bit MSB-first is 1 (would be 0 if LSB-first).
+        var r2 = new BitReader(new byte[] { 0x80 }, 0);
+        Assert.Equal(1ul, r2.Read(1));
     }
 
     [Fact]
-    public void EncodeSearchAllRequest_SetsOpcodeAndZeroSize()
+    public void EncodeSearchAllRequest_SetsRetailOpcodeAndCriteriaSize()
     {
         var codec = new SearchPacketCodec();
         byte[] pkt = codec.EncodeSearchAllRequest(0xAABBCCDD, out var ctx);
+        Assert.Equal(0x4C, pkt.Length);    // retail /sea all frame is 76 bytes
         var fields = SearchPacketCodec.DecryptSearchRequestForTest(pkt, ctx);
         Assert.Equal(0x00, fields.Type);   // TCP_SEARCH_ALL
-        Assert.Equal(0, fields.Size);      // no criteria
+        Assert.Equal(2, fields.Size);      // retail sends a 2-byte criteria block
     }
 
     [Fact]

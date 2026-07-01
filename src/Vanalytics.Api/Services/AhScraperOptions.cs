@@ -21,6 +21,7 @@ public class AhScraperOptions
         "202.67.54.0/24",
         "202.67.62.0/24",
         "124.150.152.0/24",
+        "124.150.154.0/24", // confirmed via live capture: Siren search server is 124.150.154.71
     ];
 
     /// <summary>Minimum overlapping character names required to consider a roster-to-world match valid.</summary>

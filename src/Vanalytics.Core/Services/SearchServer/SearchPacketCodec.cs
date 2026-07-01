@@ -5,17 +5,23 @@ namespace Vanalytics.Core.Services.SearchServer;
 
 public class SearchPacketCodec
 {
-    private const int RequestLength = 0x30;          // chosen fixed request frame (0x30 keeps body fields below hash region at 0x1C)
+    // Retail AH-history request is a fixed 268-byte frame (reversed from a live capture).
+    // Header bytes 0x08=0xB8, 0x0A=0x80, 0x14=0x04 are sent verbatim by the real client;
+    // item id @0x12, stack flag @0x15, type @0x0B; the rest of the body is zero.
+    private const int RequestLength = 0x10C;
     private const int ResponseSeedOffsetFromEnd = 0x18;
 
     public byte[] EncodeHistoryRequest(int itemId, bool stack, uint nonce, out SearchKeyContext ctx)
     {
         var buf = new byte[RequestLength];
-        buf[SearchProtocol.OffType] = stack ? SearchProtocol.OpAhHistoryStack : SearchProtocol.OpAhHistorySingle;
-        BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(SearchProtocol.OffItemId), (ushort)itemId);
-        buf[SearchProtocol.OffStack] = (byte)(stack ? 1 : 0);
+        buf[0x08] = 0xB8;
+        buf[0x0A] = 0x80;
+        buf[SearchProtocol.OffType] = stack ? SearchProtocol.OpAhHistoryStack : SearchProtocol.OpAhHistorySingle; // 0x0B
+        BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(SearchProtocol.OffItemId), (ushort)itemId);          // 0x12
+        buf[0x14] = 0x04;
+        buf[SearchProtocol.OffStack] = (byte)(stack ? 1 : 0);                                                    // 0x15
 
-        // ResponseSeed = plaintext dword at length-0x18 (left as 0 here, recorded for response keying)
+        // ResponseSeed = plaintext dword at length-0x18 (zero here; recorded for response keying)
         uint responseSeed = BinaryPrimitives.ReadUInt32LittleEndian(buf.AsSpan(RequestLength - ResponseSeedOffsetFromEnd));
         ctx = new SearchKeyContext(nonce, responseSeed);
 
@@ -146,6 +152,7 @@ public class SearchPacketCodec
             buf[SearchProtocol.OffStack]);
     }
 
+
     internal static byte[] BuildResponseForTest(int itemId, int category, IReadOnlyList<AhSale> sales, in SearchKeyContext ctx)
     {
         int count = Math.Min(sales.Count, 10);
@@ -182,14 +189,21 @@ public class SearchPacketCodec
         SearchTagId = 0x08, SearchTagUnk0E = 0x0E, SearchTagRank = 0x10, SearchTagComment = 0x11,
         SearchTagFlags2 = 0x16, SearchTagLanguage = 0x17;
     private const int OffSearchSize = 0x10;
+    // Retail /sea all request is a fixed 76-byte frame (reversed from a live capture):
+    // header bytes 0x08=0x13, 0x0A=0x80; type @0x0B=0x00; criteria size @0x10=0x02 with
+    // the 2-byte criteria payload 0x11=0x00, 0x12=0x10; rest zero.
+    private const int SearchRequestLength = 0x4C;
 
     public byte[] EncodeSearchAllRequest(uint nonce, out SearchKeyContext ctx)
     {
-        var buf = new byte[RequestLength];
-        buf[SearchProtocol.OffType] = 0x00;   // TCP_SEARCH_ALL
-        buf[OffSearchSize] = 0x00;            // zero criteria bytes
+        var buf = new byte[SearchRequestLength];
+        buf[0x08] = 0x13;
+        buf[0x0A] = 0x80;
+        buf[SearchProtocol.OffType] = 0x00;   // TCP_SEARCH_ALL @0x0B
+        buf[OffSearchSize] = 0x02;            // 2 criteria bytes @0x10
+        buf[0x12] = 0x10;                     // criteria payload (0x11=0x00, 0x12=0x10)
         uint responseSeed = BinaryPrimitives.ReadUInt32LittleEndian(
-            buf.AsSpan(RequestLength - ResponseSeedOffsetFromEnd));
+            buf.AsSpan(SearchRequestLength - ResponseSeedOffsetFromEnd));
         ctx = new SearchKeyContext(nonce, responseSeed);
         EncryptInPlace(buf, RequestKey(nonce), nonce);
         return buf;
@@ -320,11 +334,13 @@ public class SearchPacketCodec
         return buf;
     }
 
+    // MSB-first, to mirror BitReader (retail player-list bit packing).
     private static int WriteBits(byte[] data, int bitOffset, ulong value, int count)
     {
         for (int i = 0; i < count; i++)
         {
-            if (((value >> i) & 1) != 0) data[bitOffset >> 3] |= (byte)(1 << (bitOffset & 7));
+            if (((value >> (count - 1 - i)) & 1) != 0)
+                data[bitOffset >> 3] |= (byte)(1 << (7 - (bitOffset & 7)));
             bitOffset++;
         }
         return bitOffset;
