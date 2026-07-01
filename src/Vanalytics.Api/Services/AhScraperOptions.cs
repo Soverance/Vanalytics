@@ -14,20 +14,6 @@ public class AhScraperOptions
     // Discovery (CIDR range scan) settings
     // -----------------------------------------------------------------------
 
-    /// <summary>CIDR blocks to enumerate during search-server discovery.</summary>
-    public string[] DiscoveryCidrs { get; set; } =
-    [
-        // "202.67.53.0/24",
-        // "202.67.54.0/24",
-        // "202.67.62.0/24",
-        // "124.150.152.0/24",
-        //"124.150.144.0/20", // this is likely to be the full range of Square Enix servers
-        "124.150.154.0/24", // confirmed via live capture: Siren search server is 124.150.154.71, seems like the 17 other search servers are also in this range
-    ];
-
-    /// <summary>Minimum overlapping character names required to consider a roster-to-world match valid.</summary>
-    public int MappingThreshold { get; set; } = 3;
-
     /// <summary>Maximum concurrent IP probes during discovery.</summary>
     public int DiscoveryConcurrency { get; set; } = 8;
 
@@ -35,7 +21,6 @@ public class AhScraperOptions
     public int ProbeTimeoutMs { get; set; } = 3000;
 
     /// <summary>Item IDs to pull sample AH sales for from each discovered endpoint, as a
-    /// world fingerprint. Edited directly like <see cref="DiscoveryCidrs"/>. 2=Simple Bed,
-    /// 4096=Fire Crystal, 4128=Ice Crystal.</summary>
+    /// world fingerprint. 2=Simple Bed, 4096=Fire Crystal, 4128=Ice Crystal.</summary>
     public int[] DiscoveryProbeItemIds { get; set; } = [2, 4096, 4128];
 }

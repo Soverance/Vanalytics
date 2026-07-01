@@ -8,4 +8,7 @@ public class ScraperSetting
     public bool MasterEnabled { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public Guid? UpdatedByUserId { get; set; }
+    /// <summary>Newline-separated CIDR ranges for the discovery scanner. Null = none configured.
+    /// Stored in the DB (never in source) so SE IP ranges stay out of the repository.</summary>
+    public string? DiscoveryCidrsText { get; set; }
 }

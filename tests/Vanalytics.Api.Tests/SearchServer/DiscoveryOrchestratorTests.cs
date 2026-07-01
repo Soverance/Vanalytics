@@ -207,10 +207,19 @@ public class DiscoveryOrchestratorTests : IAsyncLifetime
     [Fact]
     public async Task TryStart_TerminalEventReachesChannel_Completed()
     {
-        // Arrange: 1-IP CIDR, prober always returns false after a short delay.
+        // Arrange: seed a dummy 1-IP scan range in the DB so TryStart runs the REAL scan
+        // path. The Progress<T> race only exists when RunDiscoveryAsync actually awaits work;
+        // an empty-CIDRs early-return would bypass it. FastFalseProber rejects the IP → found=0.
+        using (var seedScope = _factory.Services.CreateScope())
+        {
+            var seedDb = seedScope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            var setting = await seedDb.ScraperSettings.FirstAsync(s => s.Id == 1);
+            setting.DiscoveryCidrsText = "10.0.0.5/32";   // dummy single IP, never a real SE range
+            await seedDb.SaveChangesAsync();
+        }
+
         var options = new AhScraperOptions
         {
-            DiscoveryCidrs = ["127.0.0.1/32"],   // 1 IP only
             ProbeTimeoutMs = 500,
             DiscoveryConcurrency = 1,
         };

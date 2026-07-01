@@ -287,6 +287,34 @@ function DiscoveryPanel({ onWorldsRefresh, worlds }: { onWorldsRefresh: () => vo
 
   useEffect(() => { fetchReport() }, [fetchReport])
 
+  const [cidrs, setCidrs] = useState('')
+  const [cidrsSaving, setCidrsSaving] = useState(false)
+  const [cidrsStatus, setCidrsStatus] = useState('')
+
+  const fetchCidrs = useCallback(() => {
+    api<{ cidrs: string }>('/api/admin/economy/discovery/cidrs')
+      .then(r => setCidrs(r.cidrs))
+      .catch(() => { /* leave empty */ })
+  }, [])
+
+  useEffect(() => { fetchCidrs() }, [fetchCidrs])
+
+  const handleSaveCidrs = async () => {
+    setCidrsSaving(true)
+    setCidrsStatus('')
+    try {
+      await api('/api/admin/economy/discovery/cidrs', {
+        method: 'PUT',
+        body: JSON.stringify({ cidrs }),
+      })
+      setCidrsStatus('Saved.')
+    } catch (err: unknown) {
+      setCidrsStatus(err instanceof Error ? err.message : 'Save failed.')
+    } finally {
+      setCidrsSaving(false)
+    }
+  }
+
   const openStream = useCallback((abort: AbortController) => {
     const run = async () => {
       const { accessToken } = getStoredTokens()
@@ -388,6 +416,30 @@ function DiscoveryPanel({ onWorldsRefresh, worlds }: { onWorldsRefresh: () => vo
 
   return (
     <div className={`rounded-lg border bg-gray-900 p-5 transition-colors ${running ? 'border-blue-600' : 'border-gray-800'}`}>
+      <div className="mb-4">
+        <label className="block text-xs font-semibold text-gray-400 mb-1">
+          Scan ranges — one CIDR per line
+        </label>
+        <textarea
+          value={cidrs}
+          onChange={e => setCidrs(e.target.value)}
+          rows={3}
+          spellCheck={false}
+          placeholder="e.g. 10.0.0.0/24"
+          className="w-full rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs font-mono text-gray-200 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+        />
+        <div className="mt-1 flex items-center gap-2">
+          <button
+            onClick={handleSaveCidrs}
+            disabled={cidrsSaving}
+            className="px-2.5 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-gray-200 transition-colors"
+          >
+            {cidrsSaving ? 'Saving…' : 'Save ranges'}
+          </button>
+          {cidrsStatus && <span className="text-[11px] text-gray-500">{cidrsStatus}</span>}
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-base font-semibold text-gray-200">Endpoint Discovery</h3>

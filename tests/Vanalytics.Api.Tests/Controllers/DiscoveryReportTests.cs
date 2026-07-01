@@ -134,7 +134,7 @@ public class DiscoveryReportTests : IAsyncLifetime
             db.GameItems.Add(new GameItem { ItemId = 4096, Name = "Fire Crystal", StackSize = 12, Flags = 0, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow });
             db.DiscoveredEndpoints.Add(new DiscoveredEndpoint
             {
-                Ip = "124.150.154.71", Port = 54002, ScannedAt = DateTimeOffset.UtcNow,
+                Ip = "203.0.113.71", Port = 54002, ScannedAt = DateTimeOffset.UtcNow,
                 SampleSalesJson = "[{\"itemId\":4096,\"sales\":[{\"price\":100,\"soldAt\":\"2026-06-01T00:00:00+00:00\",\"sellerName\":\"S\",\"buyerName\":\"B\"}]}]",
             });
             await db.SaveChangesAsync();
@@ -145,7 +145,7 @@ public class DiscoveryReportTests : IAsyncLifetime
         var resp = await _client.SendAsync(req);
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var body = await resp.Content.ReadAsStringAsync();
-        Assert.Contains("124.150.154.71", body);
+        Assert.Contains("203.0.113.71", body);
         Assert.Contains("Fire Crystal", body);   // itemName resolved from GameItems
     }
 
@@ -159,7 +159,7 @@ public class DiscoveryReportTests : IAsyncLifetime
             var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
             var gs = new GameServer { Name = "Siren", Status = ServerStatus.Online, LastCheckedAt = DateTimeOffset.UtcNow, CreatedAt = DateTimeOffset.UtcNow, MappingSource = MappingSource.Unmapped };
             db.GameServers.Add(gs);
-            var ep = new DiscoveredEndpoint { Ip = "124.150.154.71", Port = 54002, ScannedAt = DateTimeOffset.UtcNow, SampleSalesJson = "[]" };
+            var ep = new DiscoveredEndpoint { Ip = "203.0.113.71", Port = 54002, ScannedAt = DateTimeOffset.UtcNow, SampleSalesJson = "[]" };
             db.DiscoveredEndpoints.Add(ep);
             await db.SaveChangesAsync();
             endpointId = ep.Id; serverId = gs.Id;
@@ -175,7 +175,7 @@ public class DiscoveryReportTests : IAsyncLifetime
         {
             var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
             var gs = await db.GameServers.FindAsync(serverId);
-            Assert.Equal("124.150.154.71", gs!.SearchHost);
+            Assert.Equal("203.0.113.71", gs!.SearchHost);
             Assert.Equal(54002, gs.SearchPort);
             Assert.Equal(MappingSource.Manual, gs.MappingSource);
             var ep = await db.DiscoveredEndpoints.FindAsync(endpointId);

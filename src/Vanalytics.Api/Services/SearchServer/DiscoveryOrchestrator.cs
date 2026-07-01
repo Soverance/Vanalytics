@@ -62,7 +62,27 @@ public class DiscoveryOrchestrator(
 
                 try
                 {
-                    var ips = options.DiscoveryCidrs.SelectMany(CidrRange.Enumerate);
+                    List<string> cidrLines;
+                    using (var scope = scopeFactory.CreateScope())
+                    {
+                        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+                        var setting = await db.ScraperSettings.AsNoTracking()
+                            .FirstOrDefaultAsync(s => s.Id == 1, cts.Token);
+                        cidrLines = CidrRange.ParseCidrLines(setting?.DiscoveryCidrsText).ToList();
+                    }
+
+                    if (cidrLines.Count == 0)
+                    {
+                        progress.Report(new DiscoveryProgressEvent
+                        {
+                            Type = "Completed",
+                            Found = 0,
+                            Message = "No scan ranges configured — set them in the admin panel.",
+                        });
+                        return;
+                    }
+
+                    var ips = cidrLines.SelectMany(CidrRange.Enumerate);
                     var result = await RunDiscoveryAsync(
                         ips,
                         new RealClientFactory(codec),

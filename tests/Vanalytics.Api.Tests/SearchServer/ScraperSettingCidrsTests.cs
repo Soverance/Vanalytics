@@ -5,13 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Testcontainers.MsSql;
-using Vanalytics.Core.Models;
 using Vanalytics.Data;
 using Xunit;
 
 namespace Vanalytics.Api.Tests.SearchServer;
 
-public class DiscoveredEndpointPersistenceTests : IAsyncLifetime
+public class ScraperSettingCidrsTests : IAsyncLifetime
 {
     private readonly MsSqlContainer _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
     private WebApplicationFactory<Program> _factory = null!;
@@ -52,20 +51,17 @@ public class DiscoveredEndpointPersistenceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task DiscoveredEndpoint_RoundTrips_WithUniqueIpPort()
+    public async Task DiscoveryCidrsText_RoundTrips_OnScraperSetting()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
 
-        db.DiscoveredEndpoints.Add(new DiscoveredEndpoint
-        {
-            Ip = "203.0.113.71", Port = 54002, ScannedAt = DateTimeOffset.UtcNow,
-            SampleSalesJson = "[]",
-        });
+        // Row Id=1 is seeded by the AhScraperAdmin migration.
+        var s = await db.ScraperSettings.FirstAsync(x => x.Id == 1);
+        s.DiscoveryCidrsText = "10.0.0.0/30\n192.168.1.0/30";   // dummy ranges only
         await db.SaveChangesAsync();
 
-        var row = await db.DiscoveredEndpoints.AsNoTracking().SingleAsync(e => e.Ip == "203.0.113.71" && e.Port == 54002);
-        Assert.Equal(54002, row.Port);
-        Assert.Null(row.MappedServerId);
+        var reread = await db.ScraperSettings.AsNoTracking().FirstAsync(x => x.Id == 1);
+        Assert.Equal("10.0.0.0/30\n192.168.1.0/30", reread.DiscoveryCidrsText);
     }
 }

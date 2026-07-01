@@ -140,6 +140,31 @@ public class AdminEconomyController(
     public IActionResult CancelDiscovery() =>
         discoveryOrchestrator.TryCancel() ? Ok() : NotFound();
 
+    [HttpGet("discovery/cidrs")]
+    public async Task<IActionResult> GetCidrs()
+    {
+        var s = await db.ScraperSettings.AsNoTracking().FirstOrDefaultAsync(x => x.Id == 1);
+        return Ok(new { cidrs = s?.DiscoveryCidrsText ?? "" });
+    }
+
+    public record CidrsRequest(string Cidrs);
+
+    [HttpPut("discovery/cidrs")]
+    public async Task<IActionResult> SetCidrs([FromBody] CidrsRequest req)
+    {
+        var invalid = CidrRange.ParseCidrLines(req.Cidrs).Where(l => !CidrRange.IsValid(l)).ToList();
+        if (invalid.Count > 0)
+            return BadRequest(new { message = "Invalid CIDR range(s)", invalid });
+
+        var s = await db.ScraperSettings.FirstOrDefaultAsync(x => x.Id == 1)
+                ?? db.ScraperSettings.Add(new ScraperSetting { Id = 1 }).Entity;
+        s.DiscoveryCidrsText = req.Cidrs;
+        s.UpdatedAt = DateTimeOffset.UtcNow;
+        s.UpdatedByUserId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var g) ? g : null;
+        await db.SaveChangesAsync();
+        return Ok(new { cidrs = s.DiscoveryCidrsText });
+    }
+
     [HttpGet("discovery/report")]
     public async Task<IActionResult> DiscoveryReport()
     {
