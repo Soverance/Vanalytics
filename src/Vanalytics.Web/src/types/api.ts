@@ -536,6 +536,11 @@ export interface CrossServerResponse {
   servers: CrossServerPrice[]
 }
 
+export interface EconomyServer {
+  id: number
+  name: string
+}
+
 // Vana'diel Clock
 export interface VanadielClockData {
   time: VanadielTime

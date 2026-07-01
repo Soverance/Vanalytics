@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import type { GameItemDetail } from '../types/api'
+import { api } from '../api/client'
+import { useAuth } from '../context/AuthContext'
+import { resolveDefaultServer } from '../lib/economyServers'
+import ItemMarketCard from '../components/economy/ItemMarketCard'
+import ItemRecentSales from '../components/economy/ItemRecentSales'
+import type { GameItemDetail, EconomyServer } from '../types/api'
 import ItemStatsTable from '../components/economy/ItemStatsTable'
 import { itemImageUrl } from '../utils/imageUrl'
 import { useCompare } from '../components/compare/CompareContext'
@@ -15,6 +20,22 @@ export default function ItemDetailPage() {
   const [loading, setLoading] = useState(true)
   const { addItem, removeItem, isSelected, isFull } = useCompare()
   const [copied, setCopied] = useState(false)
+  const { user, loading: authLoading } = useAuth()
+  const [servers, setServers] = useState<EconomyServer[]>([])
+  const [selectedServer, setSelectedServer] = useState<string | null>(null)
+  const [days, setDays] = useState(30)
+
+  useEffect(() => {
+    // Wait for auth to settle so we resolve the default world against the final
+    // user.defaultServer once — avoids a first-enabled→default flicker + double fetch.
+    if (authLoading) return
+    api<EconomyServer[]>('/api/economy/servers')
+      .then(list => {
+        setServers(list)
+        setSelectedServer(resolveDefaultServer(list, user?.defaultServer))
+      })
+      .catch(() => { setServers([]); setSelectedServer(null) })
+  }, [authLoading, user?.defaultServer])
 
   useEffect(() => {
     fetch(`/api/items/${id}`)
@@ -26,6 +47,8 @@ export default function ItemDetailPage() {
 
   if (loading) return <p className="text-gray-400">Loading item...</p>
   if (!item) return <p className="text-red-400">Item not found.</p>
+
+  const showMarket = !item.isNoAuction && servers.length > 0 && selectedServer !== null
 
   return (
     <div>
@@ -139,12 +162,22 @@ export default function ItemDetailPage() {
       />
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Left column: Stats */}
-        <div className="lg:col-span-1">
+        {/* Left column: Stats + market */}
+        <div className="lg:col-span-1 space-y-4">
           <div className="rounded-lg border border-gray-800 bg-gray-900 p-4">
             <h2 className="text-sm font-semibold text-gray-400 mb-3">Item Stats</h2>
             <ItemStatsTable item={item} />
           </div>
+          {showMarket && (
+            <ItemMarketCard
+              itemId={item.itemId}
+              server={selectedServer!}
+              days={days}
+              servers={servers}
+              onServerChange={setSelectedServer}
+              onDaysChange={setDays}
+            />
+          )}
         </div>
 
         {/* Right column: Economy + Who's using this? */}
@@ -157,6 +190,9 @@ export default function ItemDetailPage() {
               </p>
             ) : (
               <p className="text-sm text-gray-500">This item cannot be sold to NPCs.</p>
+            )}
+            {showMarket && (
+              <ItemRecentSales itemId={item.itemId} server={selectedServer!} days={days} />
             )}
           </div>
           <ItemCrafting itemId={item.itemId} />
