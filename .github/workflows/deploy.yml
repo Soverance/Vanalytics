@@ -8,11 +8,11 @@
 # Secrets: ACR_USERNAME, ACR_PASSWORD, AZURE_CREDENTIALS,
 #          SQL_CONNECTION_STRING, ADMIN_PASSWORD, JWT_SECRET,
 #          AZURE_STORAGE_CONNECTION_STRING,
-#          GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_SECRET
+#          GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_SECRET, DISCORD_CLIENT_SECRET
 # Variables: AZURE_RESOURCE_GROUP, ADMIN_EMAIL, ADMIN_USERNAME,
 #            JWT_ISSUER, JWT_AUDIENCE,
 #            AZURE_AD_CLIENT_ID, AZURE_AD_DOMAIN, AZURE_AD_TENANT_ID,
-#            GOOGLE_CLIENT_ID, MICROSOFT_CLIENT_ID
+#            GOOGLE_CLIENT_ID, MICROSOFT_CLIENT_ID, DISCORD_CLIENT_ID
 
 name: Build and Deploy
 
@@ -70,6 +70,7 @@ jobs:
             --build-arg APP_VERSION=${{ steps.version.outputs.version }} \
             --build-arg VITE_GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }} \
             --build-arg VITE_MICROSOFT_CLIENT_ID=${{ vars.MICROSOFT_CLIENT_ID }} \
+            --build-arg VITE_DISCORD_CLIENT_ID=${{ vars.DISCORD_CLIENT_ID }} \
             -t soveranceacr.azurecr.io/vanalytics:v${{ steps.version.outputs.version }} \
             -t soveranceacr.azurecr.io/vanalytics:latest
 
@@ -104,6 +105,7 @@ jobs:
           AZURE_STORAGE: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
           GOOGLE_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           MICROSOFT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+          DISCORD_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
         run: |
           SECRETS=(
             "sql-connection-string=$SQL_CONN"
@@ -113,6 +115,7 @@ jobs:
           )
           [ -n "$GOOGLE_SECRET" ] && SECRETS+=("google-client-secret=$GOOGLE_SECRET")
           [ -n "$MICROSOFT_SECRET" ] && SECRETS+=("microsoft-client-secret=$MICROSOFT_SECRET")
+          [ -n "$DISCORD_SECRET" ] && SECRETS+=("discord-client-secret=$DISCORD_SECRET")
           az containerapp secret set \
             --name vanalytics \
             --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
@@ -122,6 +125,7 @@ jobs:
         env:
           GOOGLE_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           MICROSOFT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+          DISCORD_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
         run: |
           ENV_VARS=(
             "ConnectionStrings__DefaultConnection=secretref:sql-connection-string"
@@ -151,6 +155,10 @@ jobs:
             ENV_VARS+=("OAuth__Microsoft__ClientId=${{ vars.MICROSOFT_CLIENT_ID }}")
             ENV_VARS+=("OAuth__Microsoft__ClientSecret=secretref:microsoft-client-secret")
             ENV_VARS+=("Authentication__AzureAd__ClientSecret=secretref:microsoft-client-secret")
+          fi
+          if [ -n "$DISCORD_SECRET" ]; then
+            ENV_VARS+=("OAuth__Discord__ClientId=${{ vars.DISCORD_CLIENT_ID }}")
+            ENV_VARS+=("OAuth__Discord__ClientSecret=secretref:discord-client-secret")
           fi
           az containerapp update \
             --name vanalytics \

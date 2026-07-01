@@ -14,6 +14,11 @@ const OAUTH_CONFIG = {
     authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     scope: 'openid email profile User.Read',
   },
+  discord: {
+    clientId: import.meta.env.VITE_DISCORD_CLIENT_ID || '',
+    authUrl: 'https://discord.com/api/oauth2/authorize',
+    scope: 'identify email',
+  },
 }
 
 export default function LoginModal({ onClose }: { onClose: () => void }) {
@@ -39,7 +44,7 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', handleKey)
   }, [onClose])
 
-  const handleOAuth = (provider: 'google' | 'microsoft') => {
+  const handleOAuth = (provider: keyof typeof OAUTH_CONFIG) => {
     const config = OAUTH_CONFIG[provider]
     const redirectUri = `${window.location.origin}/oauth/callback`
     const params = new URLSearchParams({
@@ -107,6 +112,13 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
             className="w-full rounded border border-gray-700 bg-gray-800 py-2.5 text-sm font-medium text-gray-200 hover:bg-gray-700 transition-colors"
           >
             Sign in with Microsoft
+          </button>
+          <button
+            onClick={() => handleOAuth('discord')}
+            className="w-full rounded border border-gray-700 bg-gray-800 py-2.5 text-sm font-medium text-gray-200 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
+          >
+            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#5865F2' }} />
+            Sign in with Discord
           </button>
         </div>
 
