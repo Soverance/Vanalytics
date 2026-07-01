@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Api.DTOs;
+using Vanalytics.Api.Services.Economy;
 using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.Models;
 using Vanalytics.Core.Services.Economy;
@@ -379,10 +380,13 @@ public class ItemsController : ControllerBase
         var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
         if (!itemExists) return NotFound();
 
+        var enabled = await EnabledServerQuery.GetEnabledAsync(_db);
+        var enabledIds = enabled.Select(s => s.Id).ToHashSet();
+
         var since = DateTimeOffset.UtcNow.AddDays(-days);
 
         var rawSales = await _db.AuctionSales
-            .Where(s => s.ItemId == id && s.SoldAt >= since)
+            .Where(s => s.ItemId == id && s.SoldAt >= since && enabledIds.Contains(s.ServerId))
             .Select(s => new { ServerName = s.Server.Name, s.Price })
             .ToListAsync();
 
