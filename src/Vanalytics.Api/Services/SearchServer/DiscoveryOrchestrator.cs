@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Threading.Channels;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Api.Services;
-using Vanalytics.Core.Enums;
+using Vanalytics.Core.Models;
 using Vanalytics.Core.Services.SearchServer;
 using Vanalytics.Data;
 
@@ -75,8 +75,6 @@ public class DiscoveryOrchestrator(
                     {
                         Type = "Completed",
                         Found = result.Found,
-                        Mapped = result.Mapped,
-                        Unmapped = result.Unmapped,
                     });
                 }
                 catch (OperationCanceledException)
@@ -118,11 +116,13 @@ public class DiscoveryOrchestrator(
 
     /// <summary>
     /// Scans <paramref name="ips"/>, probes each via <paramref name="prober"/>,
-    /// fetches the online roster from live endpoints via <paramref name="clientFactory"/>,
-    /// maps each to a world, and writes discovery columns to the matching <c>GameServer</c> row.
+    /// fetches sample AH sales from each live endpoint via <paramref name="clientFactory"/>
+    /// for each configured <see cref="AhScraperOptions.DiscoveryProbeItemIds"/>,
+    /// and upserts a <see cref="DiscoveredEndpoint"/> row (refreshing sample data while
+    /// preserving any existing <c>MappedServerId</c>). Never maps worlds.
     /// <para>
-    /// NEVER sets <c>ScrapeEnabled</c> — that is an explicit admin action only.
-    /// Per-IP failures are caught and logged; they do not abort the scan.
+    /// Per-IP probe failures are caught and logged; they do not abort the scan.
+    /// A found IP is always persisted — even if its sales fetch fails (empty samples).
     /// Respects <paramref name="ct"/> cancellation.
     /// </para>
     /// </summary>
@@ -135,24 +135,10 @@ public class DiscoveryOrchestrator(
         CancellationToken ct)
     {
         var ipList = ips.ToList();
-
-        // Build a Characters-by-server lookup once (read-only snapshot).
-        Dictionary<string, IReadOnlyCollection<string>> byServer;
-        using (var scope = scopes.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
-            byServer = (await db.Characters
-                    .AsNoTracking()
-                    .Select(c => new { c.Name, c.Server })
-                    .ToListAsync(ct))
-                .GroupBy(c => c.Server)
-                .ToDictionary(
-                    g => g.Key,
-                    g => (IReadOnlyCollection<string>)g.Select(x => x.Name).ToList());
-        }
+        var probeItemIds = options.DiscoveryProbeItemIds;
 
         int scanned = 0, found = 0;
-        var liveEndpoints = new ConcurrentBag<(string Ip, IReadOnlyList<PlayerRecord> Roster)>();
+        var live = new ConcurrentBag<(string Ip, string SamplesJson)>();
         var sem = new SemaphoreSlim(Math.Max(1, options.DiscoveryConcurrency));
 
         await Task.WhenAll(ipList.Select(async ip =>
@@ -166,10 +152,8 @@ public class DiscoveryOrchestrator(
                 if (isLive)
                 {
                     Interlocked.Increment(ref found);
-                    await using var client = clientFactory.Create();
-                    await client.ConnectAsync(ip, 54002, ct);
-                    var roster = await client.GetOnlinePlayersAsync(ct);
-                    liveEndpoints.Add((ip, roster));
+                    var samples = await FetchSamplesAsync(clientFactory, ip, probeItemIds, ct);
+                    live.Add((ip, DiscoverySamples.Serialize(samples)));
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -192,45 +176,71 @@ public class DiscoveryOrchestrator(
 
         ct.ThrowIfCancellationRequested();
 
-        // Map and write candidates.
-        int mapped = 0, unmapped = 0;
+        // Upsert discovered endpoints by (Ip, Port). Refresh samples; preserve any manual mapping.
         using (var scope = scopes.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
-
-            foreach (var (ip, roster) in liveEndpoints)
+            var now = DateTimeOffset.UtcNow;
+            foreach (var (ip, samplesJson) in live)
             {
-                var names = roster.Select(p => p.Name).ToList();
-                var (server, confidence) = WorldMapper.Map(names, byServer, options.MappingThreshold);
-
-                if (server is null)
+                var row = await db.DiscoveredEndpoints.FirstOrDefaultAsync(e => e.Ip == ip && e.Port == 54002, ct);
+                if (row is null)
                 {
-                    unmapped++;
-                    continue;
+                    db.DiscoveredEndpoints.Add(new DiscoveredEndpoint
+                    {
+                        Ip = ip, Port = 54002, ScannedAt = now, SampleSalesJson = samplesJson,
+                    });
                 }
-
-                var gs = await db.GameServers.FirstOrDefaultAsync(g => g.Name == server, ct);
-                if (gs is null)
+                else
                 {
-                    unmapped++;
-                    continue;
+                    row.ScannedAt = now;
+                    row.SampleSalesJson = samplesJson;   // MappedServerId left untouched
                 }
-
-                // Write discovery candidate columns only — NEVER touch ScrapeEnabled.
-                gs.SearchHost = ip;
-                gs.SearchPort = 54002;
-                gs.MappingSource = MappingSource.Auto;
-                gs.MappingConfidence = confidence;
-                gs.LastDiscoveredAt = DateTimeOffset.UtcNow;
-                gs.EndpointHealthy = true;
-                gs.LastProbedAt = DateTimeOffset.UtcNow;
-                mapped++;
             }
-
             await db.SaveChangesAsync(ct);
         }
 
-        return new DiscoveryResult(found, mapped, unmapped);
+        return new DiscoveryResult(found);
+    }
+
+    /// <summary>
+    /// Fetches up to 5 most-recent single-quantity sales for each probe item from one endpoint.
+    /// Never throws (except on cancellation) — connect/fetch failures yield empty samples so the
+    /// IP is still recorded.
+    /// </summary>
+    private async Task<List<ProbeItemSample>> FetchSamplesAsync(
+        ISearchServerClientFactory clientFactory, string ip, int[] probeItemIds, CancellationToken ct)
+    {
+        var samples = new List<ProbeItemSample>();
+        try
+        {
+            await using var client = clientFactory.Create();
+            await client.ConnectAsync(ip, 54002, ct);
+            foreach (var itemId in probeItemIds)
+            {
+                ct.ThrowIfCancellationRequested();
+                try
+                {
+                    var sales = await client.GetSalesHistoryAsync(itemId, stack: false, ct);
+                    var recent = sales
+                        .OrderByDescending(s => s.SoldAt)
+                        .Take(5)
+                        .Select(s => new SampleSale(s.Price, s.SoldAt, s.SellerName, s.BuyerName))
+                        .ToList();
+                    samples.Add(new ProbeItemSample(itemId, recent));
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    logger.LogDebug(ex, "Sample fetch item {ItemId} on {Ip} failed", itemId, ip);
+                    samples.Add(new ProbeItemSample(itemId, new List<SampleSale>()));
+                }
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogDebug(ex, "Sample connect on {Ip} failed", ip);
+        }
+        return samples;
     }
 
     // -----------------------------------------------------------------------

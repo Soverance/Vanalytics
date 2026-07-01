@@ -33,4 +33,9 @@ public class AhScraperOptions
 
     /// <summary>Milliseconds allowed per probe attempt before timing out.</summary>
     public int ProbeTimeoutMs { get; set; } = 3000;
+
+    /// <summary>Item IDs to pull sample AH sales for from each discovered endpoint, as a
+    /// world fingerprint. Edited directly like <see cref="DiscoveryCidrs"/>. 2=Simple Bed,
+    /// 4096=Fire Crystal, 4128=Ice Crystal.</summary>
+    public int[] DiscoveryProbeItemIds { get; set; } = [2, 4096, 4128];
 }

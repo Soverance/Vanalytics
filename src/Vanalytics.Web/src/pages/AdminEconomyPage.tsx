@@ -27,8 +27,27 @@ interface DiscoveryProgress {
   scanned: number
   total: number
   found: number
-  mapped: number
-  unmapped: number
+}
+
+interface DiscoverySampleSale {
+  price: number
+  soldAt: string
+  sellerName: string
+  buyerName: string
+}
+interface DiscoveryProbeItem {
+  itemId: number
+  itemName: string
+  sales: DiscoverySampleSale[]
+}
+interface DiscoveredEndpointReport {
+  id: number
+  ip: string
+  port: number
+  scannedAt: string
+  mappedServerId: number | null
+  mappedServerName: string | null
+  sampleSales: DiscoveryProbeItem[]
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -253,11 +272,20 @@ function WorldRow({ world, onRefresh }: { world: World; onRefresh: () => void })
 
 // ─── DiscoveryPanel ───────────────────────────────────────────────────────────
 
-function DiscoveryPanel({ onWorldsRefresh }: { onWorldsRefresh: () => void }) {
+function DiscoveryPanel({ onWorldsRefresh, worlds }: { onWorldsRefresh: () => void; worlds: World[] }) {
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<DiscoveryProgress | null>(null)
   const [error, setError] = useState('')
+  const [report, setReport] = useState<DiscoveredEndpointReport[]>([])
   const abortRef = useRef<AbortController | null>(null)
+
+  const fetchReport = useCallback(() => {
+    api<DiscoveredEndpointReport[]>('/api/admin/economy/discovery/report')
+      .then(setReport)
+      .catch(() => { /* leave last-known report */ })
+  }, [])
+
+  useEffect(() => { fetchReport() }, [fetchReport])
 
   const openStream = useCallback((abort: AbortController) => {
     const run = async () => {
@@ -288,6 +316,7 @@ function DiscoveryPanel({ onWorldsRefresh }: { onWorldsRefresh: () => void }) {
               if (evt.type === 'Completed' || evt.type === 'Cancelled' || evt.type === 'Failed') {
                 setRunning(false)
                 onWorldsRefresh()
+                fetchReport()
               }
             }
           }
@@ -300,7 +329,20 @@ function DiscoveryPanel({ onWorldsRefresh }: { onWorldsRefresh: () => void }) {
       }
     }
     run()
-  }, [onWorldsRefresh])
+  }, [onWorldsRefresh, fetchReport])
+
+  const handleMap = async (endpointId: number, serverId: number | null) => {
+    try {
+      await api(`/api/admin/economy/discovery/${endpointId}/map`, {
+        method: 'POST',
+        body: JSON.stringify({ serverId }),
+      })
+      fetchReport()
+      onWorldsRefresh()
+    } catch {
+      // swallow; report refresh will reflect reality
+    }
+  }
 
   const handleStart = async () => {
     setError('')
@@ -403,16 +445,61 @@ function DiscoveryPanel({ onWorldsRefresh }: { onWorldsRefresh: () => void }) {
           <span className={progress.type === 'Completed' ? 'text-emerald-400' : 'text-yellow-400'}>
             {progress.type}
           </span>
-          <span className="text-gray-400">{progress.found} found</span>
-          <span className="text-blue-400">{progress.mapped} mapped</span>
-          {progress.unmapped > 0 && (
-            <span className="text-gray-500">{progress.unmapped} unmapped</span>
-          )}
+          <span className="text-gray-400">{progress.found} endpoints found</span>
           {progress.message && <span className="text-gray-500">{progress.message}</span>}
         </div>
       )}
 
       {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+
+      {report.length > 0 && (
+        <div className="mt-4 space-y-3">
+          <h4 className="text-xs font-semibold text-gray-400">Discovered endpoints ({report.length})</h4>
+          {report.map(ep => (
+            <div key={ep.id} className="rounded border border-gray-800 bg-gray-950/40 p-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="text-sm text-gray-200 font-mono">{ep.ip}:{ep.port}</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-gray-600">{formatDate(ep.scannedAt)}</span>
+                  <select
+                    value={ep.mappedServerId ?? ''}
+                    onChange={e => handleMap(ep.id, e.target.value === '' ? null : Number(e.target.value))}
+                    className="rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  >
+                    <option value="">Map to world…</option>
+                    {worlds.map(w => (
+                      <option key={w.id} value={w.id}>
+                        {w.name}{w.searchHost ? ` (${w.searchHost})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {ep.mappedServerName && (
+                <p className="mt-1 text-[11px] text-emerald-400">Mapped → {ep.mappedServerName}</p>
+              )}
+              <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {ep.sampleSales.map(item => (
+                  <div key={item.itemId} className="text-[11px]">
+                    <p className="text-gray-400 mb-0.5">{item.itemName}</p>
+                    {item.sales.length === 0 ? (
+                      <p className="text-gray-600">no recent sales</p>
+                    ) : (
+                      <ul className="space-y-0.5">
+                        {item.sales.map((s, i) => (
+                          <li key={i} className="text-gray-500">
+                            {s.price.toLocaleString()}g · {new Date(s.soldAt).toLocaleDateString()} · {s.buyerName}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -582,7 +669,7 @@ export default function AdminEconomyPage() {
       {/* ── Discovery ── */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold mb-3">Endpoint Discovery</h2>
-        <DiscoveryPanel onWorldsRefresh={fetchWorlds} />
+        <DiscoveryPanel onWorldsRefresh={fetchWorlds} worlds={worlds} />
       </section>
 
       {/* ── World table ── */}

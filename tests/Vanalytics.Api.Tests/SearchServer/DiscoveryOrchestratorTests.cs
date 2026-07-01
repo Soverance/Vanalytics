@@ -5,11 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
-using Soverance.Auth.Models;
 using Testcontainers.MsSql;
 using Vanalytics.Api.Services;
 using Vanalytics.Api.Services.SearchServer;
-using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 using Vanalytics.Core.Services.SearchServer;
 using Vanalytics.Data;
@@ -35,33 +33,30 @@ file sealed class FastFalseProber : IDiscoveryProber
     }
 }
 
-file sealed class FakeSearchClient(IReadOnlyList<string> names) : ISearchServerClient
+file sealed class FakeProber(string liveIp) : IDiscoveryProber
+{
+    public Task<bool> IsSearchServerAsync(string host, int port, int probeItemId, int timeoutMs, CancellationToken ct)
+        => Task.FromResult(host == liveIp);
+}
+
+file sealed class FakeClientFactory(Dictionary<int, List<AhSale>> salesByItem) : ISearchServerClientFactory
+{
+    public ISearchServerClient Create() => new FakeClient(salesByItem);
+}
+
+file sealed class FakeClient(Dictionary<int, List<AhSale>> salesByItem) : ISearchServerClient
 {
     public Task ConnectAsync(string host, int port, CancellationToken ct) => Task.CompletedTask;
-
-    public Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct)
-    {
-        IReadOnlyList<PlayerRecord> list = names
-            .Select(n => new PlayerRecord(n, 0, 0, 0, 0, 0, 0, 0, 0, 0))
-            .ToList();
-        return Task.FromResult(list);
-    }
-
     public Task<IReadOnlyList<AhSale>> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
-        => Task.FromResult<IReadOnlyList<AhSale>>(Array.Empty<AhSale>());
-
+        => Task.FromResult<IReadOnlyList<AhSale>>(salesByItem.TryGetValue(itemId, out var s) ? s : new List<AhSale>());
+    public Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct)
+        => Task.FromResult<IReadOnlyList<PlayerRecord>>(Array.Empty<PlayerRecord>());
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }
 
-file sealed class FakeProber(IReadOnlyCollection<string> liveIps) : IDiscoveryProber
+file sealed class NoopProgress : IProgress<DiscoveryProgressEvent>
 {
-    public Task<bool> IsSearchServerAsync(string host, int port, int probeItemId, int timeoutMs, CancellationToken ct)
-        => Task.FromResult(liveIps.Contains(host));
-}
-
-file sealed class FakeClientFactory(ISearchServerClient client) : ISearchServerClientFactory
-{
-    public ISearchServerClient Create() => client;
+    public void Report(DiscoveryProgressEvent value) { }
 }
 
 // ---------------------------------------------------------------------------
@@ -110,64 +105,95 @@ public class DiscoveryOrchestratorTests : IAsyncLifetime
         await _container.DisposeAsync();
     }
 
-    private VanalyticsDbContext NewDb()
-    {
-        var scope = _factory.Services.CreateScope();
-        return scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
-    }
-
-    private IServiceScopeFactory ScopeFor(VanalyticsDbContext _)
+    private IServiceScopeFactory ScopeFactory
         => _factory.Services.GetRequiredService<IServiceScopeFactory>();
 
+    private static List<AhSale> SixSales() =>
+        Enumerable.Range(0, 6)
+            .Select(i => new AhSale(100 + i, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + i), "S", "B", false))
+            .ToList();
+
     [Fact]
-    public async Task RunDiscovery_MapsLiveEndpointToWorld_WritesCandidate_NoScrapeEnable()
+    public async Task RunDiscovery_PersistsDiscoveredEndpoint_WithSampleSales()
     {
-        await using var db = NewDb();
-        db.GameServers.Add(new GameServer
+        // Arrange: prober returns true only for 10.0.0.5; fake client returns 6 sales for item 4096.
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+
+        var options = new AhScraperOptions
         {
-            Name = "Asura",
-            Status = ServerStatus.Online,
-            LastCheckedAt = DateTimeOffset.UtcNow,
-            CreatedAt = DateTimeOffset.UtcNow,
-        });
-        // Characters have a FK to Users — create a user row first.
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = "test@example.com",
-            Username = "testuser",
-            PasswordHash = "h",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            DiscoveryProbeItemIds = [4096],
+            DiscoveryConcurrency = 4,
+            ProbeTimeoutMs = 1000,
         };
-        db.Users.Add(user);
-        db.Characters.AddRange(
-            new Character { Id = Guid.NewGuid(), UserId = user.Id, Name = "Alpha", Server = "Asura", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
-            new Character { Id = Guid.NewGuid(), UserId = user.Id, Name = "Beta",  Server = "Asura", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
-            new Character { Id = Guid.NewGuid(), UserId = user.Id, Name = "Gamma", Server = "Asura", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow });
-        await db.SaveChangesAsync();
+        var orchestrator = new DiscoveryOrchestrator(
+            NullLogger<DiscoveryOrchestrator>.Instance,
+            ScopeFactory,
+            options,
+            new FakeProber(liveIp: "10.0.0.5"));
 
-        var fakeClient = new FakeSearchClient(new[] { "Alpha", "Beta", "Gamma" });
-        var options = new AhScraperOptions { MappingThreshold = 2, DiscoveryConcurrency = 4, ProbeTimeoutMs = 1000 };
-        var fakeProber = new FakeProber(liveIps: new[] { "10.0.0.1" });
-        var orch = new DiscoveryOrchestrator(NullLogger<DiscoveryOrchestrator>.Instance, _factory.Services.GetRequiredService<IServiceScopeFactory>(), options, fakeProber);
-
-        var progress = new Progress<DiscoveryProgressEvent>();
-        var result = await orch.RunDiscoveryAsync(
-            ips: new[] { "10.0.0.1" },
-            clientFactory: new FakeClientFactory(fakeClient),
-            prober: new FakeProber(liveIps: new[] { "10.0.0.1" }),
-            progress: progress,
-            scopes: ScopeFor(db),
+        var result = await orchestrator.RunDiscoveryAsync(
+            ips: new[] { "10.0.0.5", "10.0.0.6" },
+            clientFactory: new FakeClientFactory(salesByItem: new() { [4096] = SixSales() }),
+            prober: new FakeProber(liveIp: "10.0.0.5"),
+            progress: new NoopProgress(),
+            scopes: ScopeFactory,
             ct: CancellationToken.None);
 
-        await using var db2 = NewDb();
-        var asura = await db2.GameServers.FirstAsync(s => s.Name == "Asura");
-        Assert.Equal("10.0.0.1", asura.SearchHost);
-        Assert.Equal(54002, asura.SearchPort);
-        Assert.Equal(MappingSource.Auto, asura.MappingSource);
-        Assert.False(asura.ScrapeEnabled);     // never auto-enabled
-        Assert.Equal(1, result.Mapped);
+        Assert.Equal(1, result.Found);
+        var row = await db.DiscoveredEndpoints.AsNoTracking().SingleAsync(e => e.Ip == "10.0.0.5");
+        Assert.Equal(54002, row.Port);
+        var samples = DiscoverySamples.Deserialize(row.SampleSalesJson);
+        var item = samples.Single(s => s.ItemId == 4096);
+        Assert.Equal(5, item.Sales.Count);                       // capped at 5 most recent
+        Assert.True(item.Sales[0].SoldAt >= item.Sales[1].SoldAt); // descending by SoldAt
+    }
+
+    [Fact]
+    public async Task RunDiscovery_Rescan_PreservesMappedServerId()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+
+        // Seed a real GameServer so the FK reference is valid.
+        var gs = new Vanalytics.Core.Models.GameServer
+        {
+            Name = "Siren",
+            Status = Vanalytics.Core.Enums.ServerStatus.Online,
+            LastCheckedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+        db.GameServers.Add(gs);
+        await db.SaveChangesAsync();
+
+        db.DiscoveredEndpoints.Add(new DiscoveredEndpoint
+        {
+            Ip = "10.0.1.5", Port = 54002, ScannedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            SampleSalesJson = "[]", MappedServerId = gs.Id,
+        });
+        await db.SaveChangesAsync();
+
+        var options = new AhScraperOptions
+        {
+            DiscoveryProbeItemIds = [4096],
+            DiscoveryConcurrency = 4,
+            ProbeTimeoutMs = 1000,
+        };
+        var orchestrator = new DiscoveryOrchestrator(
+            NullLogger<DiscoveryOrchestrator>.Instance,
+            ScopeFactory,
+            options,
+            new FakeProber(liveIp: "10.0.1.5"));
+
+        await orchestrator.RunDiscoveryAsync(
+            new[] { "10.0.1.5" },
+            new FakeClientFactory(salesByItem: new() { [4096] = SixSales() }),
+            new FakeProber(liveIp: "10.0.1.5"),
+            new NoopProgress(), ScopeFactory, CancellationToken.None);
+
+        var row = await db.DiscoveredEndpoints.AsNoTracking().SingleAsync(e => e.Ip == "10.0.1.5");
+        Assert.Equal(gs.Id, row.MappedServerId);                 // mapping preserved
+        Assert.NotEqual("[]", row.SampleSalesJson);              // samples refreshed
     }
 
     /// <summary>

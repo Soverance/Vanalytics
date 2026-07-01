@@ -140,6 +140,66 @@ public class AdminEconomyController(
     public IActionResult CancelDiscovery() =>
         discoveryOrchestrator.TryCancel() ? Ok() : NotFound();
 
+    [HttpGet("discovery/report")]
+    public async Task<IActionResult> DiscoveryReport()
+    {
+        var rows = await db.DiscoveredEndpoints.AsNoTracking()
+            .OrderByDescending(e => e.ScannedAt).ThenBy(e => e.Ip).ToListAsync();
+
+        var serverNames = await db.GameServers.AsNoTracking().ToDictionaryAsync(g => g.Id, g => g.Name);
+
+        var parsed = rows.Select(r => new
+        {
+            r.Id, r.Ip, r.Port, r.ScannedAt, r.MappedServerId,
+            Samples = DiscoverySamples.Deserialize(r.SampleSalesJson),
+        }).ToList();
+
+        var itemIds = parsed.SelectMany(p => p.Samples.Select(s => s.ItemId)).Distinct().ToList();
+        var itemNames = await db.GameItems.AsNoTracking()
+            .Where(i => itemIds.Contains(i.ItemId))
+            .ToDictionaryAsync(i => i.ItemId, i => i.Name);
+
+        var result = parsed.Select(p => new
+        {
+            p.Id, p.Ip, p.Port, p.ScannedAt, p.MappedServerId,
+            mappedServerName = p.MappedServerId is int sid && serverNames.TryGetValue(sid, out var n) ? n : null,
+            sampleSales = p.Samples.Select(s => new
+            {
+                s.ItemId,
+                itemName = itemNames.TryGetValue(s.ItemId, out var nm) ? nm : $"Item {s.ItemId}",
+                sales = s.Sales,
+            }),
+        });
+
+        return Ok(result);
+    }
+
+    public record MapRequest(int? ServerId);
+
+    [HttpPost("discovery/{id:int}/map")]
+    public async Task<IActionResult> MapDiscovery(int id, [FromBody] MapRequest req)
+    {
+        var ep = await db.DiscoveredEndpoints.FindAsync(id);
+        if (ep is null) return NotFound();
+
+        if (req.ServerId is null)
+        {
+            ep.MappedServerId = null;
+            await db.SaveChangesAsync();
+            return Ok(new { ep.Id, mappedServerId = (int?)null, mappedServerName = (string?)null });
+        }
+
+        var gs = await db.GameServers.FindAsync(req.ServerId.Value);
+        if (gs is null) return NotFound();
+
+        gs.SearchHost = ep.Ip;
+        gs.SearchPort = ep.Port;
+        gs.MappingSource = MappingSource.Manual;
+        ep.MappedServerId = gs.Id;
+        await db.SaveChangesAsync();
+        return Ok(new { ep.Id, mappedServerId = gs.Id, mappedServerName = gs.Name });
+    }
+
     [HttpGet("discovery/progress")]
     public async Task ProgressDiscovery(CancellationToken ct)
     {

@@ -7,11 +7,9 @@ public record DiscoveryProgressEvent
     public int Scanned { get; init; }
     public int Total { get; init; }
     public int Found { get; init; }
-    public int Mapped { get; init; }
-    public int Unmapped { get; init; }
 }
 
-public record DiscoveryResult(int Found, int Mapped, int Unmapped);
+public record DiscoveryResult(int Found);
 
 /// <summary>
 /// Abstraction over <see cref="Vanalytics.Core.Services.SearchServer.SearchEndpointProber"/>
