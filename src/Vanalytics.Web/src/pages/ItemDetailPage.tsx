@@ -23,7 +23,7 @@ export default function ItemDetailPage() {
   const { user, loading: authLoading } = useAuth()
   const [servers, setServers] = useState<EconomyServer[]>([])
   const [selectedServer, setSelectedServer] = useState<string | null>(null)
-  const [days, setDays] = useState(90)
+  const [days, setDays] = useState(0) // 0 = All Time (default span)
 
   useEffect(() => {
     // Wait for auth to settle so we resolve the default world against the final
