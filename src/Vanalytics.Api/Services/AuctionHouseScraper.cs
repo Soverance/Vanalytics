@@ -180,8 +180,20 @@ public class AuctionHouseScraper(
         {
             if (ct.IsCancellationRequested) break;
 
-            var sales = await client.GetSalesHistoryAsync(unit.ItemId, unit.Stack, ct);
-            total += await ingestor.IngestAsync(unit.ItemId, world.Id, sales, now, ct);
+            try
+            {
+                var sales = await client.GetSalesHistoryAsync(unit.ItemId, unit.Stack, ct);
+                total += await ingestor.IngestAsync(unit.ItemId, world.Id, sales, now, ct);
+            }
+            catch (SearchProtocolException ex)
+            {
+                // A per-item protocol/decode failure must not abort the world's batch or stall
+                // the cursor. Log it and fall through to mark the unit scraped — it rotates to
+                // the back of the least-recently-scraped queue instead of blocking every cycle.
+                // (Connection-level failures are NOT caught here — they propagate to fail the world.)
+                logger.LogWarning(ex, "AH scrape item {ItemId} (stack={Stack}) on {World} skipped: {Message}",
+                    unit.ItemId, unit.Stack, world.Name, ex.Message);
+            }
             done.Add(unit);
 
             if (options.InterRequestDelayMs > 0)

@@ -16,7 +16,9 @@ public static class SearchProtocol
     public const uint Magic = 0x46465849; // "IXFF"
     public const byte OpAhHistorySingle = 0x05;
     public const byte OpAhHistoryStack  = 0x06;
-    public const byte RespAhHistory     = 0x85;
+    // Response opcode = request opcode | 0x80 (the high bit marks a response).
+    public const byte RespAhHistory      = 0x85; // single-item history response
+    public const byte RespAhHistoryStack = 0x86; // stack history response
 
     public const int OffType   = 0x0B;
     public const int OffItemId = 0x12;

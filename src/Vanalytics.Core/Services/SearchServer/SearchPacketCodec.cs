@@ -40,10 +40,13 @@ public class SearchPacketCodec
         DecryptInPlace(buf, ResponseKey(nonce, ctx.ResponseSeed));
 
         if (!VerifyHash(buf)) throw new SearchProtocolException("hash mismatch");
-        if (buf[SearchProtocol.OffType] != SearchProtocol.RespAhHistory)
-            throw new SearchProtocolException($"unexpected type 0x{buf[SearchProtocol.OffType]:X2}");
+        byte type = buf[SearchProtocol.OffType];
+        if (type != SearchProtocol.RespAhHistory && type != SearchProtocol.RespAhHistoryStack)
+            throw new SearchProtocolException($"unexpected type 0x{type:X2}");
 
-        bool stack = false; // history packet does not echo stack; caller knows from the request
+        // The response type carries the single/stack distinction (0x85 single, 0x86 stack);
+        // flag the sales so the ingestor records the correct StackSize.
+        bool stack = type == SearchProtocol.RespAhHistoryStack;
         var sales = new List<AhSale>();
         const int firstEntry = 0x20, stride = 40, maxEntries = 10;
         for (int n = 0; n < maxEntries; n++)
@@ -153,13 +156,13 @@ public class SearchPacketCodec
     }
 
 
-    internal static byte[] BuildResponseForTest(int itemId, int category, IReadOnlyList<AhSale> sales, in SearchKeyContext ctx)
+    internal static byte[] BuildResponseForTest(int itemId, int category, IReadOnlyList<AhSale> sales, in SearchKeyContext ctx, bool stack = false)
     {
         int count = Math.Min(sales.Count, 10);
         int length = 0x20 + 40 * count + 28;
         var buf = new byte[length];
         buf[0x0A] = 0x80;
-        buf[SearchProtocol.OffType] = SearchProtocol.RespAhHistory;
+        buf[SearchProtocol.OffType] = stack ? SearchProtocol.RespAhHistoryStack : SearchProtocol.RespAhHistory;
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(0x08), (ushort)(0x20 + 40 * count));
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(0x10), (ushort)itemId);
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(0x18), (ushort)itemId);

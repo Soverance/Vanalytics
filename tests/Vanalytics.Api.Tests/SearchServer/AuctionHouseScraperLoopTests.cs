@@ -133,4 +133,67 @@ public class AuctionHouseScraperLoopTests : IAsyncLifetime
         Assert.True(await db.AuctionSales.AnyAsync());
         Assert.All(await db.AhScrapeStates.ToListAsync(), s => Assert.NotNull(s.LastScrapedAt));
     }
+
+    /// <summary>
+    /// A protocol failure on one item (e.g. the stack request) must NOT abort the world's
+    /// batch or stall the cursor. The successful (single) sale should still be ingested and
+    /// BOTH units — including the failing stack unit — must advance their LastScrapedAt so
+    /// the scraper doesn't re-hit the same bad item every cycle.
+    /// </summary>
+    [Fact]
+    public async Task ScrapeWorldOnce_ItemProtocolFailure_DoesNotAbort_AndAdvancesCursor()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+
+        var world = new GameServer
+        {
+            Name = "Bahamut", Status = Core.Enums.ServerStatus.Online,
+            LastCheckedAt = DateTimeOffset.UtcNow, CreatedAt = DateTimeOffset.UtcNow,
+            SearchHost = "x", SearchPort = 54002, ScrapeEnabled = true,
+        };
+        db.GameServers.Add(world);
+        db.GameItems.Add(new GameItem
+        {
+            ItemId = 4096, Name = "Fire Crystal", StackSize = 12, Flags = 0,   // stackable → single + stack units
+            CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var scraper = new AuctionHouseScraper(
+            NullLogger<AuctionHouseScraper>.Instance, null!,
+            new AhScraperOptions { BatchSize = 10, InterRequestDelayMs = 0 });
+
+        // Must not throw even though the stack request raises a protocol error.
+        int n = await scraper.ScrapeWorldOnceAsync(
+            world, batchSize: 10, client: new StackFailingClient(),
+            ingestor: new AuctionHouseIngestor(db), scheduler: new AhScrapeScheduler(db),
+            now: DateTimeOffset.UtcNow, ct: CancellationToken.None);
+
+        Assert.True(n >= 1);                                   // the single sale was ingested
+        Assert.True(await db.AuctionSales.AnyAsync());
+        var states = await db.AhScrapeStates.ToListAsync();
+        Assert.Equal(2, states.Count);                          // single + stack seeded
+        Assert.All(states, s => Assert.NotNull(s.LastScrapedAt)); // BOTH advanced — no stall
+    }
+
+    /// <summary>Returns a sale for single requests; throws a protocol error for stack requests.</summary>
+    private sealed class StackFailingClient : ISearchServerClient
+    {
+        public Task ConnectAsync(string host, int port, CancellationToken ct) => Task.CompletedTask;
+
+        public Task<IReadOnlyList<AhSale>> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
+        {
+            if (stack) throw new SearchProtocolException("unexpected type 0x86");
+            return Task.FromResult<IReadOnlyList<AhSale>>(new[]
+            {
+                new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "S", "B", false),
+            });
+        }
+
+        public Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<PlayerRecord>>(Array.Empty<PlayerRecord>());
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
 }

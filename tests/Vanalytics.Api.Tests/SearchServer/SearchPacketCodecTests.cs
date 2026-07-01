@@ -46,6 +46,27 @@ public class SearchPacketCodecTests
     }
 
     [Fact]
+    public void DecodeHistoryResponse_AcceptsStackResponse_AndFlagsSalesAsStack()
+    {
+        // A stack history request (opcode 0x06) yields a 0x86 response. The decoder must
+        // accept it (not throw "unexpected type 0x86") and flag the sales as stack so the
+        // ingestor records the correct StackSize.
+        var codec = new SearchPacketCodec();
+        var ctx = new SearchKeyContext(Nonce: 0x11223344, ResponseSeed: 0);
+        var sales = new List<AhSale>
+        {
+            new(Price: 60000, SoldAt: DateTimeOffset.FromUnixTimeSeconds(1_700_000_000), SellerName: "S", BuyerName: "B", Stack: false),
+        };
+        byte[] resp = SearchPacketCodec.BuildResponseForTest(itemId: 4096, category: 1, sales: sales, ctx: ctx, stack: true);
+
+        var parsed = codec.DecodeHistoryResponse(resp, ctx);
+
+        Assert.Single(parsed);
+        Assert.Equal(60000, parsed[0].Price);
+        Assert.True(parsed[0].Stack);   // derived from the 0x86 response type
+    }
+
+    [Fact]
     public void DecodeHistoryResponse_ParsesSales()
     {
         var codec = new SearchPacketCodec();
