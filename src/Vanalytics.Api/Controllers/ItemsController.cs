@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Vanalytics.Api.DTOs;
 using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.Models;
+using Vanalytics.Core.Services.Economy;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Controllers;
@@ -345,8 +346,8 @@ public class ItemsController : ControllerBase
             var max = await prices.MaxAsync();
             var avg = (int)await prices.AverageAsync();
 
-            var sortedPrices = await query.OrderBy(s => s.Price).Select(s => s.Price).ToListAsync();
-            var median = sortedPrices[sortedPrices.Count / 2];
+            var allPrices = await query.Select(s => s.Price).ToListAsync();
+            var median = PriceMath.Median(allPrices);
 
             salesPerDay = days > 0 ? Math.Round((double)totalCount / days, 2) : 0;
 
@@ -393,7 +394,7 @@ public class ItemsController : ControllerBase
                 return new
                 {
                     Server = g.Key,
-                    Median = sorted[sorted.Count / 2],
+                    Median = PriceMath.Median(sorted),
                     Min = sorted[0],
                     Max = sorted[^1],
                     Average = (int)sorted.Average(),
