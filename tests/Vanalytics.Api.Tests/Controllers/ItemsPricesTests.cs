@@ -59,6 +59,7 @@ public class ItemsPricesTests : IAsyncLifetime
     private record CrossServerDto(int Days, List<CrossServerPriceDto> Servers);
     private record PriceStatsDto(int Median, int Min, int Max, int Average, double SalesPerDay);
     private record PricesDto(int TotalCount, int Page, int PageSize, int Days, PriceStatsDto? Stats, List<object> Sales);
+    private record PricesOnAhDto(int TotalCount, int? OnAh, DateTimeOffset? OnAhAsOf);
 
     [Fact]
     public async Task Prices_AllTime_IncludesRowsOlderThanAYear()
@@ -135,6 +136,33 @@ public class ItemsPricesTests : IAsyncLifetime
         var stacks = await _client.GetFromJsonAsync<PricesDto>($"/api/items/{itemId}/prices?server=Siren&days=0&stack=true");
         Assert.Equal(1, stacks!.TotalCount);
         Assert.Equal(5000, stacks.Stats!.Median);
+    }
+
+    [Fact]
+    public async Task Prices_ReturnsOnAhQuantity_FromScrapeState_ScopedToStackVariant()
+    {
+        const int itemId = 6300;
+        var asOf = DateTimeOffset.UtcNow.AddMinutes(-5);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            db.GameItems.Add(new GameItem { ItemId = itemId, Name = "Crystal", StackSize = 12, Flags = 0, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow });
+            var gs = new GameServer { Name = "Siren", Status = ServerStatus.Online, LastCheckedAt = DateTimeOffset.UtcNow, CreatedAt = DateTimeOffset.UtcNow };
+            db.GameServers.Add(gs);
+            await db.SaveChangesAsync();
+
+            // Distinct on-AH counts for the single vs stack variant, captured at last scrape.
+            db.AhScrapeStates.Add(new AhScrapeState { ItemId = itemId, ServerId = gs.Id, Stack = false, LastQuantity = 8, LastScrapedAt = asOf });
+            db.AhScrapeStates.Add(new AhScrapeState { ItemId = itemId, ServerId = gs.Id, Stack = true, LastQuantity = 3, LastScrapedAt = asOf });
+            await db.SaveChangesAsync();
+        }
+
+        var singles = await _client.GetFromJsonAsync<PricesOnAhDto>($"/api/items/{itemId}/prices?server=Siren&days=0&stack=false");
+        Assert.Equal(8, singles!.OnAh);                       // single-variant count
+        Assert.NotNull(singles.OnAhAsOf);
+
+        var stacks = await _client.GetFromJsonAsync<PricesOnAhDto>($"/api/items/{itemId}/prices?server=Siren&days=0&stack=true");
+        Assert.Equal(3, stacks!.OnAh);                        // stack-variant count, not mixed with singles
     }
 
     [Fact]

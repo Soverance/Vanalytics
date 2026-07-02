@@ -8,6 +8,19 @@ import type { PriceHistoryResponse, PriceHistoryPointsResponse, CrossServerRespo
 
 type MarketTab = 'history' | 'cross'
 
+function timeAgo(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60_000)
+  const hours = Math.floor(diff / 3_600_000)
+  const days = Math.floor(diff / 86_400_000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  if (hours < 24) return `${hours}h ago`
+  if (days < 7) return `${days}d ago`
+  return new Date(iso).toLocaleDateString()
+}
+
 interface Props {
   itemId: number
   server: string
@@ -23,6 +36,8 @@ interface Props {
 export default function ItemMarketCard({ itemId, server, days, stack, stackable, servers, onServerChange, onDaysChange, onStackChange }: Props) {
   const [tab, setTab] = useState<MarketTab>('history')
   const [stats, setStats] = useState<PriceHistoryResponse['stats']>(null)
+  const [onAh, setOnAh] = useState<number | null>(null)
+  const [onAhAsOf, setOnAhAsOf] = useState<string | null>(null)
   const [history, setHistory] = useState<PriceHistoryPointsResponse | null>(null)
   const [cross, setCross] = useState<CrossServerResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,8 +54,8 @@ export default function ItemMarketCard({ itemId, server, days, stack, stackable,
       api<PriceHistoryPointsResponse>(`/api/items/${itemId}/prices/history?${histQs}`),
       api<CrossServerResponse>(`/api/items/${itemId}/prices/all?days=${days}&stack=${stack}`),
     ])
-      .then(([s, h, c]) => { if (!cancelled) { setStats(s.stats); setHistory(h); setCross(c) } })
-      .catch(() => { if (!cancelled) { setStats(null); setHistory(null); setCross(null) } })
+      .then(([s, h, c]) => { if (!cancelled) { setStats(s.stats); setOnAh(s.onAh ?? null); setOnAhAsOf(s.onAhAsOf ?? null); setHistory(h); setCross(c) } })
+      .catch(() => { if (!cancelled) { setStats(null); setOnAh(null); setOnAhAsOf(null); setHistory(null); setCross(null) } })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [itemId, server, days, stack])
@@ -49,9 +64,20 @@ export default function ItemMarketCard({ itemId, server, days, stack, stackable,
 
   return (
     <div className="rounded-lg border border-gray-800 bg-gray-900 p-4">
-      {/* Header: span toggle (+ singles/stacks for stackables) + world selector */}
-      <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap">
+      {/* Header: hero on-AH count (left) + stacked controls (right) */}
+      <div className="flex items-start justify-between gap-4 mb-3 flex-wrap">
+        {onAh != null ? (
+          <div className="shrink-0">
+            <div className="text-3xl font-bold leading-none text-amber-400">{fmt(onAh)}</div>
+            <div className="mt-1 text-xs text-gray-400">
+              on AH{stackable ? ` · ${stack ? 'stacks' : 'singles'}` : ''}
+            </div>
+            {onAhAsOf && <div className="text-[11px] text-gray-500">{timeAgo(onAhAsOf)}</div>}
+          </div>
+        ) : <div />}
+
+        <div className="flex flex-col items-end gap-2">
+          {/* Time-range span toggle */}
           <div className="flex items-center gap-1 rounded-md bg-gray-800 p-0.5">
             {SPAN_OPTIONS.map(o => (
               <button
@@ -65,32 +91,35 @@ export default function ItemMarketCard({ itemId, server, days, stack, stackable,
               </button>
             ))}
           </div>
-          {stackable && (
-            <div className="flex items-center gap-1 rounded-md bg-gray-800 p-0.5">
-              {([{ v: false, l: 'Singles' }, { v: true, l: 'Stacks' }] as const).map(o => (
-                <button
-                  key={o.l}
-                  onClick={() => onStackChange(o.v)}
-                  className={`px-2.5 py-1 text-xs rounded transition-colors ${
-                    stack === o.v ? 'bg-gray-700 text-gray-100' : 'text-gray-400 hover:text-gray-200'
-                  }`}
-                >
-                  {o.l}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Singles/stacks toggle (stackables only) + world selector */}
+          <div className="flex items-center justify-end gap-2 flex-wrap">
+            {stackable && (
+              <div className="flex items-center gap-1 rounded-md bg-gray-800 p-0.5">
+                {([{ v: false, l: 'Singles' }, { v: true, l: 'Stacks' }] as const).map(o => (
+                  <button
+                    key={o.l}
+                    onClick={() => onStackChange(o.v)}
+                    className={`px-2.5 py-1 text-xs rounded transition-colors ${
+                      stack === o.v ? 'bg-gray-700 text-gray-100' : 'text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    {o.l}
+                  </button>
+                ))}
+              </div>
+            )}
+            <select
+              value={server}
+              onChange={e => onServerChange(e.target.value)}
+              className="rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-600"
+            >
+              {servers.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+            </select>
+          </div>
         </div>
-        <select
-          value={server}
-          onChange={e => onServerChange(e.target.value)}
-          className="rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-600"
-        >
-          {servers.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-        </select>
       </div>
 
-      {/* Stats line */}
+      {/* Stats line (on-AH count now lives in the hero) */}
       {stats && (
         <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
           <span>Median <span className="text-gray-200">{fmt(stats.median)}</span></span>

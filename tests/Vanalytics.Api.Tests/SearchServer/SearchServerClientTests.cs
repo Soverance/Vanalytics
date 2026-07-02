@@ -43,9 +43,9 @@ public class SearchServerClientTests
         var result = await client.GetSalesHistoryAsync(4096, stack: false, CancellationToken.None);
 
         await serverTask;
-        Assert.Single(result);
-        Assert.Equal(500, result[0].Price);
-        Assert.Equal("Sel", result[0].SellerName);
+        Assert.Single(result.Sales);
+        Assert.Equal(500, result.Sales[0].Price);
+        Assert.Equal("Sel", result.Sales[0].SellerName);
         }
         finally
         {

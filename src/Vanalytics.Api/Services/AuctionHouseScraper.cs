@@ -176,6 +176,7 @@ public class AuctionHouseScraper(
 
         int total = 0;
         var done = new List<ScrapeUnit>(batch.Count);
+        var quantities = new Dictionary<(int ItemId, bool Stack), int>(batch.Count);
 
         foreach (var unit in batch)
         {
@@ -183,8 +184,9 @@ public class AuctionHouseScraper(
 
             try
             {
-                var sales = await client.GetSalesHistoryAsync(unit.ItemId, unit.Stack, ct);
-                total += await ingestor.IngestAsync(unit.ItemId, world.Id, sales, now, ct);
+                var result = await client.GetSalesHistoryAsync(unit.ItemId, unit.Stack, ct);
+                total += await ingestor.IngestAsync(unit.ItemId, world.Id, result.Sales, now, ct);
+                quantities[(unit.ItemId, unit.Stack)] = result.OnAhQuantity;
             }
             catch (SearchProtocolException ex)
             {
@@ -212,7 +214,7 @@ public class AuctionHouseScraper(
                 await Task.Delay(options.InterRequestDelayMs, ct);
         }
 
-        await scheduler.MarkScrapedAsync(world.Id, done, now, ct);
+        await scheduler.MarkScrapedAsync(world.Id, done, quantities, now, ct);
         return total;
     }
 }

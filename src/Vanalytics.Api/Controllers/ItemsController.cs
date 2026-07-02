@@ -334,11 +334,20 @@ public class ItemsController : ControllerBase
             query = query.Where(s => s.SoldAt >= since);
         }
 
+        int? onAh = null;
+        DateTimeOffset? onAhAsOf = null;
         if (!string.IsNullOrEmpty(server))
         {
             var srv = await _db.GameServers.FirstOrDefaultAsync(s => s.Name == server);
             if (srv is null) return BadRequest(new { message = $"Unknown server: {server}" });
             query = query.Where(s => s.ServerId == srv.Id);
+
+            // Current count listed on this world's AH for this single/stack variant, captured on
+            // the last scrape of this item (LastScrapedAt doubles as the freshness timestamp).
+            var state = await _db.AhScrapeStates.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.ItemId == id && s.ServerId == srv.Id && s.Stack == stack);
+            onAh = state?.LastQuantity;
+            onAhAsOf = state?.LastScrapedAt;
         }
 
         var totalCount = await query.CountAsync();
@@ -384,7 +393,7 @@ public class ItemsController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(new { totalCount, page, pageSize, days, stats, sales });
+        return Ok(new { totalCount, page, pageSize, days, onAh, onAhAsOf, stats, sales });
     }
 
     [HttpGet("{id:int}/prices/all")]

@@ -33,7 +33,7 @@ public sealed class SearchServerClient(SearchPacketCodec codec) : ISearchServerC
         _stream = _tcp.GetStream();
     }
 
-    public async Task<IReadOnlyList<AhSale>> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
+    public async Task<AhHistoryResult> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
     {
         if (_stream is null) throw new InvalidOperationException("not connected");
 

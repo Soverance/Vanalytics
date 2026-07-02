@@ -29,7 +29,7 @@ public class SearchPacketCodec
         return buf;
     }
 
-    public IReadOnlyList<AhSale> DecodeHistoryResponse(ReadOnlySpan<byte> packet, in SearchKeyContext ctx)
+    public AhHistoryResult DecodeHistoryResponse(ReadOnlySpan<byte> packet, in SearchKeyContext ctx)
     {
         int length = packet.Length;
         if (length < SearchProtocol.MinPacket) throw new SearchProtocolException("packet too short");
@@ -47,6 +47,10 @@ public class SearchPacketCodec
         // The response type carries the single/stack distinction (0x85 single, 0x86 stack);
         // flag the sales so the ingestor records the correct StackSize.
         bool stack = type == SearchProtocol.RespAhHistoryStack;
+
+        // Current count listed on the AH (singles for 0x85, stacks for 0x86) — u32 @ 0x1A.
+        int onAhQuantity = length >= 0x1E ? (int)BinaryPrimitives.ReadUInt32LittleEndian(buf.AsSpan(0x1A)) : 0;
+
         var sales = new List<AhSale>();
         const int firstEntry = 0x20, stride = 40, maxEntries = 10;
         for (int n = 0; n < maxEntries; n++)
@@ -60,7 +64,7 @@ public class SearchPacketCodec
             if (price == 0 && ts == 0 && seller.Length == 0 && buyer.Length == 0) continue;
             sales.Add(new AhSale(price, DateTimeOffset.FromUnixTimeSeconds(ts), seller, buyer, stack));
         }
-        return sales;
+        return new AhHistoryResult(onAhQuantity, sales);
     }
 
     // Diagnostic only (not used in production): decrypts a raw response frame as-is, with no
@@ -167,7 +171,7 @@ public class SearchPacketCodec
     }
 
 
-    internal static byte[] BuildResponseForTest(int itemId, int category, IReadOnlyList<AhSale> sales, in SearchKeyContext ctx, bool stack = false)
+    internal static byte[] BuildResponseForTest(int itemId, int category, IReadOnlyList<AhSale> sales, in SearchKeyContext ctx, bool stack = false, int quantity = 0)
     {
         int count = Math.Min(sales.Count, 10);
         int length = 0x20 + 40 * count + 28;
@@ -177,6 +181,7 @@ public class SearchPacketCodec
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(0x08), (ushort)(0x20 + 40 * count));
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(0x10), (ushort)itemId);
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(0x18), (ushort)itemId);
+        BinaryPrimitives.WriteUInt32LittleEndian(buf.AsSpan(0x1A), (uint)quantity);   // current count on AH
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(0x1E), (ushort)category);
         for (int n = 0; n < count; n++)
         {

@@ -47,8 +47,8 @@ file sealed class FakeClientFactory(Dictionary<int, List<AhSale>> salesByItem) :
 file sealed class FakeClient(Dictionary<int, List<AhSale>> salesByItem) : ISearchServerClient
 {
     public Task ConnectAsync(string host, int port, CancellationToken ct) => Task.CompletedTask;
-    public Task<IReadOnlyList<AhSale>> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
-        => Task.FromResult<IReadOnlyList<AhSale>>(salesByItem.TryGetValue(itemId, out var s) ? s : new List<AhSale>());
+    public Task<AhHistoryResult> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
+        => Task.FromResult(new AhHistoryResult(0, salesByItem.TryGetValue(itemId, out var s) ? s : new List<AhSale>()));
     public Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct)
         => Task.FromResult<IReadOnlyList<PlayerRecord>>(Array.Empty<PlayerRecord>());
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;

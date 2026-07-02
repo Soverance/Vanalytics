@@ -241,7 +241,7 @@ public class DiscoveryOrchestrator(
                 ct.ThrowIfCancellationRequested();
                 try
                 {
-                    var sales = await client.GetSalesHistoryAsync(itemId, stack: false, ct);
+                    var sales = (await client.GetSalesHistoryAsync(itemId, stack: false, ct)).Sales;
                     var recent = sales
                         .OrderByDescending(s => s.SoldAt)
                         .Take(5)

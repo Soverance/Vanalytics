@@ -63,11 +63,11 @@ public class AuctionHouseScraperLoopTests : IAsyncLifetime
     {
         public Task ConnectAsync(string host, int port, CancellationToken ct) => Task.CompletedTask;
 
-        public Task<IReadOnlyList<AhSale>> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<AhSale>>(new[]
+        public Task<AhHistoryResult> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct) =>
+            Task.FromResult(new AhHistoryResult(5, new[]
             {
                 new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "S", "B", stack),
-            });
+            }));
 
         public Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<PlayerRecord>>(Array.Empty<PlayerRecord>());
@@ -131,7 +131,9 @@ public class AuctionHouseScraperLoopTests : IAsyncLifetime
 
         Assert.True(n >= 1);
         Assert.True(await db.AuctionSales.AnyAsync());
-        Assert.All(await db.AhScrapeStates.ToListAsync(), s => Assert.NotNull(s.LastScrapedAt));
+        var scrapedStates = await db.AhScrapeStates.ToListAsync();
+        Assert.All(scrapedStates, s => Assert.NotNull(s.LastScrapedAt));
+        Assert.All(scrapedStates, s => Assert.Equal(5, s.LastQuantity));   // FakeClient reports OnAhQuantity=5
     }
 
     /// <summary>
@@ -224,14 +226,14 @@ public class AuctionHouseScraperLoopTests : IAsyncLifetime
 
         public Task ConnectAsync(string host, int port, CancellationToken ct) => Task.CompletedTask;
 
-        public Task<IReadOnlyList<AhSale>> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
+        public Task<AhHistoryResult> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
         {
             if (++_calls >= 2)
                 throw new EndOfStreamException("Unable to read beyond the end of the stream.");
-            return Task.FromResult<IReadOnlyList<AhSale>>(new[]
+            return Task.FromResult(new AhHistoryResult(1, new[]
             {
                 new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "S", "B", stack),
-            });
+            }));
         }
 
         public Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct) =>
@@ -245,13 +247,13 @@ public class AuctionHouseScraperLoopTests : IAsyncLifetime
     {
         public Task ConnectAsync(string host, int port, CancellationToken ct) => Task.CompletedTask;
 
-        public Task<IReadOnlyList<AhSale>> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
+        public Task<AhHistoryResult> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
         {
             if (stack) throw new SearchProtocolException("unexpected type 0x86");
-            return Task.FromResult<IReadOnlyList<AhSale>>(new[]
+            return Task.FromResult(new AhHistoryResult(2, new[]
             {
                 new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "S", "B", false),
-            });
+            }));
         }
 
         public Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct) =>

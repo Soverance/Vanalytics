@@ -518,6 +518,10 @@ export interface PriceHistoryResponse {
   page: number
   pageSize: number
   days: number
+  /** Count currently listed on the selected world's AH for this single/stack variant, as of the last scrape. Only set when a server is specified. */
+  onAh?: number | null
+  /** Timestamp of the scrape that captured onAh (doubles as freshness). */
+  onAhAsOf?: string | null
   stats: PriceStats | null
   sales: AhSale[]
 }
