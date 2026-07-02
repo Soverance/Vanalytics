@@ -10,15 +10,16 @@ interface Props {
   itemId: number
   server: string
   days: number
+  stack: boolean
 }
 
-export default function ItemRecentSales({ itemId, server, days }: Props) {
+export default function ItemRecentSales({ itemId, server, days, stack }: Props) {
   const [data, setData] = useState<PriceHistoryResponse | null>(null)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
 
-  // Reset to page 1 whenever the world or window changes.
-  useEffect(() => { setPage(1) }, [server, days])
+  // Reset to page 1 whenever the world, window, or single/stack selection changes.
+  useEffect(() => { setPage(1) }, [server, days, stack])
 
   useEffect(() => {
     let cancelled = false
@@ -28,13 +29,14 @@ export default function ItemRecentSales({ itemId, server, days }: Props) {
       days: String(days),
       page: String(page),
       pageSize: String(PAGE_SIZE),
+      stack: String(stack),
     })
     api<PriceHistoryResponse>(`/api/items/${itemId}/prices?${qs}`)
       .then(r => { if (!cancelled) setData(r) })
       .catch(() => { if (!cancelled) setData(null) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [itemId, server, days, page])
+  }, [itemId, server, days, page, stack])
 
   return (
     <div className="mt-4">

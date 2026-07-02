@@ -63,6 +63,17 @@ public class SearchPacketCodec
         return sales;
     }
 
+    // Diagnostic only (not used in production): decrypts a raw response frame as-is, with no
+    // type check or hash verify, so an unknown/unhandled layout (e.g. the stack 0x86 history
+    // frame) can be captured and inspected. Assumes the frame is complete (nonce is the last 4 bytes).
+    internal static byte[] DecryptResponseForCapture(byte[] packet, in SearchKeyContext ctx)
+    {
+        uint nonce = BinaryPrimitives.ReadUInt32LittleEndian(packet.AsSpan(packet.Length - 4));
+        var buf = (byte[])packet.Clone();
+        DecryptInPlace(buf, ResponseKey(nonce, ctx.ResponseSeed));
+        return buf;
+    }
+
     private static string ReadName(byte[] buf, int offset)
     {
         var span = buf.AsSpan(offset, 15);

@@ -177,6 +177,69 @@ public class AuctionHouseScraperLoopTests : IAsyncLifetime
         Assert.All(states, s => Assert.NotNull(s.LastScrapedAt)); // BOTH advanced — no stall
     }
 
+    /// <summary>
+    /// When the reused connection drops mid-batch (an IOException / EndOfStreamException —
+    /// "Unable to read beyond the end of the stream"), the world's scrape must NOT throw. It
+    /// should persist what it already scraped, RETURN that partial count (so the cycle summary
+    /// isn't reset to 0), and leave the un-scraped units for next cycle (cursor not advanced).
+    /// </summary>
+    [Fact]
+    public async Task ScrapeWorldOnce_ConnectionDropsMidBatch_ReturnsPartialCount_LeavesRemainder()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+
+        var world = new GameServer
+        {
+            Name = "Ramuh", Status = Core.Enums.ServerStatus.Online,
+            LastCheckedAt = DateTimeOffset.UtcNow, CreatedAt = DateTimeOffset.UtcNow,
+            SearchHost = "x", SearchPort = 54002, ScrapeEnabled = true,
+        };
+        db.GameServers.Add(world);
+        // Two non-stackable items → two single units in the batch.
+        db.GameItems.Add(new GameItem { ItemId = 100, Name = "A", StackSize = 1, Flags = 0, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow });
+        db.GameItems.Add(new GameItem { ItemId = 101, Name = "B", StackSize = 1, Flags = 0, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow });
+        await db.SaveChangesAsync();
+
+        var scraper = new AuctionHouseScraper(
+            NullLogger<AuctionHouseScraper>.Instance, null!,
+            new AhScraperOptions { BatchSize = 10, InterRequestDelayMs = 0 });
+
+        // First item scrapes; the connection then drops on the second request.
+        int n = await scraper.ScrapeWorldOnceAsync(
+            world, batchSize: 10, client: new DropAfterFirstClient(),
+            ingestor: new AuctionHouseIngestor(db), scheduler: new AhScrapeScheduler(db),
+            now: DateTimeOffset.UtcNow, ct: CancellationToken.None);
+
+        Assert.True(n >= 1);                                   // partial count returned, not lost to a throw
+        var states = await db.AhScrapeStates.ToListAsync();
+        Assert.Equal(2, states.Count);
+        Assert.Equal(1, states.Count(s => s.LastScrapedAt != null)); // only the completed unit advanced
+    }
+
+    /// <summary>Serves the first request, then simulates the connection dropping (EndOfStreamException).</summary>
+    private sealed class DropAfterFirstClient : ISearchServerClient
+    {
+        private int _calls;
+
+        public Task ConnectAsync(string host, int port, CancellationToken ct) => Task.CompletedTask;
+
+        public Task<IReadOnlyList<AhSale>> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct)
+        {
+            if (++_calls >= 2)
+                throw new EndOfStreamException("Unable to read beyond the end of the stream.");
+            return Task.FromResult<IReadOnlyList<AhSale>>(new[]
+            {
+                new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "S", "B", stack),
+            });
+        }
+
+        public Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<PlayerRecord>>(Array.Empty<PlayerRecord>());
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
     /// <summary>Returns a sale for single requests; throws a protocol error for stack requests.</summary>
     private sealed class StackFailingClient : ISearchServerClient
     {

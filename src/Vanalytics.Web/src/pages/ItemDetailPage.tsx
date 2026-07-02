@@ -24,6 +24,7 @@ export default function ItemDetailPage() {
   const [servers, setServers] = useState<EconomyServer[]>([])
   const [selectedServer, setSelectedServer] = useState<string | null>(null)
   const [days, setDays] = useState(0) // 0 = All Time (default span)
+  const [stack, setStack] = useState(false) // false = Singles, true = Stacks (only meaningful for stackables)
 
   useEffect(() => {
     // Wait for auth to settle so we resolve the default world against the final
@@ -173,9 +174,12 @@ export default function ItemDetailPage() {
               itemId={item.itemId}
               server={selectedServer!}
               days={days}
+              stack={stack}
+              stackable={item.stackSize > 1}
               servers={servers}
               onServerChange={setSelectedServer}
               onDaysChange={setDays}
+              onStackChange={setStack}
             />
           )}
         </div>
@@ -192,7 +196,7 @@ export default function ItemDetailPage() {
               <p className="text-sm text-gray-500">This item cannot be sold to NPCs.</p>
             )}
             {showMarket && (
-              <ItemRecentSales itemId={item.itemId} server={selectedServer!} days={days} />
+              <ItemRecentSales itemId={item.itemId} server={selectedServer!} days={days} stack={stack} />
             )}
           </div>
           <ItemCrafting itemId={item.itemId} />

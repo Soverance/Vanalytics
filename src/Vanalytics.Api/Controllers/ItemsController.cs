@@ -316,14 +316,18 @@ public class ItemsController : ControllerBase
         [FromQuery] string? server = null,
         [FromQuery] int days = 30,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 25)
+        [FromQuery] int pageSize = 25,
+        [FromQuery] bool stack = false)
     {
         if (pageSize > 100) pageSize = 100;
 
         var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
         if (!itemExists) return NotFound();
 
+        // Single (StackSize==1) and stack (StackSize>1) sales have very different per-listing
+        // prices, so they're never mixed — the caller picks one series.
         var query = _db.AuctionSales.Where(s => s.ItemId == id);
+        query = stack ? query.Where(s => s.StackSize > 1) : query.Where(s => s.StackSize == 1);
         if (days > 0)
         {
             var since = DateTimeOffset.UtcNow.AddDays(-days);
@@ -384,7 +388,7 @@ public class ItemsController : ControllerBase
     }
 
     [HttpGet("{id:int}/prices/all")]
-    public async Task<IActionResult> CrossServerPrices(int id, [FromQuery] int days = 30)
+    public async Task<IActionResult> CrossServerPrices(int id, [FromQuery] int days = 30, [FromQuery] bool stack = false)
     {
         var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
         if (!itemExists) return NotFound();
@@ -394,6 +398,7 @@ public class ItemsController : ControllerBase
 
         var salesQuery = _db.AuctionSales
             .Where(s => s.ItemId == id && enabledIds.Contains(s.ServerId));
+        salesQuery = stack ? salesQuery.Where(s => s.StackSize > 1) : salesQuery.Where(s => s.StackSize == 1);
         if (days > 0)
         {
             var since = DateTimeOffset.UtcNow.AddDays(-days);
@@ -427,12 +432,13 @@ public class ItemsController : ControllerBase
 
     [HttpGet("{id:int}/prices/history")]
     public async Task<IActionResult> PriceHistory(
-        int id, [FromQuery] string? server = null, [FromQuery] int days = 90)
+        int id, [FromQuery] string? server = null, [FromQuery] int days = 90, [FromQuery] bool stack = false)
     {
         var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
         if (!itemExists) return NotFound();
 
         var query = _db.AuctionSales.Where(s => s.ItemId == id);
+        query = stack ? query.Where(s => s.StackSize > 1) : query.Where(s => s.StackSize == 1);
         if (days > 0)
         {
             var since = DateTimeOffset.UtcNow.AddDays(-days);

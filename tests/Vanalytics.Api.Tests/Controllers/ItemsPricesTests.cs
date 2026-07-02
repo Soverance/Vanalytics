@@ -110,6 +110,34 @@ public class ItemsPricesTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Prices_StackFilter_SeparatesSingleAndStackSales()
+    {
+        const int itemId = 6200;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            db.GameItems.Add(new GameItem { ItemId = itemId, Name = "Crystal", StackSize = 12, Flags = 0, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow });
+            var gs = new GameServer { Name = "Siren", Status = ServerStatus.Online, LastCheckedAt = DateTimeOffset.UtcNow, CreatedAt = DateTimeOffset.UtcNow };
+            db.GameServers.Add(gs);
+            await db.SaveChangesAsync();
+            var now = DateTimeOffset.UtcNow;
+            db.AuctionSales.Add(new AuctionSale { ItemId = itemId, ServerId = gs.Id, Price = 1000, SoldAt = now.AddHours(-1), SellerName = "S", BuyerName = "B", StackSize = 1, ObservedAt = now });
+            db.AuctionSales.Add(new AuctionSale { ItemId = itemId, ServerId = gs.Id, Price = 1100, SoldAt = now.AddHours(-2), SellerName = "S", BuyerName = "B", StackSize = 1, ObservedAt = now });
+            db.AuctionSales.Add(new AuctionSale { ItemId = itemId, ServerId = gs.Id, Price = 5000, SoldAt = now.AddHours(-3), SellerName = "S", BuyerName = "B", StackSize = 12, ObservedAt = now });
+            await db.SaveChangesAsync();
+        }
+
+        // Default / stack=false → only the 2 single sales.
+        var singles = await _client.GetFromJsonAsync<PricesDto>($"/api/items/{itemId}/prices?server=Siren&days=0&stack=false");
+        Assert.Equal(2, singles!.TotalCount);
+
+        // stack=true → only the 1 stack sale; its median is the stack price, not mixed with singles.
+        var stacks = await _client.GetFromJsonAsync<PricesDto>($"/api/items/{itemId}/prices?server=Siren&days=0&stack=true");
+        Assert.Equal(1, stacks!.TotalCount);
+        Assert.Equal(5000, stacks.Stats!.Median);
+    }
+
+    [Fact]
     public async Task CrossServer_ExcludesDisabledWorlds_EvenWithHistoricalData()
     {
         const int itemId = 4096;

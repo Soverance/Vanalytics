@@ -1,3 +1,4 @@
+using System.Net.Sockets;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Api.Services.SearchServer;
 using Vanalytics.Core.Models;
@@ -190,9 +191,20 @@ public class AuctionHouseScraper(
                 // A per-item protocol/decode failure must not abort the world's batch or stall
                 // the cursor. Log it and fall through to mark the unit scraped — it rotates to
                 // the back of the least-recently-scraped queue instead of blocking every cycle.
-                // (Connection-level failures are NOT caught here — they propagate to fail the world.)
                 logger.LogWarning(ex, "AH scrape item {ItemId} (stack={Stack}) on {World} skipped: {Message}",
                     unit.ItemId, unit.Stack, world.Name, ex.Message);
+            }
+            catch (Exception ex) when (ex is IOException or SocketException)
+            {
+                // The reused TCP connection dropped mid-batch — search servers close long-lived
+                // connections (this is the "Unable to read beyond the end of the stream"). Stop
+                // using the dead socket, persist what we already scraped, and resume from the
+                // cursor next cycle. Not a world failure — this unit + the rest are just deferred
+                // (the unit is NOT added to `done`, so its cursor position is preserved).
+                logger.LogInformation(
+                    "AH scrape {World}: connection dropped after {Done} item(s) — resuming next cycle ({Message})",
+                    world.Name, done.Count, ex.Message);
+                break;
             }
             done.Add(unit);
 
