@@ -24,8 +24,8 @@
     </PackageReference>
     <PackageReference Include="Scalar.AspNetCore" Version="2.13.13" />
     <PackageReference Include="Soverance.Auth" Version="1.4.0" />
-    <PackageReference Include="Soverance.Data" Version="1.1.5" />
-    <PackageReference Include="Soverance.Data.SqlServer" Version="1.0.4" />
+    <PackageReference Include="Soverance.Data" Version="1.1.6" />
+    <PackageReference Include="Soverance.Data.SqlServer" Version="1.0.5" />
     <PackageReference Include="Soverance.Forum" Version="1.2.1" />
     <PackageReference Include="Soverance.Messaging" Version="1.1.0" />
   </ItemGroup>

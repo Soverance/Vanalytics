@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Soverance.Auth" Version="1.3.0" />
+    <PackageReference Include="Soverance.Auth" Version="1.4.0" />
     <PackageReference Include="Loretta.CodeAnalysis.Lua" Version="0.2.13" />
   </ItemGroup>
 
