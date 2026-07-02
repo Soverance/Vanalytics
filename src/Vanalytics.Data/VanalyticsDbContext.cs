@@ -19,6 +19,9 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<ServerStatusChange> ServerStatusChanges => Set<ServerStatusChange>();
     public DbSet<AuctionSale> AuctionSales => Set<AuctionSale>();
     public DbSet<AhScrapeState> AhScrapeStates => Set<AhScrapeState>();
+    public DbSet<ScraperSetting> ScraperSettings => Set<ScraperSetting>();
+    public DbSet<ScraperRunState> ScraperRunStates => Set<ScraperRunState>();
+    public DbSet<DiscoveredEndpoint> DiscoveredEndpoints => Set<DiscoveredEndpoint>();
     public DbSet<BazaarPresence> BazaarPresences => Set<BazaarPresence>();
     public DbSet<BazaarListing> BazaarListings => Set<BazaarListing>();
     public DbSet<SyncHistory> SyncHistory => Set<SyncHistory>();

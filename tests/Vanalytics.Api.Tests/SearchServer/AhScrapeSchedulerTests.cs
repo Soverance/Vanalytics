@@ -85,7 +85,7 @@ public class AhScrapeSchedulerTests : IAsyncLifetime
         Assert.DoesNotContain(batch, u => u.ItemId == 300);
 
         // mark 100/single scraped; it should now sort last
-        await sched.MarkScrapedAsync(serverId, new[] { new ScrapeUnit(100, false) }, DateTimeOffset.UtcNow, CancellationToken.None);
+        await sched.MarkScrapedAsync(serverId, new[] { new ScrapeUnit(100, false) }, new Dictionary<(int ItemId, bool Stack), int>(), DateTimeOffset.UtcNow, CancellationToken.None);
         var next = await sched.NextBatchAsync(serverId, 1, CancellationToken.None);
         Assert.NotEqual(new ScrapeUnit(100, false), next[0]);
     }

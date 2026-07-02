@@ -102,6 +102,10 @@ function BlueprintEditorInner() {
 
   const [character, setCharacter] = useState<CharacterDetail | null>(null)
   const [sets, setSets] = useState<GearSetSummary[]>([])
+  // Has the gear-sets fetch settled? Hydration must wait for it so equip nodes can resolve
+  // GearSetId→name; otherwise a graph that loads first bakes in setName:undefined (node body
+  // then shows #94) and the hydrated guard blocks the corrective re-run when sets arrive.
+  const [setsLoaded, setSetsLoaded] = useState(false)
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
   const [palette, setPalette] = useState<{ x: number; y: number; flowX: number; flowY: number; connect?: { nodeId: string; handle: string } } | null>(null)
@@ -173,10 +177,11 @@ function BlueprintEditorInner() {
     api<GearSetSummary[]>(`/api/characters/${id}/gear-sets`)
       .then(all => setSets(all.filter(s => !s.job || s.job === job)))
       .catch(() => setSets([]))
+      .finally(() => setSetsLoaded(true))
   }, [id, job])
 
   useEffect(() => {
-    if (!graph || hydrated.current) return
+    if (!graph || !setsLoaded || hydrated.current) return
     hydrated.current = true
     const setById = new Map(sets.map(s => [s.id, s]))
     setNodes(graph.nodes.map(n => {
@@ -212,7 +217,7 @@ function BlueprintEditorInner() {
     }))
     setEdges(graph.edges.map(e => ({ id: e.id, source: e.source, target: e.target,
       sourceHandle: e.sourceHandle ?? undefined, targetHandle: e.targetHandle ?? undefined })))
-  }, [graph, sets])
+  }, [graph, sets, setsLoaded])
 
   const toGraph = useCallback((): BlueprintGraph => ({
     version: 1,
