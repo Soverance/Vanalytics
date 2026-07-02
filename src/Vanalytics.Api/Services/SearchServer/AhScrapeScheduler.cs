@@ -40,7 +40,10 @@ public class AhScrapeScheduler(VanalyticsDbContext db)
             .Select(s => new ScrapeUnit(s.ItemId, s.Stack))
             .ToListAsync(ct);
 
-    public async Task MarkScrapedAsync(int serverId, IReadOnlyList<ScrapeUnit> units, DateTimeOffset at, CancellationToken ct)
+    public async Task MarkScrapedAsync(
+        int serverId, IReadOnlyList<ScrapeUnit> units,
+        IReadOnlyDictionary<(int ItemId, bool Stack), int> quantities,
+        DateTimeOffset at, CancellationToken ct)
     {
         if (units.Count == 0) return;
         var itemIds = units.Select(u => u.ItemId).Distinct().ToList();
@@ -49,8 +52,14 @@ public class AhScrapeScheduler(VanalyticsDbContext db)
             .Where(s => s.ServerId == serverId && itemIds.Contains(s.ItemId))
             .ToListAsync(ct);
         foreach (var row in rows)
-            if (set.Contains((row.ItemId, row.Stack)))
-                row.LastScrapedAt = at;
+        {
+            var key = (row.ItemId, row.Stack);
+            if (!set.Contains(key)) continue;
+            row.LastScrapedAt = at;
+            // Only refresh the on-AH count for units that actually returned one (skipped/failed
+            // units aren't in the dict — keep their previous count).
+            if (quantities.TryGetValue(key, out var q)) row.LastQuantity = q;
+        }
         await db.SaveChangesAsync(ct);
     }
 }

@@ -518,6 +518,10 @@ export interface PriceHistoryResponse {
   page: number
   pageSize: number
   days: number
+  /** Count currently listed on the selected world's AH for this single/stack variant, as of the last scrape. Only set when a server is specified. */
+  onAh?: number | null
+  /** Timestamp of the scrape that captured onAh (doubles as freshness). */
+  onAhAsOf?: string | null
   stats: PriceStats | null
   sales: AhSale[]
 }
@@ -534,6 +538,22 @@ export interface CrossServerPrice {
 export interface CrossServerResponse {
   days: number
   servers: CrossServerPrice[]
+}
+
+export interface EconomyServer {
+  id: number
+  name: string
+}
+
+export interface PricePoint {
+  t: string          // ISO bucket-start timestamp
+  median: number
+  count: number
+}
+
+export interface PriceHistoryPointsResponse {
+  bucket: 'day' | 'week' | 'month'
+  points: PricePoint[]
 }
 
 // Vana'diel Clock

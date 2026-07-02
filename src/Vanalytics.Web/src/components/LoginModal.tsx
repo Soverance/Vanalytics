@@ -2,19 +2,31 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { api, ApiError } from '../api/client'
 import { X } from 'lucide-react'
+import { GoogleIcon, MicrosoftIcon, DiscordIcon } from './icons/ProviderIcons'
 
 const OAUTH_CONFIG = {
   google: {
     clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     scope: 'openid email profile',
+    label: 'Google',
+    Icon: GoogleIcon,
   },
   microsoft: {
     clientId: import.meta.env.VITE_MICROSOFT_CLIENT_ID || '',
     authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     scope: 'openid email profile User.Read',
+    label: 'Microsoft',
+    Icon: MicrosoftIcon,
   },
-}
+  discord: {
+    clientId: import.meta.env.VITE_DISCORD_CLIENT_ID || '',
+    authUrl: 'https://discord.com/api/oauth2/authorize',
+    scope: 'identify email',
+    label: 'Discord',
+    Icon: DiscordIcon,
+  },
+} as const
 
 export default function LoginModal({ onClose }: { onClose: () => void }) {
   const { login } = useAuth()
@@ -39,7 +51,7 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', handleKey)
   }, [onClose])
 
-  const handleOAuth = (provider: 'google' | 'microsoft') => {
+  const handleOAuth = (provider: keyof typeof OAUTH_CONFIG) => {
     const config = OAUTH_CONFIG[provider]
     const redirectUri = `${window.location.origin}/oauth/callback`
     const params = new URLSearchParams({
@@ -95,19 +107,23 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        <div className="space-y-3">
-          <button
-            onClick={() => handleOAuth('google')}
-            className="w-full rounded border border-gray-700 bg-gray-800 py-2.5 text-sm font-medium text-gray-200 hover:bg-gray-700 transition-colors"
-          >
-            Sign in with Google
-          </button>
-          <button
-            onClick={() => handleOAuth('microsoft')}
-            className="w-full rounded border border-gray-700 bg-gray-800 py-2.5 text-sm font-medium text-gray-200 hover:bg-gray-700 transition-colors"
-          >
-            Sign in with Microsoft
-          </button>
+        <div>
+          <p className="text-center text-sm text-gray-500 mb-3">Sign in with</p>
+          <div className="space-y-3">
+            {(Object.keys(OAUTH_CONFIG) as Array<keyof typeof OAUTH_CONFIG>).map((provider) => {
+              const { label, Icon } = OAUTH_CONFIG[provider]
+              return (
+                <button
+                  key={provider}
+                  onClick={() => handleOAuth(provider)}
+                  className="w-full rounded border border-gray-700 bg-gray-800 py-2.5 px-4 text-sm font-medium text-gray-200 hover:bg-gray-700 transition-colors flex items-center justify-center gap-3"
+                >
+                  <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  <span>{label}</span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <div className="mt-5">

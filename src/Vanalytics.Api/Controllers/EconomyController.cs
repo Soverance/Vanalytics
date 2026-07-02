@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Api.Services;
+using Vanalytics.Api.Services.Economy;
 using Vanalytics.Core.DTOs.Economy;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
@@ -48,6 +49,17 @@ public class EconomyController : ControllerBase
             single = await SideAsync(false),
             stack = await SideAsync(true),
         });
+    }
+
+    /// <summary>
+    /// Public list of worlds the AH scraper is actively scraping (master on + per-world
+    /// enabled + endpoint set). Drives the item-page world selector and section gating.
+    /// </summary>
+    [HttpGet("servers")]
+    public async Task<IActionResult> Servers(CancellationToken ct)
+    {
+        var enabled = await EnabledServerQuery.GetEnabledAsync(_db, ct);
+        return Ok(enabled.Select(s => new { s.Id, s.Name }));
     }
 
     [HttpPost("bazaar/presence")]

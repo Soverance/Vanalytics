@@ -1,21 +1,21 @@
 // src/Vanalytics.Web/src/components/economy/PriceHistoryChart.tsx
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import type { AhSale } from '../../types/api'
+import type { PricePoint } from '../../types/api'
 
 interface Props {
-  sales: AhSale[]
+  points: PricePoint[]
 }
 
-export default function PriceHistoryChart({ sales }: Props) {
-  if (sales.length === 0) {
+export default function PriceHistoryChart({ points }: Props) {
+  if (points.length === 0) {
     return <p className="text-sm text-gray-500">No price data available.</p>
   }
 
-  const data = [...sales]
-    .sort((a, b) => new Date(a.soldAt).getTime() - new Date(b.soldAt).getTime())
-    .map((s) => ({
-      date: new Date(s.soldAt).toLocaleDateString(),
-      price: s.price,
+  const data = [...points]
+    .sort((a, b) => new Date(a.t).getTime() - new Date(b.t).getTime())
+    .map((p) => ({
+      date: new Date(p.t).toLocaleDateString(),
+      median: p.median,
     }))
 
   return (
@@ -38,11 +38,11 @@ export default function PriceHistoryChart({ sales }: Props) {
           contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8 }}
           labelStyle={{ color: '#9ca3af' }}
           itemStyle={{ color: '#60a5fa' }}
-          formatter={(value) => [typeof value === 'number' ? value.toLocaleString() + ' gil' : value, 'Price']}
+          formatter={(value) => [typeof value === 'number' ? value.toLocaleString() + ' gil' : value, 'Median']}
         />
         <Area
           type="monotone"
-          dataKey="price"
+          dataKey="median"
           stroke="#3b82f6"
           fill="#3b82f6"
           fillOpacity={0.15}

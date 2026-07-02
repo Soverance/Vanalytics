@@ -71,7 +71,7 @@ end
 -- log/log_error/log_success each take a single string and print to the in-game chat.
 function blueprint.pull(opts)
     if not blueprint.gearswap_installed() then
-        opts.log_error('GearSwap not found — is it installed?')
+        opts.log_error('GearSwap not found. Is it installed?')
         return
     end
 
@@ -86,7 +86,7 @@ function blueprint.pull(opts)
         label = 'blueprint-pull',
     }, function(result, status_code, _, body)
         if status_code == 404 then
-            opts.log_error('No ' .. job .. ' blueprint found — build one at vanalytics.soverance.com')
+            opts.log_error('No ' .. job .. ' blueprint found. Build one at vanalytics.soverance.com')
             return
         end
         if not result or status_code ~= 200 then
@@ -101,13 +101,13 @@ function blueprint.pull(opts)
         end
         local lua = data.lua or ''
         if lua == '' then
-            opts.log_error("Couldn't generate " .. job .. '.lua — fix it in the editor: vanalytics.soverance.com')
+            opts.log_error("Couldn't generate " .. job .. '.lua. Fix it in the editor: vanalytics.soverance.com')
             return
         end
 
         -- Overwrite safety: never clobber an existing file without --force; back it up to .bak first.
         if blueprint.file_exists(target) and not opts.force then
-            opts.log_error(job .. '.lua already exists — re-run with --force (your file is backed up to '
+            opts.log_error(job .. '.lua already exists. Re-run with --force (your existing file will be backed up to '
                 .. job .. '.lua.bak)')
             return
         end
@@ -137,7 +137,7 @@ function blueprint.pull(opts)
             windower.send_command('gs reload')
             opts.log_success(job .. '.lua installed and reloaded.' .. suffix)
         else
-            opts.log_success(job .. '.lua installed — switch to ' .. job .. ' or //gs reload when on it.'
+            opts.log_success(job .. '.lua installed. Switch to ' .. job .. ' or //gs reload when on it.'
                 .. suffix)
         end
     end)

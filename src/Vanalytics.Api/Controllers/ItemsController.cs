@@ -2,8 +2,10 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Api.DTOs;
+using Vanalytics.Api.Services.Economy;
 using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.Models;
+using Vanalytics.Core.Services.Economy;
 using Vanalytics.Data;
 
 namespace Vanalytics.Api.Controllers;
@@ -314,23 +316,38 @@ public class ItemsController : ControllerBase
         [FromQuery] string? server = null,
         [FromQuery] int days = 30,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 25)
+        [FromQuery] int pageSize = 25,
+        [FromQuery] bool stack = false)
     {
-        if (days > 365) days = 365;
         if (pageSize > 100) pageSize = 100;
 
         var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
         if (!itemExists) return NotFound();
 
-        var since = DateTimeOffset.UtcNow.AddDays(-days);
-        var query = _db.AuctionSales
-            .Where(s => s.ItemId == id && s.SoldAt >= since);
+        // Single (StackSize==1) and stack (StackSize>1) sales have very different per-listing
+        // prices, so they're never mixed — the caller picks one series.
+        var query = _db.AuctionSales.Where(s => s.ItemId == id);
+        query = stack ? query.Where(s => s.StackSize > 1) : query.Where(s => s.StackSize == 1);
+        if (days > 0)
+        {
+            var since = DateTimeOffset.UtcNow.AddDays(-days);
+            query = query.Where(s => s.SoldAt >= since);
+        }
 
+        int? onAh = null;
+        DateTimeOffset? onAhAsOf = null;
         if (!string.IsNullOrEmpty(server))
         {
             var srv = await _db.GameServers.FirstOrDefaultAsync(s => s.Name == server);
             if (srv is null) return BadRequest(new { message = $"Unknown server: {server}" });
             query = query.Where(s => s.ServerId == srv.Id);
+
+            // Current count listed on this world's AH for this single/stack variant, captured on
+            // the last scrape of this item (LastScrapedAt doubles as the freshness timestamp).
+            var state = await _db.AhScrapeStates.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.ItemId == id && s.ServerId == srv.Id && s.Stack == stack);
+            onAh = state?.LastQuantity;
+            onAhAsOf = state?.LastScrapedAt;
         }
 
         var totalCount = await query.CountAsync();
@@ -345,10 +362,19 @@ public class ItemsController : ControllerBase
             var max = await prices.MaxAsync();
             var avg = (int)await prices.AverageAsync();
 
-            var sortedPrices = await query.OrderBy(s => s.Price).Select(s => s.Price).ToListAsync();
-            var median = sortedPrices[sortedPrices.Count / 2];
+            var allPrices = await query.Select(s => s.Price).ToListAsync();
+            var median = PriceMath.Median(allPrices);
 
-            salesPerDay = days > 0 ? Math.Round((double)totalCount / days, 2) : 0;
+            if (days > 0)
+            {
+                salesPerDay = Math.Round((double)totalCount / days, 2);
+            }
+            else
+            {
+                var earliest = await query.MinAsync(s => s.SoldAt);
+                var spanDays = Math.Max(1, Math.Ceiling((DateTimeOffset.UtcNow - earliest).TotalDays));
+                salesPerDay = Math.Round(totalCount / spanDays, 2);
+            }
 
             stats = new { Median = median, Min = min, Max = max, Average = avg, SalesPerDay = salesPerDay };
         }
@@ -367,21 +393,28 @@ public class ItemsController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(new { totalCount, page, pageSize, days, stats, sales });
+        return Ok(new { totalCount, page, pageSize, days, onAh, onAhAsOf, stats, sales });
     }
 
     [HttpGet("{id:int}/prices/all")]
-    public async Task<IActionResult> CrossServerPrices(int id, [FromQuery] int days = 30)
+    public async Task<IActionResult> CrossServerPrices(int id, [FromQuery] int days = 30, [FromQuery] bool stack = false)
     {
-        if (days > 365) days = 365;
-
         var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
         if (!itemExists) return NotFound();
 
-        var since = DateTimeOffset.UtcNow.AddDays(-days);
+        var enabled = await EnabledServerQuery.GetEnabledAsync(_db);
+        var enabledIds = enabled.Select(s => s.Id).ToHashSet();
 
-        var rawSales = await _db.AuctionSales
-            .Where(s => s.ItemId == id && s.SoldAt >= since)
+        var salesQuery = _db.AuctionSales
+            .Where(s => s.ItemId == id && enabledIds.Contains(s.ServerId));
+        salesQuery = stack ? salesQuery.Where(s => s.StackSize > 1) : salesQuery.Where(s => s.StackSize == 1);
+        if (days > 0)
+        {
+            var since = DateTimeOffset.UtcNow.AddDays(-days);
+            salesQuery = salesQuery.Where(s => s.SoldAt >= since);
+        }
+
+        var rawSales = await salesQuery
             .Select(s => new { ServerName = s.Server.Name, s.Price })
             .ToListAsync();
 
@@ -393,7 +426,7 @@ public class ItemsController : ControllerBase
                 return new
                 {
                     Server = g.Key,
-                    Median = sorted[sorted.Count / 2],
+                    Median = PriceMath.Median(sorted),
                     Min = sorted[0],
                     Max = sorted[^1],
                     Average = (int)sorted.Average(),
@@ -404,6 +437,44 @@ public class ItemsController : ControllerBase
             .ToList();
 
         return Ok(new { days, servers = serverPrices });
+    }
+
+    [HttpGet("{id:int}/prices/history")]
+    public async Task<IActionResult> PriceHistory(
+        int id, [FromQuery] string? server = null, [FromQuery] int days = 90, [FromQuery] bool stack = false)
+    {
+        var itemExists = await _db.GameItems.AnyAsync(i => i.ItemId == id);
+        if (!itemExists) return NotFound();
+
+        var query = _db.AuctionSales.Where(s => s.ItemId == id);
+        query = stack ? query.Where(s => s.StackSize > 1) : query.Where(s => s.StackSize == 1);
+        if (days > 0)
+        {
+            var since = DateTimeOffset.UtcNow.AddDays(-days);
+            query = query.Where(s => s.SoldAt >= since);
+        }
+        if (!string.IsNullOrEmpty(server))
+        {
+            var srv = await _db.GameServers.FirstOrDefaultAsync(s => s.Name == server);
+            if (srv is null) return BadRequest(new { message = $"Unknown server: {server}" });
+            query = query.Where(s => s.ServerId == srv.Id);
+        }
+
+        var bucket = PriceBuckets.BucketForDays(days);
+        var rows = await query.Select(s => new { s.SoldAt, s.Price }).ToListAsync();
+
+        var points = rows
+            .GroupBy(r => PriceBuckets.BucketStart(r.SoldAt, bucket))
+            .OrderBy(g => g.Key)
+            .Select(g => new
+            {
+                t = g.Key,
+                median = PriceMath.Median(g.Select(x => x.Price).ToList()),
+                count = g.Count(),
+            })
+            .ToList();
+
+        return Ok(new { bucket, points });
     }
 
     [HttpGet("{id:int}/bazaar")]

@@ -19,5 +19,6 @@ public class GameServerConfiguration : IEntityTypeConfiguration<GameServer>
             .HasDefaultValue(ServerStatus.Unknown);
         builder.Property(s => s.SearchHost).HasMaxLength(255);
         builder.Property(s => s.ScrapeEnabled).HasDefaultValue(false);
+        builder.Property(s => s.MappingSource).HasConversion<int>();
     }
 }

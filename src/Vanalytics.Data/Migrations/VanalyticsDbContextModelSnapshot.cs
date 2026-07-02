@@ -666,6 +666,9 @@ namespace Vanalytics.Data.Migrations
                     b.Property<int>("ItemId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("LastQuantity")
+                        .HasColumnType("int");
+
                     b.Property<DateTimeOffset?>("LastScrapedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1392,6 +1395,42 @@ namespace Vanalytics.Data.Migrations
                     b.ToTable("CraftingSkills");
                 });
 
+            modelBuilder.Entity("Vanalytics.Core.Models.DiscoveredEndpoint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Ip")
+                        .IsRequired()
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<int?>("MappedServerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Port")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SampleSalesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("ScannedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MappedServerId");
+
+                    b.HasIndex("Ip", "Port")
+                        .IsUnique();
+
+                    b.ToTable("DiscoveredEndpoints");
+                });
+
             modelBuilder.Entity("Vanalytics.Core.Models.DismissedAnomaly", b =>
                 {
                     b.Property<long>("Id")
@@ -1635,8 +1674,29 @@ namespace Vanalytics.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<bool?>("EndpointHealthy")
+                        .HasColumnType("bit");
+
                     b.Property<DateTimeOffset>("LastCheckedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("LastDiscoveredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("LastProbedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("LastScrapeError")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset?>("LastScrapeErrorAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("MappingConfidence")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MappingSource")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2208,6 +2268,60 @@ namespace Vanalytics.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("RecipeIngredients");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.ScraperRunState", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRunning")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LastCycleFinishedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("LastCycleStartedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset?>("LastErrorAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("SalesIngestedLastCycle")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WorldsProcessedLastCycle")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScraperRunStates");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.ScraperSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DiscoveryCidrsText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("MasterEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScraperSettings");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.ServerStatusChange", b =>
@@ -2943,6 +3057,16 @@ namespace Vanalytics.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.DiscoveredEndpoint", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.GameServer", "MappedServer")
+                        .WithMany()
+                        .HasForeignKey("MappedServerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("MappedServer");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.DismissedAnomaly", b =>

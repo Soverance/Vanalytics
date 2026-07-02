@@ -38,7 +38,7 @@ public class AhScraperLiveSearchTests
 
         await using var client = new SearchServerClient(new SearchPacketCodec());
         await client.ConnectAsync(target.Value.host, target.Value.port, CancellationToken.None);
-        var sales = await client.GetSalesHistoryAsync(4096, stack: false, CancellationToken.None);
+        var sales = (await client.GetSalesHistoryAsync(4096, stack: false, CancellationToken.None)).Sales;
 
         Assert.NotEmpty(sales);
         Assert.Contains(sales, s =>

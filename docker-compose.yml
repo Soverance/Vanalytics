@@ -22,6 +22,7 @@ services:
       args:
         VITE_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
         VITE_MICROSOFT_CLIENT_ID: "${MICROSOFT_CLIENT_ID}"
+        VITE_DISCORD_CLIENT_ID: "${DISCORD_CLIENT_ID}"
     ports:
       - "5000:8080"
     environment:
@@ -41,6 +42,8 @@ services:
       OAuth__Google__ClientSecret: "${GOOGLE_CLIENT_SECRET}"
       OAuth__Microsoft__ClientId: "${MICROSOFT_CLIENT_ID}"
       OAuth__Microsoft__ClientSecret: "${MICROSOFT_CLIENT_SECRET}"
+      OAuth__Discord__ClientId: "${DISCORD_CLIENT_ID}"
+      OAuth__Discord__ClientSecret: "${DISCORD_CLIENT_SECRET}"
     volumes:
       - itemimages:/app/item-images
     depends_on:
@@ -55,6 +58,11 @@ services:
       - "3000:3000"
     environment:
       API_PROXY_TARGET: "http://api:8080"
+      # Vite dev server (npm run dev) exposes VITE_-prefixed vars from the container
+      # environment via loadEnv. Needed so the OAuth buttons have a client_id on :3000.
+      VITE_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+      VITE_MICROSOFT_CLIENT_ID: "${MICROSOFT_CLIENT_ID}"
+      VITE_DISCORD_CLIENT_ID: "${DISCORD_CLIENT_ID}"
     depends_on:
       - api
 
