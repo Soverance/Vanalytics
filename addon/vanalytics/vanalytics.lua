@@ -2703,11 +2703,20 @@ windower.register_event('addon command', function(command, ...)
             session.flush()
         elseif subcommand == 'cleanup' then
             session.cleanup()
+        elseif subcommand == 'recover' then
+            local player = windower.ffxi.get_player()
+            local info = windower.ffxi.get_info()
+            if not player then
+                log_error('Not logged in.')
+                return
+            end
+            local server_name = res.servers[info.server] and res.servers[info.server].en or 'Unknown'
+            session.recover(player.name, server_name)
         elseif subcommand == 'debug' then
             local enabled = session.toggle_debug()
             log('Session debug mode: ' .. (enabled and 'ON' or 'OFF'))
         else
-            log('Session commands: start | stop | status | flush | cleanup | debug')
+            log('Session commands: start | stop | status | flush | recover | cleanup | debug')
         end
 
     elseif command == 'lsdump' then
@@ -3557,6 +3566,7 @@ windower.register_event('addon command', function(command, ...)
         log('//va session stop    - Stop the active session and upload data')
         log('//va session status  - Show current session info')
         log('//va session flush   - Manually upload buffered events')
+        log('//va session recover - Re-upload past session files that failed to upload')
         log('//va session cleanup - Delete old session files')
         log('//va session debug   - Toggle debug mode (logs unmatched chat lines)')
         log('//va macros push [--force]  - Upload changed macro books (zone first to flush edits)')

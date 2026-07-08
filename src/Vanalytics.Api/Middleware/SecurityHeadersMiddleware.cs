@@ -44,7 +44,7 @@ public class SecurityHeadersMiddleware
             "default-src 'self'",
             "script-src 'self'",
             "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' blob: data: https://*.blob.core.windows.net https://*.googleusercontent.com",
+            "img-src 'self' blob: data: https://*.blob.core.windows.net https://*.googleusercontent.com https://cdn.discordapp.com",
             "font-src 'self'",
             "connect-src 'self'",
             "media-src 'self'",

@@ -18,6 +18,18 @@ local server_name = nil
 local debug_mode = false
 local debug_handle = nil
 
+-- Flush hygiene: prevent overlapping flushes and stop a persistently-failing
+-- flush from re-firing on every prerender frame (which spikes chat spam and
+-- tanks FPS). is_flushing guards re-entrancy; flush_backoff_until gates the
+-- auto-flush path after a failure so we retry on a cooldown, not per-frame.
+local is_flushing = false
+local flush_backoff_until = 0
+local flush_fail_count = 0
+-- Callbacks for flush() calls that arrived while another flush was in flight
+-- (e.g. a stop/manual-flush racing an auto-flush). Run when the current one
+-- finishes so no request is silently dropped.
+local flush_waiters = {}
+
 -- Dependencies injected via init
 local settings = nil
 local http_request_fn = nil
@@ -52,6 +64,18 @@ local function get_zone_name()
 end
 
 -----------------------------------------------------------------------
+-- Internal: clamp a string to a byte length. FFXI names/abilities are
+-- ASCII, so byte length == char length here. This is a backstop matching
+-- the server's column widths so a mis-parsed (greedy-regex) over-length
+-- value can never trip server-side validation and reject a whole batch.
+-----------------------------------------------------------------------
+local function truncate(s, n)
+    if type(s) ~= 'string' then return s end
+    if #s > n then return s:sub(1, n) end
+    return s
+end
+
+-----------------------------------------------------------------------
 -- Internal: map short JSONL keys to API SessionEventEntry field names
 -----------------------------------------------------------------------
 local function jsonl_to_api_event(raw_line)
@@ -60,12 +84,12 @@ local function jsonl_to_api_event(raw_line)
     return {
         EventType = event.t,
         Timestamp = event.ts and os.date('!%Y-%m-%dT%H:%M:%SZ', event.ts) or nil,
-        Source = event.s or '',
-        Target = event.tg or '',
+        Source = truncate(event.s or '', 64),
+        Target = truncate(event.tg or '', 128),
         Value = event.v or 0,
-        Ability = event.a,
+        Ability = event.a and truncate(event.a, 128) or nil,
         ItemId = event.item_id,
-        Zone = event.z or '',
+        Zone = truncate(event.z or '', 64),
     }
 end
 
@@ -350,6 +374,10 @@ function session.start(character_name, server, zone)
     start_time = os.time()
     event_count = 0
     uploaded_count = 0
+    is_flushing = false
+    flush_backoff_until = 0
+    flush_fail_count = 0
+    flush_waiters = {}
 
     if debug_mode then
         local debug_path = sessions_dir .. character_name .. '_' .. date_stamp .. '_debug.log'
@@ -416,6 +444,10 @@ function session.stop()
         start_time = nil
         player_name = nil
         server_name = nil
+        is_flushing = false
+        flush_backoff_until = 0
+        flush_fail_count = 0
+        flush_waiters = {}
 
         log_success_fn('Session stopped. ' .. final_count .. ' events recorded over ' .. minutes .. 'm ' .. seconds .. 's.')
     end)
@@ -426,6 +458,15 @@ function session.flush(on_complete)
 
     if not active or event_count <= uploaded_count then
         on_complete()
+        return
+    end
+
+    -- Re-entrancy guard: check_auto_flush runs every prerender frame, so a
+    -- flush that's still awaiting its HTTP response must not spawn another.
+    -- A direct caller (stop / manual flush) that races an in-flight flush is
+    -- queued and run when it finishes, rather than dropped.
+    if is_flushing then
+        table.insert(flush_waiters, on_complete)
         return
     end
 
@@ -471,12 +512,26 @@ function session.flush(on_complete)
     local batch_size = 500
     local total_uploaded = 0
 
+    is_flushing = true
+    local function finish()
+        is_flushing = false
+        on_complete()
+        -- Run any flush requests that arrived mid-flight (e.g. a racing stop).
+        if #flush_waiters > 0 then
+            local waiter = table.remove(flush_waiters, 1)
+            session.flush(waiter)
+        end
+    end
+
     local function upload_batch(batch_start)
         if batch_start > #api_events then
             if total_uploaded > 0 then
                 log_fn('Flushed ' .. total_uploaded .. ' events to API (' .. uploaded_count .. '/' .. event_count .. ' total).')
             end
-            on_complete()
+            -- Full success: clear any prior failure backoff.
+            flush_fail_count = 0
+            flush_backoff_until = 0
+            finish()
             return
         end
 
@@ -501,7 +556,12 @@ function session.flush(on_complete)
                 if total_uploaded > 0 then
                     log_fn('Flushed ' .. total_uploaded .. ' events to API (' .. uploaded_count .. '/' .. event_count .. ' total).')
                 end
-                on_complete()
+                -- Back off the auto-flush path so we don't retry (and re-spam
+                -- this error) every frame. Exponential 30s → 300s cap.
+                flush_fail_count = flush_fail_count + 1
+                local backoff = math.min(300, 30 * (2 ^ (flush_fail_count - 1)))
+                flush_backoff_until = os.time() + backoff
+                finish()
             end
         end)
     end
@@ -547,7 +607,11 @@ function session.on_text(original, modified, original_mode, modified_mode, block
 end
 
 function session.check_auto_flush()
-    if active and (event_count - uploaded_count) > 5000 then
+    if not active then return end
+    if is_flushing then return end
+    -- Respect failure backoff so a persistent error doesn't retry per-frame.
+    if os.time() < flush_backoff_until then return end
+    if (event_count - uploaded_count) > 5000 then
         session.flush()
     end
 end
@@ -615,6 +679,105 @@ function session.cleanup()
     if deleted > 0 then
         log_fn('Cleaned up ' .. deleted .. ' session file(s) older than 7 days.')
     end
+end
+
+-----------------------------------------------------------------------
+-- Recover: re-upload local session files whose live upload failed (e.g.
+-- the flush-400 bug). Reads each of THIS character's un-uploaded .jsonl
+-- files and POSTs it to /api/session/import, which creates a completed
+-- session dated from the events. Successfully-imported files are renamed
+-- to *.uploaded so a re-run won't duplicate them.
+-----------------------------------------------------------------------
+function session.recover(character_name, server)
+    if active then
+        log_error_fn('Stop the active session before recovering.')
+        return
+    end
+
+    local sessions_dir = windower.addon_path .. 'sessions/'
+    local entries = windower.get_dir(sessions_dir)
+    if not entries then
+        log_fn('No sessions folder found.')
+        return
+    end
+
+    -- Only this character's raw session files: end in .jsonl (excludes the
+    -- already-renamed *.jsonl.uploaded and *_debug.log) and match the
+    -- "<name>_" filename prefix so we never import another character's run.
+    local prefix = character_name .. '_'
+    local files = {}
+    for _, filename in ipairs(entries) do
+        if filename:sub(-6) == '.jsonl' and filename:sub(1, #prefix) == prefix then
+            table.insert(files, filename)
+        end
+    end
+
+    if #files == 0 then
+        log_fn('No session files to recover for ' .. character_name .. '.')
+        return
+    end
+
+    log_fn('Recovering ' .. #files .. ' session file(s) for ' .. character_name .. '...')
+
+    -- Process one file at a time via a callback chain (never parallel) so we
+    -- stay within the API rate limit and report per-file results in order.
+    local recovered = 0
+    local function process(idx)
+        if idx > #files then
+            log_success_fn('Recovery complete. ' .. recovered .. '/' .. #files .. ' file(s) uploaded.')
+            return
+        end
+
+        local filename = files[idx]
+        local full_path = sessions_dir .. filename
+
+        local read_handle = io.open(full_path, 'r')
+        if not read_handle then
+            log_error_fn(filename .. ': could not read, skipping.')
+            process(idx + 1)
+            return
+        end
+
+        local events = {}
+        local zone = ''
+        for line in read_handle:lines() do
+            local event = jsonl_to_api_event(line)
+            if event then
+                table.insert(events, event)
+                if zone == '' and event.Zone and event.Zone ~= '' then
+                    zone = event.Zone
+                end
+            end
+        end
+        read_handle:close()
+
+        if #events == 0 then
+            log_fn(filename .. ': no events, skipping.')
+            process(idx + 1)
+            return
+        end
+
+        api_post_async('/api/session/import', {
+            characterName = character_name,
+            server = server,
+            zone = zone,
+            events = events,
+        }, function(result, status_code, _)
+            if result and status_code == 200 then
+                recovered = recovered + 1
+                if os.rename(full_path, full_path .. '.uploaded') then
+                    log_fn(filename .. ': uploaded ' .. #events .. ' events.')
+                else
+                    log_fn(filename .. ': uploaded ' .. #events .. ' events (could not rename file).')
+                end
+            else
+                log_error_fn(filename .. ': import failed (status: ' .. tostring(status_code) .. ').')
+            end
+            process(idx + 1)
+        end)
+    end
+
+    process(1)
 end
 
 return session

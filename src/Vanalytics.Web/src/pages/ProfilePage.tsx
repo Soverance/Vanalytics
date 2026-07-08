@@ -430,18 +430,26 @@ export default function ProfilePage() {
 
                 <div className="rounded bg-amber-900/30 border border-amber-700/50 p-3 text-xs text-amber-200 space-y-2">
                   <p className="font-medium text-amber-100">
-                    Heads up: Chrome and Edge will block folders inside <code className="px-1 rounded bg-amber-950/60">C:\Program Files</code> or <code className="px-1 rounded bg-amber-950/60">C:\Program Files (x86)</code>.
+                    Heads up: Chrome and Edge block any folder that resolves to inside <code className="px-1 rounded bg-amber-950/60">C:\Program Files</code> or <code className="px-1 rounded bg-amber-950/60">C:\Program Files (x86)</code>.
                   </p>
                   <p>
-                    If your FFXI install is there (default), Windows will show <em>"can't open this folder because it contains system files"</em>. To work around this, create a directory junction to a non-restricted location and pick that instead. Run from an elevated Command Prompt:
+                    If your FFXI install is there (the default), the picker shows <em>"can't open this folder because it contains system files"</em>.
                   </p>
-                  <pre className="mt-1 p-2 bg-black/40 rounded text-[11px] text-amber-100 overflow-x-auto"><code>mklink /J C:\FFXI-Link "C:\Program Files (x86)\PlayOnline\SquareEnix\FINAL FANTASY XI"</code></pre>
-                  <p>Then browse to <code className="px-1 rounded bg-amber-950/60">C:\FFXI-Link</code> below. Alternatively, copy the <code className="px-1 rounded bg-amber-950/60">ROM</code>, <code className="px-1 rounded bg-amber-950/60">ROM2</code>–<code className="px-1 rounded bg-amber-950/60">ROM9</code>, and <code className="px-1 rounded bg-amber-950/60">VTABLE.DAT</code> files to a folder outside Program Files.</p>
+                  <p className="rounded bg-amber-950/40 border border-amber-700/40 p-2">
+                    ⚠️ A symlink or shortcut <span className="whitespace-nowrap">(<code className="px-1 rounded bg-amber-950/60">mklink /D</code>)</span> won't get around this — Chrome and Edge follow the link to its real target, so one pointing back into Program Files is blocked just the same.
+                  </p>
+                  <p>
+                    <span className="font-medium text-amber-100">The reliable fix</span> is to copy the game's data files out of Program Files: copy <code className="px-1 rounded bg-amber-950/60">ROM</code>, <code className="px-1 rounded bg-amber-950/60">ROM2</code>–<code className="px-1 rounded bg-amber-950/60">ROM9</code>, and <code className="px-1 rounded bg-amber-950/60">VTABLE.DAT</code> into a folder outside Program Files (e.g. <code className="px-1 rounded bg-amber-950/60">C:\FFXI-Data</code>), then browse to that folder below.
+                  </p>
+                  <p>
+                    If your install already lives outside Program Files but at an awkward path, a junction to it works fine — just don't point it into Program Files:
+                  </p>
+                  <pre className="mt-1 p-2 bg-black/40 rounded text-[11px] text-amber-100 overflow-x-auto"><code>mklink /J C:\FFXI-Link "D:\Games\PlayOnline\SquareEnix\FINAL FANTASY XI"</code></pre>
                 </div>
 
                 {ffxiSetupError === 'blocked' && (
                   <div className="rounded bg-red-900/40 border border-red-700/60 p-3 text-sm text-red-200">
-                    Windows blocked access to that folder. See the workaround above — FFXI must be accessed from a location outside <code className="px-1 rounded bg-red-950/60">C:\Program Files</code>.
+                    Windows blocked access to that folder. See the workaround above — FFXI must be accessed from a location outside <code className="px-1 rounded bg-red-950/60">C:\Program Files</code>. If you picked a shortcut, symlink, or junction, note the browser follows it to the real folder and applies the same block.
                   </div>
                 )}
                 {ffxiSetupError === 'invalid' && (

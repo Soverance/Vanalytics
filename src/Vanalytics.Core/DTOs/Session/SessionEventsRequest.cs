@@ -14,26 +14,30 @@ public class SessionEventsRequest
     public List<SessionEventEntry> Events { get; set; } = []; // Max 500 enforced in controller
 }
 
+// NOTE: SessionEventEntry intentionally carries NO per-field validation
+// attributes (no [Required] / [MaxLength]). The addon's greedy chat-log
+// parser can occasionally emit a mis-parsed event whose Source/Target/etc.
+// overflows the DB column width. With DataAnnotations, ASP.NET's automatic
+// model validation would reject the ENTIRE batch (400) for one bad entry,
+// which — combined with the addon's retry-on-failure — silently drops whole
+// sessions. Instead the controller sanitizes each entry individually
+// (truncate to column width, skip unparseable EventType) so one bad line can
+// never poison the other 499.
 public class SessionEventEntry
 {
-    [Required]
     public string EventType { get; set; } = string.Empty;
 
     public DateTimeOffset Timestamp { get; set; }
 
-    [MaxLength(64)]
     public string Source { get; set; } = string.Empty;
 
-    [MaxLength(128)]
     public string Target { get; set; } = string.Empty;
 
     public long Value { get; set; }
 
-    [MaxLength(128)]
     public string? Ability { get; set; }
 
     public int? ItemId { get; set; }
 
-    [MaxLength(64)]
     public string Zone { get; set; } = string.Empty;
 }
