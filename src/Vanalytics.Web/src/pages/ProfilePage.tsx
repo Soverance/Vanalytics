@@ -439,7 +439,7 @@ export default function ProfilePage() {
                     ⚠️ A symlink or shortcut <span className="whitespace-nowrap">(<code className="px-1 rounded bg-amber-950/60">mklink /D</code>)</span> won't get around this — Chrome and Edge follow the link to its real target, so one pointing back into Program Files is blocked just the same.
                   </p>
                   <p>
-                    <span className="font-medium text-amber-100">The reliable fix</span> is to copy the game's data files out of Program Files: copy <code className="px-1 rounded bg-amber-950/60">ROM</code>, <code className="px-1 rounded bg-amber-950/60">ROM2</code>–<code className="px-1 rounded bg-amber-950/60">ROM9</code>, and <code className="px-1 rounded bg-amber-950/60">VTABLE.DAT</code> into a folder outside Program Files (e.g. <code className="px-1 rounded bg-amber-950/60">C:\FFXI-Data</code>), then browse to that folder below.
+                    <span className="font-medium text-amber-100">The reliable fix</span> is to copy the game's data files out of Program Files: copy the <code className="px-1 rounded bg-amber-950/60">ROM</code>, <code className="px-1 rounded bg-amber-950/60">ROM2</code>–<code className="px-1 rounded bg-amber-950/60">ROM9</code> folders plus the <code className="px-1 rounded bg-amber-950/60">VTABLE.DAT</code> and <code className="px-1 rounded bg-amber-950/60">FTABLE.DAT</code> files into a folder outside Program Files (e.g. <code className="px-1 rounded bg-amber-950/60">C:\FFXI-Data</code>), then browse to that folder below.
                   </p>
                   <p>
                     If your install already lives outside Program Files but at an awkward path, a junction to it works fine — just don't point it into Program Files:
