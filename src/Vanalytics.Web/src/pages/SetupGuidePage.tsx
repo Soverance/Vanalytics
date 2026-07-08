@@ -240,6 +240,7 @@ function CommandsTab() {
         <CommandRow command="//va session stop" description="Stop the active session and upload remaining data" />
         <CommandRow command="//va session status" description="Show current session info (ID, event count, duration)" />
         <CommandRow command="//va session flush" description="Manually upload buffered events to the API" />
+        <CommandRow command="//va session recover" description="Re-upload past session files that failed to upload (e.g. after a connection or server error)" />
         <CommandRow command="//va session cleanup" description="Delete old local session files" />
         <CommandRow command="//va session debug" description="Toggle debug mode (logs unmatched chat lines to help identify missing parsers)" />
       </CommandTable>
@@ -755,9 +756,24 @@ function SessionsTab() {
         <ul className="list-disc list-inside space-y-1">
           <li><Code>{'//va session status'}</Code> — View session ID, event count, and elapsed time</li>
           <li><Code>{'//va session flush'}</Code> — Manually upload buffered events without stopping the session</li>
+          <li><Code>{'//va session recover'}</Code> — Re-upload past sessions whose live upload failed</li>
           <li><Code>{'//va session cleanup'}</Code> — Delete old local JSONL session files to free disk space</li>
         </ul>
       </InfoBox>
+
+      <SectionHeading>Recovering Failed Uploads</SectionHeading>
+      <Paragraph>
+        Every session is written to a local JSONL file as it happens, so your data is safe even if
+        the upload to the server fails (for example during a connection drop or server error). If a
+        session shows up empty on the website, you can re-upload it:
+      </Paragraph>
+      <CodeBlock>{`//va session recover`}</CodeBlock>
+      <Paragraph>
+        This scans your local session files for the current character and uploads any that haven't
+        been sent yet, creating a completed session for each with its original date and duration.
+        Recovered files are marked so re-running the command won't create duplicates. Run it while
+        logged in with no active session (stop your current session first).
+      </Paragraph>
 
       <SectionHeading>Debug Mode</SectionHeading>
       <Paragraph>

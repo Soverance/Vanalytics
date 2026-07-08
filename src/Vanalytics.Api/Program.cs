@@ -287,12 +287,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi("/api/openapi/{documentName}.json");
     var devToken = app.Configuration["DevAdminToken"];
     app.MapScalarApiReference("/api/docs", options =>
     {
         options.Title = "Vanalytics API";
-        options.OpenApiRoutePattern = "/openapi/{documentName}.json";
+        options.OpenApiRoutePattern = "/api/openapi/{documentName}.json";
         if (!string.IsNullOrEmpty(devToken))
         {
             options
