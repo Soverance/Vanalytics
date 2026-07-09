@@ -33,6 +33,14 @@ git commit -m "feat(inventory): persist per-bag unlocked capacity from addon syn
 ```
 NOTE: Tasks 3 & 4 also add to InventoryCapacityTests.cs and InventoryManagementController.cs — if you commit per-task, stage those files' Task-2 state before Tasks 3/4 edits land, OR just squash Tasks 2-4 into one backend commit (simpler).
 
+## Tasks 3 + 4 — capacities endpoint + real-capacity anomalies (review clean; 5/5 InventoryCapacityTests green)
+Both tasks edit InventoryManagementController.cs + InventoryCapacityTests.cs — one combined commit. No BLU overlap.
+```bash
+git add src/Vanalytics.Api/Controllers/InventoryManagementController.cs \
+        tests/Vanalytics.Api.Tests/Controllers/InventoryCapacityTests.cs
+git commit -m "feat(inventory): capacities endpoint + near-capacity uses real capacity"
+```
+
 ## Task 6 — Totals view shows real capacity (review clean; tsc -b clean, 181/181 vitest)
 ```bash
 git add src/Vanalytics.Web/src/components/character/InventoryTotals.tsx \

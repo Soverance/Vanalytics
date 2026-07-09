@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,23 @@ public class InventoryManagementController : ControllerBase
         _db = db;
     }
 
+    [HttpGet("capacities")]
+    public async Task<IActionResult> GetCapacities(Guid characterId)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters
+            .Where(c => c.Id == characterId && c.UserId == userId)
+            .FirstOrDefaultAsync();
+
+        if (character is null) return NotFound();
+
+        var map = character.BagCapacitiesJson is not null
+            ? JsonSerializer.Deserialize<Dictionary<string, int>>(character.BagCapacitiesJson) ?? new()
+            : new Dictionary<string, int>();
+
+        return Ok(map);
+    }
+
     [HttpGet("anomalies")]
     public async Task<IActionResult> GetAnomalies(Guid characterId)
     {
@@ -32,6 +50,10 @@ public class InventoryManagementController : ControllerBase
             .FirstOrDefaultAsync();
 
         if (character is null) return NotFound();
+
+        var capacities = character.BagCapacitiesJson is not null
+            ? System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(character.BagCapacitiesJson) ?? new()
+            : new Dictionary<string, int>();
 
         var inventory = await _db.CharacterInventories
             .Where(i => i.CharacterId == characterId)
@@ -155,9 +177,12 @@ public class InventoryManagementController : ControllerBase
         foreach (var bagGroup in slotsByBag)
         {
             var usedSlots = bagGroup.Count();
-            if ((double)usedSlots / MaxSlotsPerBag >= NearCapacityThreshold)
+            var bagName = bagGroup.Key.ToString();
+            var maxSlots = capacities.TryGetValue(bagName, out var cap) && cap > 0
+                ? cap
+                : MaxSlotsPerBag;
+            if ((double)usedSlots / maxSlots >= NearCapacityThreshold)
             {
-                var bagName = bagGroup.Key.ToString();
                 var key = $"nearCapacity:{bagName}";
                 if (!dismissedSet.Contains(key))
                 {
@@ -171,7 +196,7 @@ public class InventoryManagementController : ControllerBase
                         {
                             BagName = bagName,
                             UsedSlots = usedSlots,
-                            MaxSlots = MaxSlotsPerBag
+                            MaxSlots = maxSlots
                         }
                     });
                 }
