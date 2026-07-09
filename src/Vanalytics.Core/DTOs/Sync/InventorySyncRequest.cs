@@ -19,6 +19,13 @@ public class InventorySyncRequest
     /// to reconcile stale data.
     /// </summary>
     public bool FullSync { get; set; }
+
+    /// <summary>
+    /// Per-bag unlocked slot capacity, keyed by bag name (matching InventoryBag enum
+    /// names). Sent by the addon from windower.ffxi.get_bag_info(bag).max. When present,
+    /// overwrites Character.BagCapacitiesJson. Null on older addon versions.
+    /// </summary>
+    public Dictionary<string, int>? BagCapacities { get; set; }
 }
 
 public class InventoryChangeEntry

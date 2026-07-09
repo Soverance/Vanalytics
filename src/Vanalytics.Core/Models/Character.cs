@@ -70,6 +70,13 @@ public class Character
     public int? PlaytimeSeconds { get; set; }
 
     public string? MeritsJson { get; set; }
+
+    /// <summary>
+    /// JSON-serialized map of bag name -> unlocked slot capacity, from the addon's
+    /// get_bag_info reads. Null until the character syncs with a capacity-aware addon.
+    /// </summary>
+    public string? BagCapacitiesJson { get; set; }
+
     public string? FavoriteAnimationJson { get; set; }
     public DateTimeOffset? LastSyncAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }

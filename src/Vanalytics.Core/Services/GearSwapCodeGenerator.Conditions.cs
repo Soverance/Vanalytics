@@ -83,6 +83,9 @@ public static partial class GearSwapCodeGenerator
                     // pattern metacharacter. Returns a number (truthy) or nil (falsy); composes under
                     // if / op:and/or/not via Lua truthiness.
                     "contains" => $"string.find(spell.english, {slit}, 1, true)",
+                    // BLU category: truthy lookup in the blu_cat_<slug> membership table emitted by
+                    // EmitBluCategoryTables (the runtime has no class/stat data). Returns true or nil.
+                    "bluCategory" => $"blu_cat_{BluCategorySlug(sval)}[spell.english]",
                     _          => null,
                 };
 

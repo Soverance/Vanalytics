@@ -740,6 +740,7 @@ export interface InventoryItem {
 }
 
 export type InventoryByBag = Record<string, InventoryItem[]>
+export type BagCapacities = Record<string, number>
 
 export interface PorterItem {
   itemId: number
@@ -1209,8 +1210,9 @@ export interface BlueprintNode {
     members?: ModeMember[]
     overlaySetIds?: number[] | null
     buffName?: string | null
-    spellField?: 'name' | 'skill' | 'element' | 'contains' | null
+    spellField?: 'name' | 'skill' | 'element' | 'contains' | 'bluCategory' | null
     spellValue?: string | null
+    spellNames?: string[] | null
     petField?: 'exists' | 'status' | null
     petValue?: string | null
     worldField?: 'weather' | 'day' | 'moghouse' | 'zone' | null

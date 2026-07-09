@@ -867,6 +867,9 @@ namespace Vanalytics.Data.Migrations
                     b.Property<int?>("Attack")
                         .HasColumnType("int");
 
+                    b.Property<string>("BagCapacitiesJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("BaseAgi")
                         .HasColumnType("int");
 

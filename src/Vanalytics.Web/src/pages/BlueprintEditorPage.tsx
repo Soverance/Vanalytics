@@ -12,7 +12,7 @@ import { api } from '../api/client'
 import { useJobBlueprint } from '../hooks/useJobBlueprint'
 import { wouldCreateCycle, isValidConnection, isSingleTargetSource, handleInfo, handlesOf, upstreamChainEdgeIds, TRIGGER_DEFS } from '../components/character/blueprint/blueprintGraph'
 import ActionPicker from '../components/character/blueprint/ActionPicker'
-import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, dropDuplicateSingletons, DEFAULT_CHAT_COLOR, menuCandidateValid, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
+import { categoryOfHandle, hasAction, allowGenericForHandle, labelForAction, addMember, removeMember, moveMember, addOverlay, removeOverlay, moveOverlay, cloneSelection, pasteClone, clipboardAnchor, dropDuplicateSingletons, DEFAULT_CHAT_COLOR, menuCandidateValid, bluCategoryMembers, type ActionCategory, type Clipboard } from '../components/character/blueprint/blueprintGraph'
 import TriggerNode from '../components/character/blueprint/TriggerNode'
 import EquipGearSetNode from '../components/character/blueprint/EquipGearSetNode'
 import NodePalette from '../components/character/blueprint/NodePalette'
@@ -197,7 +197,7 @@ function BlueprintEditorInner() {
         : n.type === 'buff'
         ? { buffName: n.data.buffName ?? null }
         : n.type === 'spell'
-        ? { spellField: (n.data.spellField ?? 'name') as 'name' | 'skill' | 'element' | 'contains', spellValue: n.data.spellValue ?? null }
+        ? { spellField: (n.data.spellField ?? 'name') as 'name' | 'skill' | 'element' | 'contains' | 'bluCategory', spellValue: n.data.spellValue ?? null }
         : n.type === 'pet'
         ? { petField: (n.data.petField ?? 'exists') as 'exists' | 'status', petValue: n.data.petValue ?? null }
         : n.type === 'world'
@@ -231,8 +231,12 @@ function BlueprintEditorInner() {
       } else if (t === 'buff') {
         data = { buffName: (n.data as { buffName?: string | null }).buffName ?? null }
       } else if (t === 'spell') {
-        const d = n.data as { spellField?: 'name' | 'skill' | 'element' | 'contains' | null; spellValue?: string | null }
-        data = { spellField: d.spellField ?? 'name', spellValue: d.spellValue ?? null }
+        const d = n.data as { spellField?: 'name' | 'skill' | 'element' | 'contains' | 'bluCategory' | null; spellValue?: string | null }
+        const spellField = d.spellField ?? 'name'
+        const spellValue = d.spellValue ?? null
+        data = spellField === 'bluCategory'
+          ? { spellField, spellValue, spellNames: spellValue ? bluCategoryMembers(spellValue) : [] }
+          : { spellField, spellValue }
       } else if (t === 'pet') {
         const d = n.data as { petField?: 'exists' | 'status' | null; petValue?: string | null }
         data = { petField: d.petField ?? 'exists', petValue: d.petValue ?? null }
@@ -735,7 +739,7 @@ function BlueprintEditorInner() {
         )}
         {selected?.type === 'spell' && (
           <SpellInspector
-            field={((selected.data as { spellField?: 'name' | 'skill' | 'element' | 'contains' | null }).spellField) ?? 'name'}
+            field={((selected.data as { spellField?: 'name' | 'skill' | 'element' | 'contains' | 'bluCategory' | null }).spellField) ?? 'name'}
             value={(selected.data as { spellValue?: string | null }).spellValue}
             onChange={(patch) => updateCondData(patch)}
           />

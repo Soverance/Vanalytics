@@ -3,7 +3,7 @@ import { Wand } from 'lucide-react'
 import { spellFace } from './blueprintGraph'
 
 export interface SpellNodeData extends Record<string, unknown> {
-  spellField?: 'name' | 'skill' | 'element' | null
+  spellField?: 'name' | 'skill' | 'element' | 'contains' | 'bluCategory' | null
   spellValue?: string | null
 }
 

@@ -3,6 +3,7 @@ import { WEAPON_SKILLS } from '../../../lib/weaponSkills'
 import { JOB_ABILITIES } from '../../../lib/jobAbilities'
 import { SPELLS } from '../../../lib/spells'
 import { BUFFS } from '../../../lib/buffs'
+import { BLU_CLASSIFICATION } from '../../../lib/bluClassification'
 
 export type ActionCategory = 'WeaponSkill' | 'JobAbility' | 'Magic' | 'Buff' | 'PetAction'
 export interface ActionEntry { id: number; name: string; label?: string }
@@ -342,6 +343,48 @@ export function familyMatchCount(value: string): number {
   return allActionsCatalog().filter(a => a.name.includes(value)).length
 }
 
+// BLU mechanical-category buckets for the spell "BLU category" field. Buckets are DERIVED from
+// bluClassification.ts (never authored): for each class present, the class alone plus each
+// class+stat combo with ≥1 member; then a single "Unbridled" bucket (Unbridled Learning and
+// Unbridled Wisdom share one 18-spell roster, so there is no Learning/Wisdom split). The stored
+// spellValue IS the label; codegen freezes the member english names onto the node (the runtime has
+// no such data). Order is canonical (class order, then stat order, then Unbridled) so the dropdown
+// is stable.
+const BLU_CLASS_ORDER: string[] = ['Physical', 'Magical', 'Breath', 'Healing', 'Buff', 'Stun', 'Skill']
+const BLU_STAT_ORDER: string[] = ['STR', 'DEX', 'VIT', 'AGI', 'INT', 'MND', 'CHR']
+
+const BLU_BUCKETS: Map<string, string[]> = (() => {
+  const nameById = new Map(SPELLS.map(s => [s.id, s.name]))
+  const m = new Map<string, string[]>()
+  const push = (label: string, name: string) => {
+    const arr = m.get(label); if (arr) arr.push(name); else m.set(label, [name])
+  }
+  for (const [idStr, c] of Object.entries(BLU_CLASSIFICATION)) {
+    const name = nameById.get(Number(idStr)); if (!name) continue
+    push(c.class, name)
+    if (c.stat) push(`${c.class} (${c.stat})`, name)
+    if (c.unbridled) push('Unbridled', name)
+  }
+  return m
+})()
+
+// Ordered, deduped bucket labels present in the data (canonical order).
+export const SPELL_BLU_CATEGORIES: string[] = (() => {
+  const out: string[] = []
+  const take = (label: string) => { if (BLU_BUCKETS.has(label) && !out.includes(label)) out.push(label) }
+  for (const cls of BLU_CLASS_ORDER) {
+    take(cls)
+    for (const stat of BLU_STAT_ORDER) take(`${cls} (${stat})`)
+  }
+  take('Unbridled')
+  return out
+})()
+
+// Member spell-english names for a bucket label; [] for an unknown label.
+export function bluCategoryMembers(label: string): string[] {
+  return BLU_BUCKETS.get(label) ?? []
+}
+
 // Curated pet status values (res/statuses en — verify against GearSwap pet.status during impl).
 export const PET_STATUSES: string[] = ['Idle', 'Engaged', 'Dead']
 
@@ -406,6 +449,7 @@ export function allActionsCatalog(): ActionEntry[] {
 // skill/element show verbatim. Placeholder when no value is chosen yet.
 export function spellFace(data: { spellField?: string | null; spellValue?: string | null }): string {
   const field = data.spellField ?? 'name'
+  if (field === 'bluCategory') return data.spellValue ? `BLU: ${data.spellValue}` : 'BLU category …'
   if (field === 'contains') return data.spellValue ? `contains "${data.spellValue}"` : 'contains …'
   const lead = field === 'skill' ? 'skill' : field === 'element' ? 'element' : 'spell'
   return data.spellValue ? `${lead} is ${data.spellValue}` : `${lead} is …`

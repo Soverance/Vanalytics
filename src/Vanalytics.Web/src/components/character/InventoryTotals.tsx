@@ -1,5 +1,7 @@
-import { useMemo } from 'react'
-import type { InventoryByBag } from '../../types/api'
+import { useMemo, useState, useEffect } from 'react'
+import type { InventoryByBag, BagCapacities } from '../../types/api'
+import { api } from '../../api/client'
+import { capOf, sumCapacities } from './inventoryCapacity'
 
 const BAG_ORDER = [
   'Inventory', 'Safe', 'Safe2', 'Storage', 'Locker',
@@ -29,9 +31,9 @@ const BAG_LABELS: Record<string, string> = {
 
 const CATEGORY_COLORS = ['#3b82f6', '#8b5cf6', '#f59e0b', '#06b6d4', '#10b981', '#6b7280']
 const OTHER_COLOR = '#6b7280'
-const MAX_SLOTS = 80
 
 interface Props {
+  characterId: string
   inventory: InventoryByBag
   dismissedAnomalyKeys: Set<string>
 }
@@ -154,6 +156,7 @@ interface BagEntry {
   key: string
   label: string
   used: number
+  max: number
 }
 
 interface BagUtilizationChartProps {
@@ -181,7 +184,7 @@ function BagUtilizationChart({ bags, dismissedBags }: BagUtilizationChartProps) 
       <div className="text-xs uppercase text-gray-500 mb-3">Bag Utilization</div>
       <div className="flex flex-col gap-2">
         {bags.map((bag) => {
-          const pct = (bag.used / MAX_SLOTS) * 100
+          const pct = (bag.used / bag.max) * 100
           const dismissed = dismissedBags.has(bag.key)
           const barColor = getBarColor(pct, dismissed)
           const textColor = getTextColor(pct, dismissed)
@@ -206,7 +209,7 @@ function BagUtilizationChart({ bags, dismissedBags }: BagUtilizationChartProps) 
                 className={`text-xs flex-shrink-0 text-right ${textColor}`}
                 style={{ width: 40 }}
               >
-                {bag.used}/80
+                {bag.used}/{bag.max}
               </span>
             </div>
           )
@@ -218,7 +221,15 @@ function BagUtilizationChart({ bags, dismissedBags }: BagUtilizationChartProps) 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function InventoryTotals({ inventory, dismissedAnomalyKeys }: Props) {
+export default function InventoryTotals({ characterId, inventory, dismissedAnomalyKeys }: Props) {
+  const [capacities, setCapacities] = useState<BagCapacities>({})
+
+  useEffect(() => {
+    api<BagCapacities>(`/api/characters/${characterId}/inventory/capacities`)
+      .then(setCapacities)
+      .catch(() => setCapacities({}))
+  }, [characterId])
+
   // Build set of bag keys whose nearCapacity anomaly has been dismissed
   const dismissedBags = useMemo(() => {
     const bags = new Set<string>()
@@ -236,8 +247,8 @@ export default function InventoryTotals({ inventory, dismissedAnomalyKeys }: Pro
     // Stat card values
     const totalItems = allItems.reduce((sum, item) => sum + item.quantity, 0)
     const slotsUsed = allItems.length
-    const activeBags = Object.keys(inventory).filter((k) => inventory[k].length > 0).length
-    const totalSlots = activeBags * MAX_SLOTS
+    const activeBagKeys = Object.keys(inventory).filter((k) => inventory[k].length > 0)
+    const totalSlots = sumCapacities(capacities, activeBagKeys)
     const availableSlots = totalSlots - slotsUsed
     const freePct = totalSlots > 0 ? Math.round((availableSlots / totalSlots) * 100) : 0
     const rareExCount = allItems.filter((item) => item.isRare || item.isExclusive).length
@@ -278,6 +289,7 @@ export default function InventoryTotals({ inventory, dismissedAnomalyKeys }: Pro
         key,
         label: BAG_LABELS[key] ?? key,
         used: inventory[key].length,
+        max: capOf(capacities, key),
       }))
 
     return {
@@ -290,7 +302,7 @@ export default function InventoryTotals({ inventory, dismissedAnomalyKeys }: Pro
       categories,
       bags,
     }
-  }, [inventory])
+  }, [inventory, capacities])
 
   return (
     <div className="space-y-4">

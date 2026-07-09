@@ -59,13 +59,19 @@ public class BlueprintNodeDataDto
     /// <summary>On an `op:compare` node: the numeric threshold (e.g. 25 for player.hpp &lt; 25).</summary>
     public int? Value { get; set; }
 
-    /// <summary>On a `spell` node: which spell field to test — "name" | "skill" | "element".</summary>
+    /// <summary>On a `spell` node: which spell field to test — "name" | "skill" | "element" | "contains" | "bluCategory".</summary>
     public string? SpellField { get; set; }
 
     /// <summary>On a `spell` node: the value to compare against — an action's raw english name
     /// (field "name"), a skill name (field "skill"), or an element (field "element"). Emitted
     /// verbatim (NOT case-folded) as a Lua string literal.</summary>
     public string? SpellValue { get; set; }
+
+    /// <summary>On a `spell` node with field "bluCategory": the frozen list of BLU spell english
+    /// names in the picked bucket. Written by the frontend at serialization time (the runtime has no
+    /// classification data). Consumed by codegen to emit the blu_cat_&lt;slug&gt; membership table.
+    /// Null/absent for all other spell fields.</summary>
+    public List<string>? SpellNames { get; set; }
 
     /// <summary>On a `pet` node: which pet field to test — "exists" (pet.isvalid) or "status"
     /// (pet.status == PetValue).</summary>

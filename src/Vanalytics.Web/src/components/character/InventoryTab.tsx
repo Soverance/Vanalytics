@@ -653,7 +653,7 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
 
           {/* Totals tab content */}
           {activeView === 'totals' && inventory && (
-            <InventoryTotals inventory={inventory} dismissedAnomalyKeys={dismissedAnomalyKeys} />
+            <InventoryTotals characterId={characterId} inventory={inventory} dismissedAnomalyKeys={dismissedAnomalyKeys} />
           )}
 
           {/* Crafting tab content */}

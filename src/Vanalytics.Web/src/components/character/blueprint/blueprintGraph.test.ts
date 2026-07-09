@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { wouldCreateCycle, TRIGGER_DEFS, categoryOfHandle, actionCatalog, hasAction, allowGenericForHandle, labelForAction, isTerminalHandle, addMember, removeMember, moveMember, cloneSelection, pasteClone, clipboardAnchor, addOverlay, removeOverlay, moveOverlay, isFullSet, canConnect, compareFace, statResourceLabel, isValidConnection, isSingleTargetSource, upstreamChainEdgeIds, dropDuplicateSingletons, handleType, handleInfo, menuCandidateValid } from './blueprintGraph'
 import { spellFace, SPELL_SKILLS, SPELL_ELEMENTS, allActionsCatalog, NODE_HANDLES, SPELL_FAMILIES, familyMatchCount, VALUE_SOURCES, petFace, worldFace } from './blueprintGraph'
+import { SPELL_BLU_CATEGORIES, bluCategoryMembers } from './blueprintGraph'
 import type { BlueprintEdge, BlueprintNode } from '../../../types/api'
 
 describe('wouldCreateCycle', () => {
@@ -450,5 +451,43 @@ describe('pet/world condition nodes', () => {
     expect(worldFace({ worldField: 'weather', worldValue: 'Fire' })).toBe('weather is Fire')
     expect(worldFace({ worldField: 'moghouse' })).toBe('in mog house')
     expect(worldFace({ worldField: 'zone', worldLabel: 'Western Adoulin' })).toBe('in Western Adoulin')
+  })
+})
+
+describe('BLU categories', () => {
+  it('exposes a class-alone bucket and derives its members', () => {
+    // Foot Kick (577) is seeded as Physical/STR.
+    expect(SPELL_BLU_CATEGORIES).toContain('Physical')
+    expect(SPELL_BLU_CATEGORIES).toContain('Physical (STR)')
+    expect(bluCategoryMembers('Physical')).toContain('Foot Kick')
+    expect(bluCategoryMembers('Physical (STR)')).toContain('Foot Kick')
+  })
+
+  it('a class+stat bucket is a subset of the class-alone bucket', () => {
+    const all = new Set(bluCategoryMembers('Physical'))
+    for (const n of bluCategoryMembers('Physical (STR)')) expect(all.has(n)).toBe(true)
+  })
+
+  it('returns [] for an unknown bucket label', () => {
+    expect(bluCategoryMembers('Nonsense (ZZZ)')).toEqual([])
+  })
+
+  it('lists no empty buckets', () => {
+    for (const label of SPELL_BLU_CATEGORIES) expect(bluCategoryMembers(label).length).toBeGreaterThan(0)
+  })
+})
+
+describe('spellFace BLU category', () => {
+  it('renders a BLU category face', () => {
+    expect(spellFace({ spellField: 'bluCategory', spellValue: 'Physical (STR)' })).toBe('BLU: Physical (STR)')
+    expect(spellFace({ spellField: 'bluCategory', spellValue: null })).toBe('BLU category …')
+  })
+})
+
+describe('bluCategory serialization helper', () => {
+  it('freezes the current member list for a bucket', () => {
+    const names = bluCategoryMembers('Physical (STR)')
+    expect(names.length).toBeGreaterThan(0)
+    expect(names).toContain('Foot Kick')
   })
 })
