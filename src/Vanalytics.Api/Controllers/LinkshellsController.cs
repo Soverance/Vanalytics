@@ -26,7 +26,7 @@ public class LinkshellsController(
     [HttpGet]
     public async Task<IActionResult> GetDirectory([FromQuery] string? server)
     {
-        var query = db.Linkshells.Where(l => l.MemberCount > 0);
+        var query = db.Linkshells.Where(l => l.MemberCount > 0 && l.IsPublic);
         if (!string.IsNullOrEmpty(server))
             query = query.Where(l => l.Server == server);
 
@@ -84,6 +84,15 @@ public class LinkshellsController(
 
         if (ls is null) return NotFound();
 
+        // Visibility gate: a private linkshell is loadable only by a viewer who
+        // owns a character with a CURRENT membership in it (managers are a
+        // subset). Anonymous or non-member viewers get 404, mirroring the
+        // character privacy model. Character-level roster filtering below is
+        // unaffected — the two privacy layers are independent.
+        var viewerId = GetOptionalUserId();
+        if (!ls.IsPublic && !await IsCurrentMemberAsync(viewerId, ls.Id))
+            return NotFound();
+
         // Public current members, with their active job. AsSplitQuery avoids the
         // cartesian blow-up that timed out the public character profile.
         var publicMembers = await db.LinkshellMemberships
@@ -112,7 +121,6 @@ public class LinkshellsController(
             })
             .ToList();
 
-        var viewerId = GetOptionalUserId();
         var canManage = await CanManageAsync(viewerId, ls.Id);
         var (applyState, cooldownUntil) = await ComputeApplyStateAsync(viewerId, ls);
 
@@ -131,6 +139,7 @@ public class LinkshellsController(
             LastActiveAt = ls.LastSeenAt,
             RecruitmentStatus = (ls.Profile?.RecruitmentStatus ?? RecruitmentStatus.Unknown).ToString(),
             CanManage = canManage,
+            IsPublic = ls.IsPublic,
             ApplyState = applyState,
             CooldownUntil = cooldownUntil,
             Profile = ls.Profile is null ? null : ToCustomization(ls.Profile),
@@ -144,6 +153,10 @@ public class LinkshellsController(
     {
         var userId = GetUserId();
         if (!await CanManageAsync(userId, linkshellId)) return Forbid();
+
+        var linkshell = await db.Linkshells.FirstOrDefaultAsync(l => l.Id == linkshellId);
+        if (linkshell is null) return NotFound();
+        if (request.IsPublic.HasValue) linkshell.IsPublic = request.IsPublic.Value;
 
         if (!Enum.TryParse<RecruitmentStatus>(request.RecruitmentStatus, ignoreCase: true, out var status))
             return BadRequest(new { error = "Invalid recruitment status." });
@@ -328,6 +341,17 @@ public class LinkshellsController(
             && m.Character.UserId == userId
             && m.IsCurrent
             && (m.Rank == LinkshellRank.Leader || m.Rank == LinkshellRank.Sackholder));
+    }
+
+    // Live-computed: the caller owns a Character with a CURRENT membership on
+    // this linkshell (any rank). Gates private-linkshell visibility.
+    private Task<bool> IsCurrentMemberAsync(Guid? userId, Guid linkshellId)
+    {
+        if (userId is null) return Task.FromResult(false);
+        return db.LinkshellMemberships.AnyAsync(m =>
+            m.LinkshellId == linkshellId
+            && m.Character.UserId == userId
+            && m.IsCurrent);
     }
 
     // Computes the Apply button state for a given viewer against a loaded LS

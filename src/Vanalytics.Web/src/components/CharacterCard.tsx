@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { CharacterSummary } from '../types/api'
+import { roleLabel } from '../lib/characterRoles'
 
 interface Props {
   character: CharacterSummary
@@ -22,6 +23,11 @@ export default function CharacterCard({ character, onDelete }: Props) {
       </div>
 
       <div className="mt-3 flex items-center gap-4 text-sm">
+        {character.role && character.role !== 'None' && (
+          <span className="rounded border border-gray-700 bg-gray-800 px-2 py-0.5 text-xs text-gray-300">
+            {roleLabel(character.role)}
+          </span>
+        )}
         {character.isPublic && (
           <span className="text-green-400 text-xs">Public</span>
         )}

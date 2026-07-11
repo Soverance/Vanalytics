@@ -33,6 +33,7 @@ export interface CharacterSummary {
   server: string
   isPublic: boolean
   lastSyncAt: string | null
+  role: string // CharacterRole enum name; "None" when unlabeled
 }
 
 export interface CharacterDetail {
@@ -41,6 +42,7 @@ export interface CharacterDetail {
   server: string
   isPublic: boolean
   lastSyncAt: string | null
+  role: string // CharacterRole enum name; "None" when unlabeled (owner-only)
   race?: string
   gender?: string
   faceModelId?: number

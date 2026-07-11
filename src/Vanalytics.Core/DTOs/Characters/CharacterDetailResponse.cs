@@ -7,6 +7,9 @@ public class CharacterDetailResponse
     public string Server { get; set; } = string.Empty;
     public bool IsPublic { get; set; }
     public DateTimeOffset? LastSyncAt { get; set; }
+    // Owner-only: populated by the authenticated owner endpoints, never by the
+    // shared MapToDetail — so public profiles always report "None".
+    public string Role { get; set; } = "None";
     public string? Race { get; set; }
     public string? Gender { get; set; }
     public int? FaceModelId { get; set; }

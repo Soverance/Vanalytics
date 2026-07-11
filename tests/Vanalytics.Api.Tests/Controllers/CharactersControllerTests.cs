@@ -222,4 +222,65 @@ public class CharactersControllerTests : IAsyncLifetime
         var body = await resp.Content.ReadFromJsonAsync<CharacterDetailResponse>();
         Assert.Equal(3, body!.SuperiorLevel);
     }
+
+    [Fact]
+    public async Task UpdateCharacter_SetsRole_AndEchoesIt()
+    {
+        var (token, charId) = await SetupUserWithCharacterAsync("role1@test.com", "role1user", "RoleChar");
+
+        var req = Authed(HttpMethod.Put, $"/api/characters/{charId}", token);
+        req.Content = JsonContent.Create(new UpdateCharacterRequest { IsPublic = false, Role = "Main" });
+        var resp = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var updated = await resp.Content.ReadFromJsonAsync<CharacterSummaryResponse>();
+        Assert.Equal("Main", updated!.Role);
+    }
+
+    [Fact]
+    public async Task ListAndDetail_IncludeRole_AfterSet()
+    {
+        var (token, charId) = await SetupUserWithCharacterAsync("role2@test.com", "role2user", "RoleChar2");
+
+        var put = Authed(HttpMethod.Put, $"/api/characters/{charId}", token);
+        put.Content = JsonContent.Create(new UpdateCharacterRequest { IsPublic = false, Role = "mule" }); // case-insensitive
+        await _client.SendAsync(put);
+
+        var listResp = await _client.SendAsync(Authed(HttpMethod.Get, "/api/characters", token));
+        var chars = await listResp.Content.ReadFromJsonAsync<List<CharacterSummaryResponse>>();
+        Assert.Equal("Mule", chars!.First(c => c.Id == charId).Role);
+
+        var detailResp = await _client.SendAsync(Authed(HttpMethod.Get, $"/api/characters/{charId}", token));
+        var detail = await detailResp.Content.ReadFromJsonAsync<CharacterDetailResponse>();
+        Assert.Equal("Mule", detail!.Role);
+    }
+
+    [Fact]
+    public async Task UpdateCharacter_UnknownRole_ReturnsBadRequest()
+    {
+        var (token, charId) = await SetupUserWithCharacterAsync("role3@test.com", "role3user", "RoleChar3");
+
+        var req = Authed(HttpMethod.Put, $"/api/characters/{charId}", token);
+        req.Content = JsonContent.Create(new UpdateCharacterRequest { IsPublic = false, Role = "Overlord" });
+        var resp = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task PublicProfile_DoesNotExposeRole()
+    {
+        var (token, charId) = await SetupUserWithCharacterAsync("role4@test.com", "role4user", "RolePub");
+
+        // Set a role AND make the character public.
+        var put = Authed(HttpMethod.Put, $"/api/characters/{charId}", token);
+        put.Content = JsonContent.Create(new UpdateCharacterRequest { IsPublic = true, Role = "Main" });
+        await _client.SendAsync(put);
+
+        // Anonymous public profile fetch — role must stay "None" (owner-only).
+        var pub = await _client.GetAsync("/api/profiles/Asura/RolePub");
+        Assert.Equal(HttpStatusCode.OK, pub.StatusCode);
+        var detail = await pub.Content.ReadFromJsonAsync<CharacterDetailResponse>();
+        Assert.Equal("None", detail!.Role);
+    }
 }

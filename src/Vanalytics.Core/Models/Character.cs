@@ -78,6 +78,11 @@ public class Character
     public string? BagCapacitiesJson { get; set; }
 
     public string? FavoriteAnimationJson { get; set; }
+
+    /// <summary>Player's private role label for this character (Main, Mule, etc.).
+    /// Owner-only; never exposed on public profiles. None = unlabeled.</summary>
+    public CharacterRole Role { get; set; } = CharacterRole.None;
+
     public DateTimeOffset? LastSyncAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }

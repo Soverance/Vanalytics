@@ -22,4 +22,8 @@ public class UpdateLinkshellProfileRequest
     public string RecruitmentStatus { get; init; } = "Unknown"; // enum name
     public string? RecruitmentRules { get; init; }
     public List<LinkshellExternalLink> ExternalLinks { get; init; } = [];
+    // Nullable on purpose: this endpoint is full-replace for the text fields, but
+    // visibility must NOT be clobbered by a caller that omits it. Only when a value
+    // is sent does the linkshell's public listing change.
+    public bool? IsPublic { get; init; }
 }

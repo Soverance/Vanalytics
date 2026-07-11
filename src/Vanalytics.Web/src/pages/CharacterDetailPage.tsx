@@ -115,7 +115,7 @@ export default function CharacterDetailPage() {
       await api(`/api/characters/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublic: character.isPublic, favoriteAnimation: fav }),
+        body: JSON.stringify({ isPublic: character.isPublic, favoriteAnimation: fav, role: character.role }),
       })
       setCharacter(prev => prev ? { ...prev, favoriteAnimation: fav ?? undefined } : prev)
     } catch (err) {
@@ -130,12 +130,30 @@ export default function CharacterDetailPage() {
       await api(`/api/characters/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublic: newPublic, favoriteAnimation: character.favoriteAnimation ?? null }),
+        body: JSON.stringify({ isPublic: newPublic, favoriteAnimation: character.favoriteAnimation ?? null, role: character.role }),
       })
       setCharacter(prev => prev ? { ...prev, isPublic: newPublic } : prev)
       if (newPublic) setShowShareModal(true)
     } catch (err) {
       console.warn('Failed to toggle public profile:', err)
+    }
+  }
+
+  const handleSetRole = async (role: string) => {
+    if (!character) return
+    try {
+      await api(`/api/characters/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isPublic: character.isPublic,
+          favoriteAnimation: character.favoriteAnimation ?? null,
+          role,
+        }),
+      })
+      setCharacter(prev => prev ? { ...prev, role } : prev)
+    } catch (err) {
+      console.warn('Failed to set character role:', err)
     }
   }
 
@@ -177,6 +195,7 @@ export default function CharacterDetailPage() {
         showPublicButton
         onTogglePublic={handleTogglePublic}
         onShareClick={() => setShowShareModal(true)}
+        onSetRole={handleSetRole}
       />
 
       <section className="mb-8">

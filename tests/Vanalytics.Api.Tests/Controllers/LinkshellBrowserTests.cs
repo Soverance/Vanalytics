@@ -102,6 +102,18 @@ public class LinkshellBrowserTests : IAsyncLifetime
         Assert.True(syncResp.IsSuccessStatusCode,
             $"Seed sync failed ({(int)syncResp.StatusCode}): {await syncResp.Content.ReadAsStringAsync()}");
 
+        // Private-by-default linkshells: these legacy directory/profile/apply tests
+        // were written for publicly-listed linkshells. Make the seeded linkshell
+        // public so they exercise the visible path. (Character-level privacy is a
+        // separate axis, still controlled by the isPublic parameter below.)
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            var seededLs = await db.Linkshells.FirstAsync(l => l.Server == server && l.GameLinkshellId == lsId);
+            seededLs.IsPublic = true;
+            await db.SaveChangesAsync();
+        }
+
         if (!isPublic) return;
 
         // make character public

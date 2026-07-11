@@ -8,6 +8,7 @@ import CharacterCard from '../components/CharacterCard'
 import ConfirmModal from '../components/ConfirmModal'
 import { Link } from 'react-router-dom'
 import { Package, Map, Bug } from 'lucide-react'
+import { groupByRole } from '../lib/characterRoles'
 
 export default function CharactersPage() {
   const { user, loading: authLoading } = useAuth()
@@ -178,13 +179,22 @@ export default function CharactersPage() {
           <p className="text-sm text-gray-500 mb-6">
             Characters are automatically added when your Windower addon syncs.
           </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {characters.map((c) => (
-              <CharacterCard
-                key={c.id}
-                character={c}
-                onDelete={(id) => setPendingDelete(id)}
-              />
+          <div className="space-y-6">
+            {groupByRole(characters).map(group => (
+              <div key={group.role}>
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                  {group.label}
+                </h2>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {group.rows.map((c) => (
+                    <CharacterCard
+                      key={c.id}
+                      character={c}
+                      onDelete={(id) => setPendingDelete(id)}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </>

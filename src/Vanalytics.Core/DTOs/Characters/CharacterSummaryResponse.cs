@@ -7,4 +7,5 @@ public class CharacterSummaryResponse
     public string Server { get; set; } = string.Empty;
     public bool IsPublic { get; set; }
     public DateTimeOffset? LastSyncAt { get; set; }
+    public string Role { get; set; } = "None";
 }

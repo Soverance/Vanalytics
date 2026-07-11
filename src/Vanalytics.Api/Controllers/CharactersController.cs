@@ -50,7 +50,8 @@ public class CharactersController : ControllerBase
                 Name = c.Name,
                 Server = c.Server,
                 IsPublic = c.IsPublic,
-                LastSyncAt = c.LastSyncAt
+                LastSyncAt = c.LastSyncAt,
+                Role = c.Role.ToString()
             })
             .ToListAsync();
 
@@ -77,6 +78,7 @@ public class CharactersController : ControllerBase
 
         var detail = MapToDetail(character);
         detail.LinkshellLogoUrl = await LoadActiveLinkshellLogoAsync(_db, character);
+        detail.Role = character.Role.ToString();
         return Ok(detail);
     }
 
@@ -93,6 +95,9 @@ public class CharactersController : ControllerBase
         character.FavoriteAnimationJson = request.FavoriteAnimation != null
             ? JsonSerializer.Serialize(request.FavoriteAnimation, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
             : null;
+        if (!TryNormalizeRole(request.Role, out var role))
+            return BadRequest(new { message = "Invalid role." });
+        character.Role = role;
         character.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
 
@@ -102,7 +107,8 @@ public class CharactersController : ControllerBase
             Name = character.Name,
             Server = character.Server,
             IsPublic = character.IsPublic,
-            LastSyncAt = character.LastSyncAt
+            LastSyncAt = character.LastSyncAt,
+            Role = character.Role.ToString()
         });
     }
 
@@ -981,6 +987,16 @@ public class CharactersController : ControllerBase
             return true;
         }
         return false;
+    }
+
+    // Validates the optional role label against the CharacterRole enum, returning the
+    // parsed value. Null/blank defaults to None; an unrecognized value is rejected.
+    private static bool TryNormalizeRole(string? role, out Vanalytics.Core.Enums.CharacterRole normalized)
+    {
+        normalized = Vanalytics.Core.Enums.CharacterRole.None;
+        if (string.IsNullOrWhiteSpace(role)) return true;
+        return Enum.TryParse(role.Trim(), ignoreCase: true, out normalized)
+            && Enum.IsDefined(normalized);
     }
 
     private const int MaxTags = 20;

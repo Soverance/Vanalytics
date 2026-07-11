@@ -14,6 +14,7 @@ public class LinkshellProfileResponse
     public DateTimeOffset? LastActiveAt { get; init; }
     public string RecruitmentStatus { get; init; } = "Unknown"; // from profile row, else "Unknown"
     public bool CanManage { get; init; }                         // true only for an authed current officer
+    public bool IsPublic { get; init; }                          // linkshell public-listing flag
 
     /// <summary>Apply button state for the current viewer: Closed | NotLoggedIn |
     /// NoEligibleCharacter | AlreadyMember | OnCooldown | NoReachableLeaders | Open.</summary>
