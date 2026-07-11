@@ -40,6 +40,10 @@ public class AdminUsersController : ControllerBase
                 CharacterCount = _db.Set<Character>().Count(c => c.UserId == u.Id),
                 CreatedAt = u.CreatedAt,
                 UpdatedAt = u.UpdatedAt,
+                LastActiveAt = _db.Set<Character>()
+                    .Where(c => c.UserId == u.Id)
+                    .Max(c => (DateTimeOffset?)c.LastSyncAt),
+                DefaultServer = u.DefaultServer,
             })
             .OrderBy(u => u.CreatedAt)
             .ToListAsync();
@@ -66,6 +70,10 @@ public class AdminUsersController : ControllerBase
                 CharacterCount = _db.Set<Character>().Count(c => c.UserId == u.Id),
                 CreatedAt = u.CreatedAt,
                 UpdatedAt = u.UpdatedAt,
+                LastActiveAt = _db.Set<Character>()
+                    .Where(c => c.UserId == u.Id)
+                    .Max(c => (DateTimeOffset?)c.LastSyncAt),
+                DefaultServer = u.DefaultServer,
             })
             .FirstOrDefaultAsync();
 

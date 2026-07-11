@@ -14,4 +14,6 @@ public class AdminUserResponse
     public int CharacterCount { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? LastActiveAt { get; set; }
+    public string? DefaultServer { get; set; }
 }

@@ -376,6 +376,8 @@ export interface AdminUser {
   characterCount: number
   createdAt: string
   updatedAt: string
+  lastActiveAt: string | null
+  defaultServer: string | null
 }
 
 export interface CreateUserRequest {

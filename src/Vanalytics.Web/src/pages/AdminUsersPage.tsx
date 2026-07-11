@@ -1,19 +1,14 @@
 import { useState, useEffect } from 'react'
 import { api, ApiError } from '../api/client'
 import type { AdminUser, UserRole, CreateUserResponse, ResetPasswordResponse } from '../types/api'
-import UserAvatar from '../components/UserAvatar'
 import ConfirmModal from '../components/ConfirmModal'
 import GeneratedPasswordReveal from '../components/GeneratedPasswordReveal'
+import Tabs from '../components/Tabs'
+import UsersList from '../components/admin/UsersList'
+import UsersAnalytics from '../components/admin/UsersAnalytics'
 import { useAuth } from '../context/AuthContext'
 import { X, Plus } from 'lucide-react'
-
-const ROLES: UserRole[] = ['Member', 'Moderator', 'Admin']
-
-const roleBadgeStyles: Record<UserRole, string> = {
-  Admin: 'bg-amber-900/50 text-amber-400',
-  Moderator: 'bg-blue-900/50 text-blue-400',
-  Member: 'bg-gray-800 text-gray-500',
-}
+import { ROLES } from '../lib/adminUsers'
 
 function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [email, setEmail] = useState('')
@@ -175,6 +170,7 @@ export default function AdminUsersPage() {
   const [pendingDelete, setPendingDelete] = useState<{ id: string; username: string } | null>(null)
   const [pendingReset, setPendingReset] = useState<{ id: string; username: string } | null>(null)
   const [resetResult, setResetResult] = useState<ResetPasswordResponse | null>(null)
+  const [tab, setTab] = useState<'list' | 'analytics'>('list')
 
   const fetchUsers = async () => {
     try {
@@ -247,87 +243,26 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-gray-800 bg-gray-900 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-800 text-left text-gray-500">
-              <th className="px-4 py-3 font-medium">User</th>
-              <th className="px-4 py-3 font-medium hidden sm:table-cell">Auth</th>
-              <th className="px-4 py-3 font-medium hidden md:table-cell">Characters</th>
-              <th className="px-4 py-3 font-medium hidden md:table-cell">Joined</th>
-              <th className="px-4 py-3 font-medium">Role</th>
-              <th className="px-4 py-3 font-medium"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id} className="border-b border-gray-800 last:border-0">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <UserAvatar username={u.username} displayName={u.displayName} size="sm" />
-                    <div className="min-w-0">
-                      <p className="font-medium text-gray-200 truncate">{u.displayName ?? u.username}</p>
-                      <p className="text-xs text-gray-500 truncate">{u.email}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 hidden sm:table-cell text-gray-400">
-                  {u.oAuthProvider
-                    ? u.oAuthProvider.charAt(0).toUpperCase() + u.oAuthProvider.slice(1)
-                    : 'Local'}
-                </td>
-                <td className="px-4 py-3 hidden md:table-cell text-gray-400">
-                  {u.characterCount}
-                </td>
-                <td className="px-4 py-3 hidden md:table-cell text-gray-500">
-                  {new Date(u.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3">
-                  {u.isSystemAccount || u.id === currentUser?.id ? (
-                    <span className={`rounded px-2 py-1 text-xs font-medium ${roleBadgeStyles[u.role]}`}>
-                      {u.role}
-                    </span>
-                  ) : (
-                    <select
-                      value={u.role}
-                      onChange={(e) => handleRoleChange(u.id, e.target.value as UserRole)}
-                      className={`rounded px-2 py-1 text-xs font-medium border-0 cursor-pointer ${roleBadgeStyles[u.role]}`}
-                    >
-                      {ROLES.map((r) => (
-                        <option key={r} value={r}>{r}</option>
-                      ))}
-                    </select>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                    {u.hasPassword && !u.isSystemAccount && (
-                      <button
-                        onClick={() => setPendingReset({ id: u.id, username: u.username })}
-                        className="text-xs text-gray-400 hover:text-gray-200"
-                      >
-                        Reset password
-                      </button>
-                    )}
-                    {!u.isSystemAccount && u.role !== 'Admin' && (
-                      <button
-                        onClick={() => setPendingDelete({ id: u.id, username: u.username })}
-                        className="text-xs text-red-400 hover:text-red-300"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Tabs
+        items={[
+          { value: 'list', label: 'List', badge: users.length },
+          { value: 'analytics', label: 'Analytics' },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
 
-      <p className="mt-4 text-xs text-gray-600">
-        {users.length} user{users.length !== 1 ? 's' : ''} registered
-      </p>
+      {tab === 'list' ? (
+        <UsersList
+          users={users}
+          currentUserId={currentUser?.id}
+          onRoleChange={handleRoleChange}
+          onRequestDelete={setPendingDelete}
+          onRequestReset={setPendingReset}
+        />
+      ) : (
+        <UsersAnalytics users={users} />
+      )}
 
       {showCreate && (
         <CreateUserModal
