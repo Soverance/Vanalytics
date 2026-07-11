@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Soverance.Messaging.Services;
 using Vanalytics.Api.DTOs;
 using Vanalytics.Api.Services;
+using Vanalytics.Core.DTOs.Achievements;
 using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
@@ -36,6 +37,7 @@ public class LinkshellsController(
         var rows = await query
             .Select(l => new
             {
+                l.Id,
                 l.Name,
                 l.Server,
                 l.ColorRgb,
@@ -47,19 +49,34 @@ public class LinkshellsController(
             })
             .ToListAsync();
 
+        // Fetch achievement scores in a single query and merge in memory.
+        var linkshellIds = rows.Select(r => r.Id).ToList();
+        var achievementMap = await db.LinkshellAchievements
+            .AsNoTracking()
+            .Where(a => linkshellIds.Contains(a.LinkshellId))
+            .Select(a => new { a.LinkshellId, a.TotalScore, a.AverageScore, a.RankedMemberCount })
+            .ToDictionaryAsync(a => a.LinkshellId);
+
         var items = rows
             .OrderByDescending(r => r.MemberCount)
             .ThenBy(r => r.Name)
-            .Select(r => new LinkshellListItem
+            .Select(r =>
             {
-                Name = r.Name,
-                Server = r.Server,
-                ColorRgb = r.ColorRgb,
-                MemberCount = r.MemberCount,
-                PublicMemberCount = r.PublicMemberCount,
-                LastActiveAt = r.LastSeenAt,
-                LogoUrl = r.LogoUrl,
-                RecruitmentStatus = r.RecruitmentStatus.ToString(),
+                achievementMap.TryGetValue(r.Id, out var ach);
+                return new LinkshellListItem
+                {
+                    Name = r.Name,
+                    Server = r.Server,
+                    ColorRgb = r.ColorRgb,
+                    MemberCount = r.MemberCount,
+                    PublicMemberCount = r.PublicMemberCount,
+                    LastActiveAt = r.LastSeenAt,
+                    LogoUrl = r.LogoUrl,
+                    RecruitmentStatus = r.RecruitmentStatus.ToString(),
+                    TotalScore = ach?.TotalScore ?? 0,
+                    AverageScore = ach?.AverageScore ?? 0,
+                    RankedMemberCount = ach?.RankedMemberCount ?? 0,
+                };
             })
             .ToList();
 
@@ -145,6 +162,75 @@ public class LinkshellsController(
             Profile = ls.Profile is null ? null : ToCustomization(ls.Profile),
             Members = rows,
         });
+    }
+
+    /// <summary>
+    /// Returns the cached achievement aggregate for a linkshell, including global/server
+    /// dense ranks over all linkshells with at least one ranked member, and an ordered list
+    /// of the linkshell's current public members with their per-LS ranks.
+    /// Public — no authentication required (mirrors GetDirectory / GetProfile auth posture).
+    /// </summary>
+    [HttpGet("{id:guid}/achievement")]
+    public async Task<IActionResult> GetAchievement(Guid id)
+    {
+        var agg = await db.LinkshellAchievements.AsNoTracking()
+            .Include(a => a.Linkshell)
+            .FirstOrDefaultAsync(a => a.LinkshellId == id);
+        if (agg is null) return NotFound();
+
+        // Visibility gate: mirrors GetProfile — private linkshells are 404 for
+        // anonymous callers and non-members.
+        var viewerId = GetOptionalUserId();
+        if (!agg.Linkshell.IsPublic && !await IsCurrentMemberAsync(viewerId, agg.LinkshellId))
+            return NotFound();
+
+        // Dense 1-based global rank: count of linkshells with RankedMemberCount > 0
+        // that score strictly higher than this one, plus 1. NULL when this LS itself
+        // is unranked (RankedMemberCount == 0) — excluded from every leaderboard.
+        int? globalRank = agg.RankedMemberCount > 0
+            ? await db.LinkshellAchievements
+                .Where(a => a.RankedMemberCount > 0 && a.TotalScore > agg.TotalScore)
+                .CountAsync() + 1
+            : null;
+
+        // Same but scoped to the same server.
+        int? serverRank = agg.RankedMemberCount > 0
+            ? await db.LinkshellAchievements
+                .Where(a => a.RankedMemberCount > 0
+                         && a.Linkshell.Server == agg.Linkshell.Server
+                         && a.TotalScore > agg.TotalScore)
+                .CountAsync() + 1
+            : null;
+
+        // Current public members joined to their achievement rows, ordered by score desc
+        // then name asc for deterministic ordering on ties.
+        var members = await db.LinkshellMemberships
+            .Where(m => m.LinkshellId == id && m.IsCurrent && m.Character.IsPublic)
+            .Join(db.CharacterAchievements,
+                  m => m.CharacterId,
+                  a => a.CharacterId,
+                  (m, a) => new
+                  {
+                      m.Character.Id,
+                      m.Character.Name,
+                      m.Character.Server,
+                      a.TotalScore,
+                      m.Character.LastSyncAt,
+                      m.Character.Linkshell,
+                  })
+            .OrderByDescending(x => x.TotalScore)
+            .ThenBy(x => x.Name)
+            .ToListAsync();
+
+        var memberEntries = members
+            .Select((x, idx) => new CharacterLeaderboardEntry(
+                idx + 1, x.Id, x.Name, x.Server, x.TotalScore, x.LastSyncAt, x.Linkshell))
+            .ToList();
+
+        return Ok(new LinkshellAchievementResponse(
+            agg.TotalScore, agg.AverageScore, agg.RankedMemberCount,
+            globalRank, serverRank,
+            memberEntries));
     }
 
     [Authorize]

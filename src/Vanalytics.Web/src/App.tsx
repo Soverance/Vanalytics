@@ -40,6 +40,8 @@ import LinkshellManagePage from './pages/LinkshellManagePage'
 import RecipeBrowserPage from './pages/RecipeBrowserPage'
 import RecipeDetailPage from './pages/RecipeDetailPage'
 import MessagesPage from './pages/MessagesPage'
+import LeaderboardsPage from './pages/LeaderboardsPage'
+import RubricPage from './pages/RubricPage'
 
 
 function SamlCodeHandler() {
@@ -153,6 +155,8 @@ export default function App() {
             <Route path="/linkshells" element={<LinkshellDirectoryPage />} />
             <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
             <Route path="/messages/:conversationId" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+            <Route path="/leaderboards" element={<LeaderboardsPage />} />
+            <Route path="/leaderboards/rubric" element={<RubricPage />} />
           </Route>
 
           {/* Public: shareable linkshell profiles (3-segment, before /:server/:name) */}

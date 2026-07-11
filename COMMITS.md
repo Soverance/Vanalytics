@@ -42,3 +42,33 @@ git add src/Vanalytics.Api/Controllers/LinkshellsController.cs \
 git commit -m "feat(linkshell): gate private profile to current members"
 ```
 (Note: LinkshellsController.cs + LinkshellsControllerTests.cs also carry Task 2's changes — staging them here is fine if Task 2's commit already ran; if committing out of order, these files accumulate all task edits.)
+
+## Task 4 — manager public/private toggle via PUT /profile (reviewed clean)
+
+```bash
+git add src/Vanalytics.Api/DTOs/LinkshellManageDtos.cs \
+        src/Vanalytics.Api/Controllers/LinkshellsController.cs \
+        tests/Vanalytics.Api.Tests/Controllers/LinkshellsControllerTests.cs
+git commit -m "feat(linkshell): manager toggle for public/private listing"
+```
+
+## Task 5 — applications to a private linkshell 404 (reviewed clean)
+
+```bash
+git add src/Vanalytics.Api/Controllers/LinkshellsController.cs \
+        tests/Vanalytics.Api.Tests/Controllers/LinkshellsControllerTests.cs
+git commit -m "feat(linkshell): reject applications to private linkshells"
+```
+
+## Task 6 — frontend visibility toggle + private badge (reviewed clean)
+
+```bash
+git add src/Vanalytics.Web/src/types/api.ts \
+        src/Vanalytics.Web/src/pages/LinkshellManagePage.tsx \
+        src/Vanalytics.Web/src/pages/LinkshellProfilePage.tsx
+git commit -m "feat(linkshell): visibility toggle + private badge in web UI"
+```
+> ⚠ SHARED FILE — `src/Vanalytics.Web/src/types/api.ts` also carries the parallel "Character Role Label"
+> feature's `role: string` additions to `CharacterSummary`/`CharacterDetail` (my change here is only the
+> `isPublic: boolean` on `LinkshellProfileResponse`). Same situation as the EF ModelSnapshot: staging this
+> file stages both features' edits. Coordinate with the parallel feature's commit so neither is lost.

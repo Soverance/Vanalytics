@@ -22,14 +22,19 @@ public class SyncController : ControllerBase
     private readonly RateLimiter _rateLimiter;
     private readonly MacroRateLimiter _macroLimiter;
     private readonly BlueprintGenerationService _blueprintGen;
+    private readonly AchievementRecomputeService _achievements;
+    private readonly ILogger<SyncController> _logger;
 
     public SyncController(VanalyticsDbContext db, RateLimiter rateLimiter, MacroRateLimiter macroLimiter,
-        BlueprintGenerationService blueprintGen)
+        BlueprintGenerationService blueprintGen, AchievementRecomputeService achievements,
+        ILogger<SyncController> logger)
     {
         _db = db;
         _rateLimiter = rateLimiter;
         _macroLimiter = macroLimiter;
         _blueprintGen = blueprintGen;
+        _achievements = achievements;
+        _logger = logger;
     }
 
     // Resolve the character the addon is acting on. The addon MUST send
@@ -466,6 +471,10 @@ public class SyncController : ControllerBase
             }
             await _db.SaveChangesAsync();
         }
+
+        // Best-effort achievement rescore. A scoring failure must never fail the sync.
+        try { await _achievements.RecomputeCharacterAsync(character.Id); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Achievement recompute failed for {CharacterId}", character.Id); }
 
         return Ok(new { message = "Sync successful", lastSyncAt = character.LastSyncAt });
     }

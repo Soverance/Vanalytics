@@ -162,3 +162,53 @@ export class ApiError extends Error {
     this.name = 'ApiError'
   }
 }
+
+// Achievement / Leaderboard API helpers
+import type {
+  LeaderboardPage,
+  CharacterLeaderboardEntry,
+  LinkshellLeaderboardEntry,
+  RubricResponse,
+  CharacterAchievementResponse,
+  LinkshellAchievementResponse,
+} from '../types/api'
+
+export function getCharacterLeaderboard(
+  server?: string,
+  page = 1,
+  pageSize = 50
+): Promise<LeaderboardPage<CharacterLeaderboardEntry>> {
+  const params = new URLSearchParams({
+    ...(server ? { server } : {}),
+    page: String(page),
+    pageSize: String(pageSize),
+  })
+  return api<LeaderboardPage<CharacterLeaderboardEntry>>(`/api/leaderboards/characters?${params}`)
+}
+
+export function getLinkshellLeaderboard(
+  server?: string,
+  sort = 'total',
+  page = 1,
+  pageSize = 50
+): Promise<LeaderboardPage<LinkshellLeaderboardEntry>> {
+  const params = new URLSearchParams({
+    ...(server ? { server } : {}),
+    sort,
+    page: String(page),
+    pageSize: String(pageSize),
+  })
+  return api<LeaderboardPage<LinkshellLeaderboardEntry>>(`/api/leaderboards/linkshells?${params}`)
+}
+
+export function getRubric(): Promise<RubricResponse> {
+  return api<RubricResponse>('/api/achievements/rubric')
+}
+
+export function getCharacterAchievement(id: string): Promise<CharacterAchievementResponse> {
+  return api<CharacterAchievementResponse>(`/api/characters/${id}/achievement`)
+}
+
+export function getLinkshellAchievement(id: string): Promise<LinkshellAchievementResponse> {
+  return api<LinkshellAchievementResponse>(`/api/linkshells/${id}/achievement`)
+}

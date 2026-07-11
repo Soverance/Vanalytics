@@ -27,11 +27,13 @@ import MacroEditorPanel from '../components/macros/MacroEditorPanel'
 import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
 import SessionsTab from '../components/session/SessionsTab'
 import GearSetsTab from '../components/character/GearSetsTab'
-import { ApiError } from '../api/client'
+import { ApiError, getCharacterAchievement } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
 import Tabs from '../components/Tabs'
+import AchievementBreakdown from '../components/achievements/AchievementBreakdown'
+import type { CharacterAchievementResponse } from '../types/api'
 
-const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items', 'Linkshells'] as const
+const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items', 'Linkshells', 'Achievements'] as const
 type StatTab = typeof STAT_TABS[number]
 
 const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Spells', 'Macros', 'Sessions', 'Gear Sets'] as const
@@ -62,9 +64,19 @@ export default function CharacterDetailPage() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  // Achievements tab state
+  const [achievement, setAchievement] = useState<CharacterAchievementResponse | null>(null)
+  const [achievementLoading, setAchievementLoading] = useState(false)
+  const [achievementNotFound, setAchievementNotFound] = useState(false)
+  const [achievementError, setAchievementError] = useState(false)
+
   useEffect(() => {
     setCharacter(null)
     setLoading(true)
+    setAchievement(null)
+    setAchievementNotFound(false)
+    setAchievementLoading(false)
+    setAchievementError(false)
     api<CharacterDetail>(`/api/characters/${id}`)
       .then(setCharacter)
       .catch(() => setCharacter(null))
@@ -88,6 +100,27 @@ export default function CharacterDetailPage() {
         .catch(() => {})
     })
   }, [localGear])
+
+  // Load achievement score when switching to Achievements tab
+  useEffect(() => {
+    if (activeTab !== 'Achievements' || !id) return
+    if (achievement || achievementLoading) return
+    setAchievementLoading(true)
+    setAchievementNotFound(false)
+    setAchievementError(false)
+    getCharacterAchievement(id)
+      .then(data => {
+        setAchievement(data)
+      })
+      .catch((err) => {
+        if (err instanceof ApiError && err.status === 404) {
+          setAchievementNotFound(true)
+        } else {
+          setAchievementError(true)
+        }
+      })
+      .finally(() => setAchievementLoading(false))
+  }, [activeTab, id])
 
   // Load macro books when switching to Macros tab
   useEffect(() => {
@@ -211,6 +244,19 @@ export default function CharacterDetailPage() {
               {activeTab === 'Titles' && <TitlesTab characterId={character.id} />}
               {activeTab === 'Key Items' && <KeyItemsTab characterId={character.id} />}
               {activeTab === 'Linkshells' && <LinkshellsTab characterId={character.id} server={character.server} />}
+              {activeTab === 'Achievements' && (
+                achievementLoading ? (
+                  <LoadingSpinner />
+                ) : achievementError ? (
+                  <p className="text-red-400 text-sm py-4">Failed to load achievement score.</p>
+                ) : achievementNotFound ? (
+                  <p className="text-gray-500 text-sm py-4">
+                    Score pending next sync — achievement scores are computed after your first sync.
+                  </p>
+                ) : achievement ? (
+                  <AchievementBreakdown data={achievement} server={character.server} />
+                ) : null
+              )}
             </div>
           </div>
 

@@ -70,7 +70,7 @@ export default function LinkshellDirectoryPage() {
       setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortKey(key)
-      setSortDir(key === 'memberCount' || key === 'publicMemberCount' ? 'desc' : 'asc')
+      setSortDir(key === 'memberCount' || key === 'publicMemberCount' || key === 'totalScore' || key === 'averageScore' || key === 'rankedMemberCount' ? 'desc' : 'asc')
     }
   }
 
@@ -159,6 +159,9 @@ export default function LinkshellDirectoryPage() {
                 <th className={thClass} onClick={() => handleSort('server')}>Server<SortIndicator col="server" /></th>
                 <th className={thClass} onClick={() => handleSort('memberCount')}>Members<SortIndicator col="memberCount" /></th>
                 <th className={thClass} onClick={() => handleSort('publicMemberCount')}>Public<SortIndicator col="publicMemberCount" /></th>
+                <th className={thClass} onClick={() => handleSort('totalScore')}>Total<SortIndicator col="totalScore" /></th>
+                <th className={thClass} onClick={() => handleSort('averageScore')}>Avg<SortIndicator col="averageScore" /></th>
+                <th className={thClass} onClick={() => handleSort('rankedMemberCount')}>Ranked<SortIndicator col="rankedMemberCount" /></th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider select-none">Recruitment</th>
                 <th className={thClass} onClick={() => handleSort('lastActiveAt')}>Last Active<SortIndicator col="lastActiveAt" /></th>
               </tr>
@@ -183,6 +186,9 @@ export default function LinkshellDirectoryPage() {
                   <td className="px-3 py-2 text-gray-400">{l.server}</td>
                   <td className="px-3 py-2 text-gray-400">{l.memberCount}</td>
                   <td className="px-3 py-2 text-gray-400">{l.publicMemberCount}</td>
+                  <td className="px-3 py-2 text-gray-400">{l.totalScore > 0 ? l.totalScore.toLocaleString() : '—'}</td>
+                  <td className="px-3 py-2 text-gray-400">{l.averageScore > 0 ? Math.round(l.averageScore).toLocaleString() : '—'}</td>
+                  <td className="px-3 py-2 text-gray-400">{l.rankedMemberCount > 0 ? l.rankedMemberCount : '—'}</td>
                   <td className="px-3 py-2">
                     {l.recruitmentStatus === 'Open' || l.recruitmentStatus === 'Closed' ? (
                       <span className={`inline-block rounded border px-1.5 py-0.5 text-[10px] font-medium ${RECRUIT_STYLE[l.recruitmentStatus]}`}>

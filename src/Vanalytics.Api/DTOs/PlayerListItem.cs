@@ -9,4 +9,5 @@ public class PlayerListItem
     public string? Race { get; init; }
     public string? Linkshell { get; init; }
     public DateTimeOffset? LastSyncedAt { get; init; }
+    public int TotalScore { get; init; }
 }

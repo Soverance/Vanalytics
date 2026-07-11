@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Core.Data;
+using Vanalytics.Core.DTOs.Achievements;
 using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Core.DTOs.Porter;
@@ -12,6 +13,7 @@ using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 using Vanalytics.Core.Services;
+using Vanalytics.Core.Services.Achievements;
 using Vanalytics.Data;
 using Vanalytics.Api.Services;
 
@@ -426,6 +428,32 @@ public class CharactersController : ControllerBase
             .OrderBy(p => p.Category).ToList();
 
         return new { progress, weapons = results };
+    }
+
+    /// <summary>
+    /// Highest owned <see cref="UltimateWeaponStage.Rank"/> per owned ultimate weapon
+    /// (base-name grouped), keeping only rank >= 75 (the base-weapon threshold). Shared by the
+    /// character relics page and the achievement recompute so leaderboard and page agree.
+    /// </summary>
+    internal static async Task<List<int>> OwnedUltimateWeaponRanksAsync(VanalyticsDbContext db, Guid characterId)
+    {
+        var everHeld = await db.CharacterInventories
+            .Where(i => i.CharacterId == characterId).Select(i => i.ItemId)
+            .Union(db.InventoryChanges
+                .Where(c => c.CharacterId == characterId && c.ChangeType == Vanalytics.Core.Enums.InventoryChangeType.Added)
+                .Select(c => c.ItemId))
+            .Distinct().ToListAsync();
+
+        var baseNames = Vanalytics.Core.Data.UltimateWeapons.All.Select(w => w.BaseName).Distinct().ToList();
+        var items = await db.GameItems
+            .Where(gi => baseNames.Contains(gi.Name) && everHeld.Contains(gi.ItemId))
+            .Select(gi => new { gi.Name, gi.Level, gi.ItemLevel, gi.Description })
+            .ToListAsync();
+
+        return items.GroupBy(i => i.Name)
+            .Select(g => g.Max(i => UltimateWeaponStage.Rank(i.Level, i.ItemLevel, i.Description)))
+            .Where(rank => rank >= 75)
+            .ToList();
     }
 
     [HttpGet("{id:guid}/porter")]
@@ -964,6 +992,44 @@ public class CharactersController : ControllerBase
         await _db.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Returns the cached achievement score for a character.
+    /// Owner always sees their own (with null ranks when private).
+    /// Non-owners can only see public characters (private → 403, matching the rest of this controller).
+    /// Ranks are dense 1-based, computed from public CharacterAchievements only.
+    /// </summary>
+    [HttpGet("{id:guid}/achievement")]
+    public async Task<IActionResult> GetAchievement(Guid id)
+    {
+        var userId = GetUserId();
+        var ch = await _db.Characters.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        if (ch is null) return NotFound();
+        // Non-owner trying to read a private character: mirror the existing Forbid() gate
+        // used by every other endpoint in this controller (e.g. Get, GetInventory, GetProgression…)
+        if (!ch.IsPublic && ch.UserId != userId) return Forbid();
+
+        var a = await _db.CharacterAchievements.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.CharacterId == id);
+        if (a is null) return NotFound();
+
+        int? globalRank = null, serverRank = null;
+        if (ch.IsPublic)
+        {
+            // Dense rank: count of public characters that scored strictly higher + 1.
+            globalRank = await _db.CharacterAchievements
+                .Where(x => x.Character.IsPublic && x.TotalScore > a.TotalScore)
+                .CountAsync() + 1;
+            serverRank = await _db.CharacterAchievements
+                .Where(x => x.Character.IsPublic
+                         && x.Character.Server == ch.Server
+                         && x.TotalScore > a.TotalScore)
+                .CountAsync() + 1;
+        }
+
+        var breakdown = JsonSerializer.Deserialize<List<AchievementCategoryScore>>(a.BreakdownJson) ?? [];
+        return Ok(new CharacterAchievementResponse(a.TotalScore, a.RubricVersion, a.ComputedAt, serverRank, globalRank, breakdown));
     }
 
     // Per-character ceiling on saved gear sets — bounds DB growth; far above realistic use.

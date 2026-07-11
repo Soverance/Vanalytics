@@ -942,6 +942,9 @@ export interface LinkshellListItem {
   lastActiveAt: string | null
   logoUrl: string | null
   recruitmentStatus: string // "Open" | "Closed" | "Unknown"
+  totalScore: number
+  averageScore: number
+  rankedMemberCount: number
 }
 
 export interface LinkshellMemberRow {
@@ -975,6 +978,7 @@ export interface LinkshellProfileResponse {
   lastActiveAt: string | null
   recruitmentStatus: string // "Unknown" | "Open" | "Closed"
   canManage: boolean
+  isPublic: boolean
   applyState: string // Closed | NotLoggedIn | NoEligibleCharacter | AlreadyMember | OnCooldown | NoReachableLeaders | Open
   cooldownUntil: string | null
   profile: LinkshellCustomization | null
@@ -1049,6 +1053,7 @@ export interface PlayerListItem {
   race: string | null
   linkshell: string | null
   lastSyncedAt: string | null
+  totalScore: number
 }
 
 // Crafting Recipes
@@ -1293,4 +1298,72 @@ export interface ImportCommitResponse {
   created: number
   updated: number
   names: string[]
+}
+
+// Achievement / Leaderboard types
+export interface AchievementCategoryScore {
+  key: string
+  name: string
+  points: number
+  current: number | null
+  total: number | null
+  detail: string
+}
+
+export interface CharacterLeaderboardEntry {
+  rank: number
+  characterId: string
+  name: string
+  server: string
+  totalScore: number
+  lastSyncAt: string | null
+  linkshell: string | null
+}
+
+export interface LinkshellLeaderboardEntry {
+  rank: number
+  linkshellId: string
+  name: string
+  server: string
+  totalScore: number
+  averageScore: number
+  rankedMemberCount: number
+  colorRgb: number
+}
+
+export interface LeaderboardPage<T> {
+  items: T[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export interface RubricCategory {
+  key: string
+  name: string
+  description: string
+  scoring: string
+}
+
+export interface RubricResponse {
+  version: number
+  categories: RubricCategory[]
+}
+
+export interface CharacterAchievementResponse {
+  totalScore: number
+  rubricVersion: number
+  computedAt: string
+  serverRank: number | null
+  globalRank: number | null
+  breakdown: AchievementCategoryScore[]
+}
+
+export interface LinkshellAchievementResponse {
+  totalScore: number
+  averageScore: number
+  rankedMemberCount: number
+  globalRank: number | null
+  serverRank: number | null
+  members: CharacterLeaderboardEntry[]
 }

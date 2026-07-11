@@ -246,4 +246,24 @@ public class LinkshellsControllerTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
     }
+
+    [Fact]
+    public async Task Apply_ToPrivateLinkshell_Returns404()
+    {
+        // Leader owns the (private) LS; a second user on the same server applies.
+        await SyncLeaderLinkshellAsync("ls_a1@test.com", "lsa1", "Leada", "Asura", "PrivRecruitLS", 401L);
+        var lsId = await GetLinkshellIdAsync("Asura", 401L);
+        var applicantToken = await CreateUserAndGetTokenAsync("ls_a1b@test.com", "lsa1b");
+
+        var req = new HttpRequestMessage(HttpMethod.Post, $"/api/linkshells/{lsId}/apply");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", applicantToken);
+        req.Content = JsonContent.Create(new ApplyToLinkshellRequest
+        {
+            CharacterId = Guid.NewGuid(),   // never reached; visibility gate fires first
+            Intro = "Hi, I'd like to join.",
+        });
+        var resp = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
 }
