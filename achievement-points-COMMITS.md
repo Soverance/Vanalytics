@@ -172,3 +172,21 @@ Fixes are already in the working tree on files ALREADY listed above:
 - LinkshellsController.cs (Task 9/14 blocks) — added IsPublic+current-member gate to GetAchievement
 - LinkshellLeaderboardTests.cs / LinkshellAchievementTests.cs — IsPublic seeds + 2 new exclusion tests
 Running the queued commits in order captures these automatically (shared-file note above).
+
+---
+## REDESIGN — FFXIAH-style header rank (supersedes the Achievements-tab UI)
+The Achievements tab was replaced with a header rank badge (+ leaderboard deep-link) + endpoint made anonymously readable for public characters. These files are already listed in earlier task blocks (git add captures current content); the ONLY files not covered elsewhere are the new ones below. `AchievementBreakdown.tsx` + its old test were deleted (never committed — just absent from the tree, no git action needed).
+
+```bash
+git add src/Vanalytics.Web/src/components/character/AchievementRankBadge.tsx \
+        src/Vanalytics.Web/src/components/character/CharacterProfileHeader.tsx \
+        src/Vanalytics.Web/src/pages/PublicProfilePage.tsx \
+        src/Vanalytics.Web/src/pages/CharacterDetailPage.tsx \
+        src/Vanalytics.Web/src/pages/LeaderboardsPage.tsx \
+        src/Vanalytics.Web/src/components/achievements/achievementUtils.ts \
+        src/Vanalytics.Web/src/components/achievements/achievementUtils.test.ts \
+        src/Vanalytics.Api/Controllers/CharactersController.cs \
+        tests/Vanalytics.Api.Tests/Controllers/CharacterAchievementTests.cs
+git commit -m "feat(achievements): FFXIAH-style header rank + leaderboard deep-link (replaces tab)"
+```
+> If you already committed Task 12/13 blocks earlier, just `git add -A` the above paths and commit — git captures the redesigned content either way.

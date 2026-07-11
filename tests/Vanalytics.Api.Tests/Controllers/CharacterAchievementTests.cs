@@ -216,4 +216,46 @@ public class CharacterAchievementTests : IAsyncLifetime
         // Assert: 403 — the same status CharactersController returns for all non-owner private character reads.
         Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
     }
+
+    /// <summary>
+    /// Assertion 4: Anonymous (no auth header) GET on a PUBLIC character with a CharacterAchievement → 200,
+    /// TotalScore and GlobalRank are populated.
+    /// </summary>
+    [Fact]
+    public async Task GetAchievement_AnonymousReadsPublicCharacter_Returns200WithScore()
+    {
+        // Arrange: create a user, sync a character, make it public, add an achievement.
+        var (jwt, key) = await SetupSyncUserAsync("ach4@test.com", "ach4user");
+        var charId = await SyncCharacterAsync(key, "AchAnonPub", "Asura");
+        await MakePublicAsync(jwt, charId);
+        await AddAchievementAsync(charId, 750);
+
+        // Act: no Authorization header → anonymous caller.
+        var resp = await _client.GetAsync($"/api/characters/{charId}/achievement");
+
+        // Assert: endpoint is now [AllowAnonymous] for public characters.
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var body = (await resp.Content.ReadFromJsonAsync<CharacterAchievementResponse>())!;
+        Assert.Equal(750, body.TotalScore);
+        Assert.NotNull(body.GlobalRank);
+    }
+
+    /// <summary>
+    /// Assertion 5: Anonymous (no auth header) GET on a PRIVATE character → 403 Forbidden.
+    /// </summary>
+    [Fact]
+    public async Task GetAchievement_AnonymousReadsPrivateCharacter_ReturnsForbidden()
+    {
+        // Arrange: create a user, sync a character (stays private), add an achievement.
+        var (_, key) = await SetupSyncUserAsync("ach5@test.com", "ach5user");
+        var charId = await SyncCharacterAsync(key, "AchAnonPriv", "Asura");
+        // Do NOT make public.
+        await AddAchievementAsync(charId, 400);
+
+        // Act: no Authorization header → anonymous caller.
+        var resp = await _client.GetAsync($"/api/characters/{charId}/achievement");
+
+        // Assert: same 403 the existing non-owner private test asserts.
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
 }

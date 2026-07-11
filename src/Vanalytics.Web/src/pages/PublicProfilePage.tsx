@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { api } from '../api/client'
-import type { CharacterDetail, GameItemDetail, CharacterOwner } from '../types/api'
+import { api, getCharacterAchievement } from '../api/client'
+import type { CharacterDetail, GameItemDetail, CharacterOwner, CharacterAchievementResponse } from '../types/api'
 import JobsGrid from '../components/JobsGrid'
 import CraftingTable from '../components/CraftingTable'
 import StatusPanel from '../components/character/StatusPanel'
@@ -38,11 +38,13 @@ export default function PublicProfilePage() {
   const [gearTab, setGearTab] = useState<GearTab>('Equipment')
   const [itemCache, setItemCache] = useState<Map<number, GameItemDetail>>(new Map())
   const [copied, setCopied] = useState(false)
+  const [achievement, setAchievement] = useState<CharacterAchievementResponse | null>(null)
 
   useEffect(() => {
     setLoading(true)
     setNotFound(false)
     setLoadError(false)
+    setAchievement(null)
     fetch(`/api/profiles/${server}/${name}`)
       .then(async (res) => {
         // 404 = genuinely not public / no such character.
@@ -68,6 +70,14 @@ export default function PublicProfilePage() {
       .then(setOwner)
       .catch(() => setOwner(null))
   }, [server, name])
+
+  // Fetch achievement score after character loads — shown in header rank badge
+  useEffect(() => {
+    if (!character) return
+    getCharacterAchievement(character.id)
+      .then(setAchievement)
+      .catch(() => setAchievement(null))
+  }, [character?.id])
 
   // Deep-link: a ?gearset=<id> means the visitor wants a specific set — jump to that tab.
   useEffect(() => {
@@ -143,7 +153,7 @@ export default function PublicProfilePage() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
       <main className="mx-auto max-w-5xl px-4 py-8">
-        <CharacterProfileHeader character={character} owner={owner} />
+        <CharacterProfileHeader character={character} owner={owner} achievement={achievement} />
 
         {/* Share link */}
         <div className="mb-6 -mt-4">

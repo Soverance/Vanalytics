@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api, getCharacterLeaderboard, getLinkshellLeaderboard } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import type {
@@ -75,12 +75,28 @@ function Pagination({
 
 export default function LeaderboardsPage() {
   const { user } = useAuth()
-  const [tab, setTab] = useState<TabValue>('characters')
+  const [searchParams] = useSearchParams()
+
+  // Deep-link params
+  const paramBoard = searchParams.get('board') as TabValue | null
+  const paramServer = searchParams.get('server')
+  const paramFocusRank = searchParams.get('focusRank') ? Number(searchParams.get('focusRank')) : null
+  const paramFocusId = searchParams.get('focusId')
+
+  const [tab, setTab] = useState<TabValue>(
+    paramBoard === 'linkshells' ? 'linkshells' : 'characters'
+  )
   const [servers, setServers] = useState<GameServer[]>([])
-  const [selectedServer, setSelectedServer] = useState<string>('')
+  // Start with the param server if provided, else empty (resolved once servers load)
+  const [selectedServer, setSelectedServer] = useState<string>(paramServer ?? '')
+
+  // Ref for highlight scroll
+  const focusRowRef = useRef<HTMLTableRowElement | null>(null)
 
   // Characters tab state
-  const [charPage, setCharPage] = useState(1)
+  const [charPage, setCharPage] = useState(
+    paramFocusRank != null ? Math.ceil(paramFocusRank / PAGE_SIZE) : 1
+  )
   const [charData, setCharData] = useState<LeaderboardPage<CharacterLeaderboardEntry> | null>(null)
   const [charLoading, setCharLoading] = useState(false)
   const [charError, setCharError] = useState<string | null>(null)
@@ -97,12 +113,17 @@ export default function LeaderboardsPage() {
     api<GameServer[]>('/api/servers').then(setServers).catch(() => {})
   }, [])
 
-  // Set default server once servers + auth are ready
+  // Set default server once servers + auth are ready (skip if deep-link already set one)
   useEffect(() => {
     if (servers.length === 0) return
     if (selectedServer) return
-    const defaultServer = user?.defaultServer || servers[0]?.name || ''
-    setSelectedServer(defaultServer)
+    // No param server and no focusRank → use user's default; focusRank without server → All Servers (global)
+    if (paramFocusRank != null && !paramServer) {
+      setSelectedServer('All Servers')
+    } else {
+      const defaultServer = user?.defaultServer || servers[0]?.name || ''
+      setSelectedServer(defaultServer)
+    }
   }, [servers, user])
 
   // Fetch character leaderboard
@@ -128,6 +149,14 @@ export default function LeaderboardsPage() {
       .catch(() => setLsError('Failed to load linkshell leaderboard.'))
       .finally(() => setLsLoading(false))
   }, [selectedServer, lsSort, lsPage])
+
+  // Scroll focused row into view after charData loads
+  useEffect(() => {
+    if (!paramFocusId || !charData) return
+    if (focusRowRef.current) {
+      focusRowRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+  }, [charData, paramFocusId])
 
   // Reset page when server or sort changes
   const handleServerChange = (val: string) => {
@@ -199,10 +228,13 @@ export default function LeaderboardsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {charData.items.map(entry => (
+                    {charData.items.map(entry => {
+                      const isFocused = paramFocusId != null && entry.characterId === paramFocusId
+                      return (
                       <tr
                         key={entry.characterId}
-                        className="border-t border-gray-800 hover:bg-gray-800/50 transition-colors"
+                        ref={isFocused ? focusRowRef : null}
+                        className={`border-t border-gray-800 hover:bg-gray-800/50 transition-colors${isFocused ? ' bg-blue-900/30 ring-1 ring-inset ring-blue-600/60' : ''}`}
                       >
                         <td className="px-3 py-2 text-gray-500 tabular-nums w-12">{entry.rank}</td>
                         <td className="px-3 py-2 font-medium text-gray-100">
@@ -218,7 +250,8 @@ export default function LeaderboardsPage() {
                         <td className="px-3 py-2 text-gray-400">{entry.linkshell ?? '—'}</td>
                         <td className="px-3 py-2 text-gray-400">{timeAgo(entry.lastSyncAt)}</td>
                       </tr>
-                    ))}
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

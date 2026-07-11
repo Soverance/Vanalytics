@@ -998,12 +998,14 @@ public class CharactersController : ControllerBase
     /// Returns the cached achievement score for a character.
     /// Owner always sees their own (with null ranks when private).
     /// Non-owners can only see public characters (private → 403, matching the rest of this controller).
+    /// Anonymous callers may read PUBLIC characters (scores/ranks are already public via leaderboards).
     /// Ranks are dense 1-based, computed from public CharacterAchievements only.
     /// </summary>
     [HttpGet("{id:guid}/achievement")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAchievement(Guid id)
     {
-        var userId = GetUserId();
+        var userId = GetOptionalUserId();
         var ch = await _db.Characters.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
         if (ch is null) return NotFound();
         // Non-owner trying to read a private character: mirror the existing Forbid() gate
@@ -1119,6 +1121,12 @@ public class CharactersController : ControllerBase
         CreatedAt = s.CreatedAt,
         UpdatedAt = s.UpdatedAt
     };
+
+    private Guid? GetOptionalUserId()
+    {
+        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(claim, out var id) ? id : (Guid?)null;
+    }
 
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

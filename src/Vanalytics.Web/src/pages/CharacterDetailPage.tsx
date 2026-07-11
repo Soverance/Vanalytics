@@ -29,11 +29,11 @@ import SessionsTab from '../components/session/SessionsTab'
 import GearSetsTab from '../components/character/GearSetsTab'
 import { ApiError, getCharacterAchievement } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
+import CharacterRoleModal from '../components/character/CharacterRoleModal'
 import Tabs from '../components/Tabs'
-import AchievementBreakdown from '../components/achievements/AchievementBreakdown'
 import type { CharacterAchievementResponse } from '../types/api'
 
-const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items', 'Linkshells', 'Achievements'] as const
+const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items', 'Linkshells'] as const
 type StatTab = typeof STAT_TABS[number]
 
 const GEAR_TABS = ['Equipment', 'Ultimate Weapons', 'Inventory', 'Porter', 'Spells', 'Macros', 'Sessions', 'Gear Sets'] as const
@@ -62,21 +62,16 @@ export default function CharacterDetailPage() {
   const [macroError, setMacroError] = useState('')
   const [showMacroHistory, setShowMacroHistory] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showRoleModal, setShowRoleModal] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  // Achievements tab state
+  // Achievement state — fetched on character load, displayed in header
   const [achievement, setAchievement] = useState<CharacterAchievementResponse | null>(null)
-  const [achievementLoading, setAchievementLoading] = useState(false)
-  const [achievementNotFound, setAchievementNotFound] = useState(false)
-  const [achievementError, setAchievementError] = useState(false)
 
   useEffect(() => {
     setCharacter(null)
     setLoading(true)
     setAchievement(null)
-    setAchievementNotFound(false)
-    setAchievementLoading(false)
-    setAchievementError(false)
     api<CharacterDetail>(`/api/characters/${id}`)
       .then(setCharacter)
       .catch(() => setCharacter(null))
@@ -101,26 +96,13 @@ export default function CharacterDetailPage() {
     })
   }, [localGear])
 
-  // Load achievement score when switching to Achievements tab
+  // Fetch achievement score after character loads — shown in header rank badge
   useEffect(() => {
-    if (activeTab !== 'Achievements' || !id) return
-    if (achievement || achievementLoading) return
-    setAchievementLoading(true)
-    setAchievementNotFound(false)
-    setAchievementError(false)
+    if (!id) return
     getCharacterAchievement(id)
-      .then(data => {
-        setAchievement(data)
-      })
-      .catch((err) => {
-        if (err instanceof ApiError && err.status === 404) {
-          setAchievementNotFound(true)
-        } else {
-          setAchievementError(true)
-        }
-      })
-      .finally(() => setAchievementLoading(false))
-  }, [activeTab, id])
+      .then(setAchievement)
+      .catch(() => setAchievement(null))
+  }, [id])
 
   // Load macro books when switching to Macros tab
   useEffect(() => {
@@ -228,7 +210,8 @@ export default function CharacterDetailPage() {
         showPublicButton
         onTogglePublic={handleTogglePublic}
         onShareClick={() => setShowShareModal(true)}
-        onSetRole={handleSetRole}
+        onRoleClick={() => setShowRoleModal(true)}
+        achievement={achievement}
       />
 
       <section className="mb-8">
@@ -244,19 +227,6 @@ export default function CharacterDetailPage() {
               {activeTab === 'Titles' && <TitlesTab characterId={character.id} />}
               {activeTab === 'Key Items' && <KeyItemsTab characterId={character.id} />}
               {activeTab === 'Linkshells' && <LinkshellsTab characterId={character.id} server={character.server} />}
-              {activeTab === 'Achievements' && (
-                achievementLoading ? (
-                  <LoadingSpinner />
-                ) : achievementError ? (
-                  <p className="text-red-400 text-sm py-4">Failed to load achievement score.</p>
-                ) : achievementNotFound ? (
-                  <p className="text-gray-500 text-sm py-4">
-                    Score pending next sync — achievement scores are computed after your first sync.
-                  </p>
-                ) : achievement ? (
-                  <AchievementBreakdown data={achievement} server={character.server} />
-                ) : null
-              )}
             </div>
           </div>
 
@@ -477,6 +447,13 @@ export default function CharacterDetailPage() {
             return { slotId: slotMap[slotName] ?? 0, datPath }
           }).filter(s => s.slotId > 0)}
           onExit={() => setFullscreen(false)}
+        />
+      )}
+      {showRoleModal && (
+        <CharacterRoleModal
+          current={character.role}
+          onSelect={(r) => { handleSetRole(r); setShowRoleModal(false) }}
+          onClose={() => setShowRoleModal(false)}
         />
       )}
       {showShareModal && (

@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import type { CharacterDetail, CharacterOwner } from '../../types/api'
+import type { CharacterDetail, CharacterOwner, CharacterAchievementResponse } from '../../types/api'
 import MessageButton from '../messages/MessageButton'
 import { ownerDisplayLabel, shouldShowMessageButton } from './ownerActions'
 import LinkshellPearl from './LinkshellPearl'
-import { CHARACTER_ROLES, roleLabel } from '../../lib/characterRoles'
+import { roleLabel } from '../../lib/characterRoles'
+import AchievementRankBadge from './AchievementRankBadge'
 
 const NATION_NAMES: Record<number, string> = { 0: "San d'Oria", 1: 'Bastok', 2: 'Windurst' }
 
@@ -22,7 +23,8 @@ interface CharacterProfileHeaderProps {
   showPublicButton?: boolean
   onTogglePublic?: () => void
   onShareClick?: () => void
-  onSetRole?: (role: string) => void
+  onRoleClick?: () => void
+  achievement?: CharacterAchievementResponse | null
 }
 
 export default function CharacterProfileHeader({
@@ -31,7 +33,8 @@ export default function CharacterProfileHeader({
   showPublicButton,
   onTogglePublic,
   onShareClick,
-  onSetRole,
+  onRoleClick,
+  achievement,
 }: CharacterProfileHeaderProps) {
   const activeJob = character.jobs.find(j => j.isActive)
   const jobSubLine = activeJob
@@ -67,40 +70,49 @@ export default function CharacterProfileHeader({
 
   return (
     <div className="mb-6">
-      {/* Name row */}
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold">{character.name}</h1>
-        <span className="text-gray-400 text-sm self-baseline">{character.server}</span>
-        {showPublicButton ? (
-          <div className="ml-auto flex items-center gap-2">
-            <select
-              value={character.role && character.role !== 'None' ? character.role : ''}
-              onChange={(e) => onSetRole?.(e.target.value === '' ? 'None' : e.target.value)}
-              className="rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-200 hover:bg-gray-700"
-              aria-label="Character role"
-            >
-              <option value="">Unlabeled</option>
-              {CHARACTER_ROLES.map(r => (
-                <option key={r.value} value={r.value}>{r.label}</option>
-              ))}
-            </select>
-            <button
-              onClick={character.isPublic ? onShareClick : onTogglePublic}
-              className={`flex items-center gap-1.5 rounded px-3 py-1 text-xs font-medium transition-colors ${
-                character.isPublic
-                  ? 'bg-green-900/40 text-green-400 border border-green-700 hover:bg-green-900/60'
-                  : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700 hover:text-gray-200'
-              }`}
-            >
-              {character.isPublic ? 'Public Profile' : 'Make Public'}
-            </button>
-          </div>
-        ) : (
-          character.role && character.role !== 'None' && (
-            <span className="ml-auto rounded border border-gray-700 bg-gray-800 px-2 py-0.5 text-xs text-gray-300">
-              {roleLabel(character.role)}
-            </span>
-          )
+      {/* Name row — left: name/server/actions; right: achievement rank badge */}
+      <div className="flex items-start gap-3">
+        <div className="flex flex-1 min-w-0 items-center gap-3 flex-wrap">
+          <h1 className="text-2xl font-bold">{character.name}</h1>
+          <span className="text-gray-400 text-sm self-baseline">{character.server}</span>
+          {showPublicButton ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onRoleClick}
+                aria-label="Set character type"
+                className={
+                  character.role && character.role !== 'None'
+                    ? 'rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-300 hover:bg-gray-700 transition-colors'
+                    : 'rounded border border-dashed border-gray-600 bg-transparent px-2 py-1 text-xs text-gray-500 hover:text-gray-300 hover:border-gray-500 transition-colors'
+                }
+              >
+                {character.role && character.role !== 'None' ? roleLabel(character.role) : '+ Set type'}
+              </button>
+              <button
+                onClick={character.isPublic ? onShareClick : onTogglePublic}
+                className={`flex items-center gap-1.5 rounded px-3 py-1 text-xs font-medium transition-colors ${
+                  character.isPublic
+                    ? 'bg-green-900/40 text-green-400 border border-green-700 hover:bg-green-900/60'
+                    : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700 hover:text-gray-200'
+                }`}
+              >
+                {character.isPublic ? 'Public Profile' : 'Make Public'}
+              </button>
+            </div>
+          ) : (
+            character.role && character.role !== 'None' && (
+              <span className="rounded border border-gray-700 bg-gray-800 px-2 py-0.5 text-xs text-gray-300">
+                {roleLabel(character.role)}
+              </span>
+            )
+          )}
+        </div>
+        {achievement && (
+          <AchievementRankBadge
+            achievement={achievement}
+            server={character.server}
+            characterId={character.id}
+          />
         )}
       </div>
 
