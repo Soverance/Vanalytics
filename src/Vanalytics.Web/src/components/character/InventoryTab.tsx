@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client'
-import type { InventoryByBag, InventoryItem, GameItemDetail, AnomalyResponse, CraftingEntry } from '../../types/api'
+import type { InventoryByBag, InventoryItem, GameItemDetail, AnomalyResponse, CraftingEntry, SellAdviceResponse } from '../../types/api'
 import { useCharacterPorter } from '../../hooks/useCharacterPorter'
 import ItemPreviewBox from '../economy/ItemPreviewBox'
 import InventoryAnomalyBanner from './InventoryAnomalyBanner'
 import BulkMoveTray from './BulkMoveTray'
 import InventoryTotals from './InventoryTotals'
 import InventoryCrafting from './InventoryCrafting'
+import { deriveSellAdvice, summarizeSellAdvice } from '../../lib/sellAdvice'
 
 const BAG_ORDER = [
   'Inventory', 'Safe', 'Safe2', 'Storage', 'Locker',
@@ -58,6 +59,8 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
   const [sortField, setSortField] = useState<SortField>('itemName')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [categoryFilter, setCategoryFilter] = useState<string>('')
+  const [sellAdvice, setSellAdvice] = useState<SellAdviceResponse | null>(null)
+  const [sellAdviceLoading, setSellAdviceLoading] = useState(false)
 
   // Tooltip state
   const [hoveredItemId, setHoveredItemId] = useState<number | null>(null)
@@ -187,6 +190,22 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
       .catch(() => {})
   }, [characterId])
 
+  // Sell Advisor data is fetched lazily — only when the tab is first opened —
+  // so the plain inventory load stays fast for everyone who never opens it.
+  useEffect(() => {
+    if (activeView !== 'sellAdvisor' || sellAdvice !== null) return
+    setSellAdviceLoading(true)
+    api<SellAdviceResponse>(`/api/characters/${characterId}/inventory/sell-advice`)
+      .then(setSellAdvice)
+      .catch(() => setSellAdvice(null))
+      .finally(() => setSellAdviceLoading(false))
+  }, [activeView, characterId, sellAdvice])
+
+  // Drop cached advice when the character changes so the next open refetches.
+  useEffect(() => {
+    setSellAdvice(null)
+  }, [characterId])
+
   const availableBags = useMemo(() => {
     if (!inventory) return []
     return BAG_ORDER.filter(b => inventory[b] && inventory[b].length > 0)
@@ -211,27 +230,6 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
     }
     return counts
   }, [selection])
-
-  const sellableItems = useMemo(() => {
-    if (!inventory) return []
-    const items: (InventoryItem & { bag: string; totalValue: number })[] = []
-    for (const bag of BAG_ORDER) {
-      const bagItems = inventory[bag]
-      if (!bagItems) continue
-      for (const item of bagItems) {
-        if (item.baseSell && item.baseSell > 0) {
-          items.push({ ...item, bag, totalValue: item.quantity * item.baseSell })
-        }
-      }
-    }
-    items.sort((a, b) => b.totalValue - a.totalValue)
-    return items
-  }, [inventory])
-
-  const totalSellableGil = useMemo(
-    () => sellableItems.reduce((sum, i) => sum + i.totalValue, 0),
-    [sellableItems]
-  )
 
   const isSearching = search.length > 0
 
@@ -603,50 +601,103 @@ export default function InventoryTab({ characterId, craftingSkills = [] }: Props
           {/* Sell Advisor tab content */}
           {activeView === 'sellAdvisor' && (
             <div>
-              <div className="rounded-lg border border-green-800/50 bg-green-950/20 p-3 mb-4">
-                <p className="text-sm text-green-400">
-                  Total sellable value: <span className="font-semibold">{formatGil(totalSellableGil)} gil</span>
-                  {' '}across {sellableItems.length} item{sellableItems.length !== 1 ? 's' : ''}
-                </p>
-              </div>
-              {sellableItems.length === 0 ? (
+              {sellAdviceLoading && !sellAdvice ? (
+                <p className="text-gray-400 py-4">Loading sell advice...</p>
+              ) : !sellAdvice || sellAdvice.items.length === 0 ? (
                 <p className="text-gray-400 text-sm py-4">No sellable items found in your inventory.</p>
               ) : (
-                <div className="max-h-[480px] overflow-y-auto styled-scrollbar">
-                  <table className="w-full text-sm">
-                    <thead className="sticky top-0 z-10">
-                      <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
-                        <th className="px-4 py-2 text-left w-12"></th>
-                        <th className="px-4 py-2 text-left">Item</th>
-                        <th className="px-4 py-2 text-left">Bag</th>
-                        <th className="px-4 py-2 text-right w-16">Qty</th>
-                        <th className="px-4 py-2 text-right w-20">Unit</th>
-                        <th className="px-4 py-2 text-right w-24">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sellableItems.map(item => (
-                        <tr key={`${item.bag}-${item.slotIndex}`} className="border-t border-gray-700/50 hover:bg-gray-800/50">
-                          <td className="px-4 py-1.5">
-                            {item.iconPath && (
-                              <img src={`/item-images/${item.iconPath}`} alt="" className="w-8 h-auto object-contain" loading="lazy" />
-                            )}
-                          </td>
-                          <td className="px-4 py-1.5 text-gray-100">
-                            {item.itemName}
-                            <span className="ml-2 text-gray-600 text-xs">#{item.itemId}</span>
-                          </td>
-                          <td className="px-4 py-1.5 text-gray-400">{BAG_LABELS[item.bag] ?? item.bag}</td>
-                          <td className="px-4 py-1.5 text-right text-gray-300">
-                            {item.quantity}{item.stackSize > 1 ? `/${item.stackSize}` : ''}
-                          </td>
-                          <td className="px-4 py-1.5 text-right text-gray-400">{formatGil(item.baseSell!)}</td>
-                          <td className="px-4 py-1.5 text-right text-yellow-400 font-medium">{formatGil(item.totalValue)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                (() => {
+                  const summary = summarizeSellAdvice(sellAdvice.items)
+                  const rows = sellAdvice.items
+                    .map(it => ({ it, d: deriveSellAdvice(it) }))
+                    .sort((a, b) => b.d.bestValue - a.d.bestValue)
+                  return (
+                    <>
+                      <div className="rounded-lg border border-green-800/50 bg-green-950/20 p-3 mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                        <span className="text-gray-300">Vendor everything: <span className="font-semibold text-gray-100">{formatGil(summary.vendorEverything)}</span></span>
+                        <span className="text-gray-300">Sell optimally: <span className="font-semibold text-green-400">{formatGil(summary.sellOptimally)}</span></span>
+                        {summary.upside > 0 && (
+                          <span className="text-gray-300">Upside: <span className="font-semibold text-yellow-400">+{formatGil(summary.upside)}</span></span>
+                        )}
+                        <span className="ml-auto text-gray-500">{summary.count} item{summary.count !== 1 ? 's' : ''}</span>
+                      </div>
+
+                      {!sellAdvice.serverScraped && (
+                        <p className="text-xs text-gray-500 mb-2">
+                          AH data not available for {sellAdvice.serverName} — showing vendor values only.
+                        </p>
+                      )}
+
+                      <div className="max-h-[480px] overflow-y-auto styled-scrollbar">
+                        <table className="w-full text-sm">
+                          <thead className="sticky top-0 z-10">
+                            <tr className="bg-gray-800 text-gray-400 text-xs uppercase">
+                              <th className="px-4 py-2 text-left w-12"></th>
+                              <th className="px-4 py-2 text-left">Item</th>
+                              <th className="px-4 py-2 text-left">Bag</th>
+                              <th className="px-4 py-2 text-right w-16">Qty</th>
+                              <th className="px-4 py-2 text-right w-24">Vendor</th>
+                              <th className="px-4 py-2 text-right w-28">AH est.</th>
+                              <th className="px-4 py-2 text-right w-24">Best</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rows.map(({ it, d }) => (
+                              <tr key={`${it.bag}-${it.slotIndex}-${it.itemId}`} className="border-t border-gray-700/50 hover:bg-gray-800/50">
+                                <td className="px-4 py-1.5">
+                                  {it.iconPath && (
+                                    <img src={`/item-images/${it.iconPath}`} alt="" className="w-8 h-auto object-contain" loading="lazy" />
+                                  )}
+                                </td>
+                                <td className="px-4 py-1.5">
+                                  <Link to={`/items/${it.itemId}`} className="text-gray-100 hover:text-blue-400 hover:underline">
+                                    {it.itemName}
+                                  </Link>
+                                  <span className="ml-2 text-gray-600 text-xs">#{it.itemId}</span>
+                                </td>
+                                <td className="px-4 py-1.5 text-gray-400">{BAG_LABELS[it.bag] ?? it.bag}</td>
+                                <td className="px-4 py-1.5 text-right text-gray-300">
+                                  {it.quantity}{it.stackSize > 1 ? `/${it.stackSize}` : ''}
+                                </td>
+                                <td className="px-4 py-1.5 text-right text-gray-400">
+                                  {d.vendorTotal != null ? formatGil(d.vendorTotal) : '—'}
+                                </td>
+                                <td className="px-4 py-1.5 text-right">
+                                  {d.ahValue != null ? (
+                                    <span className={d.ahThin ? 'text-gray-500' : 'text-gray-300'}>
+                                      {formatGil(d.ahValue)}
+                                      <span className="ml-1 text-[10px] text-gray-600" title={`${d.ahCount} sale${d.ahCount !== 1 ? 's' : ''} in the last 30 days`}>
+                                        {d.ahBasis} · {d.ahCount}
+                                      </span>
+                                      {d.ahThin && <span className="ml-1 text-[10px] text-amber-600" title="Based on very few recent sales">thin</span>}
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-600">{'—'}</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-1.5 text-right">
+                                  {d.best === 'AH' ? (
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="text-[10px] font-semibold uppercase text-green-400 bg-green-950/40 border border-green-800/40 rounded px-1">AH</span>
+                                      <span className="text-green-400 font-medium">{formatGil(d.bestValue)}</span>
+                                    </span>
+                                  ) : d.best === 'Vendor' ? (
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="text-[10px] font-semibold uppercase text-yellow-500 bg-yellow-950/30 border border-yellow-800/40 rounded px-1">Vendor</span>
+                                      <span className="text-yellow-400 font-medium">{formatGil(d.bestValue)}</span>
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-600">{'—'}</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )
+                })()
               )}
             </div>
           )}

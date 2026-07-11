@@ -13,6 +13,7 @@ using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 using Vanalytics.Core.Services;
+using Vanalytics.Core.Services.Economy;
 using Vanalytics.Core.Services.Achievements;
 using Vanalytics.Data;
 using Vanalytics.Api.Services;
@@ -172,6 +173,98 @@ public class CharactersController : ControllerBase
             .ToDictionary(g => g.Key, g => g.ToList());
 
         return Ok(grouped);
+    }
+
+    [HttpGet("{id:guid}/inventory/sell-advice")]
+    public async Task<IActionResult> GetSellAdvice(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        // The character can only sell on its own world's AH. Resolve it; a missing
+        // GameServer row means that world isn't scraped, so we return vendor-only rows.
+        var server = await _db.GameServers.FirstOrDefaultAsync(s => s.Name == character.Server);
+        var serverScraped = server != null;
+
+        // Held items that are vendorable (BaseSell > 0) OR auctionable (0x0040 = NoAuction unset).
+        var rows = await _db.CharacterInventories
+            .Where(ci => ci.CharacterId == id)
+            .Join(_db.GameItems,
+                ci => ci.ItemId,
+                gi => gi.ItemId,
+                (ci, gi) => new { ci, gi })
+            .Where(x => (x.gi.BaseSell != null && x.gi.BaseSell > 0) || (x.gi.Flags & 0x0040) == 0)
+            .Select(x => new
+            {
+                x.ci.ItemId,
+                Bag = x.ci.Bag.ToString(),
+                x.ci.SlotIndex,
+                x.ci.Quantity,
+                ItemName = x.gi.Name ?? x.gi.NameJa ?? "Unknown",
+                x.gi.IconPath,
+                x.gi.StackSize,
+                x.gi.BaseSell,
+                IsNoAuction = (x.gi.Flags & 0x0040) != 0
+            })
+            .OrderBy(x => x.Bag)
+            .ThenBy(x => x.ItemName)
+            .ToListAsync();
+
+        // Per-item single/stack medians over the last 30 days on this world.
+        var medians = new Dictionary<int, (int? SingleMedian, int SingleCount, int? StackMedian, int StackCount, DateTimeOffset? LastSoldAt)>();
+        var itemIds = rows.Select(r => r.ItemId).Distinct().ToList();
+        if (serverScraped && itemIds.Count > 0)
+        {
+            var since = DateTimeOffset.UtcNow.AddDays(-30);
+            var sales = await _db.AuctionSales
+                .Where(s => s.ServerId == server!.Id && s.SoldAt >= since && itemIds.Contains(s.ItemId))
+                .Select(s => new { s.ItemId, s.Price, s.StackSize, s.SoldAt })
+                .ToListAsync();
+
+            foreach (var g in sales.GroupBy(s => s.ItemId))
+            {
+                var singles = g.Where(s => s.StackSize == 1).Select(s => s.Price).ToList();
+                var stacks = g.Where(s => s.StackSize > 1).Select(s => s.Price).ToList();
+                medians[g.Key] = (
+                    singles.Count > 0 ? PriceMath.Median(singles) : (int?)null,
+                    singles.Count,
+                    stacks.Count > 0 ? PriceMath.Median(stacks) : (int?)null,
+                    stacks.Count,
+                    g.Max(s => s.SoldAt));
+            }
+        }
+
+        var items = rows.Select(r =>
+        {
+            medians.TryGetValue(r.ItemId, out var m);
+            return new SellAdviceItemResponse
+            {
+                ItemId = r.ItemId,
+                ItemName = r.ItemName,
+                IconPath = r.IconPath,
+                Bag = r.Bag,
+                SlotIndex = r.SlotIndex,
+                Quantity = r.Quantity,
+                StackSize = r.StackSize,
+                BaseSell = r.BaseSell,
+                IsNoAuction = r.IsNoAuction,
+                SingleMedian = m.SingleMedian,
+                SingleCount = m.SingleCount,
+                StackMedian = m.StackMedian,
+                StackCount = m.StackCount,
+                LastSoldAt = m.LastSoldAt
+            };
+        }).ToList();
+
+        return Ok(new SellAdviceResponse
+        {
+            ServerName = character.Server,
+            ServerScraped = serverScraped,
+            Items = items
+        });
     }
 
     [HttpGet("{id:guid}/progression")]

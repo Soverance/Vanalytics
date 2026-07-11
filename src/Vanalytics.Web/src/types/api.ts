@@ -744,6 +744,29 @@ export interface InventoryItem {
 export type InventoryByBag = Record<string, InventoryItem[]>
 export type BagCapacities = Record<string, number>
 
+export interface SellAdviceItem {
+  itemId: number
+  itemName: string
+  iconPath: string | null
+  bag: string
+  slotIndex: number
+  quantity: number
+  stackSize: number
+  baseSell: number | null
+  isNoAuction: boolean
+  singleMedian: number | null
+  singleCount: number
+  stackMedian: number | null
+  stackCount: number
+  lastSoldAt: string | null
+}
+
+export interface SellAdviceResponse {
+  serverName: string
+  serverScraped: boolean
+  items: SellAdviceItem[]
+}
+
 export interface PorterItem {
   itemId: number
   itemName: string
