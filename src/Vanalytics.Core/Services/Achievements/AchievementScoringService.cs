@@ -11,9 +11,10 @@ public static class AchievementScoringService
     {
         var cats = new List<AchievementCategoryScore>();
 
-        int jobs = i.JobsAt99 * AchievementRubric.PointsPerJobAt99;
-        cats.Add(new("jobs", "Jobs Mastered", jobs, i.JobsAt99, i.TotalJobs,
-            $"{i.JobsAt99} / {i.TotalJobs} jobs at 99"));
+        int jobLevelSum = i.JobLevels.Sum();
+        int jobsMaxed = i.JobLevels.Count(l => l >= 99);
+        cats.Add(new("jobs", "Job Levels", jobLevelSum * AchievementRubric.PointsPerJobLevel,
+            jobsMaxed, i.TotalJobs, $"{jobLevelSum} total levels · {jobsMaxed}/{i.TotalJobs} at 99"));
 
         int mlSum = i.MasterLevels.Sum();
         cats.Add(new("master", "Master Levels", mlSum * AchievementRubric.PointsPerMasterLevel,
@@ -58,9 +59,12 @@ public static class AchievementScoringService
         cats.Add(new("crafting", "Crafting", craft, null, null,
             $"{i.CraftLevels.Sum()} combined craft levels"));
 
-        cats.Add(new("skills", "Skills Capped",
-            i.SkillsAtCap * AchievementRubric.PointsPerSkillAtCap, null, null,
-            $"{i.SkillsAtCap} skills at cap"));
+        double skillRaw = i.Skills
+            .Where(s => s.Cap > 0)
+            .Sum(s => AchievementRubric.MaxPointsPerSkill * Math.Min((double)s.Level / s.Cap, 1.0));
+        int skillPts = (int)Math.Round(skillRaw, MidpointRounding.AwayFromZero);
+        int skillsCapped = i.Skills.Count(s => s.Cap > 0 && s.Level >= s.Cap);
+        cats.Add(new("skills", "Skills", skillPts, null, null, $"{skillsCapped} skills at cap"));
 
         int nation = i.NationRank * AchievementRubric.PointsPerNationRank
                      + i.WarpsUnlocked * AchievementRubric.PointsPerWarp;

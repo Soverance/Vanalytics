@@ -8,10 +8,10 @@ namespace Vanalytics.Core.Data;
 /// </summary>
 public static class AchievementRubric
 {
-    public const int Version = 1;
+    public const int Version = 2;
 
     // Per-unit point values
-    public const int PointsPerJobAt99 = 50;
+    public const int PointsPerJobLevel = 1;
     public const int PointsPerMasterLevel = 2;
     public const int PointsPerSuperiorLevel = 50;
     public const int PointsPerMissionLine = 75;
@@ -19,7 +19,7 @@ public static class AchievementRubric
     public const int PointsPerTrust = 2;
     public const int PointsPerTitle = 1;
     public const int PointsPerCraftLevel = 1;
-    public const int PointsPerSkillAtCap = 5;
+    public const int MaxPointsPerSkill = 5;
     public const int PointsPerWarp = 1;
     public const int PointsPerNationRank = 10;
 
@@ -49,7 +49,7 @@ public static class AchievementRubric
 
     public static readonly IReadOnlyList<RubricCategory> Categories =
     [
-        new("jobs",    "Jobs Mastered",      "Each job leveled to 99.",                          $"{PointsPerJobAt99} points per job at 99"),
+        new("jobs",    "Job Levels",         "Combined levels earned across all jobs (1–99 each).", $"{PointsPerJobLevel} point per job level"),
         new("master",  "Master Levels",      "Master levels earned across all jobs.",            $"{PointsPerMasterLevel} points per master level"),
         new("superior","Superior Level",     "Character-wide Superior (Su) level.",              $"{PointsPerSuperiorLevel} points per Su level"),
         new("ultimate","Ultimate Weapons",   "Relic/Mythic/Empyrean/Aeonic/Prime weapons, scaled by upgrade stage.", "Up to 200 points per weapon by stage"),
@@ -61,7 +61,7 @@ public static class AchievementRubric
         new("titles",  "Titles",             "Titles collected.",                                $"{PointsPerTitle} point per title"),
         new("keyitems","Key Items",          "Key items held.",                                  $"1 point per {KeyItemsPerPoint} key items"),
         new("crafting","Crafting",           "Combined crafting skill levels.",                  $"{PointsPerCraftLevel} point per craft level"),
-        new("skills",  "Skills Capped",      "Combat and magic skills at their cap.",            $"{PointsPerSkillAtCap} points per capped skill"),
+        new("skills",  "Skills",             "Combat and magic skills, scaled by progress toward each cap.", $"up to {MaxPointsPerSkill} points per skill (× level/cap)"),
         new("nation",  "Nation & Explore",   "Nation rank and unlocked warps.",                  $"{PointsPerNationRank} points per nation rank, {PointsPerWarp} per warp"),
     ];
 }

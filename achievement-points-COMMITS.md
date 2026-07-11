@@ -190,3 +190,10 @@ git add src/Vanalytics.Web/src/components/character/AchievementRankBadge.tsx \
 git commit -m "feat(achievements): FFXIAH-style header rank + leaderboard deep-link (replaces tab)"
 ```
 > If you already committed Task 12/13 blocks earlier, just `git add -A` the above paths and commit — git captures the redesigned content either way.
+
+---
+## RUBRIC v2 — per-level Jobs + partial-credit Skills (user request)
+Jobs now 1 pt/level (was 50@99); Skills now 5×(level/cap) partial credit (was 5@cap); AchievementRubric.Version=2.
+Files already listed in earlier task blocks (AchievementRubric.cs, AchievementScoreInput.cs, AchievementScoringService.cs,
+AchievementRecomputeService.cs, AchievementScoringServiceTests.cs, AchievementRecomputeTests.cs) — git add captures v2 content.
+⚠ Because Version bumped to 2, run the post-deploy backfill (POST /api/admin/achievements/rescore) to rescore everyone under v2.

@@ -8,7 +8,7 @@ namespace Vanalytics.Core.Services.Achievements;
 /// </summary>
 public record AchievementScoreInput
 {
-    public int JobsAt99 { get; init; }
+    public IReadOnlyList<int> JobLevels { get; init; } = [];           // each job's level (1–99)
     public IReadOnlyList<int> MasterLevels { get; init; } = [];       // per job, 0-50
     public int SuperiorLevel { get; init; }
     public IReadOnlyList<int> UltimateWeaponRanks { get; init; } = []; // highest owned rank per owned weapon
@@ -20,7 +20,7 @@ public record AchievementScoreInput
     public int TitlesCollected { get; init; }
     public int KeyItemsHeld { get; init; }
     public IReadOnlyList<int> CraftLevels { get; init; } = [];        // per craft, 0-110
-    public int SkillsAtCap { get; init; }
+    public IReadOnlyList<SkillProgress> Skills { get; init; } = [];   // each skill's level + cap
     public int WarpsUnlocked { get; init; }
     public int NationRank { get; init; }
 
@@ -28,3 +28,6 @@ public record AchievementScoreInput
     public int TotalJobs { get; init; } = 22;
     public int TotalMissionLines { get; init; } = 14;
 }
+
+/// <summary>Skill level + cap pair used for partial-credit scoring.</summary>
+public record SkillProgress(int Level, int Cap);

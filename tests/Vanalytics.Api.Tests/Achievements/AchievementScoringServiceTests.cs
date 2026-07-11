@@ -17,13 +17,15 @@ public class AchievementScoringServiceTests
     }
 
     [Fact]
-    public void Jobs_ScoreFiftyEach()
+    public void Jobs_ScorePerLevel()
     {
-        var score = AchievementScoringService.Score(new AchievementScoreInput { JobsAt99 = 3 });
-        Assert.Equal(150, score.Total);
+        // 99 + 50 = 149 total levels → 149 pts; 1 job at 99
+        var score = AchievementScoringService.Score(
+            new AchievementScoreInput { JobLevels = new[] { 99, 50 } });
+        Assert.Equal(149, score.Total);
         var jobs = score.Categories.Single(c => c.Key == "jobs");
-        Assert.Equal(150, jobs.Points);
-        Assert.Equal(3, jobs.Current);
+        Assert.Equal(149, jobs.Points);
+        Assert.Equal(1, jobs.Current);   // 1 job at 99
         Assert.Equal(22, jobs.Total);
     }
 
@@ -70,11 +72,23 @@ public class AchievementScoringServiceTests
     }
 
     [Fact]
+    public void Skills_PartialCredit()
+    {
+        // 200/400 cap → 5×0.5 = 2.5; 400/400 cap → 5×1.0 = 5.0 → sum 7.5 → rounds AwayFromZero → 8
+        var score = AchievementScoringService.Score(new AchievementScoreInput
+        {
+            Skills = new[] { new SkillProgress(200, 400), new SkillProgress(400, 400) }
+        });
+        Assert.Equal(8, score.Categories.Single(c => c.Key == "skills").Points);
+    }
+
+    [Fact]
     public void GoldenCharacter_TotalsAllCategories()
     {
         var input = new AchievementScoreInput
         {
-            JobsAt99 = 2,                       // 100
+            // v2 rubric — jobs: 1 pt/level; skills: 5 × (level/cap) rounded once
+            JobLevels = new[] { 99, 99 },       // sum=198 levels → 198 pts, 2 at 99
             MasterLevels = new[] { 10, 5 },     // 30
             SuperiorLevel = 2,                  // 100
             UltimateWeaponRanks = new[] { 800 },// 120
@@ -86,13 +100,18 @@ public class AchievementScoringServiceTests
             TitlesCollected = 40,               // 40
             KeyItemsHeld = 20,                  // 10
             CraftLevels = new[] { 110, 60 },    // 170
-            SkillsAtCap = 6,                    // 30
+            Skills = new[]                      // 6 skills all at cap → 6×5×1.0 = 30
+            {
+                new SkillProgress(100, 100), new SkillProgress(100, 100),
+                new SkillProgress(100, 100), new SkillProgress(100, 100),
+                new SkillProgress(100, 100), new SkillProgress(100, 100),
+            },
             WarpsUnlocked = 15,                 // 15
             NationRank = 10,                    // 100
         };
         var score = AchievementScoringService.Score(input);
-        // 100+30+100+120+225+2+100+50+20+40+10+170+30+15+100
-        Assert.Equal(1112, score.Total);
+        // 198+30+100+120+225+2+100+50+20+40+10+170+30+15+100 = 1210
+        Assert.Equal(1210, score.Total);
         Assert.Equal(input.CompletedMissionLines, score.Categories.Single(c => c.Key == "missions").Current);
     }
 }

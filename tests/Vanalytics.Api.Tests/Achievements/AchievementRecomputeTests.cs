@@ -49,8 +49,8 @@ public class AchievementRecomputeTests : IAsyncLifetime
         await svc.RecomputeCharacterAsync(ch.Id);
 
         var a = await db.CharacterAchievements.SingleAsync(x => x.CharacterId == ch.Id);
-        Assert.Equal(50, a.TotalScore); // one job at 99
-        Assert.Equal(1, a.RubricVersion);
+        Assert.Equal(99, a.TotalScore); // one job at level 99 → 99 pts (1 pt/level)
+        Assert.Equal(2, a.RubricVersion);
     }
 
     [Fact]

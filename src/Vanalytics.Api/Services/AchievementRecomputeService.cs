@@ -45,7 +45,7 @@ public class AchievementRecomputeService(VanalyticsDbContext db)
 
         var input = new AchievementScoreInput
         {
-            JobsAt99 = ch.Jobs.Count(j => j.Level >= 99),
+            JobLevels = ch.Jobs.Select(j => j.Level).ToList(),
             MasterLevels = ch.Jobs.Select(j => j.MasterLevel ?? 0).ToList(),
             SuperiorLevel = ch.SuperiorLevel ?? 0,
             UltimateWeaponRanks = uwRanks,
@@ -57,7 +57,7 @@ public class AchievementRecomputeService(VanalyticsDbContext db)
             TitlesCollected = titleCount,
             KeyItemsHeld = CountKeyItems(collection?.KeyItemIdsJson),
             CraftLevels = ch.CraftingSkills.Select(c => c.Level).ToList(),
-            SkillsAtCap = ch.Skills.Count(s => s.Cap > 0 && s.Level >= s.Cap),
+            Skills = ch.Skills.Select(s => new SkillProgress(s.Level, s.Cap)).ToList(),
             WarpsUnlocked = CountWarps(progression?.WarpsJson),
             NationRank = ch.NationRank ?? 0,
         };
