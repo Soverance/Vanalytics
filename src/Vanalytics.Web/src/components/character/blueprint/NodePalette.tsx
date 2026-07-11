@@ -3,7 +3,7 @@ import { ClipboardPaste, Search, ChevronRight, ChevronDown } from 'lucide-react'
 import type { BlueprintNodeType } from '../../../types/api'
 import {
   buildPaletteGroups, isGroupExpanded, loadPaletteCollapse, savePaletteCollapse, DEFAULT_EXPANDED_GROUPS,
-  loadContextSensitive, saveContextSensitive,
+  loadContextSensitive, saveContextSensitive, GROUP_DESCRIPTIONS, paletteRows,
 } from './paletteCatalog'
 
 export default function NodePalette({ x, y, onPick, onClose, onPaste, filter }: {
@@ -84,12 +84,25 @@ export default function NodePalette({ x, y, onPick, onClose, onPaste, filter }: 
                   {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                   {group}
                 </button>
-                {expanded && items.map(i => (
-                  <button key={i.key} onClick={() => onPick(i.type, i.data)}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-gray-700">
-                    <span className="h-2 w-2 rounded-sm" style={{ background: i.color }} /> {i.label}
-                  </button>
-                ))}
+                {expanded && GROUP_DESCRIPTIONS[group] && (
+                  <div className="px-3 pb-1 pl-7 text-[10px] text-gray-600">{GROUP_DESCRIPTIONS[group]}</div>
+                )}
+                {expanded && paletteRows(items).map((row, idx) =>
+                  row.kind === 'subheader' ? (
+                    <div key={`sub-${group}-${row.label}-${idx}`}
+                      className="px-3 pt-1 pb-0.5 pl-7 text-[10px] uppercase tracking-wide text-gray-500">
+                      {row.label}
+                    </div>
+                  ) : (
+                    <button key={row.item.key} onClick={() => onPick(row.item.type, row.item.data)}
+                      className={`flex w-full flex-col gap-0.5 py-1.5 pr-3 text-left text-xs text-gray-200 hover:bg-gray-700 ${row.item.subgroup ? 'pl-7' : 'pl-3'}`}>
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 shrink-0 rounded-sm" style={{ background: row.item.color }} /> {row.item.label}
+                      </span>
+                      {row.item.desc && <span className="pl-4 text-[10px] leading-snug text-gray-500">{row.item.desc}</span>}
+                    </button>
+                  ),
+                )}
                 {expanded && group === 'Conditions' && !q && buffsAvailable && (
                   <div className="px-3 pb-1 pl-7 text-[10px] text-gray-600">Buffs — type to search</div>
                 )}
