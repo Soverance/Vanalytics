@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client'
-import type { GameItemDetail, PorterItem, PorterSlip } from '../../types/api'
+import type { GameItemDetail, PorterItem } from '../../types/api'
 import { useCharacterPorter } from '../../hooks/useCharacterPorter'
 import ItemPreviewBox from '../economy/ItemPreviewBox'
 
@@ -36,7 +36,7 @@ const FRESHNESS_STYLES: Record<Freshness, string> = {
 }
 
 export default function PorterTab({ characterId }: Props) {
-  const { slips, loading, error, refresh, hideSlip, forgetSlip } = useCharacterPorter(characterId)
+  const { slips, loading, error, refresh, hideSlip } = useCharacterPorter(characterId)
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
   const [showHidden, setShowHidden] = useState(false)
   const [search, setSearch] = useState('')
@@ -83,17 +83,10 @@ export default function PorterTab({ characterId }: Props) {
     })
   }
 
-  const handleForget = async (slip: PorterSlip) => {
-    const ok = window.confirm(
-      `Forget "${slip.slipName}"? This deletes Vanalytics's record of ${slip.items.length} stored item(s). ` +
-      `Do this only if you've torn up the slip in-game.`
-    )
-    if (!ok) return
-    try { await forgetSlip(slip.slipItemId) } catch { /* surfaced via api client */ }
-  }
-
-  const visibleSlips = useMemo(() => slips.filter(s => !s.userHidden), [slips])
-  const hiddenSlips = useMemo(() => slips.filter(s => s.userHidden), [slips])
+  const visibleSlips = useMemo(() => slips.filter(s => !s.userHidden && s.items.length > 0), [slips])
+  // Empty slips are auto-hidden from the main view (display-only, reverses when items return)
+  // and folded into the same collapsible as user-hidden slips.
+  const hiddenSlips = useMemo(() => slips.filter(s => s.userHidden || s.items.length === 0), [slips])
 
   const searchResults = useMemo(() => {
     if (!search) return null
@@ -244,13 +237,6 @@ export default function PorterTab({ characterId }: Props) {
                     >
                       Hide
                     </button>
-                    <button
-                      onClick={() => handleForget(slip)}
-                      className="text-xs text-red-400 hover:text-red-300"
-                      title="Delete Vanalytics's record of this slip"
-                    >
-                      Forget
-                    </button>
                   </div>
                 </div>
                 {isOpen && (
@@ -295,7 +281,7 @@ export default function PorterTab({ characterId }: Props) {
                 onClick={() => setShowHidden(prev => !prev)}
                 className="text-xs text-gray-400 hover:text-gray-200"
               >
-                {showHidden ? '▼' : '▶'} Hidden slips ({hiddenSlips.length})
+                {showHidden ? '▼' : '▶'} Hidden &amp; empty slips ({hiddenSlips.length})
               </button>
               {showHidden && (
                 <div className="mt-2 space-y-1">
@@ -306,12 +292,16 @@ export default function PorterTab({ characterId }: Props) {
                       <span className="ml-3 text-gray-500 text-xs">
                         {slip.items.length} item{slip.items.length !== 1 ? 's' : ''}
                       </span>
-                      <button
-                        onClick={() => hideSlip(slip.slipItemId, false)}
-                        className="ml-auto text-xs text-blue-400 hover:text-blue-300"
-                      >
-                        Unhide
-                      </button>
+                      {slip.userHidden ? (
+                        <button
+                          onClick={() => hideSlip(slip.slipItemId, false)}
+                          className="ml-auto text-xs text-blue-400 hover:text-blue-300"
+                        >
+                          Unhide
+                        </button>
+                      ) : (
+                        <span className="ml-auto text-xs text-gray-600 italic">empty</span>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -28,13 +28,13 @@ export const BLU_CLASSIFICATION: Record<number, BluClassification> = {
   519: { class: 'Physical', stat: 'MND' },              // Screwdriver
   521: { class: 'Magical' },                            // MP Drainkiss
   522: { class: 'Magical', stat: 'INT' },               // Death Ray
-  524: { class: 'Magical' },                            // Sandspin
+  524: { class: 'Magical', stat: 'INT' },               // Sandspin
   527: { class: 'Physical', stat: 'DEX' },              // Smite of Rage
   529: { class: 'Physical', stat: 'CHR' },              // Bludgeon
   530: { class: 'Buff' },                               // Refueling
   531: { class: 'Magical', stat: 'INT' },               // Ice Break
   532: { class: 'Stun' },                               // Blitzstrahl
-  533: { class: 'Breath' },                             // Self-Destruct
+  533: { class: 'Magical' },                            // Self-Destruct (Fire; dmg = current HP, no stat)
   534: { class: 'Magical', stat: 'CHR' },               // Mysterious Light
   535: { class: 'Magical' },                            // Cold Wave
   536: { class: 'Breath' },                             // Poison Breath
@@ -56,7 +56,7 @@ export const BLU_CLASSIFICATION: Record<number, BluClassification> = {
   557: { class: 'Magical', stat: 'CHR' },               // Eyes On Me
   560: { class: 'Physical', stat: 'DEX' },              // Frenetic Rip
   561: { class: 'Magical' },                            // Frightful Roar
-  563: { class: 'Magical', stat: 'MND' },               // Hecatomb Wave
+  563: { class: 'Breath' },                             // Hecatomb Wave (Wind breath; dmg = current HP, no stat)
   564: { class: 'Physical', stat: 'VIT' },              // Body Slam
   565: { class: 'Breath' },                             // Radiant Breath
   567: { class: 'Physical', stat: 'AGI' },              // Helldive
@@ -122,7 +122,7 @@ export const BLU_CLASSIFICATION: Record<number, BluClassification> = {
   645: { class: 'Buff' },                               // Exuviation
   646: { class: 'Magical', stat: 'MND' },               // Magic Hammer
   647: { class: 'Buff' },                               // Zephyr Mantle
-  648: { class: 'Magical', stat: 'INT' },               // Regurgitation
+  648: { class: 'Magical', stat: 'MND' },               // Regurgitation
   650: { class: 'Physical', stat: 'DEX' },              // Seedspray
   651: { class: 'Magical', stat: 'INT' },               // Corrosive Ooze
   652: { class: 'Physical', stat: 'AGI' },              // Spiral Spin
@@ -157,7 +157,7 @@ export const BLU_CLASSIFICATION: Record<number, BluClassification> = {
   682: { class: 'Physical', stat: 'VIT' },              // Delta Thrust
   683: { class: 'Magical', stat: 'MND' },               // Evryone. Grudge
   684: { class: 'Magical' },                            // Reaving Wind
-  685: { class: 'Skill' },                              // Barrier Tusk
+  685: { class: 'Buff' },                               // Barrier Tusk (flat -15% DT, no BM-skill scaling)
   686: { class: 'Magical' },                            // Mortal Ray
   687: { class: 'Magical', stat: 'INT' },               // Water Bomb
   688: { class: 'Physical', stat: 'STR' },              // Heavy Strike
@@ -201,11 +201,11 @@ export const BLU_CLASSIFICATION: Record<number, BluClassification> = {
   727: { class: 'Magical', stat: 'AGI' },               // Silent Storm
   728: { class: 'Magical', stat: 'INT' },               // Tenebral Crush
   736: { class: 'Stun', unbridled: true },              // Thunderbolt
-  737: { class: 'Skill', unbridled: true },             // Harden Shell
+  737: { class: 'Buff', unbridled: true },              // Harden Shell (flat +100% Def, no BM-skill scaling)
   738: { class: 'Magical', unbridled: true },           // Absolute Terror
   739: { class: 'Magical', stat: 'DEX', unbridled: true },// Gates of Hades
   740: { class: 'Physical', stat: 'MND', unbridled: true },// Tourbillion
-  741: { class: 'Skill', unbridled: true },             // Pyric Bulwark
+  741: { class: 'Buff', unbridled: true },              // Pyric Bulwark (Phys. Immunity, no BM-skill scaling)
   742: { class: 'Physical', unbridled: true },          // Bilgestorm
   743: { class: 'Physical', stat: 'STR', unbridled: true },// Bloodrake
   744: { class: 'Magical', unbridled: true },           // Droning Whirlwind
