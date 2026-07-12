@@ -66,7 +66,7 @@ public class AuctionHouseScraperLoopTests : IAsyncLifetime
         public Task<AhHistoryResult> GetSalesHistoryAsync(int itemId, bool stack, CancellationToken ct) =>
             Task.FromResult(new AhHistoryResult(5, new[]
             {
-                new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "S", "B", stack),
+                new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "Seller", "Buyer", stack),
             }));
 
         public Task<IReadOnlyList<PlayerRecord>> GetOnlinePlayersAsync(CancellationToken ct) =>
@@ -232,7 +232,7 @@ public class AuctionHouseScraperLoopTests : IAsyncLifetime
                 throw new EndOfStreamException("Unable to read beyond the end of the stream.");
             return Task.FromResult(new AhHistoryResult(1, new[]
             {
-                new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "S", "B", stack),
+                new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "Seller", "Buyer", stack),
             }));
         }
 
@@ -252,7 +252,7 @@ public class AuctionHouseScraperLoopTests : IAsyncLifetime
             if (stack) throw new SearchProtocolException("unexpected type 0x86");
             return Task.FromResult(new AhHistoryResult(2, new[]
             {
-                new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "S", "B", false),
+                new AhSale(itemId * 10, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000 + itemId), "Seller", "Buyer", false),
             }));
         }
 

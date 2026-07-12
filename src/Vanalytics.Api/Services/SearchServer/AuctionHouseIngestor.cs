@@ -35,7 +35,11 @@ public class AuctionHouseIngestor(VanalyticsDbContext db)
         {
             // Defense-in-depth: never persist an implausible sale (stale/garbage server memory).
             // The decoder fix stops padded-slot over-reads at the source; this is the backstop.
-            if (!AhSaleValidation.IsPlausible(s.Price, s.SoldAt, observedAt)) continue;
+            // Three orthogonal zero-false-positive signals (mirrors the purge SQL): positive
+            // in-range price, in-range date, and valid FFXI character names for both parties.
+            if (!AhSaleValidation.IsPlausible(s.Price, s.SoldAt, observedAt)
+                || !AhSaleValidation.IsValidCharacterName(s.SellerName)
+                || !AhSaleValidation.IsValidCharacterName(s.BuyerName)) continue;
 
             int stack = StackSizeOf(s, itemStack);
             var key = Key(s.Price, s.SoldAt, s.BuyerName, s.SellerName, stack);

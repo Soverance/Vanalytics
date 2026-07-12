@@ -1454,3 +1454,21 @@ export interface AggregateInventoryResponse {
   serverScraped: boolean
   availableWorlds: string[]
 }
+
+// Analytics types
+export interface AnalyticsSummary {
+  characters: number
+  worlds: number
+  jobsMastered: number
+  ultimateWeapons: number
+}
+export interface ServerComparisonEntry { server: string; value: number }
+export interface JobPopularityEntry { job: string; count: number }
+export interface UltimateWeaponRarityEntry {
+  weapon: string
+  category: string
+  owners: number
+  percent: number
+}
+export type ServerMetric = 'avgScore' | 'population' | 'pctWithUltimate' | 'avgJobsAt99'
+export type JobMode = 'maxed' | 'mained'

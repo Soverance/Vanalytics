@@ -24,4 +24,18 @@ public static class AhSaleValidation
            && price <= MaxPrice
            && soldAt >= FfxiEpoch
            && soldAt <= now.AddDays(1);
+
+    /// <summary>
+    /// True when <paramref name="name"/> is a valid FFXI character name: English letters only
+    /// (A–Z, a–z), 3–15 characters, no digits/symbols/spaces. Both the seller and buyer of a
+    /// real AH sale are always character names, so a name failing this is stale garbage.
+    /// Mirrors the purge SQL (`LIKE '%[^A-Za-z]%'` + `LEN` 3–15).
+    /// </summary>
+    public static bool IsValidCharacterName(string? name)
+    {
+        if (name is null || name.Length < 3 || name.Length > 15) return false;
+        foreach (char c in name)
+            if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) return false;
+        return true;
+    }
 }
