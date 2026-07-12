@@ -16,6 +16,7 @@ import AdminItemsPage from './pages/AdminItemsPage'
 import AdminSamlPage from './pages/AdminSamlPage'
 import AdminReportsPage from './pages/AdminReportsPage'
 import AdminEconomyPage from './pages/AdminEconomyPage'
+import AdminAchievementsPage from './pages/AdminAchievementsPage'
 import ItemDatabasePage from './pages/ItemDatabasePage'
 import ItemDetailPage from './pages/ItemDetailPage'
 // import BazaarActivityPage from './pages/BazaarActivityPage' // hidden until bazaar sync bugs resolved
@@ -137,6 +138,7 @@ export default function App() {
             <Route path="/admin/saml" element={<ProtectedRoute requiredRole="Admin"><AdminSamlPage /></ProtectedRoute>} />
             <Route path="/admin/reports" element={<ProtectedRoute requiredRole="Admin"><AdminReportsPage /></ProtectedRoute>} />
             <Route path="/admin/economy" element={<ProtectedRoute requiredRole="Admin"><AdminEconomyPage /></ProtectedRoute>} />
+            <Route path="/admin/achievements" element={<ProtectedRoute requiredRole="Admin"><AdminAchievementsPage /></ProtectedRoute>} />
             <Route path="/npcs" element={<NpcBrowserPage />} />
             <Route path="/zones" element={<ZoneBrowserPage />} />
             <Route path="/recipes" element={<RecipeBrowserPage />} />

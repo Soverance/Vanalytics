@@ -33,6 +33,10 @@ public class AuctionHouseIngestor(VanalyticsDbContext db)
         int added = 0;
         foreach (var s in sales)
         {
+            // Defense-in-depth: never persist an implausible sale (stale/garbage server memory).
+            // The decoder fix stops padded-slot over-reads at the source; this is the backstop.
+            if (!AhSaleValidation.IsPlausible(s.Price, s.SoldAt, observedAt)) continue;
+
             int stack = StackSizeOf(s, itemStack);
             var key = Key(s.Price, s.SoldAt, s.BuyerName, s.SellerName, stack);
             if (!seen.Add(key)) continue;

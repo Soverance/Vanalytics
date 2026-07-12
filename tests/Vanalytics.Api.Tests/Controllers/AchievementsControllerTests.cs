@@ -180,4 +180,66 @@ public class AchievementsControllerTests : IAsyncLifetime
             Assert.NotNull(row);
         }
     }
+
+    // ── Assertion 4: GET /api/admin/achievements/status WITHOUT admin token → 401 ──
+
+    [Fact]
+    public async Task Status_WithoutToken_Returns401()
+    {
+        var resp = await _client.GetAsync("/api/admin/achievements/status");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
+
+    // ── Assertion 5: status before any rescore → all N characters need a rescore ──
+
+    [Fact]
+    public async Task Status_BeforeRescore_ReportsAllNeedRescore()
+    {
+        const int n = 2;
+        await SeedCharactersAsync(n);
+        var token = await AdminTokenAsync();
+
+        var req = new HttpRequestMessage(HttpMethod.Get, "/api/admin/achievements/status");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var resp = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        using var doc = System.Text.Json.JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+
+        Assert.Equal(AchievementRubric.Version, root.GetProperty("currentRubricVersion").GetInt32());
+        Assert.Equal(n, root.GetProperty("totalCharacters").GetInt32());
+        Assert.Equal(0, root.GetProperty("scoredAtCurrentVersion").GetInt32());
+        Assert.Equal(n, root.GetProperty("needsRescore").GetInt32());
+        Assert.Equal(System.Text.Json.JsonValueKind.Null, root.GetProperty("lastComputedAt").ValueKind);
+    }
+
+    // ── Assertion 6: status after a rescore → nothing needs a rescore, timestamps set ──
+
+    [Fact]
+    public async Task Status_AfterRescore_ReportsAllScored()
+    {
+        const int n = 3;
+        await SeedCharactersAsync(n);
+        var token = await AdminTokenAsync();
+
+        var rescore = new HttpRequestMessage(HttpMethod.Post, "/api/admin/achievements/rescore");
+        rescore.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        (await _client.SendAsync(rescore)).EnsureSuccessStatusCode();
+
+        var req = new HttpRequestMessage(HttpMethod.Get, "/api/admin/achievements/status");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var resp = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        using var doc = System.Text.Json.JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+
+        Assert.Equal(n, root.GetProperty("totalCharacters").GetInt32());
+        Assert.Equal(n, root.GetProperty("scoredAtCurrentVersion").GetInt32());
+        Assert.Equal(0, root.GetProperty("needsRescore").GetInt32());
+        Assert.NotEqual(System.Text.Json.JsonValueKind.Null, root.GetProperty("lastComputedAt").ValueKind);
+        Assert.NotEqual(System.Text.Json.JsonValueKind.Null, root.GetProperty("oldestComputedAt").ValueKind);
+    }
 }

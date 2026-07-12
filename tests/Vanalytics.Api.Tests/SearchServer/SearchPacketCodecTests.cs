@@ -89,6 +89,30 @@ public class SearchPacketCodecTests
     }
 
     [Fact]
+    public void DecodeHistoryResponse_IgnoresPaddedGarbageSlots_BeyondDeclaredCount()
+    {
+        // Regression for the live-confirmed Siren bug: retail pads the wire frame with extra
+        // 40-byte slots of stale server memory beyond the real count declared at 0x08. The
+        // decoder must bound by the declared count, NOT the packet length, or it ingests the
+        // garbage (e.g. Gold. Kit 25 returned 1 real sale + 1 stale slot with a 1976 date).
+        var codec = new SearchPacketCodec();
+        var ctx = new SearchKeyContext(Nonce: 0x11223344, ResponseSeed: 0);
+        var real = new List<AhSale>
+        {
+            new(Price: 40000, SoldAt: DateTimeOffset.FromUnixTimeSeconds(1_589_900_000), SellerName: "Cloudspawn", BuyerName: "Janini", Stack: false),
+        };
+        // 1 real entry declared @0x08, but 2 physical slots on the wire (slot 1 = stale garbage).
+        byte[] resp = SearchPacketCodec.BuildPaddedResponseForTest(itemId: 8837, realSales: real, physicalSlots: 2, ctx: ctx);
+
+        var sales = codec.DecodeHistoryResponse(resp, ctx).Sales;
+
+        Assert.Single(sales);
+        Assert.Equal(40000, sales[0].Price);
+        Assert.Equal("Cloudspawn", sales[0].SellerName);
+        Assert.Equal("Janini", sales[0].BuyerName);
+    }
+
+    [Fact]
     public void DecodeHistoryResponse_ReadsCurrentOnAhQuantity()
     {
         var codec = new SearchPacketCodec();

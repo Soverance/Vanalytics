@@ -98,6 +98,49 @@ public class AuctionHouseIngestorTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task IngestAsync_SkipsImplausibleSales()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+
+        var server = new GameServer
+        {
+            Name = "Siren",
+            Status = Core.Enums.ServerStatus.Online,
+            LastCheckedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+        db.GameServers.Add(server);
+        db.GameItems.Add(new GameItem
+        {
+            ItemId = 8837,
+            Name = "Gold. Kit 25",
+            StackSize = 12,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var now = DateTimeOffset.UtcNow;
+        var ingestor = new AuctionHouseIngestor(db);
+        var sales = new List<AhSale>
+        {
+            new(40000, DateTimeOffset.FromUnixTimeSeconds(1_589_900_000), "Cloudspawn", "Janini", false), // real
+            new(213959576, DateTimeOffset.FromUnixTimeSeconds(214000000), "x", "y", false),               // stale: 1976 date
+            new(500, now.AddYears(2), "S", "B", false),                                                    // future date
+            new(2_000_000_000, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000), "S", "B", false),        // price > cap
+            new(0, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000), "S", "B", false),                    // zero price
+        };
+
+        int inserted = await ingestor.IngestAsync(8837, server.Id, sales, now, CancellationToken.None);
+
+        Assert.Equal(1, inserted);
+        var row = await db.AuctionSales.SingleAsync(s => s.ItemId == 8837);
+        Assert.Equal(40000, row.Price);
+        Assert.Equal("Cloudspawn", row.SellerName);
+    }
+
+    [Fact]
     public async Task IngestAsync_Stack_UsesItemStackSize()
     {
         using var scope = _factory.Services.CreateScope();

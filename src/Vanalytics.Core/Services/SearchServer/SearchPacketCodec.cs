@@ -53,10 +53,20 @@ public class SearchPacketCodec
 
         var sales = new List<AhSale>();
         const int firstEntry = 0x20, stride = 40, maxEntries = 10;
-        for (int n = 0; n < maxEntries; n++)
+
+        // The number of REAL sales is declared by the payload-size field @0x08 (= 0x20 + 40*count;
+        // see LSB auction_history.cpp:55). Retail PADS the wire frame with extra 40-byte slots of
+        // stale server memory beyond this count, so we MUST bound by the declared count, not the
+        // packet length. Confirmed live vs Siren 2026-07-12 (Gold. Kit 25 item 8837): frame carried
+        // 2 slots but declared 1 — slot 1 was garbage (price 213M, a 1976 date). Bounding by length
+        // ingested that garbage and poisoned the Sell Advisor medians.
+        int payloadSize = BinaryPrimitives.ReadUInt16LittleEndian(buf.AsSpan(0x08));
+        int declaredEntries = payloadSize >= firstEntry ? (payloadSize - firstEntry) / stride : 0;
+        int entries = Math.Min(declaredEntries, maxEntries);
+        for (int n = 0; n < entries; n++)
         {
             int b = firstEntry + stride * n;
-            if (b + stride > length - 0x1C) break; // not within payload
+            if (b + stride > length - 0x1C) break; // safety: a declared entry must still fit the frame
             int price = (int)BinaryPrimitives.ReadUInt32LittleEndian(buf.AsSpan(b + 0x00));
             uint ts    = BinaryPrimitives.ReadUInt32LittleEndian(buf.AsSpan(b + 0x04));
             string seller = ReadName(buf, b + 0x08);
@@ -200,6 +210,40 @@ public class SearchPacketCodec
         var bytes = Encoding.ASCII.GetBytes(name);
         int n = Math.Min(bytes.Length, 15);
         Array.Copy(bytes, 0, buf, offset, n);
+    }
+
+    // Builds a RETAIL-STYLE padded frame: the payload-size field @0x08 declares only the
+    // `realSales` count, but the wire frame physically carries `physicalSlots` 40-byte slots,
+    // with the trailing (padding) slots filled with stale garbage. Mirrors what Siren sends
+    // for a thin-history item (e.g. Gold. Kit 25: declared 1, wire held 2, slot 1 = garbage).
+    internal static byte[] BuildPaddedResponseForTest(
+        int itemId, IReadOnlyList<AhSale> realSales, int physicalSlots, in SearchKeyContext ctx)
+    {
+        int realCount = Math.Min(realSales.Count, 10);
+        int length = 0x20 + 40 * physicalSlots + 28;
+        var buf = new byte[length];
+        buf[0x0A] = 0x80;
+        buf[SearchProtocol.OffType] = SearchProtocol.RespAhHistory;
+        BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(0x08), (ushort)(0x20 + 40 * realCount)); // declares REAL count only
+        BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(0x18), (ushort)itemId);
+        for (int n = 0; n < realCount; n++)
+        {
+            int b = 0x20 + 40 * n;
+            BinaryPrimitives.WriteUInt32LittleEndian(buf.AsSpan(b + 0x00), (uint)realSales[n].Price);
+            BinaryPrimitives.WriteUInt32LittleEndian(buf.AsSpan(b + 0x04), (uint)realSales[n].SoldAt.ToUnixTimeSeconds());
+            WriteName(buf, b + 0x08, realSales[n].SellerName);
+            WriteName(buf, b + 0x18, realSales[n].BuyerName);
+        }
+        for (int n = realCount; n < physicalSlots; n++)
+        {
+            int b = 0x20 + 40 * n;
+            BinaryPrimitives.WriteUInt32LittleEndian(buf.AsSpan(b + 0x00), 0x0CBFA345); // ~213M, a plausible-looking price
+            BinaryPrimitives.WriteUInt32LittleEndian(buf.AsSpan(b + 0x04), 0x0C86C398); // stale ts
+            WriteName(buf, b + 0x08, "xZzxYy");
+            WriteName(buf, b + 0x18, "qWwEe");
+        }
+        EncryptInPlace(buf, ResponseKey(ctx.Nonce, ctx.ResponseSeed), ctx.Nonce);
+        return buf;
     }
 
     // ---- player search ----

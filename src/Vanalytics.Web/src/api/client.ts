@@ -171,6 +171,7 @@ import type {
   RubricResponse,
   CharacterAchievementResponse,
   LinkshellAchievementResponse,
+  AchievementAdminStatus,
   AggregateInventoryResponse,
 } from '../types/api'
 
@@ -212,6 +213,14 @@ export function getCharacterAchievement(id: string): Promise<CharacterAchievemen
 
 export function getLinkshellAchievement(id: string): Promise<LinkshellAchievementResponse> {
   return api<LinkshellAchievementResponse>(`/api/linkshells/${id}/achievement`)
+}
+
+export function getAchievementAdminStatus(): Promise<AchievementAdminStatus> {
+  return api<AchievementAdminStatus>('/api/admin/achievements/status')
+}
+
+export function rescoreAchievements(): Promise<{ recomputed: number }> {
+  return api<{ recomputed: number }>('/api/admin/achievements/rescore', { method: 'POST' })
 }
 
 export function getAggregateInventory(world?: string): Promise<AggregateInventoryResponse> {

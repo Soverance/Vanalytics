@@ -1393,6 +1393,15 @@ export interface LinkshellAchievementResponse {
   members: CharacterLeaderboardEntry[]
 }
 
+export interface AchievementAdminStatus {
+  currentRubricVersion: number
+  totalCharacters: number
+  scoredAtCurrentVersion: number
+  needsRescore: number
+  oldestComputedAt: string | null
+  lastComputedAt: string | null
+}
+
 // Aggregate inventory (roster-wide, owner-only) — mirrors Vanalytics.Core.DTOs.Inventory
 export interface AggregateInventoryLocation {
   characterId: string
