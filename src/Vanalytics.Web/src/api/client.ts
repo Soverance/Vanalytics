@@ -171,6 +171,7 @@ import type {
   RubricResponse,
   CharacterAchievementResponse,
   LinkshellAchievementResponse,
+  AggregateInventoryResponse,
 } from '../types/api'
 
 export function getCharacterLeaderboard(
@@ -211,4 +212,8 @@ export function getCharacterAchievement(id: string): Promise<CharacterAchievemen
 
 export function getLinkshellAchievement(id: string): Promise<LinkshellAchievementResponse> {
   return api<LinkshellAchievementResponse>(`/api/linkshells/${id}/achievement`)
+}
+
+export function getAggregateInventory(): Promise<AggregateInventoryResponse> {
+  return api<AggregateInventoryResponse>('/api/characters/inventory/aggregate')
 }

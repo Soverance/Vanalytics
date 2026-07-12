@@ -1392,3 +1392,43 @@ export interface LinkshellAchievementResponse {
   serverRank: number | null
   members: CharacterLeaderboardEntry[]
 }
+
+// Aggregate inventory (roster-wide, owner-only) — mirrors Vanalytics.Core.DTOs.Inventory
+export interface AggregateInventoryLocation {
+  characterId: string
+  characterName: string
+  role: string
+  bag: string
+  quantity: number
+}
+
+export interface AggregateInventoryItem {
+  itemId: number
+  name: string
+  iconPath: string | null
+  stackSize: number
+  totalQuantity: number
+  locations: AggregateInventoryLocation[]
+}
+
+export interface AggregateInventoryCharacter {
+  characterId: string
+  name: string
+  role: string
+  lastSyncAt: string | null
+}
+
+export interface AggregateInventoryTotals {
+  characterCount: number
+  syncedCharacterCount: number
+  distinctItems: number
+  totalQuantity: number
+  usedSlots: number
+  unlockedSlots: number
+}
+
+export interface AggregateInventoryResponse {
+  totals: AggregateInventoryTotals
+  items: AggregateInventoryItem[]
+  characters: AggregateInventoryCharacter[]
+}

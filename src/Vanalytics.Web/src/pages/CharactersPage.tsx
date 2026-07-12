@@ -9,6 +9,7 @@ import ConfirmModal from '../components/ConfirmModal'
 import { Link } from 'react-router-dom'
 import { Package, Map, Bug } from 'lucide-react'
 import { groupByRole } from '../lib/characterRoles'
+import AggregateInventoryDrawer from '../components/character/AggregateInventoryDrawer'
 
 export default function CharactersPage() {
   const { user, loading: authLoading } = useAuth()
@@ -17,6 +18,7 @@ export default function CharactersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [pendingDelete, setPendingDelete] = useState<string | null>(null)
+  const [inventoryDrawerOpen, setInventoryDrawerOpen] = useState(false)
 
   const fetchCharacters = async () => {
     try {
@@ -176,9 +178,18 @@ export default function CharactersPage() {
         </div>
       ) : (
         <>
-          <p className="text-sm text-gray-500 mb-6">
-            Characters are automatically added when your Windower addon syncs.
-          </p>
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <p className="text-sm text-gray-500">
+              Characters are automatically added when your Windower addon syncs.
+            </p>
+            <button
+              onClick={() => setInventoryDrawerOpen(true)}
+              className="inline-flex flex-shrink-0 items-center gap-2 rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800 transition-colors"
+            >
+              <Package className="h-4 w-4" />
+              Roster Inventory
+            </button>
+          </div>
           <div className="space-y-6">
             {groupByRole(characters).map(group => (
               <div key={group.role}>
@@ -207,6 +218,10 @@ export default function CharactersPage() {
           onCancel={() => setPendingDelete(null)}
         />
       )}
+      <AggregateInventoryDrawer
+        open={inventoryDrawerOpen}
+        onClose={() => setInventoryDrawerOpen(false)}
+      />
     </div>
   )
 }

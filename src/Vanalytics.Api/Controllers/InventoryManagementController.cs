@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Core.DTOs.Inventory;
 using Vanalytics.Core.Enums;
+using Vanalytics.Core.Inventory;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
 
@@ -16,7 +17,6 @@ namespace Vanalytics.Api.Controllers;
 public class InventoryManagementController : ControllerBase
 {
     private readonly VanalyticsDbContext _db;
-    private const int MaxSlotsPerBag = 80;
     private const double NearCapacityThreshold = 0.90;
 
     public InventoryManagementController(VanalyticsDbContext db)
@@ -178,9 +178,7 @@ public class InventoryManagementController : ControllerBase
         {
             var usedSlots = bagGroup.Count();
             var bagName = bagGroup.Key.ToString();
-            var maxSlots = capacities.TryGetValue(bagName, out var cap) && cap > 0
-                ? cap
-                : MaxSlotsPerBag;
+            var maxSlots = BagCapacity.CapOf(capacities, bagName);
             if ((double)usedSlots / maxSlots >= NearCapacityThreshold)
             {
                 var key = $"nearCapacity:{bagName}";
