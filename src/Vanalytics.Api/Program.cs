@@ -103,6 +103,7 @@ builder.Services.AddOpenApi("v1", options =>
 // Services
 builder.Services.AddSingleton<VanadielClock>();
 builder.Services.AddSoveranceOAuth(builder.Configuration);
+builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<DatMappingService>();
 builder.Services.AddScoped<BlueprintGenerationService>();
 builder.Services.AddScoped<GearSwapImportService>();

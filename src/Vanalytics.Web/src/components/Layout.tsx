@@ -222,6 +222,7 @@ function LayoutInner() {
               <SidebarLink to="/admin/saml" label="SAML" icon={<KeyRound className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
               <SidebarLink to="/admin/reports" label="Reports" icon={<Flag className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
               <SidebarLink to="/admin/economy" label="Economy" icon={<Coins className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
+              <SidebarLink to="/admin/achievements" label="Achievements" icon={<Trophy className="h-4 w-4 shrink-0" />} onClick={() => setSidebarOpen(false)} />
             </SidebarSection>
           )}
         </nav>

@@ -35,18 +35,46 @@ public class HistoryFrameCaptureTests
         var target = Target();
         if (target is null) return; // skipped: AH_CAPTURE_HOST / AH_CAPTURE_PORT not set
 
-        var sb = new StringBuilder();
-        sb.AppendLine($"=== AH history frame capture from {target.Value.host}:{target.Value.port} (item 4096 Fire Crystal) ===");
+        int itemId = int.TryParse(Environment.GetEnvironmentVariable("AH_CAPTURE_ITEM"), out var iid) ? iid : 4096;
 
-        // Item 4096 (Fire Crystal) is stackable, so both a single and a stack history exist.
-        await CaptureAsync(target.Value.host, target.Value.port, itemId: 4096, stack: false, sb);
-        await CaptureAsync(target.Value.host, target.Value.port, itemId: 4096, stack: true, sb);
+        var sb = new StringBuilder();
+        sb.AppendLine($"=== AH history frame capture from {target.Value.host}:{target.Value.port} (item {itemId}) ===");
+
+        await CaptureAsync(target.Value.host, target.Value.port, itemId, stack: false, sb);
+        await CaptureAsync(target.Value.host, target.Value.port, itemId, stack: true, sb);
 
         var report = sb.ToString();
         const string path = "history-frame-capture.txt";
         await File.WriteAllTextAsync(path, report);
 
         Assert.Fail(report + $"\n\n(also written to {Path.GetFullPath(path)})");
+    }
+
+    // OPT-IN: runs the REAL production decode path (SearchServerClient -> DecodeHistoryResponse)
+    // against a live server and prints the decoded sales, to confirm the padded-slot fix end to end.
+    [Fact]
+    public async Task LiveDecode_ReturnsOnlyRealSales()
+    {
+        var target = Target();
+        if (target is null) return; // skipped unless AH_CAPTURE_HOST / AH_CAPTURE_PORT set
+        int itemId = int.TryParse(Environment.GetEnvironmentVariable("AH_CAPTURE_ITEM"), out var iid) ? iid : 4096;
+
+        await using var client = new SearchServerClient(new SearchPacketCodec());
+        await client.ConnectAsync(target.Value.host, target.Value.port, CancellationToken.None);
+        var sales = (await client.GetSalesHistoryAsync(itemId, stack: false, CancellationToken.None)).Sales;
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"=== production decode of item {itemId} from {target.Value.host}: {sales.Count} sale(s) ===");
+        foreach (var s in sales)
+            sb.AppendLine($"  price={s.Price,-12} soldAt={s.SoldAt:yyyy-MM-dd} seller='{s.SellerName}' buyer='{s.BuyerName}'");
+        Assert.Fail(sb.ToString());
+    }
+
+    private static string ReadName(byte[] buf, int offset)
+    {
+        int len = 0;
+        while (len < 15 && offset + len < buf.Length && buf[offset + len] != 0) len++;
+        return Encoding.ASCII.GetString(buf, offset, len);
     }
 
     private static async Task CaptureAsync(string host, int port, int itemId, bool stack, StringBuilder sb)
@@ -101,8 +129,27 @@ public class HistoryFrameCaptureTests
                     var dec = SearchPacketCodec.DecryptResponseForCapture(raw, ctx);
                     sb.AppendLine($"DECRYPTED: {Convert.ToHexString(dec)}");
                     sb.AppendLine($"  type @0x0B: 0x{dec[0x0B]:X2}   (0x85=single, 0x86=stack)");
-                    if (dec.Length > 0x09) sb.AppendLine($"  size @0x08 (u16): {dec[0x08] | (dec[0x09] << 8)}");
+                    int payloadSize = dec.Length > 0x09 ? (dec[0x08] | (dec[0x09] << 8)) : -1;
+                    sb.AppendLine($"  size @0x08 (u16): {payloadSize}");
                     if (dec.Length > 0x11) sb.AppendLine($"  itemId @0x10 (u16): {dec[0x10] | (dec[0x11] << 8)}");
+
+                    // The count-of-entries the server DECLARES via 0x08 vs. how many 40-byte slots
+                    // the wire frame physically holds. If retail pads, declared << physical.
+                    int declaredEntries = payloadSize >= 0x20 ? (payloadSize - 0x20) / 40 : -1;
+                    int physicalSlots = declaredLen >= 0x20 + 28 ? (declaredLen - 0x20 - 28) / 40 : -1;
+                    sb.AppendLine($"  entries declared by 0x08: {declaredEntries}    physical 40B slots on wire: {physicalSlots}");
+                    for (int n = 0; n < physicalSlots && n < 10; n++)
+                    {
+                        int b = 0x20 + 40 * n;
+                        if (b + 40 > dec.Length) break;
+                        uint price = BitConverter.ToUInt32(dec, b + 0x00);
+                        uint ts    = BitConverter.ToUInt32(dec, b + 0x04);
+                        string seller = ReadName(dec, b + 0x08);
+                        string buyer  = ReadName(dec, b + 0x18);
+                        string tsStr = ts is > 0 and < 4102444800 ? DateTimeOffset.FromUnixTimeSeconds(ts).ToString("yyyy-MM-dd") : $"0x{ts:X8}(invalid)";
+                        string mark = n < declaredEntries ? "REAL " : "PAD? ";
+                        sb.AppendLine($"    slot {n} [{mark}] price={price,-12} ts={tsStr,-20} seller='{seller}' buyer='{buyer}'");
+                    }
                 }
                 catch (Exception ex) { sb.AppendLine($"decrypt failed: {ex.Message}"); }
             }

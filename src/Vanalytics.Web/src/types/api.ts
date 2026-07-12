@@ -1393,6 +1393,15 @@ export interface LinkshellAchievementResponse {
   members: CharacterLeaderboardEntry[]
 }
 
+export interface AchievementAdminStatus {
+  currentRubricVersion: number
+  totalCharacters: number
+  scoredAtCurrentVersion: number
+  needsRescore: number
+  oldestComputedAt: string | null
+  lastComputedAt: string | null
+}
+
 // Aggregate inventory (roster-wide, owner-only) — mirrors Vanalytics.Core.DTOs.Inventory
 export interface AggregateInventoryLocation {
   characterId: string
@@ -1445,3 +1454,21 @@ export interface AggregateInventoryResponse {
   serverScraped: boolean
   availableWorlds: string[]
 }
+
+// Analytics types
+export interface AnalyticsSummary {
+  characters: number
+  worlds: number
+  jobsMastered: number
+  ultimateWeapons: number
+}
+export interface ServerComparisonEntry { server: string; value: number }
+export interface JobPopularityEntry { job: string; count: number }
+export interface UltimateWeaponRarityEntry {
+  weapon: string
+  category: string
+  owners: number
+  percent: number
+}
+export type ServerMetric = 'avgScore' | 'population' | 'pctWithUltimate' | 'avgJobsAt99'
+export type JobMode = 'maxed' | 'mained'

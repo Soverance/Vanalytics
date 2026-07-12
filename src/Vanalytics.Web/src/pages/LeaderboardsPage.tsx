@@ -10,10 +10,11 @@ import type {
 } from '../types/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import Tabs from '../components/Tabs'
+import AnalyticsTab from '../components/leaderboards/AnalyticsTab'
 import { ChevronUp, ChevronDown, HelpCircle } from 'lucide-react'
 import { timeAgo } from '../lib/leaderboards'
 
-type TabValue = 'characters' | 'linkshells'
+type TabValue = 'characters' | 'linkshells' | 'analytics'
 type LsSort = 'total' | 'average' | 'members'
 
 const PAGE_SIZE = 50
@@ -21,6 +22,7 @@ const PAGE_SIZE = 50
 const TABS: { value: TabValue; label: string }[] = [
   { value: 'characters', label: 'Characters' },
   { value: 'linkshells', label: 'Linkshells' },
+  { value: 'analytics', label: 'Analytics' },
 ]
 
 const thClass =
@@ -346,6 +348,10 @@ export default function LeaderboardsPage() {
             </>
           )}
         </div>
+      )}
+
+      {tab === 'analytics' && (
+        <AnalyticsTab server={selectedServer === 'All Servers' ? undefined : selectedServer} />
       )}
     </div>
   )

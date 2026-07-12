@@ -171,7 +171,14 @@ import type {
   RubricResponse,
   CharacterAchievementResponse,
   LinkshellAchievementResponse,
+  AchievementAdminStatus,
   AggregateInventoryResponse,
+  AnalyticsSummary,
+  ServerComparisonEntry,
+  JobPopularityEntry,
+  UltimateWeaponRarityEntry,
+  ServerMetric,
+  JobMode,
 } from '../types/api'
 
 export function getCharacterLeaderboard(
@@ -214,7 +221,35 @@ export function getLinkshellAchievement(id: string): Promise<LinkshellAchievemen
   return api<LinkshellAchievementResponse>(`/api/linkshells/${id}/achievement`)
 }
 
+export function getAchievementAdminStatus(): Promise<AchievementAdminStatus> {
+  return api<AchievementAdminStatus>('/api/admin/achievements/status')
+}
+
+export function rescoreAchievements(): Promise<{ recomputed: number }> {
+  return api<{ recomputed: number }>('/api/admin/achievements/rescore', { method: 'POST' })
+}
+
 export function getAggregateInventory(world?: string): Promise<AggregateInventoryResponse> {
   const qs = world ? `?world=${encodeURIComponent(world)}` : ''
   return api<AggregateInventoryResponse>(`/api/characters/inventory/aggregate${qs}`)
+}
+
+// Analytics API helpers
+export function getAnalyticsSummary(server?: string): Promise<AnalyticsSummary> {
+  const params = new URLSearchParams(server ? { server } : {})
+  return api<AnalyticsSummary>(`/api/analytics/summary?${params}`)
+}
+
+export function getServerComparison(metric: ServerMetric): Promise<ServerComparisonEntry[]> {
+  return api<ServerComparisonEntry[]>(`/api/analytics/servers?metric=${metric}`)
+}
+
+export function getJobPopularity(server: string | undefined, mode: JobMode): Promise<JobPopularityEntry[]> {
+  const params = new URLSearchParams({ ...(server ? { server } : {}), mode })
+  return api<JobPopularityEntry[]>(`/api/analytics/jobs?${params}`)
+}
+
+export function getUltimateWeaponRarity(server?: string): Promise<UltimateWeaponRarityEntry[]> {
+  const params = new URLSearchParams(server ? { server } : {})
+  return api<UltimateWeaponRarityEntry[]>(`/api/analytics/ultimate-weapons?${params}`)
 }

@@ -84,8 +84,8 @@ public class AuctionHouseIngestorTests : IAsyncLifetime
         var ingestor = new AuctionHouseIngestor(db);
         var sales = new List<AhSale>
         {
-            new(1000, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000), "S", "B", false),
-            new(2000, DateTimeOffset.FromUnixTimeSeconds(1_700_001_000), "S", "B", false),
+            new(1000, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000), "Seller", "Buyer", false),
+            new(2000, DateTimeOffset.FromUnixTimeSeconds(1_700_001_000), "Seller", "Buyer", false),
         };
         var now = DateTimeOffset.UtcNow;
 
@@ -95,6 +95,53 @@ public class AuctionHouseIngestorTests : IAsyncLifetime
         Assert.Equal(2, first);
         Assert.Equal(0, second);
         Assert.Equal(2, await db.AuctionSales.CountAsync());
+    }
+
+    [Fact]
+    public async Task IngestAsync_SkipsImplausibleSales()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+
+        var server = new GameServer
+        {
+            Name = "Siren",
+            Status = Core.Enums.ServerStatus.Online,
+            LastCheckedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+        db.GameServers.Add(server);
+        db.GameItems.Add(new GameItem
+        {
+            ItemId = 8837,
+            Name = "Gold. Kit 25",
+            StackSize = 12,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var now = DateTimeOffset.UtcNow;
+        var ingestor = new AuctionHouseIngestor(db);
+        // Each rejected row isolates ONE signal (valid on the others) so the test proves each
+        // guard independently — especially the name check, which catches the garbage row whose
+        // price and date are both in range.
+        var sales = new List<AhSale>
+        {
+            new(40000, DateTimeOffset.FromUnixTimeSeconds(1_589_900_000), "Cloudspawn", "Janini", false),      // real → KEPT
+            new(213959576, DateTimeOffset.FromUnixTimeSeconds(214000000), "Trillium", "Chocobou", false),      // 1976 date → date guard
+            new(500, now.AddYears(2), "Trillium", "Chocobou", false),                                          // future date → date guard
+            new(2_000_000_000, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000), "Trillium", "Chocobou", false), // price > cap → price guard
+            new(-774252259, DateTimeOffset.FromUnixTimeSeconds(1_700_000_000), "Trillium", "Chocobou", false),    // negative price → price guard
+            new(985987762, DateTimeOffset.FromUnixTimeSeconds(1_200_000_000), "q?6qK?V?r", "Janini", false),   // plausible price+date, garbage name → name guard
+        };
+
+        int inserted = await ingestor.IngestAsync(8837, server.Id, sales, now, CancellationToken.None);
+
+        Assert.Equal(1, inserted);
+        var row = await db.AuctionSales.SingleAsync(s => s.ItemId == 8837);
+        Assert.Equal(40000, row.Price);
+        Assert.Equal("Cloudspawn", row.SellerName);
     }
 
     [Fact]
@@ -124,7 +171,7 @@ public class AuctionHouseIngestorTests : IAsyncLifetime
         var ingestor = new AuctionHouseIngestor(db);
         var sales = new List<AhSale>
         {
-            new(3000, DateTimeOffset.FromUnixTimeSeconds(1_700_002_000), "S2", "B2", true),  // stack sale
+            new(3000, DateTimeOffset.FromUnixTimeSeconds(1_700_002_000), "Sellertwo", "Buyertwo", true),  // stack sale
         };
         var now = DateTimeOffset.UtcNow;
 
