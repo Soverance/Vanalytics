@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { matchesItemQuery, filterAggregateItems } from './aggregateInventory'
+import { matchesItemQuery, filterAggregateItems, isRosterDuplicate, isSellable } from './aggregateInventory'
 
 const items = [
   { name: 'Beastblood', itemId: 6001 },
@@ -29,5 +29,33 @@ describe('filterAggregateItems', () => {
   it('filters by name', () => {
     const result = filterAggregateItems(items, 'crystal')
     expect(result).toEqual([{ name: 'Fire Crystal', itemId: 4096 }])
+  })
+})
+
+describe('isRosterDuplicate', () => {
+  it('is true when locations span 2+ distinct characters', () => {
+    expect(isRosterDuplicate({ locations: [
+      { characterId: 'a' }, { characterId: 'b' },
+    ] })).toBe(true)
+  })
+  it('is false for 2+ slots on ONE character', () => {
+    expect(isRosterDuplicate({ locations: [
+      { characterId: 'a' }, { characterId: 'a' },
+    ] })).toBe(false)
+  })
+  it('is false for a single location', () => {
+    expect(isRosterDuplicate({ locations: [{ characterId: 'a' }] })).toBe(false)
+  })
+})
+
+describe('isSellable', () => {
+  it('is true when vendorable', () => {
+    expect(isSellable({ baseSell: 10, isNoAuction: true })).toBe(true)
+  })
+  it('is true when auctionable', () => {
+    expect(isSellable({ baseSell: null, isNoAuction: false })).toBe(true)
+  })
+  it('is false when neither', () => {
+    expect(isSellable({ baseSell: 0, isNoAuction: true })).toBe(false)
   })
 })

@@ -1409,6 +1409,16 @@ export interface AggregateInventoryItem {
   stackSize: number
   totalQuantity: number
   locations: AggregateInventoryLocation[]
+  isRare: boolean
+  isExclusive: boolean
+  isNoDelivery: boolean
+  isNoAuction: boolean
+  baseSell: number | null
+  singleMedian: number | null
+  singleCount: number
+  stackMedian: number | null
+  stackCount: number
+  lastSoldAt: string | null
 }
 
 export interface AggregateInventoryCharacter {
@@ -1431,4 +1441,7 @@ export interface AggregateInventoryResponse {
   totals: AggregateInventoryTotals
   items: AggregateInventoryItem[]
   characters: AggregateInventoryCharacter[]
+  world: string | null
+  serverScraped: boolean
+  availableWorlds: string[]
 }

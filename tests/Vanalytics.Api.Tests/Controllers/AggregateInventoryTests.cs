@@ -119,6 +119,18 @@ public class AggregateInventoryTests : IAsyncLifetime
         return (await resp.Content.ReadFromJsonAsync<AggregateInventoryResponse>())!;
     }
 
+    private async Task<AggregateInventoryResponse> GetAggregateAsync(string jwt, string? world)
+    {
+        var url = world is null
+            ? "/api/characters/inventory/aggregate"
+            : $"/api/characters/inventory/aggregate?world={Uri.EscapeDataString(world)}";
+        var req = new HttpRequestMessage(HttpMethod.Get, url);
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        return (await resp.Content.ReadFromJsonAsync<AggregateInventoryResponse>())!;
+    }
+
     [Fact]
     public async Task Aggregate_GroupsItemAcrossCharacters_WithPerLocationBreakdown()
     {
@@ -244,5 +256,68 @@ public class AggregateInventoryTests : IAsyncLifetime
         // Totals: slots count individual rows, quantity is the sum.
         Assert.Equal(2, result.Totals.UsedSlots);
         Assert.Equal(17, result.Totals.TotalQuantity);
+    }
+
+    [Fact]
+    public async Task Aggregate_ScopesToSelectedWorld_AndListsAvailableWorlds()
+    {
+        var (jwt, apiKey) = await SetupSyncUserAsync("aggw1@test.com", "aggw1user");
+        await SeedItemsAsync((7001, "Asura Item", 12), (7002, "Bahamut Item", 12));
+
+        await _client.SendAsync(SyncReq(apiKey, new SyncRequest
+        { CharacterName = "AsuraChar", Server = "Asura", ActiveJob = "THF", ActiveJobLevel = 99 }));
+        await _client.SendAsync(InvSyncReq(apiKey, new InventorySyncRequest
+        {
+            CharacterName = "AsuraChar", Server = "Asura", FullSync = true,
+            Changes = [ new InventoryChangeEntry { ItemId = 7001, Bag = "Inventory", SlotIndex = 1, ChangeType = "Added", QuantityBefore = 0, QuantityAfter = 3 } ]
+        }));
+        await _client.SendAsync(SyncReq(apiKey, new SyncRequest
+        { CharacterName = "BahaChar", Server = "Bahamut", ActiveJob = "WHM", ActiveJobLevel = 99 }));
+        await _client.SendAsync(InvSyncReq(apiKey, new InventorySyncRequest
+        {
+            CharacterName = "BahaChar", Server = "Bahamut", FullSync = true,
+            Changes = [ new InventoryChangeEntry { ItemId = 7002, Bag = "Inventory", SlotIndex = 1, ChangeType = "Added", QuantityBefore = 0, QuantityAfter = 5 } ]
+        }));
+
+        var asura = await GetAggregateAsync(jwt, "Asura");
+        Assert.Equal("Asura", asura.World);
+        Assert.Equal(new[] { "Asura", "Bahamut" }, asura.AvailableWorlds.OrderBy(w => w).ToArray());
+        Assert.Single(asura.Items);
+        Assert.Equal(7001, asura.Items[0].ItemId);   // Bahamut item excluded
+
+        var baha = await GetAggregateAsync(jwt, "Bahamut");
+        Assert.Equal("Bahamut", baha.World);
+        Assert.Single(baha.Items);
+        Assert.Equal(7002, baha.Items[0].ItemId);
+    }
+
+    [Fact]
+    public async Task Aggregate_ProjectsRareExFlags()
+    {
+        var (jwt, apiKey) = await SetupSyncUserAsync("aggw2@test.com", "aggw2user");
+        // Flags 0x8000 = Rare, 0x4000 = Exclusive → Rare/Ex item.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            db.GameItems.Add(new GameItem
+            {
+                ItemId = 7100, Name = "Rare Ex Thing", Category = "Armor", StackSize = 1,
+                Flags = 0x8000 | 0x4000, IconPath = "7100.png",
+                CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+            });
+            await db.SaveChangesAsync();
+        }
+        await _client.SendAsync(SyncReq(apiKey, new SyncRequest
+        { CharacterName = "FlagChar", Server = "Asura", ActiveJob = "THF", ActiveJobLevel = 99 }));
+        await _client.SendAsync(InvSyncReq(apiKey, new InventorySyncRequest
+        {
+            CharacterName = "FlagChar", Server = "Asura", FullSync = true,
+            Changes = [ new InventoryChangeEntry { ItemId = 7100, Bag = "Inventory", SlotIndex = 1, ChangeType = "Added", QuantityBefore = 0, QuantityAfter = 1 } ]
+        }));
+
+        var result = await GetAggregateAsync(jwt, "Asura");
+        var item = result.Items.Single(i => i.ItemId == 7100);
+        Assert.True(item.IsRare);
+        Assert.True(item.IsExclusive);
     }
 }

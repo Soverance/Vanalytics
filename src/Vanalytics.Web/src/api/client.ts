@@ -214,6 +214,7 @@ export function getLinkshellAchievement(id: string): Promise<LinkshellAchievemen
   return api<LinkshellAchievementResponse>(`/api/linkshells/${id}/achievement`)
 }
 
-export function getAggregateInventory(): Promise<AggregateInventoryResponse> {
-  return api<AggregateInventoryResponse>('/api/characters/inventory/aggregate')
+export function getAggregateInventory(world?: string): Promise<AggregateInventoryResponse> {
+  const qs = world ? `?world=${encodeURIComponent(world)}` : ''
+  return api<AggregateInventoryResponse>(`/api/characters/inventory/aggregate${qs}`)
 }

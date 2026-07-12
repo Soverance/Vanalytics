@@ -13,7 +13,6 @@ using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 using Vanalytics.Core.Services;
-using Vanalytics.Core.Services.Economy;
 using Vanalytics.Core.Services.Achievements;
 using Vanalytics.Data;
 using Vanalytics.Api.Services;
@@ -214,28 +213,10 @@ public class CharactersController : ControllerBase
             .ToListAsync();
 
         // Per-item single/stack medians over the last 30 days on this world.
-        var medians = new Dictionary<int, (int? SingleMedian, int SingleCount, int? StackMedian, int StackCount, DateTimeOffset? LastSoldAt)>();
         var itemIds = rows.Select(r => r.ItemId).Distinct().ToList();
-        if (serverScraped && itemIds.Count > 0)
-        {
-            var since = DateTimeOffset.UtcNow.AddDays(-30);
-            var sales = await _db.AuctionSales
-                .Where(s => s.ServerId == server!.Id && s.SoldAt >= since && itemIds.Contains(s.ItemId))
-                .Select(s => new { s.ItemId, s.Price, s.StackSize, s.SoldAt })
-                .ToListAsync();
-
-            foreach (var g in sales.GroupBy(s => s.ItemId))
-            {
-                var singles = g.Where(s => s.StackSize == 1).Select(s => s.Price).ToList();
-                var stacks = g.Where(s => s.StackSize > 1).Select(s => s.Price).ToList();
-                medians[g.Key] = (
-                    singles.Count > 0 ? PriceMath.Median(singles) : (int?)null,
-                    singles.Count,
-                    stacks.Count > 0 ? PriceMath.Median(stacks) : (int?)null,
-                    stacks.Count,
-                    g.Max(s => s.SoldAt));
-            }
-        }
+        var medians = serverScraped
+            ? await Vanalytics.Api.Services.AhMedianService.GetMediansAsync(_db, server!.Id, itemIds)
+            : new Dictionary<int, Vanalytics.Api.Services.AhMedians>();
 
         var items = rows.Select(r =>
         {
@@ -251,11 +232,11 @@ public class CharactersController : ControllerBase
                 StackSize = r.StackSize,
                 BaseSell = r.BaseSell,
                 IsNoAuction = r.IsNoAuction,
-                SingleMedian = m.SingleMedian,
-                SingleCount = m.SingleCount,
-                StackMedian = m.StackMedian,
-                StackCount = m.StackCount,
-                LastSoldAt = m.LastSoldAt
+                SingleMedian = m?.SingleMedian,
+                SingleCount = m?.SingleCount ?? 0,
+                StackMedian = m?.StackMedian,
+                StackCount = m?.StackCount ?? 0,
+                LastSoldAt = m?.LastSoldAt
             };
         }).ToList();
 

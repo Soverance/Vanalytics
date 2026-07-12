@@ -1,5 +1,10 @@
 import type { SellAdviceItem } from '../types/api'
 
+export type SellAdviceInput = Pick<
+  SellAdviceItem,
+  'quantity' | 'stackSize' | 'baseSell' | 'singleMedian' | 'singleCount' | 'stackMedian' | 'stackCount'
+>
+
 /** Winning AH basis with fewer than this many sales in the window is "thin" (low confidence). */
 export const THIN_DATA_THRESHOLD = 3
 
@@ -25,7 +30,7 @@ interface Candidate {
   count: number
 }
 
-export function deriveSellAdvice(item: SellAdviceItem): DerivedSellAdvice {
+export function deriveSellAdvice(item: SellAdviceInput): DerivedSellAdvice {
   const { quantity, stackSize, baseSell, singleMedian, singleCount, stackMedian, stackCount } = item
 
   const vendorTotal = baseSell != null && baseSell > 0 ? quantity * baseSell : null
@@ -68,7 +73,7 @@ export function deriveSellAdvice(item: SellAdviceItem): DerivedSellAdvice {
   return { vendorTotal, ahValue, ahBasis, ahCount, ahThin, best, bestValue }
 }
 
-export function summarizeSellAdvice(items: SellAdviceItem[]) {
+export function summarizeSellAdvice(items: SellAdviceInput[]) {
   let vendorEverything = 0
   let sellOptimally = 0
   for (const item of items) {

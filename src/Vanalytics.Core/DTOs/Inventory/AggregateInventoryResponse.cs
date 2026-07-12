@@ -2,6 +2,9 @@ namespace Vanalytics.Core.DTOs.Inventory;
 
 public class AggregateInventoryResponse
 {
+    public string? World { get; set; }
+    public bool ServerScraped { get; set; }
+    public List<string> AvailableWorlds { get; set; } = [];
     public AggregateInventoryTotals Totals { get; set; } = new();
     public List<AggregateInventoryItem> Items { get; set; } = [];
     public List<AggregateInventoryCharacter> Characters { get; set; } = [];
@@ -24,6 +27,16 @@ public class AggregateInventoryItem
     public string? IconPath { get; set; }
     public int StackSize { get; set; }
     public long TotalQuantity { get; set; }
+    public bool IsRare { get; set; }
+    public bool IsExclusive { get; set; }
+    public bool IsNoDelivery { get; set; }
+    public bool IsNoAuction { get; set; }
+    public int? BaseSell { get; set; }
+    public int? SingleMedian { get; set; }
+    public int SingleCount { get; set; }
+    public int? StackMedian { get; set; }
+    public int StackCount { get; set; }
+    public DateTimeOffset? LastSoldAt { get; set; }
     public List<AggregateInventoryLocation> Locations { get; set; } = [];
 }
 
