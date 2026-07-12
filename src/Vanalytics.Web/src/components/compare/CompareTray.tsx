@@ -3,6 +3,7 @@ import { X, ChevronUp, ChevronDown } from 'lucide-react'
 import { useCompare } from './CompareContext'
 import CompareTable from './CompareTable'
 import { itemImageUrl } from '../../utils/imageUrl'
+import BottomFlyout from '../BottomFlyout'
 
 export default function CompareTray() {
   const { items, removeItem, clearItems, details, fetchDetails } = useCompare()
@@ -22,7 +23,7 @@ export default function CompareTray() {
     .filter((d): d is NonNullable<typeof d> => d != null)
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
+    <BottomFlyout open>
       {expanded && detailItems.length >= 2 && (
         <div className="bg-gray-900 border-t border-gray-700 max-h-[60vh] overflow-y-auto">
           <div className="max-w-5xl mx-auto p-4">
@@ -68,6 +69,6 @@ export default function CompareTray() {
           </button>
         </div>
       </div>
-    </div>
+    </BottomFlyout>
   )
 }

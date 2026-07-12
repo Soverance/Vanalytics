@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { X, ChevronUp, ChevronDown } from 'lucide-react'
 import type { InventoryByBag } from '../../types/api'
 import { itemImageUrl } from '../../utils/imageUrl'
+import BottomFlyout from '../BottomFlyout'
 
 const BAG_OPTIONS = [
   'Inventory', 'Safe', 'Safe2', 'Storage', 'Locker', 'Satchel', 'Sack', 'Case',
@@ -95,7 +96,7 @@ export default function BulkMoveTray({
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
+    <BottomFlyout open>
       {/* Expanded item list */}
       {expanded && (
         <div className="bg-gray-900 border-t border-gray-700 max-h-[40vh] overflow-y-auto">
@@ -230,6 +231,6 @@ export default function BulkMoveTray({
           </button>
         </div>
       </div>
-    </div>
+    </BottomFlyout>
   )
 }

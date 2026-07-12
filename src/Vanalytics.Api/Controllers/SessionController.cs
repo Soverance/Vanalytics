@@ -134,22 +134,10 @@ public class SessionController : ControllerBase
         var accepted = 0;
         foreach (var entry in request.Events)
         {
-            if (!Enum.TryParse<SessionEventType>(entry.EventType, true, out var eventType))
-                continue;
+            var mapped = MapEvent(entry, activeSession.Id);
+            if (mapped is null) continue; // unparseable EventType — skip, don't fail the batch
 
-            _db.SessionEvents.Add(new SessionEvent
-            {
-                SessionId = activeSession.Id,
-                EventType = eventType,
-                Timestamp = entry.Timestamp,
-                Source = entry.Source,
-                Target = entry.Target,
-                Value = entry.Value,
-                Ability = entry.Ability,
-                ItemId = entry.ItemId,
-                Zone = entry.Zone
-            });
-
+            _db.SessionEvents.Add(mapped);
             accepted++;
         }
 
@@ -157,4 +145,89 @@ public class SessionController : ControllerBase
 
         return Ok(new { accepted, total = request.Events.Count });
     }
+
+    [HttpPost("import")]
+    public async Task<IActionResult> Import([FromBody] SessionImportRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var apiKey = Request.Headers["X-Api-Key"].ToString();
+        if (!_rateLimiter.IsAllowed(apiKey))
+            return StatusCode(429, new { message = "Rate limit exceeded. Max 300 requests per hour." });
+
+        var character = await _db.Characters
+            .FirstOrDefaultAsync(c => c.Name == request.CharacterName && c.Server == request.Server);
+
+        if (character is null)
+            return NotFound(new { message = "Character not found" });
+
+        if (character.UserId != userId)
+            return StatusCode(403, new { message = "Character is not owned by this account" });
+
+        // Build a completed session dated from the events themselves so a
+        // recovered run keeps its real start/end, not the recovery time.
+        var session = new Core.Models.Session
+        {
+            Id = Guid.NewGuid(),
+            CharacterId = character.Id,
+            Zone = Truncate(request.Zone, 64),
+            Status = SessionStatus.Completed
+        };
+
+        var accepted = 0;
+        DateTimeOffset? minTs = null;
+        DateTimeOffset? maxTs = null;
+        foreach (var entry in request.Events)
+        {
+            var mapped = MapEvent(entry, session.Id);
+            if (mapped is null) continue;
+
+            // Ignore default/unset timestamps when bounding the session window.
+            if (mapped.Timestamp > DateTimeOffset.MinValue)
+            {
+                if (minTs is null || mapped.Timestamp < minTs) minTs = mapped.Timestamp;
+                if (maxTs is null || mapped.Timestamp > maxTs) maxTs = mapped.Timestamp;
+            }
+
+            _db.SessionEvents.Add(mapped);
+            accepted++;
+        }
+
+        if (accepted == 0)
+            return BadRequest(new { message = "No importable events in file" });
+
+        session.StartedAt = minTs ?? DateTimeOffset.UtcNow;
+        session.EndedAt = maxTs ?? session.StartedAt;
+
+        _db.Sessions.Add(session);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { sessionId = session.Id, accepted, total = request.Events.Count });
+    }
+
+    // Maps an incoming event entry to a SessionEvent, truncating each string to
+    // its DB column width. Returns null when the EventType can't be parsed so
+    // the caller can skip it. Never throws on over-length input — that's the
+    // whole point: one bad line must not sink the batch.
+    private static SessionEvent? MapEvent(SessionEventEntry entry, Guid sessionId)
+    {
+        if (!Enum.TryParse<SessionEventType>(entry.EventType, true, out var eventType))
+            return null;
+
+        return new SessionEvent
+        {
+            SessionId = sessionId,
+            EventType = eventType,
+            Timestamp = entry.Timestamp,
+            Source = Truncate(entry.Source, 64),
+            Target = Truncate(entry.Target, 128),
+            Value = entry.Value,
+            Ability = entry.Ability is null ? null : Truncate(entry.Ability, 128),
+            ItemId = entry.ItemId,
+            Zone = Truncate(entry.Zone, 64)
+        };
+    }
+
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength];
 }

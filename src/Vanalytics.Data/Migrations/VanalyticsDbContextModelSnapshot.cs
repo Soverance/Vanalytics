@@ -867,6 +867,9 @@ namespace Vanalytics.Data.Migrations
                     b.Property<int?>("Attack")
                         .HasColumnType("int");
 
+                    b.Property<string>("BagCapacitiesJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("BaseAgi")
                         .HasColumnType("int");
 
@@ -984,6 +987,9 @@ namespace Vanalytics.Data.Migrations
                     b.Property<int?>("ResWind")
                         .HasColumnType("int");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
                     b.Property<string>("Server")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -1019,6 +1025,31 @@ namespace Vanalytics.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Characters");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterAchievement", b =>
+                {
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BreakdownJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("RubricVersion")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalScore")
+                        .HasColumnType("int");
+
+                    b.HasKey("CharacterId");
+
+                    b.HasIndex("TotalScore");
+
+                    b.ToTable("CharacterAchievements");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterCollection", b =>
@@ -1898,6 +1929,9 @@ namespace Vanalytics.Data.Migrations
                     b.Property<long>("GameLinkshellId")
                         .HasColumnType("bigint");
 
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
                     b.Property<DateTimeOffset>("LastSeenAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1920,6 +1954,32 @@ namespace Vanalytics.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Linkshells");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.LinkshellAchievement", b =>
+                {
+                    b.Property<Guid>("LinkshellId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("AverageScore")
+                        .HasColumnType("float");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("RankedMemberCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalScore")
+                        .HasColumnType("int");
+
+                    b.HasKey("LinkshellId");
+
+                    b.HasIndex("AverageScore");
+
+                    b.HasIndex("TotalScore");
+
+                    b.ToTable("LinkshellAchievements");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.LinkshellApplication", b =>
@@ -2927,6 +2987,17 @@ namespace Vanalytics.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Vanalytics.Core.Models.CharacterAchievement", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Character", "Character")
+                        .WithOne()
+                        .HasForeignKey("Vanalytics.Core.Models.CharacterAchievement", "CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
             modelBuilder.Entity("Vanalytics.Core.Models.CharacterCollection", b =>
                 {
                     b.HasOne("Vanalytics.Core.Models.Character", "Character")
@@ -3122,6 +3193,17 @@ namespace Vanalytics.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.LinkshellAchievement", b =>
+                {
+                    b.HasOne("Vanalytics.Core.Models.Linkshell", "Linkshell")
+                        .WithOne()
+                        .HasForeignKey("Vanalytics.Core.Models.LinkshellAchievement", "LinkshellId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Linkshell");
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.LinkshellApplication", b =>

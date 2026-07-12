@@ -106,6 +106,7 @@ builder.Services.AddSoveranceOAuth(builder.Configuration);
 builder.Services.AddScoped<DatMappingService>();
 builder.Services.AddScoped<BlueprintGenerationService>();
 builder.Services.AddScoped<GearSwapImportService>();
+builder.Services.AddScoped<AchievementRecomputeService>();
 builder.Services.AddSingleton<RateLimiter>();
 builder.Services.AddSingleton<EconomyRateLimiter>();
 builder.Services.AddSingleton<LoginRateLimiter>();
@@ -287,12 +288,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi("/api/openapi/{documentName}.json");
     var devToken = app.Configuration["DevAdminToken"];
     app.MapScalarApiReference("/api/docs", options =>
     {
         options.Title = "Vanalytics API";
-        options.OpenApiRoutePattern = "/openapi/{documentName}.json";
+        options.OpenApiRoutePattern = "/api/openapi/{documentName}.json";
         if (!string.IsNullOrEmpty(devToken))
         {
             options

@@ -18,6 +18,13 @@ public class Linkshell
     /// <summary>Denormalized count of current members (maintained on sync).</summary>
     public int MemberCount { get; set; }
 
+    /// <summary>
+    /// Public visibility. Private (false) by default: the linkshell is not listed
+    /// in the directory and its profile 404s to non-members. A current Leader or
+    /// Sackholder opts it in via the manage endpoint. Never written by sync.
+    /// </summary>
+    public bool IsPublic { get; set; }
+
     public DateTimeOffset FirstSeenAt { get; set; }
     public DateTimeOffset LastSeenAt { get; set; }
 

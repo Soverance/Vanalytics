@@ -55,6 +55,8 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<LinkshellMembership> LinkshellMemberships => Set<LinkshellMembership>();
     public DbSet<LinkshellProfile> LinkshellProfiles => Set<LinkshellProfile>();
     public DbSet<LinkshellApplication> LinkshellApplications => Set<LinkshellApplication>();
+    public DbSet<CharacterAchievement> CharacterAchievements => Set<CharacterAchievement>();
+    public DbSet<LinkshellAchievement> LinkshellAchievements => Set<LinkshellAchievement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

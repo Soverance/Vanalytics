@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { allActionsCatalog, SPELL_SKILLS, SPELL_ELEMENTS, SPELL_FAMILIES, familyMatchCount } from './blueprintGraph'
+import { allActionsCatalog, SPELL_SKILLS, SPELL_ELEMENTS, SPELL_FAMILIES, familyMatchCount, SPELL_BLU_CATEGORIES, bluCategoryMembers } from './blueprintGraph'
 
-type Field = 'name' | 'skill' | 'element' | 'contains'
+type Field = 'name' | 'skill' | 'element' | 'contains' | 'bluCategory'
 
 export default function SpellInspector({ field, value, onChange }: {
   field: Field
@@ -28,6 +28,7 @@ export default function SpellInspector({ field, value, onChange }: {
         <option value="skill">Spell skill</option>
         <option value="element">Spell element</option>
         <option value="contains">Name contains</option>
+        <option value="bluCategory">BLU category</option>
       </select>
 
       {field === 'name' && (
@@ -81,6 +82,24 @@ export default function SpellInspector({ field, value, onChange }: {
               <option key={f.value} value={f.value}>{f.label} ({familyMatchCount(f.value)})</option>
             ))}
           </select>
+        </>
+      )}
+      {field === 'bluCategory' && (
+        <>
+          <label className="mb-1 block text-xs text-gray-400">BLU category</label>
+          <select value={value ?? ''} onChange={e => onChange({ spellValue: e.target.value || null })}
+            className="w-full rounded border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200">
+            <option value="">— choose —</option>
+            {SPELL_BLU_CATEGORIES.map(c => (
+              <option key={c} value={c}>{c} ({bluCategoryMembers(c).length})</option>
+            ))}
+          </select>
+          {value && (
+            <p className="mt-2 text-[11px] leading-snug text-gray-500">
+              matches {bluCategoryMembers(value).length}: {bluCategoryMembers(value).slice(0, 8).join(', ')}
+              {bluCategoryMembers(value).length > 8 ? ', …' : ''}
+            </p>
+          )}
         </>
       )}
     </div>

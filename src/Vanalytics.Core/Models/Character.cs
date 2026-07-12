@@ -70,7 +70,19 @@ public class Character
     public int? PlaytimeSeconds { get; set; }
 
     public string? MeritsJson { get; set; }
+
+    /// <summary>
+    /// JSON-serialized map of bag name -> unlocked slot capacity, from the addon's
+    /// get_bag_info reads. Null until the character syncs with a capacity-aware addon.
+    /// </summary>
+    public string? BagCapacitiesJson { get; set; }
+
     public string? FavoriteAnimationJson { get; set; }
+
+    /// <summary>Player's private role label for this character (Main, Mule, etc.).
+    /// Owner-only; never exposed on public profiles. None = unlabeled.</summary>
+    public CharacterRole Role { get; set; } = CharacterRole.None;
+
     public DateTimeOffset? LastSyncAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }

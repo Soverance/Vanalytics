@@ -148,6 +148,13 @@ public class InventoryController : ControllerBase
             processed++;
         }
 
+        // Overwrite stored capacities when the addon supplied them. Absent map (older
+        // addon) leaves the existing value untouched.
+        if (request.BagCapacities is not null)
+        {
+            character.BagCapacitiesJson = JsonSerializer.Serialize(request.BagCapacities);
+        }
+
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "Inventory sync successful", processed });

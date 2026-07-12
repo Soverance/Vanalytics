@@ -33,6 +33,7 @@ export default function LinkshellManagePage() {
   const [description, setDescription] = useState('')
   const [rules, setRules] = useState('')
   const [status, setStatus] = useState('Unknown')
+  const [isPublic, setIsPublic] = useState(false)
   const [links, setLinks] = useState<LinkshellExternalLink[]>([])
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [logoUploading, setLogoUploading] = useState(false)
@@ -54,6 +55,7 @@ export default function LinkshellManagePage() {
         setDescription(p.profile?.description ?? '')
         setRules(p.profile?.recruitmentRules ?? '')
         setStatus(p.recruitmentStatus || 'Unknown')
+        setIsPublic(p.isPublic)
         setLinks(p.profile?.externalLinks ?? [])
         setLogoUrl(p.profile?.logoUrl ?? null)
       })
@@ -110,6 +112,7 @@ export default function LinkshellManagePage() {
           recruitmentStatus: status,
           recruitmentRules: rules,
           externalLinks: links.filter(l => l.label.trim() || l.url.trim()),
+          isPublic,
         }),
       })
       navigate(profilePath)
@@ -179,6 +182,25 @@ export default function LinkshellManagePage() {
           />
         </div>
         <p className="text-xs text-gray-500 mb-6">Square PNG with a transparent background works best. Max 5&nbsp;MB.</p>
+
+        {/* Visibility */}
+        <label className="block text-sm font-semibold text-gray-300 mb-2">Visibility</label>
+        <label className="mb-2 flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isPublic}
+            onChange={e => setIsPublic(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-800"
+          />
+          <span className="text-sm text-gray-300">
+            List this linkshell publicly
+            <span className="block text-xs text-gray-500">
+              When on, anyone can find this linkshell in the directory and view its page. When off, only
+              its members can see it and it stays out of the directory.
+            </span>
+          </span>
+        </label>
+        <div className="mb-6" />
 
         {/* Recruitment status */}
         <label className="block text-sm font-semibold text-gray-300 mb-2">Recruitment status</label>

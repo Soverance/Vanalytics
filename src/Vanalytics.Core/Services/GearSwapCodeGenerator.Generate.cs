@@ -85,6 +85,7 @@ public static partial class GearSwapCodeGenerator
         if (setup is not null)
             sb.Append(setup.Data.Code!.Trim()).Append("\n\n");
 
+        sb.Append(EmitBluCategoryTables(graph));
         sb.Append("function get_sets()\n");
         sb.Append(EmitSets(flatSetIds.Select(id => setsById[id])));
         sb.Append(EmitModes(modes, setsById));

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vanalytics.Core.Data;
+using Vanalytics.Core.DTOs.Achievements;
 using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Core.DTOs.Porter;
@@ -12,6 +13,7 @@ using Vanalytics.Core.DTOs.Blueprints;
 using Vanalytics.Core.Enums;
 using Vanalytics.Core.Models;
 using Vanalytics.Core.Services;
+using Vanalytics.Core.Services.Achievements;
 using Vanalytics.Data;
 using Vanalytics.Api.Services;
 
@@ -50,7 +52,8 @@ public class CharactersController : ControllerBase
                 Name = c.Name,
                 Server = c.Server,
                 IsPublic = c.IsPublic,
-                LastSyncAt = c.LastSyncAt
+                LastSyncAt = c.LastSyncAt,
+                Role = c.Role.ToString()
             })
             .ToListAsync();
 
@@ -77,6 +80,7 @@ public class CharactersController : ControllerBase
 
         var detail = MapToDetail(character);
         detail.LinkshellLogoUrl = await LoadActiveLinkshellLogoAsync(_db, character);
+        detail.Role = character.Role.ToString();
         return Ok(detail);
     }
 
@@ -93,6 +97,9 @@ public class CharactersController : ControllerBase
         character.FavoriteAnimationJson = request.FavoriteAnimation != null
             ? JsonSerializer.Serialize(request.FavoriteAnimation, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
             : null;
+        if (!TryNormalizeRole(request.Role, out var role))
+            return BadRequest(new { message = "Invalid role." });
+        character.Role = role;
         character.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
 
@@ -102,7 +109,8 @@ public class CharactersController : ControllerBase
             Name = character.Name,
             Server = character.Server,
             IsPublic = character.IsPublic,
-            LastSyncAt = character.LastSyncAt
+            LastSyncAt = character.LastSyncAt,
+            Role = character.Role.ToString()
         });
     }
 
@@ -164,6 +172,80 @@ public class CharactersController : ControllerBase
             .ToDictionary(g => g.Key, g => g.ToList());
 
         return Ok(grouped);
+    }
+
+    [HttpGet("{id:guid}/inventory/sell-advice")]
+    public async Task<IActionResult> GetSellAdvice(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+
+        // The character can only sell on its own world's AH. Resolve it; a missing
+        // GameServer row means that world isn't scraped, so we return vendor-only rows.
+        var server = await _db.GameServers.FirstOrDefaultAsync(s => s.Name == character.Server);
+        var serverScraped = server != null;
+
+        // Held items that are vendorable (BaseSell > 0) OR auctionable (0x0040 = NoAuction unset).
+        var rows = await _db.CharacterInventories
+            .Where(ci => ci.CharacterId == id)
+            .Join(_db.GameItems,
+                ci => ci.ItemId,
+                gi => gi.ItemId,
+                (ci, gi) => new { ci, gi })
+            .Where(x => (x.gi.BaseSell != null && x.gi.BaseSell > 0) || (x.gi.Flags & 0x0040) == 0)
+            .Select(x => new
+            {
+                x.ci.ItemId,
+                Bag = x.ci.Bag.ToString(),
+                x.ci.SlotIndex,
+                x.ci.Quantity,
+                ItemName = x.gi.Name ?? x.gi.NameJa ?? "Unknown",
+                x.gi.IconPath,
+                x.gi.StackSize,
+                x.gi.BaseSell,
+                IsNoAuction = (x.gi.Flags & 0x0040) != 0
+            })
+            .OrderBy(x => x.Bag)
+            .ThenBy(x => x.ItemName)
+            .ToListAsync();
+
+        // Per-item single/stack medians over the last 30 days on this world.
+        var itemIds = rows.Select(r => r.ItemId).Distinct().ToList();
+        var medians = serverScraped
+            ? await Vanalytics.Api.Services.AhMedianService.GetMediansAsync(_db, server!.Id, itemIds)
+            : new Dictionary<int, Vanalytics.Api.Services.AhMedians>();
+
+        var items = rows.Select(r =>
+        {
+            medians.TryGetValue(r.ItemId, out var m);
+            return new SellAdviceItemResponse
+            {
+                ItemId = r.ItemId,
+                ItemName = r.ItemName,
+                IconPath = r.IconPath,
+                Bag = r.Bag,
+                SlotIndex = r.SlotIndex,
+                Quantity = r.Quantity,
+                StackSize = r.StackSize,
+                BaseSell = r.BaseSell,
+                IsNoAuction = r.IsNoAuction,
+                SingleMedian = m?.SingleMedian,
+                SingleCount = m?.SingleCount ?? 0,
+                StackMedian = m?.StackMedian,
+                StackCount = m?.StackCount ?? 0,
+                LastSoldAt = m?.LastSoldAt
+            };
+        }).ToList();
+
+        return Ok(new SellAdviceResponse
+        {
+            ServerName = character.Server,
+            ServerScraped = serverScraped,
+            Items = items
+        });
     }
 
     [HttpGet("{id:guid}/progression")]
@@ -420,6 +502,32 @@ public class CharactersController : ControllerBase
             .OrderBy(p => p.Category).ToList();
 
         return new { progress, weapons = results };
+    }
+
+    /// <summary>
+    /// Highest owned <see cref="UltimateWeaponStage.Rank"/> per owned ultimate weapon
+    /// (base-name grouped), keeping only rank >= 75 (the base-weapon threshold). Shared by the
+    /// character relics page and the achievement recompute so leaderboard and page agree.
+    /// </summary>
+    internal static async Task<List<int>> OwnedUltimateWeaponRanksAsync(VanalyticsDbContext db, Guid characterId)
+    {
+        var everHeld = await db.CharacterInventories
+            .Where(i => i.CharacterId == characterId).Select(i => i.ItemId)
+            .Union(db.InventoryChanges
+                .Where(c => c.CharacterId == characterId && c.ChangeType == Vanalytics.Core.Enums.InventoryChangeType.Added)
+                .Select(c => c.ItemId))
+            .Distinct().ToListAsync();
+
+        var baseNames = Vanalytics.Core.Data.UltimateWeapons.All.Select(w => w.BaseName).Distinct().ToList();
+        var items = await db.GameItems
+            .Where(gi => baseNames.Contains(gi.Name) && everHeld.Contains(gi.ItemId))
+            .Select(gi => new { gi.Name, gi.Level, gi.ItemLevel, gi.Description })
+            .ToListAsync();
+
+        return items.GroupBy(i => i.Name)
+            .Select(g => g.Max(i => UltimateWeaponStage.Rank(i.Level, i.ItemLevel, i.Description)))
+            .Where(rank => rank >= 75)
+            .ToList();
     }
 
     [HttpGet("{id:guid}/porter")]
@@ -960,6 +1068,46 @@ public class CharactersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Returns the cached achievement score for a character.
+    /// Owner always sees their own (with null ranks when private).
+    /// Non-owners can only see public characters (private → 403, matching the rest of this controller).
+    /// Anonymous callers may read PUBLIC characters (scores/ranks are already public via leaderboards).
+    /// Ranks are dense 1-based, computed from public CharacterAchievements only.
+    /// </summary>
+    [HttpGet("{id:guid}/achievement")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAchievement(Guid id)
+    {
+        var userId = GetOptionalUserId();
+        var ch = await _db.Characters.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        if (ch is null) return NotFound();
+        // Non-owner trying to read a private character: mirror the existing Forbid() gate
+        // used by every other endpoint in this controller (e.g. Get, GetInventory, GetProgression…)
+        if (!ch.IsPublic && ch.UserId != userId) return Forbid();
+
+        var a = await _db.CharacterAchievements.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.CharacterId == id);
+        if (a is null) return NotFound();
+
+        int? globalRank = null, serverRank = null;
+        if (ch.IsPublic)
+        {
+            // Dense rank: count of public characters that scored strictly higher + 1.
+            globalRank = await _db.CharacterAchievements
+                .Where(x => x.Character.IsPublic && x.TotalScore > a.TotalScore)
+                .CountAsync() + 1;
+            serverRank = await _db.CharacterAchievements
+                .Where(x => x.Character.IsPublic
+                         && x.Character.Server == ch.Server
+                         && x.TotalScore > a.TotalScore)
+                .CountAsync() + 1;
+        }
+
+        var breakdown = JsonSerializer.Deserialize<List<AchievementCategoryScore>>(a.BreakdownJson) ?? [];
+        return Ok(new CharacterAchievementResponse(a.TotalScore, a.RubricVersion, a.ComputedAt, serverRank, globalRank, breakdown));
+    }
+
     // Per-character ceiling on saved gear sets — bounds DB growth; far above realistic use.
     // Mirrored client-side by MAX_GEAR_SETS_PER_CHARACTER in GearSetsTab.tsx (keep in sync).
     private const int MaxGearSetsPerCharacter = 500;
@@ -981,6 +1129,16 @@ public class CharactersController : ControllerBase
             return true;
         }
         return false;
+    }
+
+    // Validates the optional role label against the CharacterRole enum, returning the
+    // parsed value. Null/blank defaults to None; an unrecognized value is rejected.
+    private static bool TryNormalizeRole(string? role, out Vanalytics.Core.Enums.CharacterRole normalized)
+    {
+        normalized = Vanalytics.Core.Enums.CharacterRole.None;
+        if (string.IsNullOrWhiteSpace(role)) return true;
+        return Enum.TryParse(role.Trim(), ignoreCase: true, out normalized)
+            && Enum.IsDefined(normalized);
     }
 
     private const int MaxTags = 20;
@@ -1037,6 +1195,12 @@ public class CharactersController : ControllerBase
         CreatedAt = s.CreatedAt,
         UpdatedAt = s.UpdatedAt
     };
+
+    private Guid? GetOptionalUserId()
+    {
+        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(claim, out var id) ? id : (Guid?)null;
+    }
 
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

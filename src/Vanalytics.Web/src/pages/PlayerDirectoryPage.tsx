@@ -62,7 +62,7 @@ export default function PlayerDirectoryPage() {
       setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     } else {
       setSortKey(key)
-      setSortDir('asc')
+      setSortDir(key === 'totalScore' ? 'desc' : 'asc')
     }
   }
 
@@ -145,6 +145,7 @@ export default function PlayerDirectoryPage() {
                 <th className={thClass} onClick={() => handleSort('level')}>Level<SortIndicator col="level" /></th>
                 <th className={thClass} onClick={() => handleSort('race')}>Race<SortIndicator col="race" /></th>
                 <th className={thClass} onClick={() => handleSort('linkshell')}>Linkshell<SortIndicator col="linkshell" /></th>
+                <th className={thClass} onClick={() => handleSort('totalScore')}>Score<SortIndicator col="totalScore" /></th>
                 <th className={thClass} onClick={() => handleSort('lastSyncedAt')}>Last Synced<SortIndicator col="lastSyncedAt" /></th>
               </tr>
             </thead>
@@ -161,6 +162,7 @@ export default function PlayerDirectoryPage() {
                   <td className="px-3 py-2 text-gray-400">{p.level ?? '—'}</td>
                   <td className="px-3 py-2 text-gray-400">{p.race ?? '—'}</td>
                   <td className="px-3 py-2 text-gray-400">{p.linkshell ?? '—'}</td>
+                  <td className="px-3 py-2 text-gray-400">{p.totalScore > 0 ? p.totalScore.toLocaleString() : '—'}</td>
                   <td className="px-3 py-2 text-gray-400">{timeAgo(p.lastSyncedAt)}</td>
                 </tr>
               ))}

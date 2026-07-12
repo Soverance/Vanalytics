@@ -191,4 +191,66 @@ public class AdminUsersControllerTests : IAsyncLifetime
         public string Username { get; set; } = string.Empty;
         public string GeneratedPassword { get; set; } = string.Empty;
     }
+
+    private async Task SeedCharacterAsync(Guid userId, string name, DateTimeOffset? lastSyncAt)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        db.Set<Vanalytics.Core.Models.Character>().Add(new Vanalytics.Core.Models.Character
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Name = name,
+            Server = "Asura",
+            LastSyncAt = lastSyncAt,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
+    }
+
+    private async Task<List<AdminUserListDto>> ListUsersAsync(string adminToken)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Get, "/api/admin/users");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+        var res = await _client.SendAsync(req);
+        res.EnsureSuccessStatusCode();
+        return (await res.Content.ReadFromJsonAsync<List<AdminUserListDto>>())!;
+    }
+
+    [Fact]
+    public async Task List_ReturnsLastActiveAsMaxCharacterSync()
+    {
+        var adminToken = await AdminTokenAsync();
+        var target = await SeedUserAsync("active@example.com", "activeuser");
+        var older = DateTimeOffset.UtcNow.AddDays(-10);
+        var newer = DateTimeOffset.UtcNow.AddDays(-2);
+        await SeedCharacterAsync(target.Id, "Older", older);
+        await SeedCharacterAsync(target.Id, "Newer", newer);
+
+        var users = await ListUsersAsync(adminToken);
+        var dto = users.Single(u => u.Id == target.Id);
+
+        Assert.NotNull(dto.LastActiveAt);
+        Assert.Equal(newer.ToUnixTimeSeconds(), dto.LastActiveAt!.Value.ToUnixTimeSeconds());
+    }
+
+    [Fact]
+    public async Task List_LastActiveIsNull_WhenUserHasNoCharacters()
+    {
+        var adminToken = await AdminTokenAsync();
+        var target = await SeedUserAsync("nochars@example.com", "nocharsuser");
+
+        var users = await ListUsersAsync(adminToken);
+        var dto = users.Single(u => u.Id == target.Id);
+
+        Assert.Null(dto.LastActiveAt);
+    }
+
+    private class AdminUserListDto
+    {
+        public Guid Id { get; set; }
+        public DateTimeOffset? LastActiveAt { get; set; }
+        public string? DefaultServer { get; set; }
+    }
 }

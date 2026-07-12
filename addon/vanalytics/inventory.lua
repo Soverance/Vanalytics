@@ -26,22 +26,22 @@ local log_error_fn = nil
 -- Bag mapping: Windower bag keys -> API bag names
 -----------------------------------------------------------------------
 local bag_keys = {
-    {key = 'inventory', name = 'Inventory'},
-    {key = 'safe', name = 'Safe'},
-    {key = 'safe2', name = 'Safe2'},
-    {key = 'storage', name = 'Storage'},
-    {key = 'locker', name = 'Locker'},
-    {key = 'satchel', name = 'Satchel'},
-    {key = 'sack', name = 'Sack'},
-    {key = 'case', name = 'Case'},
-    {key = 'wardrobe', name = 'Wardrobe'},
-    {key = 'wardrobe2', name = 'Wardrobe2'},
-    {key = 'wardrobe3', name = 'Wardrobe3'},
-    {key = 'wardrobe4', name = 'Wardrobe4'},
-    {key = 'wardrobe5', name = 'Wardrobe5'},
-    {key = 'wardrobe6', name = 'Wardrobe6'},
-    {key = 'wardrobe7', name = 'Wardrobe7'},
-    {key = 'wardrobe8', name = 'Wardrobe8'},
+    {key = 'inventory', name = 'Inventory', id = 0},
+    {key = 'safe', name = 'Safe', id = 1},
+    {key = 'safe2', name = 'Safe2', id = 9},
+    {key = 'storage', name = 'Storage', id = 2},
+    {key = 'locker', name = 'Locker', id = 4},
+    {key = 'satchel', name = 'Satchel', id = 5},
+    {key = 'sack', name = 'Sack', id = 6},
+    {key = 'case', name = 'Case', id = 7},
+    {key = 'wardrobe', name = 'Wardrobe', id = 8},
+    {key = 'wardrobe2', name = 'Wardrobe2', id = 10},
+    {key = 'wardrobe3', name = 'Wardrobe3', id = 11},
+    {key = 'wardrobe4', name = 'Wardrobe4', id = 12},
+    {key = 'wardrobe5', name = 'Wardrobe5', id = 13},
+    {key = 'wardrobe6', name = 'Wardrobe6', id = 14},
+    {key = 'wardrobe7', name = 'Wardrobe7', id = 15},
+    {key = 'wardrobe8', name = 'Wardrobe8', id = 16},
 }
 
 -----------------------------------------------------------------------
@@ -84,6 +84,23 @@ function inventory.read_snapshot()
     end
 
     return snapshot
+end
+
+-----------------------------------------------------------------------
+-- Read each bag's unlocked capacity via get_bag_info.
+-- Returns a table keyed by API bag name -> max slots. Only includes
+-- bags the character has actually unlocked (max > 0); locked bags are
+-- omitted so the UI can hide them.
+-----------------------------------------------------------------------
+function inventory.read_capacities()
+    local capacities = {}
+    for _, bag_entry in ipairs(bag_keys) do
+        local info = windower.ffxi.get_bag_info(bag_entry.id)
+        if info and type(info.max) == 'number' and info.max > 0 then
+            capacities[bag_entry.name] = info.max
+        end
+    end
+    return capacities
 end
 
 -- Order-sensitive equality for two augment arrays (either may be nil).
@@ -227,6 +244,7 @@ function inventory.sync(character_name, server, on_complete)
         server = server,
         changes = api_changes,
         fullSync = is_full_sync,
+        bagCapacities = inventory.read_capacities(),
     })
 
     http_request_fn({

@@ -33,6 +33,7 @@ export interface CharacterSummary {
   server: string
   isPublic: boolean
   lastSyncAt: string | null
+  role: string // CharacterRole enum name; "None" when unlabeled
 }
 
 export interface CharacterDetail {
@@ -41,6 +42,7 @@ export interface CharacterDetail {
   server: string
   isPublic: boolean
   lastSyncAt: string | null
+  role: string // CharacterRole enum name; "None" when unlabeled (owner-only)
   race?: string
   gender?: string
   faceModelId?: number
@@ -374,6 +376,8 @@ export interface AdminUser {
   characterCount: number
   createdAt: string
   updatedAt: string
+  lastActiveAt: string | null
+  defaultServer: string | null
 }
 
 export interface CreateUserRequest {
@@ -740,6 +744,30 @@ export interface InventoryItem {
 }
 
 export type InventoryByBag = Record<string, InventoryItem[]>
+export type BagCapacities = Record<string, number>
+
+export interface SellAdviceItem {
+  itemId: number
+  itemName: string
+  iconPath: string | null
+  bag: string
+  slotIndex: number
+  quantity: number
+  stackSize: number
+  baseSell: number | null
+  isNoAuction: boolean
+  singleMedian: number | null
+  singleCount: number
+  stackMedian: number | null
+  stackCount: number
+  lastSoldAt: string | null
+}
+
+export interface SellAdviceResponse {
+  serverName: string
+  serverScraped: boolean
+  items: SellAdviceItem[]
+}
 
 export interface PorterItem {
   itemId: number
@@ -939,6 +967,9 @@ export interface LinkshellListItem {
   lastActiveAt: string | null
   logoUrl: string | null
   recruitmentStatus: string // "Open" | "Closed" | "Unknown"
+  totalScore: number
+  averageScore: number
+  rankedMemberCount: number
 }
 
 export interface LinkshellMemberRow {
@@ -972,6 +1003,7 @@ export interface LinkshellProfileResponse {
   lastActiveAt: string | null
   recruitmentStatus: string // "Unknown" | "Open" | "Closed"
   canManage: boolean
+  isPublic: boolean
   applyState: string // Closed | NotLoggedIn | NoEligibleCharacter | AlreadyMember | OnCooldown | NoReachableLeaders | Open
   cooldownUntil: string | null
   profile: LinkshellCustomization | null
@@ -1046,6 +1078,7 @@ export interface PlayerListItem {
   race: string | null
   linkshell: string | null
   lastSyncedAt: string | null
+  totalScore: number
 }
 
 // Crafting Recipes
@@ -1209,8 +1242,9 @@ export interface BlueprintNode {
     members?: ModeMember[]
     overlaySetIds?: number[] | null
     buffName?: string | null
-    spellField?: 'name' | 'skill' | 'element' | 'contains' | null
+    spellField?: 'name' | 'skill' | 'element' | 'contains' | 'bluCategory' | null
     spellValue?: string | null
+    spellNames?: string[] | null
     petField?: 'exists' | 'status' | null
     petValue?: string | null
     worldField?: 'weather' | 'day' | 'moghouse' | 'zone' | null
@@ -1289,4 +1323,125 @@ export interface ImportCommitResponse {
   created: number
   updated: number
   names: string[]
+}
+
+// Achievement / Leaderboard types
+export interface AchievementCategoryScore {
+  key: string
+  name: string
+  points: number
+  current: number | null
+  total: number | null
+  detail: string
+}
+
+export interface CharacterLeaderboardEntry {
+  rank: number
+  characterId: string
+  name: string
+  server: string
+  totalScore: number
+  lastSyncAt: string | null
+  linkshell: string | null
+}
+
+export interface LinkshellLeaderboardEntry {
+  rank: number
+  linkshellId: string
+  name: string
+  server: string
+  totalScore: number
+  averageScore: number
+  rankedMemberCount: number
+  colorRgb: number
+}
+
+export interface LeaderboardPage<T> {
+  items: T[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export interface RubricCategory {
+  key: string
+  name: string
+  description: string
+  scoring: string
+}
+
+export interface RubricResponse {
+  version: number
+  categories: RubricCategory[]
+}
+
+export interface CharacterAchievementResponse {
+  totalScore: number
+  rubricVersion: number
+  computedAt: string
+  serverRank: number | null
+  globalRank: number | null
+  breakdown: AchievementCategoryScore[]
+}
+
+export interface LinkshellAchievementResponse {
+  totalScore: number
+  averageScore: number
+  rankedMemberCount: number
+  globalRank: number | null
+  serverRank: number | null
+  members: CharacterLeaderboardEntry[]
+}
+
+// Aggregate inventory (roster-wide, owner-only) — mirrors Vanalytics.Core.DTOs.Inventory
+export interface AggregateInventoryLocation {
+  characterId: string
+  characterName: string
+  role: string
+  bag: string
+  quantity: number
+}
+
+export interface AggregateInventoryItem {
+  itemId: number
+  name: string
+  iconPath: string | null
+  stackSize: number
+  totalQuantity: number
+  locations: AggregateInventoryLocation[]
+  isRare: boolean
+  isExclusive: boolean
+  isNoDelivery: boolean
+  isNoAuction: boolean
+  baseSell: number | null
+  singleMedian: number | null
+  singleCount: number
+  stackMedian: number | null
+  stackCount: number
+  lastSoldAt: string | null
+}
+
+export interface AggregateInventoryCharacter {
+  characterId: string
+  name: string
+  role: string
+  lastSyncAt: string | null
+}
+
+export interface AggregateInventoryTotals {
+  characterCount: number
+  syncedCharacterCount: number
+  distinctItems: number
+  totalQuantity: number
+  usedSlots: number
+  unlockedSlots: number
+}
+
+export interface AggregateInventoryResponse {
+  totals: AggregateInventoryTotals
+  items: AggregateInventoryItem[]
+  characters: AggregateInventoryCharacter[]
+  world: string | null
+  serverScraped: boolean
+  availableWorlds: string[]
 }

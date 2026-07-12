@@ -27,9 +27,11 @@ import MacroEditorPanel from '../components/macros/MacroEditorPanel'
 import MacroHistoryPanel from '../components/macros/MacroHistoryPanel'
 import SessionsTab from '../components/session/SessionsTab'
 import GearSetsTab from '../components/character/GearSetsTab'
-import { ApiError } from '../api/client'
+import { ApiError, getCharacterAchievement } from '../api/client'
 import CharacterProfileHeader from '../components/character/CharacterProfileHeader'
+import CharacterRoleModal from '../components/character/CharacterRoleModal'
 import Tabs from '../components/Tabs'
+import type { CharacterAchievementResponse } from '../types/api'
 
 const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items', 'Linkshells'] as const
 type StatTab = typeof STAT_TABS[number]
@@ -60,11 +62,16 @@ export default function CharacterDetailPage() {
   const [macroError, setMacroError] = useState('')
   const [showMacroHistory, setShowMacroHistory] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showRoleModal, setShowRoleModal] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  // Achievement state — fetched on character load, displayed in header
+  const [achievement, setAchievement] = useState<CharacterAchievementResponse | null>(null)
 
   useEffect(() => {
     setCharacter(null)
     setLoading(true)
+    setAchievement(null)
     api<CharacterDetail>(`/api/characters/${id}`)
       .then(setCharacter)
       .catch(() => setCharacter(null))
@@ -88,6 +95,14 @@ export default function CharacterDetailPage() {
         .catch(() => {})
     })
   }, [localGear])
+
+  // Fetch achievement score after character loads — shown in header rank badge
+  useEffect(() => {
+    if (!id) return
+    getCharacterAchievement(id)
+      .then(setAchievement)
+      .catch(() => setAchievement(null))
+  }, [id])
 
   // Load macro books when switching to Macros tab
   useEffect(() => {
@@ -115,7 +130,7 @@ export default function CharacterDetailPage() {
       await api(`/api/characters/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublic: character.isPublic, favoriteAnimation: fav }),
+        body: JSON.stringify({ isPublic: character.isPublic, favoriteAnimation: fav, role: character.role }),
       })
       setCharacter(prev => prev ? { ...prev, favoriteAnimation: fav ?? undefined } : prev)
     } catch (err) {
@@ -130,12 +145,30 @@ export default function CharacterDetailPage() {
       await api(`/api/characters/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublic: newPublic, favoriteAnimation: character.favoriteAnimation ?? null }),
+        body: JSON.stringify({ isPublic: newPublic, favoriteAnimation: character.favoriteAnimation ?? null, role: character.role }),
       })
       setCharacter(prev => prev ? { ...prev, isPublic: newPublic } : prev)
       if (newPublic) setShowShareModal(true)
     } catch (err) {
       console.warn('Failed to toggle public profile:', err)
+    }
+  }
+
+  const handleSetRole = async (role: string) => {
+    if (!character) return
+    try {
+      await api(`/api/characters/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isPublic: character.isPublic,
+          favoriteAnimation: character.favoriteAnimation ?? null,
+          role,
+        }),
+      })
+      setCharacter(prev => prev ? { ...prev, role } : prev)
+    } catch (err) {
+      console.warn('Failed to set character role:', err)
     }
   }
 
@@ -177,6 +210,8 @@ export default function CharacterDetailPage() {
         showPublicButton
         onTogglePublic={handleTogglePublic}
         onShareClick={() => setShowShareModal(true)}
+        onRoleClick={() => setShowRoleModal(true)}
+        achievement={achievement}
       />
 
       <section className="mb-8">
@@ -412,6 +447,13 @@ export default function CharacterDetailPage() {
             return { slotId: slotMap[slotName] ?? 0, datPath }
           }).filter(s => s.slotId > 0)}
           onExit={() => setFullscreen(false)}
+        />
+      )}
+      {showRoleModal && (
+        <CharacterRoleModal
+          current={character.role}
+          onSelect={(r) => { handleSetRole(r); setShowRoleModal(false) }}
+          onClose={() => setShowRoleModal(false)}
         />
       )}
       {showShareModal && (

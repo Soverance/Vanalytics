@@ -9,7 +9,6 @@ export interface UseCharacterPorter {
   error: Error | null
   refresh: () => void
   hideSlip: (slipItemId: number, hidden: boolean) => Promise<void>
-  forgetSlip: (slipItemId: number) => Promise<void>
 }
 
 export function useCharacterPorter(characterId: string): UseCharacterPorter {
@@ -58,12 +57,5 @@ export function useCharacterPorter(characterId: string): UseCharacterPorter {
     ))
   }, [characterId])
 
-  const forgetSlip = useCallback(async (slipItemId: number) => {
-    await api(`/api/characters/${characterId}/porter/${slipItemId}`, {
-      method: 'DELETE',
-    })
-    setSlips(prev => prev.filter(s => s.slipItemId !== slipItemId))
-  }, [characterId])
-
-  return { slips, byItemId, loading, error, refresh: fetchPorter, hideSlip, forgetSlip }
+  return { slips, byItemId, loading, error, refresh: fetchPorter, hideSlip }
 }

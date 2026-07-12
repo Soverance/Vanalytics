@@ -102,6 +102,18 @@ public class LinkshellBrowserTests : IAsyncLifetime
         Assert.True(syncResp.IsSuccessStatusCode,
             $"Seed sync failed ({(int)syncResp.StatusCode}): {await syncResp.Content.ReadAsStringAsync()}");
 
+        // Private-by-default linkshells: these legacy directory/profile/apply tests
+        // were written for publicly-listed linkshells. Make the seeded linkshell
+        // public so they exercise the visible path. (Character-level privacy is a
+        // separate axis, still controlled by the isPublic parameter below.)
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+            var seededLs = await db.Linkshells.FirstAsync(l => l.Server == server && l.GameLinkshellId == lsId);
+            seededLs.IsPublic = true;
+            await db.SaveChangesAsync();
+        }
+
         if (!isPublic) return;
 
         // make character public
@@ -746,6 +758,66 @@ public class LinkshellBrowserTests : IAsyncLifetime
 
         var resp = await ApplyAsync("f4a@test.com", lsId, charId);
         Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetDirectory_IncludesAchievementScores_ZeroWhenNoRow()
+    {
+        // Seed a linkshell with one public member.
+        await SeedMemberAsync("score1@test.com", "score1", "ScoreLeader", "Asura", 20001, "ScoreShell", 0x00AABB, "leader", isPublic: true);
+
+        // Seed a second linkshell with no achievement row.
+        await SeedMemberAsync("score2@test.com", "score2", "NoScoreLeader", "Asura", 20002, "NoScoreShell", 0x112233, "leader", isPublic: true);
+
+        // UPSERT the LinkshellAchievement row for ScoreShell; DELETE any auto-created row for NoScoreShell.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+
+            // ScoreShell (20001): upsert to asserted values (sync hook may have created a row already).
+            var ls = await db.Linkshells.FirstAsync(l => l.Server == "Asura" && l.GameLinkshellId == 20001);
+            var ach = await db.LinkshellAchievements.FindAsync(ls.Id);
+            if (ach is null)
+            {
+                db.LinkshellAchievements.Add(new Vanalytics.Core.Models.LinkshellAchievement
+                {
+                    LinkshellId = ls.Id,
+                    TotalScore = 2500,
+                    AverageScore = 2500.0,
+                    RankedMemberCount = 1,
+                    ComputedAt = DateTimeOffset.UtcNow,
+                });
+            }
+            else
+            {
+                ach.TotalScore = 2500;
+                ach.AverageScore = 2500.0;
+                ach.RankedMemberCount = 1;
+                ach.ComputedAt = DateTimeOffset.UtcNow;
+            }
+
+            // NoScoreShell (20002): remove any auto-created row so the left-join "no row → 0" branch is exercised.
+            var noLs = await db.Linkshells.FirstAsync(l => l.Server == "Asura" && l.GameLinkshellId == 20002);
+            var noAch = await db.LinkshellAchievements.FindAsync(noLs.Id);
+            if (noAch is not null)
+                db.LinkshellAchievements.Remove(noAch);
+
+            await db.SaveChangesAsync();
+        }
+
+        var list = await _client.GetFromJsonAsync<List<LinkshellListItem>>("/api/linkshells?server=Asura");
+
+        Assert.NotNull(list);
+
+        var withScore = Assert.Single(list!, l => l.Name == "ScoreShell");
+        Assert.Equal(2500, withScore.TotalScore);
+        Assert.Equal(2500.0, withScore.AverageScore);
+        Assert.Equal(1, withScore.RankedMemberCount);
+
+        var noScore = Assert.Single(list!, l => l.Name == "NoScoreShell");
+        Assert.Equal(0, noScore.TotalScore);
+        Assert.Equal(0.0, noScore.AverageScore);
+        Assert.Equal(0, noScore.RankedMemberCount);
     }
 
     [Fact]

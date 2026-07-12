@@ -517,6 +517,58 @@ public class GearSwapCodeGeneratorValidateTests
             && d.Message.Contains("nothing selected"));
     }
 
+    // ---- BLU category condition validation tests ---------------------------
+
+    [Fact]
+    public void BluCategory_requires_value_and_names()
+    {
+        // bluCategory node under midcast (spell-scope trigger), SpellNames null -> error
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            {
+                new() { Id = "t", Type = "trigger:midcast" },
+                new() { Id = "b", Type = "branch" },
+                new() { Id = "e", Type = "equip", Data = new() { GearSetId = 1 } },
+                new() { Id = "s", Type = "spell",
+                    Data = new() { SpellField = "bluCategory", SpellValue = "Physical (STR)", SpellNames = null } },
+            },
+            Edges =
+            {
+                new() { Id = "t-b", Source = "t", SourceHandle = "Magic", Target = "b", TargetHandle = "in" },
+                new() { Id = "b-e", Source = "b", SourceHandle = "true",  Target = "e", TargetHandle = "in" },
+                new() { Id = "s-b", Source = "s", Target = "b", TargetHandle = "cond" },
+            },
+        };
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.Contains(diags, d => d.NodeId == "s");
+    }
+
+    [Fact]
+    public void BluCategory_with_names_is_valid()
+    {
+        // bluCategory node under midcast (spell-scope trigger), SpellNames populated -> no error for "s"
+        var graph = new BlueprintGraphDto
+        {
+            Nodes =
+            {
+                new() { Id = "t", Type = "trigger:midcast" },
+                new() { Id = "b", Type = "branch" },
+                new() { Id = "e", Type = "equip", Data = new() { GearSetId = 1 } },
+                new() { Id = "s", Type = "spell",
+                    Data = new() { SpellField = "bluCategory", SpellValue = "Physical (STR)", SpellNames = ["Foot Kick"] } },
+            },
+            Edges =
+            {
+                new() { Id = "t-b", Source = "t", SourceHandle = "Magic", Target = "b", TargetHandle = "in" },
+                new() { Id = "b-e", Source = "b", SourceHandle = "true",  Target = "e", TargetHandle = "in" },
+                new() { Id = "s-b", Source = "s", Target = "b", TargetHandle = "cond" },
+            },
+        };
+        var diags = GearSwapCodeGenerator.Validate(graph, OneSet());
+        Assert.DoesNotContain(diags, d => d.NodeId == "s" && d.Severity == "error");
+    }
+
     [Fact]
     public void Compare_wired_to_pet_value_source_is_complete()
     {

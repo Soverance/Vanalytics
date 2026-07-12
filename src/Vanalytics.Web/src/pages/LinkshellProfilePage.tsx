@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import type { LinkshellProfileResponse } from '../types/api'
-import { getStoredTokens } from '../api/client'
+import type { LinkshellProfileResponse, LinkshellAchievementResponse } from '../types/api'
+import { getStoredTokens, getLinkshellAchievement } from '../api/client'
 import LoadingSpinner from '../components/LoadingSpinner'
 import LinkshellPearl from '../components/character/LinkshellPearl'
 import { RECRUIT_STYLE } from '../components/character/linkshellStyles'
@@ -73,6 +73,7 @@ function ApplyButton({
 export default function LinkshellProfilePage() {
   const { server, name } = useParams<{ server: string; name: string }>()
   const [profile, setProfile] = useState<LinkshellProfileResponse | null>(null)
+  const [achievement, setAchievement] = useState<LinkshellAchievementResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -85,6 +86,7 @@ export default function LinkshellProfilePage() {
     setLoading(true)
     setNotFound(false)
     setLoadError(false)
+    setAchievement(null)
     const { accessToken } = getStoredTokens()
     const headers: Record<string, string> = {}
     if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`
@@ -92,7 +94,12 @@ export default function LinkshellProfilePage() {
       .then(async res => {
         if (res.status === 404) { setNotFound(true); return }
         if (!res.ok) { setLoadError(true); return }
-        setProfile(await res.json())
+        const data: LinkshellProfileResponse = await res.json()
+        setProfile(data)
+        // Fire achievement fetch opportunistically; 404 is graceful (no row yet).
+        getLinkshellAchievement(data.linkshellId)
+          .then(setAchievement)
+          .catch(() => { /* no achievement row — hide panel */ })
       })
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
@@ -140,6 +147,11 @@ export default function LinkshellProfilePage() {
               </div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2">
+              {!profile.isPublic && (
+                <span className="rounded border border-gray-600 bg-gray-800/60 px-2 py-1 text-[11px] text-gray-400">
+                  Private · not listed
+                </span>
+              )}
               <span className={`rounded border px-2 py-1 text-[11px] ${RECRUIT_STYLE[profile.recruitmentStatus] ?? RECRUIT_STYLE.Unknown}`}>
                 Recruitment: {profile.recruitmentStatus}
               </span>
@@ -183,6 +195,64 @@ export default function LinkshellProfilePage() {
             <div className="prose prose-invert prose-sm max-w-none rounded-xl border border-gray-800 bg-gray-900/40 p-5 mb-6"
                  dangerouslySetInnerHTML={{ __html: profile.profile.recruitmentRules }} />
           </>
+        )}
+
+        {/* Achievement panel — hidden when no achievement row exists */}
+        {achievement && (
+          <div className="rounded-xl border border-gray-800 bg-gray-900/40 p-5 mb-6">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Achievement Score</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500 mb-0.5">Total</span>
+                <span className="text-lg font-semibold text-gray-100">{achievement.totalScore.toLocaleString()}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500 mb-0.5">Avg</span>
+                <span className="text-lg font-semibold text-gray-100">{Math.round(achievement.averageScore).toLocaleString()}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500 mb-0.5">Ranked</span>
+                <span className="text-lg font-semibold text-gray-100">{achievement.rankedMemberCount}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500 mb-0.5">Global Rank</span>
+                <span className="text-lg font-semibold text-gray-100">{achievement.globalRank != null ? `#${achievement.globalRank}` : '—'}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500 mb-0.5">Server Rank</span>
+                <span className="text-lg font-semibold text-gray-100">{achievement.serverRank != null ? `#${achievement.serverRank}` : '—'}</span>
+              </div>
+            </div>
+            {achievement.members.length > 0 && (
+              <div className="rounded border border-gray-700/60 bg-gray-900/30 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-800">
+                      <th className="px-3 py-2 font-medium w-10">#</th>
+                      <th className="px-3 py-2 font-medium">Member</th>
+                      <th className="px-3 py-2 font-medium text-right">Score</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800/60">
+                    {achievement.members.map(m => (
+                      <tr key={m.characterId} className="hover:bg-gray-800/30">
+                        <td className="px-3 py-2 text-gray-500 text-xs">{m.rank}</td>
+                        <td className="px-3 py-2">
+                          <Link
+                            to={`/${encodeURIComponent(m.server)}/${encodeURIComponent(m.name)}`}
+                            className="text-gray-200 hover:text-blue-300"
+                          >
+                            {m.name}
+                          </Link>
+                        </td>
+                        <td className="px-3 py-2 text-gray-400 text-right">{m.totalScore.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Roster */}
