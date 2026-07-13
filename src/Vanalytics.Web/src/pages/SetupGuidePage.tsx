@@ -231,6 +231,7 @@ function CommandsTab() {
         <CommandRow command="//va notify on|off" description="Toggle in-game chat notifications on successful sync (default on). Errors are always shown regardless." />
         <CommandRow command="//va url <url>" description="Set the API URL directly, or use the shortcuts local or prod" />
         <CommandRow command="//va dump" description="Dump all player/equipment/item data to a text file for debugging" />
+        <CommandRow command="//va log" description="Show the path and size of the addon's log file (vanalytics.log), which records errors and sync activity. If you hit a problem, send this file to support. Add clear to reset it (//va log clear)" />
         <CommandRow command="//va help" description="Show the in-game command reference" />
       </CommandTable>
 
