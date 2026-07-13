@@ -21,6 +21,7 @@ local http_request_fn = nil
 local json_encode_fn = nil
 local log_fn = nil
 local log_error_fn = nil
+local flog_fn = function() end  -- file-only breadcrumb; no-op until init
 
 -----------------------------------------------------------------------
 -- Bag mapping: Windower bag keys -> API bag names
@@ -53,6 +54,7 @@ function inventory.init(deps)
     json_encode_fn = deps.json_encode
     log_fn = deps.log
     log_error_fn = deps.log_error
+    flog_fn = deps.flog or function() end
 end
 
 -----------------------------------------------------------------------
@@ -219,9 +221,11 @@ function inventory.sync(character_name, server, on_complete)
     end
 
     local changes = inventory.compute_diff(previous_snapshot, current_snapshot)
+    flog_fn('inventory: fullSync=' .. tostring(is_full_sync) .. ' changes=' .. #changes)
 
     -- No changes and not a full sync, return silently
     if #changes == 0 and not is_full_sync then
+        flog_fn('inventory: no changes, skipping')
         on_complete()
         return
     end
@@ -264,16 +268,23 @@ function inventory.sync(character_name, server, on_complete)
     }, function(result, status_code, _, _)
         if not result then
             log_error_fn('Inventory sync connection failed: ' .. tostring(status_code))
+            flog_fn('inventory: POST connection failed')
+            -- A failed full sync must re-run as a full sync next time; resetting
+            -- to nil (not {}) forces that. A failed diff leaves the snapshot
+            -- untouched so the same diff is retried.
+            if is_full_sync then previous_snapshot = nil end
             on_complete(false)
             return
         end
 
-        -- Update snapshot regardless of status so we don't re-send same diff
-        previous_snapshot = current_snapshot
-
+        flog_fn('inventory: POST status=' .. tostring(status_code))
         local ok = status_code == 200
-        if not ok then
+        if ok then
+            -- Advance only on success so a failed sync never loses its diff.
+            previous_snapshot = current_snapshot
+        else
             log_error_fn('Inventory sync failed with status ' .. tostring(status_code))
+            if is_full_sync then previous_snapshot = nil end
         end
         on_complete(ok)
     end)
