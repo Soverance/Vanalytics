@@ -147,38 +147,77 @@ public class AchievementsControllerTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
     }
 
-    // ── Assertion 3: POST with admin token, N characters seeded → 200, recomputed == N, rows written ──
+    // Poll rescore-status until the run reports not-running (or timeout), returning the final status json.
+    private async Task<System.Text.Json.JsonElement> WaitForRescoreAsync(string token, int timeoutSeconds = 60)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(timeoutSeconds);
+        while (true)
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, "/api/admin/achievements/rescore-status");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var resp = await _client.SendAsync(req);
+            resp.EnsureSuccessStatusCode();
+            var doc = System.Text.Json.JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+            var root = doc.RootElement.Clone();
+            var running = root.GetProperty("isRunning").GetBoolean();
+            var started = root.GetProperty("startedAt").ValueKind != System.Text.Json.JsonValueKind.Null;
+            if (!running && started) return root;
+            if (DateTimeOffset.UtcNow > deadline) return root;
+            await Task.Delay(250);
+        }
+    }
+
+    // ── Assertion 3: POST with admin token, N characters seeded → 202, background run completes, rows written ──
 
     [Fact]
-    public async Task Rescore_WithAdminToken_RecomputesAllCharacters()
+    public async Task Rescore_WithAdminToken_Returns202AndCompletesInBackground()
     {
         const int n = 3;
         await SeedCharactersAsync(n);
-
         var token = await AdminTokenAsync();
 
         var req = new HttpRequestMessage(HttpMethod.Post, "/api/admin/achievements/rescore");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.Accepted, resp.StatusCode);
 
-        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var final = await WaitForRescoreAsync(token);
+        Assert.False(final.GetProperty("isRunning").GetBoolean());
+        Assert.Equal(n, final.GetProperty("total").GetInt32());
+        Assert.Equal(n, final.GetProperty("processed").GetInt32());
+        Assert.Equal(0, final.GetProperty("failed").GetInt32());
 
-        using var doc = System.Text.Json.JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
-        var recomputed = doc.RootElement.GetProperty("recomputed").GetInt32();
-
-        // RecomputeAllAsync returns count of ALL characters (our N + admin user has none → exactly N)
-        Assert.Equal(n, recomputed);
-
-        // Verify each character has a CharacterAchievement row
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
         var charIds = await db.Characters.Select(c => c.Id).ToListAsync();
         Assert.Equal(n, charIds.Count);
         foreach (var id in charIds)
-        {
-            var row = await db.CharacterAchievements.FindAsync(id);
-            Assert.NotNull(row);
-        }
+            Assert.NotNull(await db.CharacterAchievements.FindAsync(id));
+    }
+
+    // ── Assertion 3b: GET rescore-status WITHOUT admin token → 401 ──
+
+    [Fact]
+    public async Task RescoreStatus_WithoutToken_Returns401()
+    {
+        var resp = await _client.GetAsync("/api/admin/achievements/rescore-status");
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
+
+    // ── Assertion 3c: rescore-status before any run → idle (not running, total 0) ──
+
+    [Fact]
+    public async Task RescoreStatus_BeforeAnyRun_ReportsIdle()
+    {
+        var token = await AdminTokenAsync();
+        var req = new HttpRequestMessage(HttpMethod.Get, "/api/admin/achievements/rescore-status");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var resp = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        var doc = System.Text.Json.JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+        Assert.False(doc.RootElement.GetProperty("isRunning").GetBoolean());
+        Assert.Equal(0, doc.RootElement.GetProperty("total").GetInt32());
     }
 
     // ── Assertion 4: GET /api/admin/achievements/status WITHOUT admin token → 401 ──
@@ -227,6 +266,7 @@ public class AchievementsControllerTests : IAsyncLifetime
         var rescore = new HttpRequestMessage(HttpMethod.Post, "/api/admin/achievements/rescore");
         rescore.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         (await _client.SendAsync(rescore)).EnsureSuccessStatusCode();
+        await WaitForRescoreAsync(token); // rescore now runs as a background job — wait for it to finish
 
         var req = new HttpRequestMessage(HttpMethod.Get, "/api/admin/achievements/status");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);

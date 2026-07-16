@@ -108,6 +108,7 @@ builder.Services.AddScoped<DatMappingService>();
 builder.Services.AddScoped<BlueprintGenerationService>();
 builder.Services.AddScoped<GearSwapImportService>();
 builder.Services.AddScoped<AchievementRecomputeService>();
+builder.Services.AddSingleton<AchievementRescoreRunner>();
 builder.Services.AddSingleton<RateLimiter>();
 builder.Services.AddSingleton<EconomyRateLimiter>();
 builder.Services.AddSingleton<LoginRateLimiter>();

@@ -1402,6 +1402,18 @@ export interface AchievementAdminStatus {
   lastComputedAt: string | null
 }
 
+export interface AchievementRescoreStatus {
+  isRunning: boolean
+  isStalled: boolean
+  processed: number
+  total: number
+  failed: number
+  startedAt: string | null
+  finishedAt: string | null
+  lastError: string | null
+  lastErrorAt: string | null
+}
+
 // Aggregate inventory (roster-wide, owner-only) — mirrors Vanalytics.Core.DTOs.Inventory
 export interface AggregateInventoryLocation {
   characterId: string

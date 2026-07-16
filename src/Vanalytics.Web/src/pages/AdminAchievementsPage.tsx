@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
-import { getAchievementAdminStatus, rescoreAchievements } from '../api/client'
-import type { AchievementAdminStatus } from '../types/api'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { getAchievementAdminStatus, startRescore, getRescoreStatus } from '../api/client'
+import type { AchievementAdminStatus, AchievementRescoreStatus } from '../types/api'
+import { deriveRescoreView } from './adminAchievementsView'
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—'
@@ -20,8 +21,8 @@ export default function AdminAchievementsPage() {
   const [status, setStatus] = useState<AchievementAdminStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [rescoring, setRescoring] = useState(false)
-  const [result, setResult] = useState<string | null>(null)
+  const [rescore, setRescore] = useState<AchievementRescoreStatus | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchStatus = useCallback(async () => {
     setLoading(true)
@@ -35,25 +36,55 @@ export default function AdminAchievementsPage() {
     }
   }, [])
 
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+  }, [])
+
+  const poll = useCallback(async () => {
+    try {
+      const s = await getRescoreStatus()
+      setRescore(s)
+      if (!s.isRunning) {
+        stopPolling()
+        await fetchStatus()
+      }
+    } catch {
+      /* transient poll error — keep polling */
+    }
+  }, [fetchStatus, stopPolling])
+
+  const startPolling = useCallback(() => {
+    if (pollRef.current) return
+    pollRef.current = setInterval(poll, 2000)
+  }, [poll])
+
   useEffect(() => {
     fetchStatus()
-  }, [fetchStatus])
+    getRescoreStatus()
+      .then((s) => {
+        setRescore(s)
+        if (s.isRunning) startPolling()
+      })
+      .catch(() => {})
+    return () => stopPolling()
+  }, [fetchStatus, startPolling, stopPolling])
 
   const handleRescore = async () => {
-    setRescoring(true)
     setError(null)
-    setResult(null)
     try {
-      const { recomputed } = await rescoreAchievements()
-      setResult(`Rescored ${recomputed.toLocaleString()} characters.`)
-      await fetchStatus()
+      await startRescore() // 409 (already running) is handled as "just start polling"
+      await poll()
+      startPolling()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Rescore failed.')
-    } finally {
-      setRescoring(false)
+      setError(err instanceof Error ? err.message : 'Rescore failed to start.')
     }
   }
 
+  const view = deriveRescoreView(rescore)
+  const running = view.running
   const needsBackfill = status != null && status.needsRescore > 0
 
   return (
@@ -102,22 +133,47 @@ export default function AdminAchievementsPage() {
         <h2 className="text-lg font-semibold mb-3">Rescore</h2>
         <div className="rounded-lg border border-gray-800 p-5 bg-gray-900">
           <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-gray-200 mb-1">Rescore all characters</p>
               <p className="text-xs text-gray-500 leading-relaxed max-w-xl">
-                Recomputes every character's score and re-aggregates every linkshell. Runs
-                synchronously — expect a few seconds per hundred characters.
+                Recomputes every character's score and re-aggregates every linkshell. Runs in the
+                background — you can leave this page and come back; progress is shown below.
               </p>
-              {result && <p className="mt-2 text-xs text-emerald-400">{result}</p>}
+
+              {rescore && view.showProgress && (
+                <div className="mt-3 max-w-md">
+                  <div className="flex justify-between text-[11px] text-gray-400 mb-1">
+                    <span>{running ? 'Rescoring…' : 'Last run complete'}</span>
+                    <span>
+                      {rescore.processed.toLocaleString()} / {rescore.total.toLocaleString()}
+                      {view.failed > 0 ? ` · ${view.failed} failed` : ''}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded bg-gray-800 overflow-hidden">
+                    <div
+                      className="h-full bg-blue-600 transition-[width] duration-500"
+                      style={{ width: `${view.pct}%` }}
+                    />
+                  </div>
+                  {view.stalled && (
+                    <p className="mt-1 text-[11px] text-amber-400">
+                      ⚠ Previous run appears stalled — you can start a new one.
+                    </p>
+                  )}
+                  {!running && rescore.lastError && (
+                    <p className="mt-1 text-[11px] text-red-400">Last error: {rescore.lastError}</p>
+                  )}
+                </div>
+              )}
               {error && status && <p className="mt-2 text-xs text-red-400">{error}</p>}
             </div>
             <div className="shrink-0">
               <button
                 onClick={handleRescore}
-                disabled={rescoring}
+                disabled={running}
                 className="px-3 py-1.5 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 transition-colors"
               >
-                {rescoring ? 'Rescoring…' : 'Rescore all characters'}
+                {running ? 'Rescoring…' : 'Rescore all characters'}
               </button>
             </div>
           </div>

@@ -504,12 +504,28 @@ public class CharactersController : ControllerBase
         return new { progress, weapons = results };
     }
 
-    /// <summary>
-    /// Highest owned <see cref="UltimateWeaponStage.Rank"/> per owned ultimate weapon
-    /// (base-name grouped), keeping only rank >= 75 (the base-weapon threshold). Shared by the
-    /// character relics page and the achievement recompute so leaderboard and page agree.
-    /// </summary>
+    /// <summary>Loads the ultimate-weapon GameItems catalog (all rows whose Name is a UW base name).
+    /// Identical for every character, so the achievement rescore loads it once and reuses it.</summary>
+    internal static async Task<List<UwCatalogItem>> LoadUltimateWeaponCatalogAsync(VanalyticsDbContext db)
+    {
+        var baseNames = Vanalytics.Core.Data.UltimateWeapons.All.Select(w => w.BaseName).Distinct().ToList();
+        return await db.GameItems
+            .Where(gi => baseNames.Contains(gi.Name))
+            .Select(gi => new UwCatalogItem(gi.ItemId, gi.Name, gi.Level, gi.ItemLevel, gi.Description))
+            .ToListAsync();
+    }
+
+    /// <summary>Highest owned <see cref="UltimateWeaponStage.Rank"/> per owned ultimate weapon
+    /// (base-name grouped), keeping only rank &gt;= 75. Shared by the character relics page and the
+    /// achievement recompute so leaderboard and page agree.</summary>
     internal static async Task<List<int>> OwnedUltimateWeaponRanksAsync(VanalyticsDbContext db, Guid characterId)
+    {
+        var catalog = await LoadUltimateWeaponCatalogAsync(db);
+        return await OwnedUltimateWeaponRanksAsync(db, characterId, catalog);
+    }
+
+    internal static async Task<List<int>> OwnedUltimateWeaponRanksAsync(
+        VanalyticsDbContext db, Guid characterId, IReadOnlyCollection<UwCatalogItem> catalog)
     {
         var everHeld = await db.CharacterInventories
             .Where(i => i.CharacterId == characterId).Select(i => i.ItemId)
@@ -518,16 +534,7 @@ public class CharactersController : ControllerBase
                 .Select(c => c.ItemId))
             .Distinct().ToListAsync();
 
-        var baseNames = Vanalytics.Core.Data.UltimateWeapons.All.Select(w => w.BaseName).Distinct().ToList();
-        var items = await db.GameItems
-            .Where(gi => baseNames.Contains(gi.Name) && everHeld.Contains(gi.ItemId))
-            .Select(gi => new { gi.Name, gi.Level, gi.ItemLevel, gi.Description })
-            .ToListAsync();
-
-        return items.GroupBy(i => i.Name)
-            .Select(g => g.Max(i => UltimateWeaponStage.Rank(i.Level, i.ItemLevel, i.Description)))
-            .Where(rank => rank >= 75)
-            .ToList();
+        return UltimateWeaponRankCalculator.Compute(catalog, everHeld.ToHashSet());
     }
 
     [HttpGet("{id:guid}/porter")]

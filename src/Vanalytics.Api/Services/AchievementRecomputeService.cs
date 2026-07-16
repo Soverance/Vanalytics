@@ -25,7 +25,11 @@ public class AchievementRecomputeService(VanalyticsDbContext db)
         PropertyNameCaseInsensitive = true
     };
 
-    public async Task RecomputeCharacterAsync(Guid characterId, CancellationToken ct = default)
+    public Task RecomputeCharacterAsync(Guid characterId, CancellationToken ct = default) =>
+        RecomputeCharacterAsync(characterId, catalog: null, ct);
+
+    public async Task RecomputeCharacterAsync(
+        Guid characterId, IReadOnlyCollection<UwCatalogItem>? catalog, CancellationToken ct = default)
     {
         var ch = await db.Characters
             .Include(c => c.Jobs)
@@ -39,7 +43,9 @@ public class AchievementRecomputeService(VanalyticsDbContext db)
         var missions = await db.CharacterMissions.FindAsync([characterId], ct);
         var collection = await db.CharacterCollection.FindAsync([characterId], ct);
         var titleCount = await db.CharacterTitles.CountAsync(t => t.CharacterId == characterId, ct);
-        var uwRanks = await CharactersController.OwnedUltimateWeaponRanksAsync(db, characterId);
+        var uwRanks = catalog is null
+            ? await CharactersController.OwnedUltimateWeaponRanksAsync(db, characterId)
+            : await CharactersController.OwnedUltimateWeaponRanksAsync(db, characterId, catalog);
 
         var (spells, trusts) = CountSpellsAndTrusts(collection?.SpellIdsJson);
 
@@ -99,16 +105,6 @@ public class AchievementRecomputeService(VanalyticsDbContext db)
         row.AverageScore = scores.Count == 0 ? 0 : (double)scores.Sum() / scores.Count;
         row.ComputedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
-    }
-
-    public async Task<int> RecomputeAllAsync(CancellationToken ct = default)
-    {
-        var ids = await db.Characters.Select(c => c.Id).ToListAsync(ct);
-        foreach (var id in ids) await RecomputeCharacterAsync(id, ct);
-
-        var lsIds = await db.Linkshells.Select(l => l.Id).ToListAsync(ct);
-        foreach (var id in lsIds) await RecomputeLinkshellAsync(id, ct);
-        return ids.Count;
     }
 
     // ── JSON decoders (internal for direct unit testing; see AchievementDecoderTests) ──
