@@ -93,6 +93,7 @@ public static partial class GearSwapCodeGenerator
             var arms = new List<(string Cond, string Body)>();
             foreach (var (handle, cond, dispatch) in spec.Branches)
             {
+                var armCond = cond;
                 var targetIds = graph.Edges
                     .Where(e => e.Source == node.Id && e.SourceHandle == handle)
                     .Select(e => e.Target)
@@ -130,9 +131,12 @@ public static partial class GearSwapCodeGenerator
                         .Where(n => n is not null).Select(n => n!)
                         .ToList();
                     body = leaves.Count == 0 ? null : NestedBody(ctx, dispatch, leaves, setNamesById);
+                    // Sub-typed abilities (DNC Waltz/Samba/…, COR rolls, etc.) report their own spell.type,
+                    // so broaden this arm's guard to also match any present among the dispatched leaves.
+                    armCond = BroadenGuardForSubTypes(cond, leaves);
                 }
                 if (body is null) continue;
-                arms.Add((cond, body));
+                arms.Add((armCond, body));
             }
             if (arms.Count == 0) continue;
 
