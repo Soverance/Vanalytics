@@ -503,38 +503,11 @@ end
 -----------------------------------------------------------------------
 -- Macro sync functions
 -----------------------------------------------------------------------
+-- Resolve the active character's macro directory under USER\. Delegates to
+-- macro_lib, which uses windower.get_dir (+ lfs mtimes when present) and never
+-- shells out to cmd.exe. Returns (path) or (nil, reason).
 local function find_macro_path()
-    local user_dir = windower.ffxi_path .. 'USER'
-    -- Find the most recently modified content ID directory.
-    local best_dir = nil
-
-    local ok_lfs, lfs = pcall(require, 'lfs')
-    if ok_lfs then
-        local best_time = 0
-        local entries = windower.get_dir(user_dir)
-        if entries then
-            for _, name in ipairs(entries) do
-                local full = user_dir .. '\\' .. name
-                local attr = lfs.attributes(full)
-                if attr and attr.mode == 'directory' and (attr.modification or 0) > best_time then
-                    best_time = attr.modification
-                    best_dir = name
-                end
-            end
-        end
-    else
-        -- Fallback for installs without LuaFileSystem. Spawns a brief
-        -- cmd.exe window; acceptable in the rare-fallback case.
-        local handle = io.popen('dir "' .. user_dir .. '" /b /ad /o-d 2>nul')
-        if handle then
-            -- First line is the most recently modified directory.
-            best_dir = handle:read('*l')
-            handle:close()
-        end
-    end
-
-    if not best_dir then return nil end
-    return user_dir .. '\\' .. best_dir
+    return macro_lib.find_macro_path(windower.ffxi_path .. 'USER')
 end
 
 -- Migrate macro hash format from string to {local, remote} table
@@ -3478,9 +3451,9 @@ windower.register_event('addon command', function(command, ...)
         log(string.format('Size: %.1f KB. Send this file to support.', size / 1024))
 
     elseif command == 'macros' then
-        local macro_path = find_macro_path()
+        local macro_path, macro_path_err = find_macro_path()
         if not macro_path then
-            windower.add_to_chat(207, '[Vanalytics] Could not find macro directory.')
+            windower.add_to_chat(207, '[Vanalytics] ' .. (macro_path_err or 'Could not find macro directory.'))
             return
         end
 

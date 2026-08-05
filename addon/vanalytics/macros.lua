@@ -449,45 +449,99 @@ function macros.parse_titles(macro_path)
     return titles
 end
 
--- Get a fingerprint of all macro DAT file timestamps in the directory.
--- Returns a table keyed by filename -> mtime (number) when lfs is available
--- (the common case in Windower 4), or a date-string parsed from `dir /T:W`
--- output as a fallback. Either is fine — book_files_changed only needs the
--- values to compare equal across consecutive checks of an unchanged file.
+-- DJB2 hash of a single file's raw bytes; nil if the file can't be opened.
+-- Shares the algorithm with hash_book so the values are directly comparable.
+local function hash_file_bytes(filepath)
+    local f = io.open(filepath, 'rb')
+    if not f then return nil end
+    local data = f:read('*a')
+    f:close()
+    if not data then return nil end
+    local hash = 5381
+    for i = 1, #data do
+        hash = ((hash * 33) + data:byte(i)) % 0xFFFFFFFF
+    end
+    return string.format('%08x', hash)
+end
+
+-- Get a fingerprint of all macro DAT files in the directory, keyed by
+-- filename. When LuaFileSystem is available (the common case) the value is the
+-- file's mtime; otherwise it is a content hash. Either works — book_files_changed
+-- only needs the value to differ when a file changes and stay equal when it
+-- doesn't. Both branches use windower.get_dir and never shell out to cmd.exe
+-- (see reference: Windower file ops), so no console window flashes and installs
+-- missing lfs still get a correct, non-empty fingerprint.
 function macros.get_file_timestamps(macro_path)
     local timestamps = {}
+    local entries = windower.get_dir(macro_path)
+    if not entries then return timestamps end
+
+    local ok_lfs, lfs = pcall(require, 'lfs')
+    for _, name in ipairs(entries) do
+        if name:match('^mcr%d*%.dat$') then
+            local full = macro_path .. '\\' .. name
+            if ok_lfs then
+                local attr = lfs.attributes(full)
+                if attr and attr.modification then
+                    timestamps[name] = attr.modification
+                end
+            else
+                local h = hash_file_bytes(full)
+                if h then timestamps[name] = h end
+            end
+        end
+    end
+
+    return timestamps
+end
+
+-- Locate the active character's macro directory under USER\.
+-- FFXI stores each character's macros in USER\<contentId>\mcr*.dat, where
+-- <contentId> is an opaque hex folder name that the Windower API does not
+-- expose. With LuaFileSystem we pick the most-recently-modified folder (the
+-- character currently being played). Without lfs we cannot read mtimes, so we
+-- can only auto-resolve when a single character folder exists; with several we
+-- return a clear message rather than guess the wrong character.
+-- Returns (path) on success, or (nil, message) with a user-facing explanation.
+function macros.find_macro_path(user_dir)
+    local entries = windower.get_dir(user_dir)
+    if not entries then
+        return nil, 'Could not find macro directory.'
+    end
 
     local ok_lfs, lfs = pcall(require, 'lfs')
     if ok_lfs then
-        local entries = windower.get_dir(macro_path)
-        if entries then
-            for _, name in ipairs(entries) do
-                if name:match('^mcr%d*%.dat$') then
-                    local attr = lfs.attributes(macro_path .. '\\' .. name)
-                    if attr and attr.modification then
-                        timestamps[name] = attr.modification
-                    end
+        local best_dir, best_time = nil, -1
+        for _, name in ipairs(entries) do
+            if name ~= '.' and name ~= '..' then
+                local attr = lfs.attributes(user_dir .. '\\' .. name)
+                if attr and attr.mode == 'directory' and (attr.modification or 0) > best_time then
+                    best_time = attr.modification
+                    best_dir = name
                 end
             end
         end
-        return timestamps
+        if not best_dir then return nil, 'Could not find macro directory.' end
+        return user_dir .. '\\' .. best_dir
     end
 
-    -- Fallback for installs without LuaFileSystem: parse `dir /T:W` output.
-    -- Spawns a brief cmd.exe window; acceptable in the rare-fallback case.
-    local handle = io.popen('dir /T:W "' .. macro_path .. '\\mcr*.dat" 2>NUL')
-    if not handle then return timestamps end
-
-    for line in handle:lines() do
-        -- dir output lines look like: "03/25/2026  02:14 PM             7,624 mcr15.dat"
-        local date_str, time_str, filename = line:match('(%d+/%d+/%d+)%s+(%d+:%d+%s*%a+)%s+[%d,]+%s+(mcr%d*%.dat)')
-        if filename then
-            timestamps[filename] = date_str .. ' ' .. time_str
+    -- No LuaFileSystem: enumerate character folders natively via windower.dir_exists.
+    local dirs = {}
+    for _, name in ipairs(entries) do
+        if name ~= '.' and name ~= '..' and windower.dir_exists(user_dir .. '\\' .. name) then
+            dirs[#dirs + 1] = name
         end
     end
-    handle:close()
 
-    return timestamps
+    if #dirs == 0 then
+        return nil, 'Could not find macro directory.'
+    elseif #dirs == 1 then
+        return user_dir .. '\\' .. dirs[1]
+    end
+
+    return nil, 'Found multiple character folders (' .. table.concat(dirs, ', ')
+        .. ') but cannot tell which is active without LuaFileSystem. Install the '
+        .. 'lfs library in your Windower Lua runtime to enable multi-character macro sync.'
 end
 
 -- Check if any DAT file in a book has changed since last check.
