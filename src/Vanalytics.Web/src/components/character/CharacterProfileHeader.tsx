@@ -80,6 +80,11 @@ export default function CharacterProfileHeader({
               <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 shadow-[0_0_6px_#818cf8]" />
               {character.server}
             </span>
+            {character.isMemorial && (
+              <span className="inline-flex items-center rounded-full border border-amber-900/60 bg-amber-950/30 px-2.5 py-0.5 text-xs font-medium text-amber-200/80">
+                In Memoriam
+              </span>
+            )}
             {/* Non-owner read-only role badge — does not render on public profiles
                 (role is "None" there by the owner-only design), kept for parity. */}
             {!showPublicButton && character.role && character.role !== 'None' && (
@@ -92,6 +97,10 @@ export default function CharacterProfileHeader({
           {/* Title — its own line under the name, above the combat line */}
           {character.title && (
             <p className="text-sm text-gray-400 italic mt-1">{character.title}</p>
+          )}
+
+          {character.isMemorial && character.dedication && (
+            <p className="text-sm text-gray-500 italic mt-1">{character.dedication}</p>
           )}
 
           {/* Combat */}

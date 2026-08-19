@@ -93,17 +93,62 @@ local packet_stats = nil  -- populated from incoming packet 0x061
 local playtime_seconds = nil  -- populated from incoming packet 0x00A
 
 -----------------------------------------------------------------------
--- Utility: chat log output
+-- Utility: persistent file log + chat log output
+--
+-- Every chat helper mirrors to <addon>/vanalytics.log so errors survive
+-- past a transient chat line. flog() writes file-only breadcrumbs (no chat)
+-- for sync-chain lifecycle. Logging is best-effort: an I/O failure degrades
+-- to a no-op and never breaks the addon. Never log settings.ApiKey.
 -----------------------------------------------------------------------
+local LOG_PATH = windower.addon_path .. 'vanalytics.log'
+local log_file = nil  -- cached append handle, opened lazily on first write
+
+-- Rotate once at load if the current log has grown past ~1 MB. Keeps one
+-- previous generation (vanalytics.log.1); two files max. Must run before any
+-- handle is open so the rename isn't blocked.
+local function rotate_if_needed()
+    if log_file then log_file:close(); log_file = nil end
+    local f = io.open(LOG_PATH, 'r')
+    if not f then return end
+    local size = f:seek('end')
+    f:close()
+    if size and size > 1024 * 1024 then
+        os.remove(LOG_PATH .. '.1')
+        os.rename(LOG_PATH, LOG_PATH .. '.1')
+    end
+end
+
+local function write_log(level, msg)
+    if not log_file then
+        log_file = io.open(LOG_PATH, 'a')
+        if not log_file then return end
+    end
+    local ok = pcall(function()
+        log_file:write(os.date('[%Y-%m-%d %H:%M:%S] ') .. '[' .. level .. '] ' .. tostring(msg) .. '\n')
+        log_file:flush()
+    end)
+    if not ok then log_file = nil end  -- invalidate stale handle; reopens next call
+end
+
+-- File-only breadcrumb (no chat).
+local function flog(msg)
+    write_log('INFO', msg)
+end
+
+rotate_if_needed()
+
 local function log(msg)
+    write_log('INFO', msg)
     windower.add_to_chat(8, '[Vanalytics] ' .. msg)
 end
 
 local function log_error(msg)
+    write_log('ERROR', msg)
     windower.add_to_chat(167, '[Vanalytics] ' .. msg)
 end
 
 local function log_success(msg)
+    write_log('SUCCESS', msg)
     windower.add_to_chat(158, '[Vanalytics] ' .. msg)
 end
 
@@ -458,38 +503,11 @@ end
 -----------------------------------------------------------------------
 -- Macro sync functions
 -----------------------------------------------------------------------
+-- Resolve the active character's macro directory under USER\. Delegates to
+-- macro_lib, which uses windower.get_dir (+ lfs mtimes when present) and never
+-- shells out to cmd.exe. Returns (path) or (nil, reason).
 local function find_macro_path()
-    local user_dir = windower.ffxi_path .. 'USER'
-    -- Find the most recently modified content ID directory.
-    local best_dir = nil
-
-    local ok_lfs, lfs = pcall(require, 'lfs')
-    if ok_lfs then
-        local best_time = 0
-        local entries = windower.get_dir(user_dir)
-        if entries then
-            for _, name in ipairs(entries) do
-                local full = user_dir .. '\\' .. name
-                local attr = lfs.attributes(full)
-                if attr and attr.mode == 'directory' and (attr.modification or 0) > best_time then
-                    best_time = attr.modification
-                    best_dir = name
-                end
-            end
-        end
-    else
-        -- Fallback for installs without LuaFileSystem. Spawns a brief
-        -- cmd.exe window; acceptable in the rare-fallback case.
-        local handle = io.popen('dir "' .. user_dir .. '" /b /ad /o-d 2>nul')
-        if handle then
-            -- First line is the most recently modified directory.
-            best_dir = handle:read('*l')
-            handle:close()
-        end
-    end
-
-    if not best_dir then return nil end
-    return user_dir .. '\\' .. best_dir
+    return macro_lib.find_macro_path(windower.ffxi_path .. 'USER')
 end
 
 -- Migrate macro hash format from string to {local, remote} table
@@ -1659,6 +1677,7 @@ inventory.init({
     json_encode = json_encode,
     log = log,
     log_error = log_error,
+    flog = flog,
 })
 
 porter.init({
@@ -2380,6 +2399,7 @@ local function run_steps(steps, on_all_done)
             if finished then return end
             finished = true
             results[#results + 1] = { name = step.name, ok = ok ~= false }
+            flog('step ' .. step.name .. ' -> ' .. (ok == false and 'FAILED' or 'ok'))
             next_step(i + 1)
         end
         local ok, err = pcall(step.fn, done)
@@ -2404,10 +2424,12 @@ local function report_sync_summary(results)
     local player = windower.ffxi.get_player()
     local who = player and player.name or '?'
     if #failed == 0 then
+        flog(string.format('sync summary: %s, all %d steps ok', who, ok_count))
         if settings.NotifyOnSync then
             log_success(string.format('Sync complete for %s. all %d steps ok.', who, ok_count))
         end
     else
+        -- log_error already mirrors to the file; no extra flog needed here.
         log_error(string.format('Sync finished for %s with errors: %d ok, %d failed (%s).',
             who, ok_count, #failed, table.concat(failed, ', ')))
     end
@@ -2419,12 +2441,13 @@ end
 -- snapshot, progression last_payload_hash).
 local sync_in_progress = false
 
-local function enqueue_sync_work()
+local function enqueue_sync_work(trigger)
     if sync_in_progress then
         log('Sync already in progress. skipping duplicate trigger...')
         return
     end
     sync_in_progress = true
+    flog('sync chain start (trigger=' .. (trigger or 'auto') .. ')')
 
     -- All HTTPS work is non-blocking via async_http. Each step's callback
     -- triggers the next one, so the chain runs strictly in sequence but
@@ -2493,7 +2516,7 @@ windower.register_event('prerender', function()
 
     if timer_elapsed >= timer_interval_seconds then
         timer_elapsed = 0
-        enqueue_sync_work()
+        enqueue_sync_work('auto')
     end
 
     -- Check if session needs auto-flush
@@ -2620,7 +2643,7 @@ windower.register_event('addon command', function(command, ...)
 
     if command == 'sync' then
         if settings.NotifyOnSync then log('Syncing...') end
-        enqueue_sync_work()
+        enqueue_sync_work('manual')
 
     elseif command == 'status' then
         local interval = get_effective_interval()
@@ -3413,10 +3436,24 @@ windower.register_event('addon command', function(command, ...)
         config.save(settings)
         log_success('API URL set to: ' .. url)
 
+    elseif command == 'log' then
+        if args[1] == 'clear' then
+            if log_file then log_file:close(); log_file = nil end
+            os.remove(LOG_PATH)
+            os.remove(LOG_PATH .. '.1')
+            log_success('Log cleared.')
+            return
+        end
+        local f = io.open(LOG_PATH, 'r')
+        local size = f and f:seek('end') or 0
+        if f then f:close() end
+        log('Log file: ' .. LOG_PATH)
+        log(string.format('Size: %.1f KB. Send this file to support.', size / 1024))
+
     elseif command == 'macros' then
-        local macro_path = find_macro_path()
+        local macro_path, macro_path_err = find_macro_path()
         if not macro_path then
-            windower.add_to_chat(207, '[Vanalytics] Could not find macro directory.')
+            windower.add_to_chat(207, '[Vanalytics] ' .. (macro_path_err or 'Could not find macro directory.'))
             return
         end
 
@@ -3542,6 +3579,7 @@ windower.register_event('addon command', function(command, ...)
         log('//va status       - Show status')
         log('//va version      - Check addon version against the server')
         log('//va update       - Download the latest addon from the server and reload (--force to re-download)')
+        log('//va log          - Show the log file path + size (//va log clear to reset)')
         log('//va interval N   - Set sync interval in minutes (min: ' .. MIN_INTERVAL .. ')')
         log('//va notify on|off - Toggle in-game chat notifications on successful sync')
         log('//va dump         - Dump player data to file')
@@ -3616,6 +3654,10 @@ windower.register_event('logout', function()
 end)
 
 windower.register_event('load', function()
+    flog('--- session start | vanalytics ' .. tostring(_addon.version) .. ' | url=' .. tostring(settings.ApiUrl) .. ' ---')
+    local _p = windower.ffxi.get_player()
+    if _p then flog('character: ' .. tostring(_p.name)) end
+
     -- One-time inventory backfill for the augment-capture feature. Existing
     -- characters already have inventory rows on the server with no augment data,
     -- and a normal diff sync won't re-send unchanged items. Forcing the next

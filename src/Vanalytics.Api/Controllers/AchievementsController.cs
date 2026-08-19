@@ -10,7 +10,7 @@ namespace Vanalytics.Api.Controllers;
 
 [ApiController]
 [Route("api")]
-public class AchievementsController(AchievementRecomputeService recompute, VanalyticsDbContext db) : ControllerBase
+public class AchievementsController(AchievementRescoreRunner rescoreRunner, VanalyticsDbContext db) : ControllerBase
 {
     /// <summary>
     /// Returns the public achievement scoring rubric (version + category list).
@@ -24,17 +24,34 @@ public class AchievementsController(AchievementRecomputeService recompute, Vanal
     public IActionResult Rubric() =>
         Ok(new { version = AchievementRubric.Version, categories = AchievementRubric.Categories });
 
-    /// <summary>
-    /// Admin-only batch rescore: recomputes CharacterAchievement for every character
-    /// and re-aggregates every linkshell. Returns the number of characters recomputed.
-    /// Role attribute mirrors AdminUsersController / AdminEconomyController exactly.
-    /// </summary>
+    /// <summary>Admin-only: start a background rescore of every character + linkshell.
+    /// Returns 202 immediately, or 409 if a (non-stalled) run is already active.</summary>
     [HttpPost("admin/achievements/rescore")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Rescore(CancellationToken ct)
     {
-        var n = await recompute.RecomputeAllAsync(ct);
-        return Ok(new { recomputed = n });
+        var result = await rescoreRunner.TryStartAsync(ct);
+        return result == RescoreStartResult.AlreadyRunning
+            ? Conflict(new { error = "A rescore is already running." })
+            : Accepted(new { started = true });
+    }
+
+    /// <summary>Admin-only: live progress of the current/last rescore run (poll-friendly).</summary>
+    [HttpGet("admin/achievements/rescore-status")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<AchievementRescoreStatus>> RescoreStatus(CancellationToken ct)
+    {
+        var s = await db.AchievementRescoreStates.FirstOrDefaultAsync(x => x.Id == 1, ct);
+        if (s is null)
+            return Ok(new AchievementRescoreStatus(false, false, 0, 0, 0, null, null, null, null));
+
+        var stalled = AchievementRescoreRunner.IsStalled(s, DateTimeOffset.UtcNow);
+        return Ok(new AchievementRescoreStatus(
+            IsRunning: s.IsRunning && !stalled,
+            IsStalled: stalled,
+            Processed: s.Processed, Total: s.Total, Failed: s.Failed,
+            StartedAt: s.StartedAt, FinishedAt: s.FinishedAt,
+            LastError: s.LastError, LastErrorAt: s.LastErrorAt));
     }
 
     /// <summary>

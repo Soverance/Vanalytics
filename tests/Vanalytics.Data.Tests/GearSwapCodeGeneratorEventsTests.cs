@@ -78,6 +78,50 @@ public class GearSwapCodeGeneratorEventsTests
     }
 
     [Fact]
+    public void Precast_JobAbility_pin_broadens_guard_for_sub_typed_abilities()
+    {
+        // A Dancer Waltz reports spell.type == 'Waltz' (not 'JobAbility') in GearSwap, so the
+        // JobAbility arm's guard must broaden to include it or the dispatch never fires.
+        var graph = Graph(
+            [Trigger("t","trigger:precast"), EquipNamed("e",4,"Curing Waltz")],
+            [Edge("t","JobAbility","e")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("if (spell.type == 'JobAbility' or spell.type == 'Waltz') then", lua);
+        Assert.Contains("if spell.english == 'Curing Waltz' then equip(sets['Cure Set'])", lua);
+    }
+
+    [Fact]
+    public void Precast_JobAbility_pin_unions_distinct_sub_types_sorted()
+    {
+        // Mixing a real JobAbility with two different sub-types unions all present types, base first
+        // then the extras in deterministic (ordinal) order — regardless of leaf wiring order.
+        var graph = Graph(
+            [Trigger("t","trigger:precast"),
+             EquipNamed("e1",4,"Drain Samba"), EquipNamed("e2",1,"Berserk"), EquipNamed("e3",6,"Curing Waltz")],
+            [Edge("t","JobAbility","e1"), Edge("t","JobAbility","e2"), Edge("t","JobAbility","e3")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("if (spell.type == 'JobAbility' or spell.type == 'Samba' or spell.type == 'Waltz') then", lua);
+    }
+
+    [Fact]
+    public void Precast_JobAbility_pin_plain_ability_keeps_narrow_guard()
+    {
+        // A leaf whose ability is a genuine JobAbility (Berserk) must NOT broaden the guard.
+        var graph = Graph(
+            [Trigger("t","trigger:precast"), EquipNamed("e",1,"Berserk")],
+            [Edge("t","JobAbility","e")]);
+
+        var lua = GearSwapCodeGenerator.EmitEvents(graph, Names);
+
+        Assert.Contains("if spell.type == 'JobAbility' then", lua);
+        Assert.DoesNotContain("or spell.type ==", lua);
+    }
+
+    [Fact]
     public void Aftercast_uses_player_status()
     {
         var graph = Graph(

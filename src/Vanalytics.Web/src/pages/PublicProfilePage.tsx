@@ -17,6 +17,11 @@ import KeyItemsTab from '../components/character/KeyItemsTab'
 import SpellsTab from '../components/character/SpellsTab'
 import RelicsTab from '../components/character/RelicsTab'
 import GearSetsTab from '../components/character/GearSetsTab'
+// Explicit .tsx extension: on case-insensitive filesystems (Windows dev/mounts)
+// an extensionless 'AppearanceSelector' would resolve to appearanceSelector.ts
+// (tsc tries .ts before .tsx), importing the logic module instead of the component.
+import AppearanceSelector from '../components/character/AppearanceSelector.tsx'
+import type { AppearanceState } from '../components/character/appearanceSelector'
 
 const STAT_TABS = ['Jobs', 'Crafting', 'Progression', 'Missions', 'Titles', 'Key Items'] as const
 type StatTab = typeof STAT_TABS[number]
@@ -39,12 +44,14 @@ export default function PublicProfilePage() {
   const [itemCache, setItemCache] = useState<Map<number, GameItemDetail>>(new Map())
   const [copied, setCopied] = useState(false)
   const [achievement, setAchievement] = useState<CharacterAchievementResponse | null>(null)
+  const [appearance, setAppearance] = useState<AppearanceState | null>(null)
 
   useEffect(() => {
     setLoading(true)
     setNotFound(false)
     setLoadError(false)
     setAchievement(null)
+    setAppearance(null) // don't leak a memorial's appearance override onto the next profile
     fetch(`/api/profiles/${server}/${name}`)
       .then(async (res) => {
         // 404 = genuinely not public / no such character.
@@ -73,7 +80,7 @@ export default function PublicProfilePage() {
 
   // Fetch achievement score after character loads — shown in header rank badge
   useEffect(() => {
-    if (!character) return
+    if (!character || character.isMemorial) return
     getCharacterAchievement(character.id)
       .then(setAchievement)
       .catch(() => setAchievement(null))
@@ -84,8 +91,12 @@ export default function PublicProfilePage() {
     if (initialSetId != null) setGearTab('Gear Sets')
   }, [initialSetId])
 
-  const raceId = toRaceId(character?.race, character?.gender)
-  const { slotDatPaths } = useSlotDatPaths(character?.gear ?? [], raceId, character?.faceModelId)
+  // Memorial pages let visitors preview face/gender variants; appearance
+  // overrides are local view state only (null = the character's own values).
+  const effectiveGender = appearance?.gender ?? character?.gender
+  const effectiveFaceModelId = appearance?.faceModelId ?? character?.faceModelId
+  const raceId = toRaceId(character?.race, effectiveGender)
+  const { slotDatPaths } = useSlotDatPaths(character?.gear ?? [], raceId, effectiveFaceModelId)
 
   // Pre-fetch item details for equipped items
   useEffect(() => {
@@ -201,14 +212,30 @@ export default function PublicProfilePage() {
           {/* Equipment tab: hidden instead of unmounted to preserve layout */}
           <div className={gearTab === 'Equipment' ? '' : 'hidden'}>
             <div className="flex gap-4">
-              <ModelViewer
-                key={character.id}
-                race={character.race}
-                gender={character.gender}
-                gear={character.gear}
-                slotDatPaths={slotDatPaths}
-                favoriteAnimation={character.favoriteAnimation}
-              />
+              <div className="flex-1 min-w-0">
+                <ModelViewer
+                  key={character.id}
+                  race={character.race}
+                  gender={effectiveGender}
+                  gear={character.gear}
+                  slotDatPaths={slotDatPaths}
+                  favoriteAnimation={character.favoriteAnimation}
+                />
+                {character.isMemorial && character.race && character.gender && (
+                  <AppearanceSelector
+                    race={character.race}
+                    value={{
+                      gender: effectiveGender ?? character.gender,
+                      faceModelId: effectiveFaceModelId ?? 0,
+                    }}
+                    defaultValue={{ gender: character.gender, faceModelId: character.faceModelId ?? 0 }}
+                    onChange={next => {
+                      const def = { gender: character.gender!, faceModelId: character.faceModelId ?? 0 }
+                      setAppearance(next.gender === def.gender && next.faceModelId === def.faceModelId ? null : next)
+                    }}
+                  />
+                )}
+              </div>
               <div className="w-[400px] flex-shrink-0">
                 <EquipmentGrid
                   gear={character.gear}

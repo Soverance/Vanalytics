@@ -162,3 +162,12 @@ export function toRaceId(race?: string, gender?: string): number | null {
   }
   return map[key] ?? null
 }
+
+/** Face variants (name + DAT path) for a race, from face-paths.json. */
+export async function getFaceVariants(
+  raceId: number | null,
+): Promise<{ name: string; path: string }[]> {
+  if (!raceId) return []
+  const facePaths = await loadFacePaths()
+  return facePaths[String(raceId)] ?? []
+}

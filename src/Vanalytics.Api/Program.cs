@@ -102,12 +102,16 @@ builder.Services.AddOpenApi("v1", options =>
 
 // Services
 builder.Services.AddSingleton<VanadielClock>();
+builder.Services.AddSingleton(sp => new MemorialProfileStore(
+    Path.Combine(builder.Environment.ContentRootPath, "Data", "memorials"),
+    sp.GetRequiredService<ILogger<MemorialProfileStore>>()));
 builder.Services.AddSoveranceOAuth(builder.Configuration);
 builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<DatMappingService>();
 builder.Services.AddScoped<BlueprintGenerationService>();
 builder.Services.AddScoped<GearSwapImportService>();
 builder.Services.AddScoped<AchievementRecomputeService>();
+builder.Services.AddSingleton<AchievementRescoreRunner>();
 builder.Services.AddSingleton<RateLimiter>();
 builder.Services.AddSingleton<EconomyRateLimiter>();
 builder.Services.AddSingleton<LoginRateLimiter>();

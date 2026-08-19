@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Soverance.Messaging.Models;
+using Vanalytics.Api.Services;
 using Vanalytics.Core.DTOs.Characters;
 using Vanalytics.Core.DTOs.GearSets;
 using Vanalytics.Data;
@@ -13,10 +14,12 @@ namespace Vanalytics.Api.Controllers;
 public class ProfilesController : ControllerBase
 {
     private readonly VanalyticsDbContext _db;
+    private readonly MemorialProfileStore _memorials;
 
-    public ProfilesController(VanalyticsDbContext db)
+    public ProfilesController(VanalyticsDbContext db, MemorialProfileStore memorials)
     {
         _db = db;
+        _memorials = memorials;
     }
 
     [HttpGet("{server}/{name}")]
@@ -38,7 +41,18 @@ public class ProfilesController : ControllerBase
                 c.Name == name &&
                 c.IsPublic);
 
-        if (character is null) return NotFound();
+        if (character is null)
+        {
+            // Memorial fallback: frozen, hand-authored profiles (never in the DB).
+            // DB is checked first, so a real synced character always wins.
+            var memorial = _memorials.Find(server, name);
+            if (memorial is null) return NotFound();
+
+            var memorialDetail = CharactersController.MapToDetail(memorial.ToCharacter());
+            memorialDetail.IsMemorial = true;
+            memorialDetail.Dedication = memorial.Dedication;
+            return Ok(memorialDetail);
+        }
 
         var detail = CharactersController.MapToDetail(character);
         detail.LinkshellLogoUrl = await CharactersController.LoadActiveLinkshellLogoAsync(_db, character);
@@ -86,11 +100,14 @@ public class ProfilesController : ControllerBase
         });
     }
 
-    private async Task<Guid?> ResolvePublicCharacterIdAsync(string server, string name) =>
-        await _db.Characters
+    private async Task<Guid?> ResolvePublicCharacterIdAsync(string server, string name)
+    {
+        var id = await _db.Characters
             .Where(c => c.Server == server && c.Name == name && c.IsPublic)
             .Select(c => (Guid?)c.Id)
             .FirstOrDefaultAsync();
+        return id ?? _memorials.Find(server, name)?.Id;
+    }
 
     [HttpGet("{server}/{name}/progression")]
     public async Task<IActionResult> GetPublicProgression(string server, string name)

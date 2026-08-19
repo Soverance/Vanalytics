@@ -43,6 +43,9 @@ export interface CharacterDetail {
   isPublic: boolean
   lastSyncAt: string | null
   role: string // CharacterRole enum name; "None" when unlabeled (owner-only)
+  // Memorial pages: frozen hand-authored profiles. Absent for normal characters.
+  isMemorial?: boolean | null
+  dedication?: string | null
   race?: string
   gender?: string
   faceModelId?: number
@@ -1400,6 +1403,18 @@ export interface AchievementAdminStatus {
   needsRescore: number
   oldestComputedAt: string | null
   lastComputedAt: string | null
+}
+
+export interface AchievementRescoreStatus {
+  isRunning: boolean
+  isStalled: boolean
+  processed: number
+  total: number
+  failed: number
+  startedAt: string | null
+  finishedAt: string | null
+  lastError: string | null
+  lastErrorAt: string | null
 }
 
 // Aggregate inventory (roster-wide, owner-only) — mirrors Vanalytics.Core.DTOs.Inventory

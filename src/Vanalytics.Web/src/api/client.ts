@@ -172,6 +172,7 @@ import type {
   CharacterAchievementResponse,
   LinkshellAchievementResponse,
   AchievementAdminStatus,
+  AchievementRescoreStatus,
   AggregateInventoryResponse,
   AnalyticsSummary,
   ServerComparisonEntry,
@@ -225,8 +226,21 @@ export function getAchievementAdminStatus(): Promise<AchievementAdminStatus> {
   return api<AchievementAdminStatus>('/api/admin/achievements/status')
 }
 
-export function rescoreAchievements(): Promise<{ recomputed: number }> {
-  return api<{ recomputed: number }>('/api/admin/achievements/rescore', { method: 'POST' })
+export async function startRescore(): Promise<{ started: boolean; alreadyRunning: boolean }> {
+  try {
+    await api<{ started: boolean }>('/api/admin/achievements/rescore', { method: 'POST' })
+    return { started: true, alreadyRunning: false }
+  } catch (err) {
+    // A run already in progress returns 409 — not an error; the caller just polls.
+    if (err instanceof ApiError && err.status === 409) {
+      return { started: false, alreadyRunning: true }
+    }
+    throw err
+  }
+}
+
+export function getRescoreStatus(): Promise<AchievementRescoreStatus> {
+  return api<AchievementRescoreStatus>('/api/admin/achievements/rescore-status')
 }
 
 export function getAggregateInventory(world?: string): Promise<AggregateInventoryResponse> {
