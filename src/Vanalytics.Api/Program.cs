@@ -102,6 +102,9 @@ builder.Services.AddOpenApi("v1", options =>
 
 // Services
 builder.Services.AddSingleton<VanadielClock>();
+builder.Services.AddSingleton(sp => new MemorialProfileStore(
+    Path.Combine(builder.Environment.ContentRootPath, "Data", "memorials"),
+    sp.GetRequiredService<ILogger<MemorialProfileStore>>()));
 builder.Services.AddSoveranceOAuth(builder.Configuration);
 builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<DatMappingService>();

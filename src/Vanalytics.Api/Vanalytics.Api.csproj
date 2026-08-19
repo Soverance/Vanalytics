@@ -8,6 +8,7 @@
   <ItemGroup>
     <Content Include="..\..\addon\vanalytics\**" CopyToOutputDirectory="PreserveNewest" Link="addon\%(RecursiveDir)%(Filename)%(Extension)" />
     <Content Include="Data\*.json" CopyToOutputDirectory="PreserveNewest" Link="Data\%(Filename)%(Extension)" />
+    <Content Include="Data\memorials\*.json" CopyToOutputDirectory="PreserveNewest" Link="Data\memorials\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

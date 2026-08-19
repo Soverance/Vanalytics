@@ -43,6 +43,9 @@ export interface CharacterDetail {
   isPublic: boolean
   lastSyncAt: string | null
   role: string // CharacterRole enum name; "None" when unlabeled (owner-only)
+  // Memorial pages: frozen hand-authored profiles. Absent for normal characters.
+  isMemorial?: boolean | null
+  dedication?: string | null
   race?: string
   gender?: string
   faceModelId?: number

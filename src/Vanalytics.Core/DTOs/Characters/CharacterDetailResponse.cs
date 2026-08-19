@@ -10,6 +10,10 @@ public class CharacterDetailResponse
     // Owner-only: populated by the authenticated owner endpoints, never by the
     // shared MapToDetail — so public profiles always report "None".
     public string Role { get; set; } = "None";
+    // Memorial pages: hand-authored frozen profiles for players who have passed
+    // away (Data/memorials/*.json). Null for every DB-backed character.
+    public bool? IsMemorial { get; set; }
+    public string? Dedication { get; set; }
     public string? Race { get; set; }
     public string? Gender { get; set; }
     public int? FaceModelId { get; set; }
