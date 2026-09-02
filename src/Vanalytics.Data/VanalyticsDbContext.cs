@@ -44,6 +44,7 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<CharacterMissions> CharacterMissions => Set<CharacterMissions>();
     public DbSet<CharacterTitle> CharacterTitles => Set<CharacterTitle>();
     public DbSet<CharacterCollection> CharacterCollection => Set<CharacterCollection>();
+    public DbSet<CharacterCurrencies> CharacterCurrencies => Set<CharacterCurrencies>();
     public DbSet<MacroBook> MacroBooks => Set<MacroBook>();
     public DbSet<MacroBookSnapshot> MacroBookSnapshots => Set<MacroBookSnapshot>();
     public DbSet<MacroPage> MacroPages => Set<MacroPage>();

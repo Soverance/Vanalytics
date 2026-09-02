@@ -543,4 +543,100 @@ public class SyncControllerTests : IAsyncLifetime
         Assert.Equal(12, character.Jobs.First(j => j.JobId == JobType.BLU).MasterLevel);
         Assert.Equal(8, character.Jobs.First(j => j.JobId == JobType.THF).MasterLevel);
     }
+
+    private HttpRequestMessage CreateCurrencySyncRequest(string apiKey, CurrenciesSyncRequest payload)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Post, "/api/sync/currencies");
+        req.Headers.Add("X-Api-Key", apiKey);
+        req.Content = JsonContent.Create(payload);
+        return req;
+    }
+
+    [Fact]
+    public async Task SyncCurrencies_WithValidApiKey_UpsertsBlob()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("cur1@test.com", "cur1user");
+        await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
+        {
+            CharacterName = "CurChar1", Server = "Asura", ActiveJob = "WAR", ActiveJobLevel = 99
+        }));
+
+        var payload = new CurrenciesSyncRequest
+        {
+            CharacterName = "CurChar1",
+            Server = "Asura",
+            Currencies = new Dictionary<string, long>
+            {
+                ["conquestSandoria"] = 45000,
+                ["bayld"] = 99999,
+                ["sparksOfEminence"] = 50000,
+            }
+        };
+
+        var resp = await _client.SendAsync(CreateCurrencySyncRequest(apiKey, payload));
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var character = await db.Characters.FirstAsync(c => c.Name == "CurChar1");
+        var row = await db.CharacterCurrencies.FirstAsync(c => c.CharacterId == character.Id);
+        Assert.NotNull(row.CurrenciesJson);
+        Assert.Contains("bayld", row.CurrenciesJson);
+    }
+
+    [Fact]
+    public async Task SyncCurrencies_SecondPost_OverwritesBlob()
+    {
+        var (_, apiKey) = await SetupSyncUserAsync("cur2@test.com", "cur2user");
+        await _client.SendAsync(CreateSyncRequest(apiKey, new SyncRequest
+        {
+            CharacterName = "CurChar2", Server = "Asura", ActiveJob = "WAR", ActiveJobLevel = 99
+        }));
+
+        await _client.SendAsync(CreateCurrencySyncRequest(apiKey, new CurrenciesSyncRequest
+        {
+            CharacterName = "CurChar2", Server = "Asura",
+            Currencies = new Dictionary<string, long> { ["cruor"] = 100 }
+        }));
+        await _client.SendAsync(CreateCurrencySyncRequest(apiKey, new CurrenciesSyncRequest
+        {
+            CharacterName = "CurChar2", Server = "Asura",
+            Currencies = new Dictionary<string, long> { ["cruor"] = 200000 }
+        }));
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VanalyticsDbContext>();
+        var character = await db.Characters.FirstAsync(c => c.Name == "CurChar2");
+        var row = await db.CharacterCurrencies.FirstAsync(c => c.CharacterId == character.Id);
+        Assert.Contains("200000", row.CurrenciesJson!);
+    }
+
+    [Fact]
+    public async Task SyncCurrencies_CharacterNotOwned_ReturnsForbidden()
+    {
+        var (_, apiKeyA) = await SetupSyncUserAsync("cur3a@test.com", "cur3auser");
+        await _client.SendAsync(CreateSyncRequest(apiKeyA, new SyncRequest
+        {
+            CharacterName = "CurChar3", Server = "Asura", ActiveJob = "WAR", ActiveJobLevel = 99
+        }));
+
+        var (_, apiKeyB) = await SetupSyncUserAsync("cur3b@test.com", "cur3buser");
+        var resp = await _client.SendAsync(CreateCurrencySyncRequest(apiKeyB, new CurrenciesSyncRequest
+        {
+            CharacterName = "CurChar3", Server = "Asura",
+            Currencies = new Dictionary<string, long> { ["bayld"] = 1 }
+        }));
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task SyncCurrencies_WithoutApiKey_ReturnsUnauthorized()
+    {
+        var resp = await _client.PostAsJsonAsync("/api/sync/currencies", new CurrenciesSyncRequest
+        {
+            CharacterName = "NoAuth", Server = "Asura",
+            Currencies = new Dictionary<string, long> { ["bayld"] = 1 }
+        });
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
 }

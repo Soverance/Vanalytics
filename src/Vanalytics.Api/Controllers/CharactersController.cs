@@ -297,6 +297,31 @@ public class CharactersController : ControllerBase
         };
     }
 
+    [HttpGet("{id:guid}/currencies")]
+    public async Task<IActionResult> GetCurrencies(Guid id)
+    {
+        var userId = GetUserId();
+        var character = await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
+        if (character is null) return NotFound();
+        if (character.UserId != userId) return Forbid();
+        return Ok(await LoadCurrenciesAsync(_db, id));
+    }
+
+    internal static async Task<CurrencyResponse> LoadCurrenciesAsync(VanalyticsDbContext db, Guid id)
+    {
+        var row = await db.CharacterCurrencies.FirstOrDefaultAsync(c => c.CharacterId == id);
+        if (row is null) return new CurrencyResponse();
+
+        return new CurrencyResponse
+        {
+            Currencies = row.CurrenciesJson is null
+                ? new Dictionary<string, long>()
+                : JsonSerializer.Deserialize<Dictionary<string, long>>(row.CurrenciesJson, JsonOpts)
+                    ?? new Dictionary<string, long>(),
+            UpdatedAt = row.UpdatedAt,
+        };
+    }
+
     [HttpGet("{id:guid}/collection")]
     public async Task<IActionResult> GetCollection(Guid id)
     {
