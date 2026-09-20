@@ -917,6 +917,13 @@ export interface ProgressionResponse {
   updatedAt: string | null
 }
 
+// Currencies — sourced from packets 0x113 / 0x118. Flat key -> balance map;
+// display metadata (name/category/cap) lives in src/lib/currencies.ts.
+export interface CurrencyResponse {
+  currencies: Record<string, number>
+  updatedAt: string | null
+}
+
 // Missions — sourced from packet 0x056. Each line is either bitfield-style
 // (completed = array of mission indices) or pointer-style (current = single int).
 export interface MissionLineState {

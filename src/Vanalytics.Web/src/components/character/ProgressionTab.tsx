@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
-import type { ProgressionResponse, JobPointEntry, MasterLevelEntry } from '../../types/api'
+import type { ProgressionResponse, JobPointEntry, MasterLevelEntry, CurrencyResponse } from '../../types/api'
 import LoadingSpinner from '../LoadingSpinner'
 import Tabs from '../Tabs'
 import { WARP_CATEGORY_LABELS, WARP_CATEGORY_CAPACITY, listWarps, type WarpCategory } from '../../lib/warps'
+import CurrencyTable from './CurrencyTable'
 
-const PROGRESSION_TABS = ['Job Points', 'Master Levels', 'Travel'] as const
+const PROGRESSION_TABS = ['Job Points', 'Master Levels', 'Travel', 'Currency'] as const
 type ProgressionSubTab = typeof PROGRESSION_TABS[number]
 
 // Job IDs in packet 0x063 Order 0x05 are 0-indexed; slot 0 is NONE.
@@ -228,6 +229,26 @@ export default function ProgressionTab({ characterId, fetchBase }: Props) {
             .finally(() => setLoading(false))
     }, [base])
 
+    const [currencyData, setCurrencyData] = useState<CurrencyResponse | null>(null)
+    // 3-state so the refetch guard ('idle' vs not) is distinct from the render
+    // decision ('done' means the fetch actually completed): 'loading' shows a
+    // spinner, only 'done'-with-empty shows the "run a sync" message.
+    const [currencyStatus, setCurrencyStatus] = useState<'idle' | 'loading' | 'done'>('idle')
+
+    useEffect(() => {
+        // Reset currencies when the character (base) changes.
+        setCurrencyData(null)
+        setCurrencyStatus('idle')
+    }, [base])
+
+    useEffect(() => {
+        if (subTab !== 'Currency' || currencyStatus !== 'idle') return
+        setCurrencyStatus('loading')
+        api<CurrencyResponse>(`${base}/currencies`)
+            .then(d => { setCurrencyData(d); setCurrencyStatus('done') })
+            .catch(() => { setCurrencyData(null); setCurrencyStatus('done') })
+    }, [subTab, base, currencyStatus])
+
     if (loading) return <LoadingSpinner />
 
     const hasAnyData = data && (
@@ -278,20 +299,22 @@ export default function ProgressionTab({ characterId, fetchBase }: Props) {
                     : <p className="text-gray-500 text-sm">No job point data captured yet.</p>
             ) : subTab === 'Master Levels' ? (
                 <MasterLevelsTable entries={data!.masterLevels ?? []} />
-            ) : (
+            ) : subTab === 'Travel' ? (
                 data!.warps ? (
                     <div className="space-y-1.5">
                         {WARP_CATEGORIES.map(cat => (
-                            <WarpSection
-                                key={cat}
-                                category={cat}
-                                ids={data!.warps![cat] ?? []}
-                            />
+                            <WarpSection key={cat} category={cat} ids={data!.warps![cat] ?? []} />
                         ))}
                     </div>
                 ) : (
                     <p className="text-gray-500 text-sm">No warp data captured yet.</p>
                 )
+            ) : (
+                currencyData && Object.keys(currencyData.currencies).length > 0
+                    ? <CurrencyTable currencies={currencyData.currencies} />
+                    : currencyStatus === 'done'
+                        ? <p className="text-gray-500 text-sm">No currency data captured yet. Open the Currencies I / II menus in-game, then run a sync.</p>
+                        : <LoadingSpinner />
             )}
         </div>
     )

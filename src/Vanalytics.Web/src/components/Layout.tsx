@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { LoginModalProvider, useLoginModal } from '../context/LoginModalContext'
 import UserAvatar from './UserAvatar'
 import LoginModal from './LoginModal'
-import { Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare, Flag, Coins, Trophy } from 'lucide-react'
+import { Swords, Menu, ShieldCheck, Users, BookOpen, Radio, Package, Database, Clock, KeyRound, Bug, ChevronRight, Map, MessageSquare, Flag, Coins, Trophy, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { CompareProvider } from './compare/CompareContext'
 import CompareTray from './compare/CompareTray'
 import { SyncProvider } from '../context/SyncContext'
@@ -111,8 +111,23 @@ function LayoutInner() {
   const { user } = useAuth()
   const { summary: notifSummary } = useNotificationSummary()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('sidebar-collapsed') === 'true'
+    } catch {
+      return false
+    }
+  })
   const { isOpen: loginOpen, open: openLogin, close: closeLogin } = useLoginModal()
   const [version, setVersion] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sidebar-collapsed', String(collapsed))
+    } catch {
+      // ignore storage failures (e.g. private mode)
+    }
+  }, [collapsed])
 
   useEffect(() => {
     fetch('/health')
@@ -146,19 +161,19 @@ function LayoutInner() {
             'radial-gradient(ellipse 70% 50% at 75% 20%, rgba(99, 102, 241, 0.08), transparent 60%), radial-gradient(ellipse 60% 40% at 15% 85%, rgba(139, 92, 246, 0.06), transparent 60%)',
         }}
       />
-      {/* Mobile overlay */}
+      {/* Drawer overlay (mobile always; desktop only when collapsed) */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/60 lg:hidden"
+          className={`fixed inset-0 z-30 bg-black/60 ${collapsed ? '' : 'lg:hidden'}`}
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-gray-800 bg-gradient-to-br from-gray-900/80 via-gray-900/70 to-indigo-950/30 backdrop-blur-sm shadow-[inset_-1px_0_0_rgba(255,255,255,0.03)] transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-gray-800 bg-gradient-to-br from-gray-900/80 via-gray-900/70 to-indigo-950/30 backdrop-blur-sm shadow-[inset_-1px_0_0_rgba(255,255,255,0.03)] transition-transform duration-200 lg:top-0 lg:h-screen ${
+          collapsed ? '' : 'lg:sticky lg:translate-x-0'
+        } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {/* Sidebar ambient highlight */}
         <div
@@ -170,8 +185,8 @@ function LayoutInner() {
           }}
         />
         {/* Logo */}
-        <div className="border-b border-gray-800 px-4 py-4">
-          <Link to={user ? '/characters' : '/'} className="flex items-center min-w-0" onClick={() => setSidebarOpen(false)}>
+        <div className="flex items-center gap-2 border-b border-gray-800 px-4 py-4">
+          <Link to={user ? '/characters' : '/'} className={`flex items-center min-w-0 flex-1 ${collapsed ? 'lg:hidden' : ''}`} onClick={() => setSidebarOpen(false)}>
             <img src="/vanalytics-square-logo.png" alt="" className="h-10 w-10 shrink-0 -mr-1" />
             <img
               src="/vanalytics-typography-horizontal-logo.png"
@@ -179,6 +194,17 @@ function LayoutInner() {
               className="min-w-0 max-w-full"
             />
           </Link>
+          <button
+            onClick={() => {
+              setCollapsed((c) => !c)
+              setSidebarOpen(false)
+            }}
+            aria-label={collapsed ? 'Pin sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Pin sidebar' : 'Collapse sidebar'}
+            className="hidden shrink-0 rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-800/50 hover:text-gray-200 lg:inline-flex"
+          >
+            {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+          </button>
         </div>
 
         {/* Nav links */}
@@ -281,8 +307,8 @@ function LayoutInner() {
 
       {/* Main content area */}
       <div className="flex flex-1 flex-col min-w-0 relative z-10">
-        {/* Mobile top bar */}
-        <header className="flex items-center gap-3 border-b border-gray-800 bg-gray-900 px-4 py-3 lg:hidden">
+        {/* Top bar with hamburger (mobile always; desktop only when collapsed) */}
+        <header className={`flex items-center gap-3 border-b border-gray-800 bg-gray-900 px-4 py-3 ${collapsed ? '' : 'lg:hidden'}`}>
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-gray-400 hover:text-white"

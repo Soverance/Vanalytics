@@ -117,6 +117,14 @@ public class ProfilesController : ControllerBase
         return Ok(await CharactersController.LoadProgressionAsync(_db, id.Value));
     }
 
+    [HttpGet("{server}/{name}/currencies")]
+    public async Task<IActionResult> GetPublicCurrencies(string server, string name)
+    {
+        var id = await ResolvePublicCharacterIdAsync(server, name);
+        if (id is null) return NotFound();
+        return Ok(await CharactersController.LoadCurrenciesAsync(_db, id.Value));
+    }
+
     [HttpGet("{server}/{name}/collection")]
     public async Task<IActionResult> GetPublicCollection(string server, string name)
     {

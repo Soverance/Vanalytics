@@ -55,6 +55,7 @@ local function collect_equipped_linkshells(player, items)
 end
 
 local progression = require('progression')
+local currencies = require('currencies')
 local missions_lib = require('missions')
 local collection_lib = require('collection')
 local macro_lib = require('macros')
@@ -1696,6 +1697,14 @@ progression.init({
     log_error = log_error,
 })
 
+currencies.init({
+    settings = settings,
+    http_request = http_request,
+    json_encode = json_encode,
+    log = log,
+    log_error = log_error,
+})
+
 missions_lib.init({
     settings = settings,
     http_request = http_request,
@@ -2082,8 +2091,8 @@ local function do_sync(on_complete)
             -- one summary line when every step finishes (report_sync_summary);
             -- printing here marked the sync "successful" after only step 1.
         elseif status_code == 403 then
-            last_sync_status = 'Forbidden (no license)'
-            log_error('Character does not have an active license. Visit the Vanalytics web app to activate.')
+            last_sync_status = 'Forbidden (owned by another account)'
+            log_error('This character is registered to a different account. Make sure this character\'s API key matches the account that owns your other characters (//va status shows the key in use).')
         elseif status_code == 429 then
             last_sync_status = 'Rate limited'
             log_error('Rate limit exceeded. Sync will retry on next interval.')
@@ -2469,6 +2478,7 @@ local function enqueue_sync_work(trigger)
         { name = 'Inventory',   fn = with_player(inventory.sync) },
         { name = 'Porter',      fn = with_player(porter.sync) },
         { name = 'Progression', fn = with_player(progression.sync) },
+        { name = 'Currencies',  fn = with_player(currencies.sync) },
         { name = 'Missions',    fn = with_player(missions_lib.sync) },
         { name = 'Collection',  fn = with_player(collection_lib.sync) },
         { name = 'Bazaar',      fn = function(done) scan_bazaars(); done(true) end },
@@ -2583,6 +2593,9 @@ windower.register_event('incoming chunk', function(id, data)
         -- Multiplexed status packet: progression module handles Orders
         -- 0x02 (limit/merit points), 0x05 (job points), 0x06 (warps).
         progression.handle_packet(data)
+    elseif id == 0x113 or id == 0x118 then
+        -- Currency Info I / II: currencies module decodes curated fields.
+        currencies.handle_packet(id, data)
     elseif id == 0x056 then
         -- Quest/mission update packet: missions module handles Types
         -- 0x00D0/0x00D8/0x00C0 (bitfields) and 0xFFFE/0xFFFF (pointers).
@@ -3648,6 +3661,7 @@ windower.register_event('logout', function()
     sync_in_progress = false
     inventory.reset()
     progression.reset()
+    currencies.reset()
     missions_lib.reset()
     collection_lib.reset()
     moves_lib.reset()
