@@ -170,7 +170,10 @@ jobs:
             sed -i "s|^VANALYTICS_IMAGE=.*|VANALYTICS_IMAGE=$IMAGE|" .env
             echo "$ACR_PASSWORD" | docker login soveranceacr.azurecr.io -u "$ACR_USERNAME" --password-stdin
             docker compose pull vanalytics
-            docker compose up -d vanalytics
+            # --force-recreate: env_file content changes alone don't trigger
+            # recreation, which strands same-image redeploys (secret rotations)
+            # on stale env
+            docker compose up -d --force-recreate vanalytics
             docker image prune -f
 
   release:
