@@ -21,9 +21,39 @@ on:
     branches: [main]
 
 jobs:
+  # Schema-drift gate, ahead of the image build so a drifted model never ships.
+  # build.yml runs this too, but only on pull requests — a push straight to main
+  # would otherwise bypass it entirely.
+  guard:
+    name: Schema Drift Guard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup .NET 10.0 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef --version 10.0.5
+
+      - name: Check for pending EF model changes
+        # Exits 1 when the EF model has changes no migration covers — the failure
+        # that put soverance.com's SAML sign-in down for two days in 2026-09.
+        run: dotnet ef migrations has-pending-model-changes --project src/Vanalytics.Data --startup-project src/Vanalytics.Api
+        env:
+          # There is no IDesignTimeDbContextFactory, so DI needs a connection
+          # string to construct the context. EF compares the model against the
+          # snapshot and never opens a connection, so this value is never used.
+          ConnectionStrings__DefaultConnection: "Server=ci-nowhere;Database=ci;User Id=ci;Password=ci;TrustServerCertificate=True"
+
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: guard
     outputs:
       version: ${{ steps.version.outputs.version }}
 
