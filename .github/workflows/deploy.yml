@@ -40,6 +40,14 @@ jobs:
       - name: Install dotnet-ef
         run: dotnet tool install --global dotnet-ef --version 10.0.5
 
+      - name: Restore NuGet packages
+        # dotnet-ef 10 reads project metadata before it builds, and that needs
+        # obj/project.assets.json — on a fresh checkout it dies with NETSDK1004.
+        # build.yml gets away without this step only because `dotnet build`
+        # runs ahead of the guard there. Restoring the startup project covers
+        # Vanalytics.Data through its project reference.
+        run: dotnet restore src/Vanalytics.Api
+
       - name: Check for pending EF model changes
         # Exits 1 when the EF model has changes no migration covers — the failure
         # that put soverance.com's SAML sign-in down for two days in 2026-09.
