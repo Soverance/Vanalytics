@@ -325,9 +325,13 @@ app.MapGet("/health", async (VanalyticsDbContext db, IHostEnvironment env) =>
         // Connection failure — dbHealthy stays false
     }
 
+    // Connecting isn't enough: with the disk full, reads work but every write fails.
+    var space = dbHealthy ? await DatabaseSpaceProbe.CheckAsync(db) : null;
+
     var version = AppVersion.Current;
 
-    var status = dbHealthy ? "healthy" : "degraded";
+    var healthy = dbHealthy && space?.IsLow != true;
+    var status = healthy ? "healthy" : "degraded";
 
     return Results.Json(new
     {
@@ -336,7 +340,10 @@ app.MapGet("/health", async (VanalyticsDbContext db, IHostEnvironment env) =>
         environment = env.EnvironmentName,
         uptime = (DateTimeOffset.UtcNow - startedAt).ToString(@"d\.hh\:mm\:ss"),
         database = dbHealthy ? "connected" : "unavailable",
-    }, statusCode: dbHealthy ? 200 : 503);
+        databaseDisk = space?.State ?? "unknown",
+        databaseDiskFreeGb = space?.VolumeFreeBytes is long b ? Math.Round(b / 1073741824.0, 1) : (double?)null,
+        databaseLogUsedPercent = space?.LogUsedPercent is double p ? Math.Round(p, 1) : (double?)null,
+    }, statusCode: healthy ? 200 : 503);
 });
 
 // Dynamic sitemap for search engine discovery

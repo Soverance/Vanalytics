@@ -24,3 +24,19 @@ jobs:
 
       - name: Build Release configuration
         run: dotnet build Vanalytics.slnx --configuration Release
+
+      # Schema-drift gate. Vanalytics shares Soverance.Auth with soverance.com,
+      # where a 1.4.0 bump silently added User.ApiKeyLookup to the EF model with
+      # no migration and took SAML sign-in down for two days. Vanalytics happened
+      # to write that migration; nothing enforced it. This does.
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef --version 10.0.5
+
+      - name: Check for pending EF model changes
+        # Exits 1 when the model has changes no migration covers.
+        run: dotnet ef migrations has-pending-model-changes --project src/Vanalytics.Data --startup-project src/Vanalytics.Api
+        env:
+          # There is no IDesignTimeDbContextFactory, so DI needs a connection
+          # string to construct the context. EF compares the model against the
+          # snapshot and never opens a connection, so this value is never used.
+          ConnectionStrings__DefaultConnection: "Server=ci-nowhere;Database=ci;User Id=ci;Password=ci;TrustServerCertificate=True"
