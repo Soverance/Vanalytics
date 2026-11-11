@@ -8,6 +8,7 @@ import { useFfxiFileSystem } from '../context/FfxiFileSystemContext'
 import { Copy, Check } from 'lucide-react'
 import ConfirmModal from '../components/ConfirmModal'
 import Tabs from '../components/Tabs'
+import { DeleteAccountModal } from '../components/AccountDeletion'
 
 type Tab = 'session' | 'preferences' | 'apikeys'
 
@@ -24,6 +25,7 @@ export default function ProfilePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialTab = tabs.find(t => t.id === searchParams.get('tab'))?.id ?? 'session'
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false)
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab)
@@ -318,7 +320,8 @@ export default function ProfilePage() {
           <section className="rounded-lg border border-gray-800 bg-gray-900 p-6">
             <h2 className="text-lg font-semibold mb-4">Delete Account</h2>
             <p className="text-sm text-gray-400 mb-4">
-              Per our{' '}
+              Permanently delete your account, characters and all synced data. You'll have 7 days to change
+              your mind by signing back in. See our{' '}
               <a
                 href="https://soverance.com/privacy"
                 target="_blank"
@@ -327,25 +330,22 @@ export default function ProfilePage() {
               >
                 privacy policy
               </a>
-              , account deletion is handled manually. The button below opens your email client with a pre-filled
-              request. Once received, your account and all associated character data are permanently removed.
+              {' '}for details.
             </p>
-            <a
-              href={`mailto:scott@soverance.com?subject=${encodeURIComponent('Vanalytics account deletion request')}&body=${encodeURIComponent(
-                [
-                  'Hello,',
-                  '',
-                  'Please delete my Vanalytics account and all associated data.',
-                  '',
-                  `Username: ${user.username}`,
-                  `Email: ${user.email}`,
-                ].join('\n')
-              )}`}
-              className="inline-block rounded border border-red-700 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-900/30"
-            >
-              Request Account Deletion
-            </a>
+            {user.role === 'Admin' ? (
+              <p className="text-sm text-gray-500">Admin accounts can't be deleted from here.</p>
+            ) : (
+              <button
+                onClick={() => setShowDeleteAccount(true)}
+                className="rounded border border-red-700 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-900/30"
+              >
+                Delete Account
+              </button>
+            )}
           </section>
+          {showDeleteAccount && (
+            <DeleteAccountModal username={user.username} onClose={() => setShowDeleteAccount(false)} />
+          )}
         </div>
       )}
 

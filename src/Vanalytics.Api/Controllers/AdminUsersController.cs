@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Soverance.Auth.Models;
 using Soverance.Auth.Services;
+using Vanalytics.Api.Services;
 using Vanalytics.Core.DTOs.Admin;
 using Vanalytics.Core.Models;
 using Vanalytics.Data;
@@ -16,10 +17,14 @@ namespace Vanalytics.Api.Controllers;
 public class AdminUsersController : ControllerBase
 {
     private readonly VanalyticsDbContext _db;
+    private readonly AccountDeletionService _deletions;
+    private readonly AccountDeletionRunner _deletionRunner;
 
-    public AdminUsersController(VanalyticsDbContext db)
+    public AdminUsersController(VanalyticsDbContext db, AccountDeletionService deletions, AccountDeletionRunner deletionRunner)
     {
         _db = db;
+        _deletions = deletions;
+        _deletionRunner = deletionRunner;
     }
 
     [HttpGet]
@@ -44,6 +49,10 @@ public class AdminUsersController : ControllerBase
                     .Where(c => c.UserId == u.Id)
                     .Max(c => (DateTimeOffset?)c.LastSyncAt),
                 DefaultServer = u.DefaultServer,
+                DeletionScheduledFor = _db.AccountDeletionRequests
+                    .Where(r => r.UserId == u.Id)
+                    .Select(r => (DateTimeOffset?)r.ScheduledFor)
+                    .FirstOrDefault(),
             })
             .OrderBy(u => u.CreatedAt)
             .ToListAsync();
@@ -74,6 +83,10 @@ public class AdminUsersController : ControllerBase
                     .Where(c => c.UserId == u.Id)
                     .Max(c => (DateTimeOffset?)c.LastSyncAt),
                 DefaultServer = u.DefaultServer,
+                DeletionScheduledFor = _db.AccountDeletionRequests
+                    .Where(r => r.UserId == u.Id)
+                    .Select(r => (DateTimeOffset?)r.ScheduledFor)
+                    .FirstOrDefault(),
             })
             .FirstOrDefaultAsync();
 
@@ -116,10 +129,29 @@ public class AdminUsersController : ControllerBase
         if (user.Role == UserRole.Admin)
             return BadRequest(new { message = "Cannot delete an admin user. Change their role first." });
 
-        _db.Users.Remove(user);
-        await _db.SaveChangesAsync();
+        var characterCount = await _db.Characters.CountAsync(c => c.UserId == id);
 
-        return NoContent();
+        // The delete itself runs in the background (a heavy account can take a while); the admin
+        // UI polls GET {id}/deletion until it reports "deleted" or "failed".
+        await _deletions.ScheduleImmediateAsync(id);
+        _deletionRunner.Start(id);
+
+        return Accepted(new { characterCount });
+    }
+
+    /// <summary>Progress of an admin delete: "deleted", "pending" (queued or running),
+    /// "failed" (with error), or "none" if the user exists and no deletion is scheduled.</summary>
+    [HttpGet("{id:guid}/deletion")]
+    public async Task<IActionResult> DeletionStatus(Guid id)
+    {
+        if (!await _db.Users.AnyAsync(u => u.Id == id))
+            return Ok(new { status = "deleted" });
+
+        var request = await _db.AccountDeletionRequests.AsNoTracking().FirstOrDefaultAsync(r => r.UserId == id);
+        if (request is null) return Ok(new { status = "none" });
+        if (request.LastError is not null && request.ProcessingStartedAt is null)
+            return Ok(new { status = "failed", error = request.LastError });
+        return Ok(new { status = "pending" });
     }
 
     [HttpPost("{id:guid}/reset-password")]

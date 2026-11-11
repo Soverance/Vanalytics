@@ -168,6 +168,8 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<{ id: string; username: string } | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [notice, setNotice] = useState('')
   const [pendingReset, setPendingReset] = useState<{ id: string; username: string } | null>(null)
   const [resetResult, setResetResult] = useState<ResetPasswordResponse | null>(null)
   const [tab, setTab] = useState<'list' | 'analytics'>('list')
@@ -199,12 +201,39 @@ export default function AdminUsersPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    try {
-      await api(`/api/admin/users/${id}`, { method: 'DELETE' })
+  // The server deletes in the background; we keep the confirm dialog open (busy) and poll
+  // until it reports deleted/failed, so it's clear the delete is still running and a
+  // second click can't fire another one.
+  const handleDelete = async (target: { id: string; username: string }) => {
+    setError('')
+    setNotice('')
+    setDeleting(true)
+    const finish = (message: { error?: string; notice?: string }) => {
+      if (message.error) setError(message.error)
+      if (message.notice) setNotice(message.notice)
+      setDeleting(false)
+      setPendingDelete(null)
       fetchUsers()
+    }
+    try {
+      const { characterCount } = await api<{ characterCount: number }>(`/api/admin/users/${target.id}`, { method: 'DELETE' })
+      const started = Date.now()
+      for (;;) {
+        await new Promise(r => setTimeout(r, 1500))
+        const status = await api<{ status: string; error?: string }>(`/api/admin/users/${target.id}/deletion`)
+        if (status.status === 'deleted') {
+          const chars = `${characterCount} character${characterCount === 1 ? '' : 's'}`
+          return finish({ notice: `Deleted "${target.username}" and ${chars}, along with all their data.` })
+        }
+        if (status.status === 'failed') {
+          return finish({ error: `Deleting "${target.username}" failed: ${status.error ?? 'unknown error'}. Click Delete to retry.` })
+        }
+        if (Date.now() - started > 3 * 60_000) {
+          return finish({ notice: `Still deleting "${target.username}" in the background. Refresh in a few minutes to confirm.` })
+        }
+      }
     } catch (err) {
-      if (err instanceof ApiError) setError(err.message)
+      finish({ error: err instanceof ApiError ? err.message : `Deleting "${target.username}" failed: ${err instanceof Error ? err.message : 'network error'}` })
     }
   }
 
@@ -243,6 +272,15 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+      {notice && (
+        <div className="mb-4 flex items-start justify-between gap-3 rounded bg-green-900/40 border border-green-700 p-3 text-sm text-green-300">
+          <span>{notice}</span>
+          <button onClick={() => setNotice('')} className="text-green-400 hover:text-green-200" aria-label="Dismiss">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       <Tabs
         items={[
           { value: 'list', label: 'List', badge: users.length },
@@ -275,7 +313,9 @@ export default function AdminUsersPage() {
         <ConfirmModal
           message={`Delete user "${pendingDelete.username}"? This will remove all their characters and data.`}
           confirmLabel="Delete"
-          onConfirm={() => { handleDelete(pendingDelete.id); setPendingDelete(null) }}
+          busy={deleting}
+          busyLabel="Deleting…"
+          onConfirm={() => handleDelete(pendingDelete)}
           onCancel={() => setPendingDelete(null)}
         />
       )}

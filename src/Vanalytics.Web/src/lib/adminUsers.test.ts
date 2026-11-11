@@ -18,6 +18,7 @@ function u(over: Partial<AdminUser>): AdminUser {
     updatedAt: '2026-01-01T00:00:00Z',
     lastActiveAt: null,
     defaultServer: null,
+    deletionScheduledFor: null,
     ...over,
   }
 }

@@ -101,6 +101,11 @@ export default function UsersList({
                     <div className="min-w-0">
                       <p className="font-medium text-gray-200 truncate">{u.displayName ?? u.username}</p>
                       <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                      {u.deletionScheduledFor && (
+                        <p className="text-xs text-red-400">
+                          Pending deletion · {new Date(u.deletionScheduledFor).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </td>

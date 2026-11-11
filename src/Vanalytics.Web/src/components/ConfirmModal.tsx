@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 
 interface ConfirmModalProps {
   message: string
@@ -8,6 +8,11 @@ interface ConfirmModalProps {
   onCancel: () => void
   variant?: 'default' | 'danger'
   confirmText?: string
+  /** While true, both buttons are disabled, the confirm button shows a spinner with
+   * busyLabel, and Escape/backdrop clicks are ignored so the dialog can't be dismissed
+   * mid-operation. */
+  busy?: boolean
+  busyLabel?: string
 }
 
 export default function ConfirmModal({
@@ -17,24 +22,27 @@ export default function ConfirmModal({
   onCancel,
   variant = 'default',
   confirmText,
+  busy = false,
+  busyLabel,
 }: ConfirmModalProps) {
   const [typed, setTyped] = useState('')
   const isDanger = variant === 'danger'
   const needsTyping = isDanger && confirmText
-  const canConfirm = needsTyping ? typed === confirmText : true
+  const canConfirm = (needsTyping ? typed === confirmText : true) && !busy
+  const dismiss = () => { if (!busy) onCancel() }
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel()
+      if (e.key === 'Escape' && !busy) onCancel()
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [onCancel])
+  }, [onCancel, busy])
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-      onClick={onCancel}
+      onClick={dismiss}
     >
       <div
         className={`rounded-lg p-6 max-w-md w-full mx-4 ${
@@ -66,6 +74,7 @@ export default function ConfirmModal({
               type="text"
               value={typed}
               onChange={e => setTyped(e.target.value)}
+              disabled={busy}
               className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-200 focus:border-red-600 focus:outline-none"
               autoFocus
             />
@@ -75,20 +84,22 @@ export default function ConfirmModal({
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded bg-gray-800 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+            disabled={busy}
+            className="rounded bg-gray-800 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={!canConfirm}
-            className={`rounded px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+            className={`inline-flex items-center gap-2 rounded px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
               isDanger
                 ? 'bg-red-600 hover:bg-red-500'
                 : 'bg-blue-600 hover:bg-blue-500'
             }`}
           >
-            {confirmLabel}
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+            {busy ? (busyLabel ?? confirmLabel) : confirmLabel}
           </button>
         </div>
       </div>

@@ -11,7 +11,7 @@ function u(over: Partial<AdminUser>): AdminUser {
     role: 'Member', isSystemAccount: false, hasApiKey: false, hasPassword: true,
     oAuthProvider: null, characterCount: 0,
     createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z',
-    lastActiveAt: null, defaultServer: null, ...over,
+    lastActiveAt: null, defaultServer: null, deletionScheduledFor: null, ...over,
   }
 }
 

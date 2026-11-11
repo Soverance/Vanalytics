@@ -655,6 +655,48 @@ namespace Vanalytics.Data.Migrations
                     b.ToTable("UserBlock");
                 });
 
+            modelBuilder.Entity("Vanalytics.Core.Models.AccountDeletionRequest", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset?>("LastErrorAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ParkedApiKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<DateTimeOffset?>("ParkedApiKeyCreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ParkedApiKeyLookup")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset?>("ProcessingStartedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("RequestedByAdmin")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("ScheduledFor")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("ScheduledFor");
+
+                    b.ToTable("AccountDeletionRequests");
+                });
+
             modelBuilder.Entity("Vanalytics.Core.Models.AchievementRescoreState", b =>
                 {
                     b.Property<int>("Id")
@@ -2944,6 +2986,15 @@ namespace Vanalytics.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Conversation");
+                });
+
+            modelBuilder.Entity("Vanalytics.Core.Models.AccountDeletionRequest", b =>
+                {
+                    b.HasOne("Soverance.Auth.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("Vanalytics.Core.Models.AccountDeletionRequest", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Vanalytics.Core.Models.AhScrapeState", b =>

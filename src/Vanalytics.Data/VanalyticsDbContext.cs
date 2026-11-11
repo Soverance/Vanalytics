@@ -22,6 +22,7 @@ public class VanalyticsDbContext(DbContextOptions<VanalyticsDbContext> options)
     public DbSet<ScraperSetting> ScraperSettings => Set<ScraperSetting>();
     public DbSet<ScraperRunState> ScraperRunStates => Set<ScraperRunState>();
     public DbSet<AchievementRescoreState> AchievementRescoreStates => Set<AchievementRescoreState>();
+    public DbSet<AccountDeletionRequest> AccountDeletionRequests => Set<AccountDeletionRequest>();
     public DbSet<DiscoveredEndpoint> DiscoveredEndpoints => Set<DiscoveredEndpoint>();
     public DbSet<BazaarPresence> BazaarPresences => Set<BazaarPresence>();
     public DbSet<BazaarListing> BazaarListings => Set<BazaarListing>();
