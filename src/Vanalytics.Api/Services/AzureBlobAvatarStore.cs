@@ -44,4 +44,13 @@ public class AzureBlobAvatarStore : IAvatarStore
         await blob.UploadAsync(stream, new BlobUploadOptions { HttpHeaders = new BlobHttpHeaders { ContentType = contentType } });
         return blob.Uri.ToString();
     }
+
+    /// <summary>Removes a user's stored avatar (either extension SaveAvatarAsync may have used).
+    /// Called on account deletion. Not on the shared IAvatarStore interface to avoid a
+    /// Soverance.Auth package bump for a Vanalytics-only need.</summary>
+    public async Task DeleteAvatarAsync(Guid userId, CancellationToken ct = default)
+    {
+        foreach (var extension in new[] { ".png", ".jpg" })
+            await _container.GetBlobClient($"{userId}{extension}").DeleteIfExistsAsync(cancellationToken: ct);
+    }
 }

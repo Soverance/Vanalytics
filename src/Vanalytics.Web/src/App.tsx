@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { PendingDeletionGate } from './components/AccountDeletion'
 import { useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -104,6 +105,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <SamlCodeHandler />
+        <PendingDeletionGate />
         <Routes>
           {/* Public: landing page (no layout) */}
           <Route path="/" element={<LandingPage />} />

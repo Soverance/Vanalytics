@@ -16,4 +16,6 @@ public class AdminUserResponse
     public DateTimeOffset UpdatedAt { get; set; }
     public DateTimeOffset? LastActiveAt { get; set; }
     public string? DefaultServer { get; set; }
+    /// <summary>Set while the account is pending deletion (self-service grace period or an admin delete in flight).</summary>
+    public DateTimeOffset? DeletionScheduledFor { get; set; }
 }

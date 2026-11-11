@@ -112,6 +112,8 @@ builder.Services.AddScoped<BlueprintGenerationService>();
 builder.Services.AddScoped<GearSwapImportService>();
 builder.Services.AddScoped<AchievementRecomputeService>();
 builder.Services.AddSingleton<AchievementRescoreRunner>();
+builder.Services.AddScoped<AccountDeletionService>();
+builder.Services.AddSingleton<AccountDeletionRunner>();
 builder.Services.AddSingleton<RateLimiter>();
 builder.Services.AddSingleton<EconomyRateLimiter>();
 builder.Services.AddSingleton<LoginRateLimiter>();
@@ -132,7 +134,11 @@ else
 
 // Avatar storage: Azure Blob in production
 if (!string.IsNullOrEmpty(builder.Configuration["AzureStorage:ConnectionString"]))
-    builder.Services.AddSingleton<IAvatarStore, AzureBlobAvatarStore>();
+{
+    // Registered concretely too so account deletion can call DeleteAvatarAsync.
+    builder.Services.AddSingleton<AzureBlobAvatarStore>();
+    builder.Services.AddSingleton<IAvatarStore>(sp => sp.GetRequiredService<AzureBlobAvatarStore>());
+}
 
 // Graph API photo service for SAML avatar sync (uses HttpClient via DI)
 if (!string.IsNullOrEmpty(builder.Configuration["Authentication:AzureAd:ClientSecret"]))
@@ -154,6 +160,7 @@ builder.Services.AddHostedService<ServerStatusScraper>();
 // when SE patches the game. Sync should only be triggered by an admin from /admin/data.
 builder.Services.AddHostedService<BazaarStalenessJob>();
 builder.Services.AddHostedService<SessionStalenessJob>();
+builder.Services.AddHostedService<AccountDeletionJob>();
 
 // AH scraper — enabled/disabled at runtime via ScraperSettings.MasterEnabled (Admin > Economy);
 // the AhScraper config section now holds tuning only (batch size, delays, discovery ranges).

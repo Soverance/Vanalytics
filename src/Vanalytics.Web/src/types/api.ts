@@ -381,6 +381,8 @@ export interface AdminUser {
   updatedAt: string
   lastActiveAt: string | null
   defaultServer: string | null
+  /** Set while the account is pending deletion. */
+  deletionScheduledFor: string | null
 }
 
 export interface CreateUserRequest {
