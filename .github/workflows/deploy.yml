@@ -214,7 +214,9 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y -qq --no-install-recommends wireguard-tools
           fi
-          umask 077
+          # The configuration must live in /etc/wireguard. Ubuntu 26.04 runners
+          # confine wg-quick with AppArmor: anywhere else, even root gets
+          # "Permission denied" reading it.
           {
             echo '[Interface]'
             echo 'Address = 10.98.0.21/32'
@@ -224,8 +226,8 @@ jobs:
             printf 'Endpoint = %s:51821\n' "$VM_HOST"
             echo 'AllowedIPs = 10.98.0.1/32'
             echo 'PersistentKeepalive = 25'
-          } > "$RUNNER_TEMP/vm.conf"
-          sudo wg-quick up "$RUNNER_TEMP/vm.conf"
+          } | sudo sh -c 'umask 077; mkdir -p /etc/wireguard; cat > /etc/wireguard/vm.conf'
+          sudo wg-quick up vm
           # The first packet starts the handshake. Fail here with the likely
           # causes, not later in an ssh step with a bare timeout.
           for _ in 1 2 3 4 5; do
@@ -311,8 +313,8 @@ jobs:
       - name: Close the tunnel
         if: always()
         run: |
-          sudo wg-quick down "$RUNNER_TEMP/vm.conf" 2>/dev/null || true
-          rm -f "$RUNNER_TEMP/vm.conf"
+          sudo wg-quick down vm 2>/dev/null || true
+          sudo rm -f /etc/wireguard/vm.conf
 
   release:
     name: Release
