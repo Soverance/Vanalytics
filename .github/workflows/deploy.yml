@@ -5,7 +5,15 @@
 # Builds a Docker image, pushes to Azure Container Registry, and deploys
 # to soverance-vm over SSH (docker compose stack at /opt/soverance).
 #
-# Secrets: ACR_USERNAME, ACR_PASSWORD, VM_HOST, VM_SSH_USER, VM_SSH_KEY,
+# The VM's port 22 is closed to the internet. The deploy job reaches sshd
+# through the VM's WireGuard admin tunnel, as peer ci-vanalytics (10.98.0.21).
+# The VM end, the peer list and what to do when the tunnel is down: IaC repo,
+# ansible role configure_admin_tunnel (README.md).
+#
+# Secrets: ACR_USERNAME, ACR_PASSWORD, VM_HOST (public address, the tunnel's
+#          endpoint), VM_WG_PRIVATE_KEY (this pipeline's tunnel key),
+#          VM_HOST_KEY (the VM's ssh host key: `ssh-keyscan` output),
+#          VM_SSH_USER, VM_SSH_KEY,
 #          SQL_CONNECTION_STRING, ADMIN_PASSWORD, JWT_SECRET,
 #          AZURE_STORAGE_CONNECTION_STRING,
 #          GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_SECRET, DISCORD_CLIENT_SECRET
@@ -19,6 +27,14 @@ name: Build and Deploy
 on:
   push:
     branches: [main]
+
+# One run at a time. Two runs at once would compute the same version number,
+# and would take the tunnel from each other (both use the same tunnel key).
+# A newer push waits for the running one. If several pile up, only the newest
+# waits: GitHub cancels the older waiting runs.
+concurrency:
+  group: build-and-deploy
+  cancel-in-progress: false
 
 jobs:
   # Schema-drift gate, ahead of the image build so a drifted model never ships.
@@ -181,38 +197,124 @@ jobs:
             } >> vanalytics.env
           fi
 
+      # The VM's public key and tunnel addresses are not secrets and are written
+      # here; the private key and the VM's public address are.
+      - name: Open the tunnel to the VM
+        env:
+          VM_WG_PRIVATE_KEY: ${{ secrets.VM_WG_PRIVATE_KEY }}
+          VM_HOST: ${{ secrets.VM_HOST }}
+        run: |
+          key=$(printf '%s' "$VM_WG_PRIVATE_KEY" | tr -d ' \r\n')
+          if [ "${#key}" -ne 44 ]; then
+            # Shape only, never the value.
+            echo "::error::Secret VM_WG_PRIVATE_KEY is missing or not a WireGuard key (${#key} characters, expected 44)."
+            exit 1
+          fi
+          if ! command -v wg-quick >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends wireguard-tools
+          fi
+          # The configuration must live in /etc/wireguard. Ubuntu 26.04 runners
+          # confine wg-quick with AppArmor: anywhere else, even root gets
+          # "Permission denied" reading it.
+          {
+            echo '[Interface]'
+            echo 'Address = 10.98.0.21/32'
+            printf 'PrivateKey = %s\n' "$key"
+            echo '[Peer]'
+            echo 'PublicKey = DbfoSy0N6KFbmcFqQGyo1a58uaLGLZTzBPNto9ZJRyo='
+            printf 'Endpoint = %s:51821\n' "$VM_HOST"
+            echo 'AllowedIPs = 10.98.0.1/32'
+            echo 'PersistentKeepalive = 25'
+          } | sudo sh -c 'umask 077; mkdir -p /etc/wireguard; cat > /etc/wireguard/vm.conf'
+          sudo wg-quick up vm
+          # The first packet starts the handshake. Fail here with the likely
+          # causes, not later in an ssh step with a bare timeout.
+          for _ in 1 2 3 4 5; do
+            if timeout 5 bash -c 'exec 3<>/dev/tcp/10.98.0.1/22' 2>/dev/null; then
+              echo "Tunnel is up: sshd answers on 10.98.0.1."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::The tunnel is configured but 10.98.0.1:22 does not answer. Check VM_WG_PRIVATE_KEY against peer ci-vanalytics on the VM, VM_HOST, and the NSG rule Allow-WireGuard-Admin (UDP 51821)."
+          sudo wg show vm latest-handshakes | awk '{ print "Last handshake (unix time, 0 = never): " $2 }'
+          exit 1
+
+      # Plain ssh/scp from the runner image. No third-party actions: these
+      # steps hold the SSH key and every production secret.
+      - name: Set up SSH
+        env:
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+          VM_HOST_KEY: ${{ secrets.VM_HOST_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VM_SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          # Pinned host key, so the runner refuses to talk to anything that
+          # isn't the VM. Accepts full `ssh-keyscan` lines ("host type key")
+          # or just "type key"; whatever host name was scanned is replaced by
+          # the alias `vm` (see HostKeyAlias). CRs from Windows pastes are dropped.
+          printf '%s\n' "$VM_HOST_KEY" | tr -d '\r' | awk '
+            $1 ~ /^#/ { next }
+            { for (i = 1; i < NF; i++) if ($i ~ /^(ssh-|ecdsa-|sk-)/) { print "vm", $i, $(i+1); break } }
+          ' > ~/.ssh/known_hosts
+          if [ ! -s ~/.ssh/known_hosts ]; then
+            # Shape only, never the values: line count and fields per line.
+            echo "::error::No host key found in VM_HOST_KEY (${#VM_HOST_KEY} chars; fields per line: $(printf '%s\n' "$VM_HOST_KEY" | awk '{printf "%s ", NF}'))"
+            exit 1
+          fi
+          echo "Pinned host key types: $(awk '{print $2}' ~/.ssh/known_hosts | paste -sd ' ')"
+          {
+            echo 'Host vm'
+            echo '  HostName 10.98.0.1'   # the VM inside the tunnel
+            echo "  User ${{ secrets.VM_SSH_USER }}"
+            echo '  HostKeyAlias vm'
+            echo '  IdentityFile ~/.ssh/id_deploy'
+            echo '  IdentitiesOnly yes'
+            echo '  StrictHostKeyChecking yes'
+            echo '  BatchMode yes'
+            echo '  ConnectTimeout 30'
+          } > ~/.ssh/config
+
       - name: Copy environment file to VM
-        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_SSH_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          source: vanalytics.env
-          target: /opt/soverance/
+        run: scp -p vanalytics.env vm:/opt/soverance/vanalytics.env
 
       - name: Deploy container
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         env:
           ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
           ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
           IMAGE: soveranceacr.azurecr.io/vanalytics:v${{ needs.build.outputs.version }}
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_SSH_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          envs: ACR_USERNAME,ACR_PASSWORD,IMAGE
-          script: |
-            set -e
-            cd /opt/soverance
-            chmod 600 vanalytics.env
-            sed -i "s|^VANALYTICS_IMAGE=.*|VANALYTICS_IMAGE=$IMAGE|" .env
-            echo "$ACR_PASSWORD" | docker login soveranceacr.azurecr.io -u "$ACR_USERNAME" --password-stdin
-            docker compose pull vanalytics
-            # --force-recreate: env_file content changes alone don't trigger
-            # recreation, which strands same-image redeploys (secret rotations)
-            # on stale env
-            docker compose up -d --force-recreate vanalytics
-            docker image prune -f
+        run: |
+          # Values travel inside the script on stdin (%q-quoted), not on the
+          # ssh command line, so they never show up in the VM's process list.
+          {
+            printf 'IMAGE=%q\n' "$IMAGE"
+            printf 'ACR_USERNAME=%q\n' "$ACR_USERNAME"
+            printf 'ACR_PASSWORD=%q\n' "$ACR_PASSWORD"
+            cat <<'EOF'
+          set -e
+          cd /opt/soverance
+          chmod 600 vanalytics.env
+          sed -i "s|^VANALYTICS_IMAGE=.*|VANALYTICS_IMAGE=$IMAGE|" .env
+          printf '%s\n' "$ACR_PASSWORD" | docker login soveranceacr.azurecr.io -u "$ACR_USERNAME" --password-stdin
+          docker compose pull vanalytics
+          # --force-recreate: env_file content changes alone don't trigger
+          # recreation, which strands same-image redeploys (secret rotations)
+          # on stale env
+          docker compose up -d --force-recreate vanalytics
+          # -a: every release is tagged, so plain prune never removed old
+          # ones; they filled the VM disk in 2026-11 and broke deploys.
+          # Images in use are kept.
+          docker image prune -af
+          EOF
+          } | ssh vm 'bash -s'
+
+      - name: Close the tunnel
+        if: always()
+        run: |
+          sudo wg-quick down vm 2>/dev/null || true
+          sudo rm -f /etc/wireguard/vm.conf
 
   release:
     name: Release
